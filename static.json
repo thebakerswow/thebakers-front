@@ -1,0 +1,8 @@
+{
+  "routes": {
+    "/*": {
+      "value": "/index.html",
+      "rewrite": true
+    }
+  }
+}
