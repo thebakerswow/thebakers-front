@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 export function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -11,16 +12,18 @@ export function AuthCallback() {
 
     if (token) {
       localStorage.setItem("jwt", token);
-
-      setTimeout(() => {
-        navigate("/home"); // Redireciona para /home após salvar o token
-      }, 100); // 100ms de atraso para garantir que o token foi salvo
+      setIsAuthenticated(true); // Força a re-renderização
     } else {
       console.error("Token não encontrado na URL.");
-      navigate("/"); // Redireciona para a página de login
     }
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("caiu no force")
+      navigate("/home");
+    }
+  }, [isAuthenticated, navigate]);
 
   return <p>Autenticando...</p>;
 }
