@@ -15,14 +15,14 @@ import { MythicRaidsNa } from "./pages/bookings-na/mythic-raids"
 import { LegacyNa } from "./pages/bookings-na/legacy"
 import { RunDetails } from "./pages/bookings-na/full-raids/run/run-details"
 import { Login } from "./pages/login"
+import { AuthCallback } from "./pages/callback"
 
 function ConditionalHeader() {
   const location = useLocation()
 
-  if (location.pathname === "/") {
+  if (location.pathname === "/" || location.pathname === "/login/callback") {
     return <Header variant="login" />
   }
-
   return <Header />
 }
 
@@ -34,7 +34,9 @@ export function App() {
           <ConditionalHeader />
           <main className="bg-zinc-300 relative flex-grow flex justify-center overflow-y-auto">
             <Routes>
+              {/* <Route path="/" element={<Login />} /> */}
               <Route path="/" element={<Login />} />
+              <Route path="/login/callback" element={<AuthCallback />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/balance" element={<Balance />} />
               <Route path="/management-teams" element={<TeamsManagement />} />
