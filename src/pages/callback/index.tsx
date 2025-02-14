@@ -20,7 +20,6 @@ export function AuthCallback() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("caiu no force")
       navigate("/home");
     }
   }, [isAuthenticated, navigate]);
