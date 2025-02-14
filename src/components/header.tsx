@@ -10,65 +10,65 @@ import {
   SignOut,
   UsersFour,
   CheckCircle,
-} from "@phosphor-icons/react"
-import { Button } from "./button"
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+} from '@phosphor-icons/react'
+import { Button } from './button'
+import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 type HeaderProps = {
-  variant?: "default" | "login"
+  variant?: 'default' | 'login'
 }
 
-export function Header({ variant = "default" }: HeaderProps) {
+export function Header({ variant = 'default' }: HeaderProps) {
   const navigate = useNavigate()
   const [isHoveringNA, setIsHoveringNA] = useState(false)
   const [isHoveringManagement, setIsHoveringManagement] = useState(false)
 
-  if (variant === "login") {
+  if (variant === 'login') {
     return (
-      <header className="h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative">
-        TheBakers <span className="text-red-700 ">Hub</span>
+      <header className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative'>
+        TheBakers <span className='text-red-700 '>Hub</span>
       </header>
     )
   }
 
   return (
-    <header className="h-[60px] bg-zinc-900 flex gap-40 items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative">
-      <Button onClick={() => navigate("/")} variant="home">
-        TheBakers <span className="text-red-700 ">Hub</span>
+    <header className='h-[60px] bg-zinc-900 flex gap-40 items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
+      <Button onClick={() => navigate('/')} variant='home'>
+        TheBakers <span className='text-red-700 '>Hub</span>
       </Button>
-      <Button onClick={() => navigate("/balance")} variant="header">
-        <Coins className="text-gray-100" size={30} />
+      <Button onClick={() => navigate('/balance')} variant='header'>
+        <Coins className='text-gray-100' size={30} />
         Balance
       </Button>
 
       <div
         onMouseEnter={() => setIsHoveringManagement(true)}
         onMouseLeave={() => setIsHoveringManagement(false)}
-        className="relative"
+        className='relative'
       >
-        <Button variant="header">
-          <Briefcase className="text-gray-100" size={30} />
+        <Button variant='header'>
+          <Briefcase className='text-gray-100' size={30} />
           Management
           {isHoveringManagement ? (
-            <CaretUp className="text-red-400" size={20} />
+            <CaretUp className='text-red-400' size={20} />
           ) : (
-            <CaretDown className="text-red-400" size={20} />
+            <CaretDown className='text-red-400' size={20} />
           )}
         </Button>
 
         {/* Dropdown abaixo do header */}
         {isHoveringManagement && (
-          <div className="absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl">
+          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl'>
             <Button
-              onClick={() => navigate("/management-teams")}
-              variant="header"
+              onClick={() => navigate('/management-teams')}
+              variant='header'
             >
-              <UsersFour className="text-gray-100" size={30} />
+              <UsersFour className='text-gray-100' size={30} />
               Teams
             </Button>
-            <Button onClick={() => navigate("/freelancers")} variant="header">
-              <CheckCircle className="text-gray-100" size={30} />
+            <Button onClick={() => navigate('/freelancers')} variant='header'>
+              <CheckCircle className='text-gray-100' size={30} />
               Attendance
             </Button>
           </div>
@@ -77,45 +77,38 @@ export function Header({ variant = "default" }: HeaderProps) {
       <div
         onMouseEnter={() => setIsHoveringNA(true)}
         onMouseLeave={() => setIsHoveringNA(false)}
-        className="relative"
+        className='relative'
       >
-        <Button variant="header">
-          <CalendarBlank className="text-gray-100" size={30} />
+        <Button variant='header'>
+          <CalendarBlank className='text-gray-100' size={30} />
           Bookings (NA)
           {isHoveringNA ? (
-            <CaretUp className="text-red-400" size={20} />
+            <CaretUp className='text-red-400' size={20} />
           ) : (
-            <CaretDown className="text-red-400" size={20} />
+            <CaretDown className='text-red-400' size={20} />
           )}
         </Button>
 
         {/* Dropdown abaixo do header */}
         {isHoveringNA && (
-          <div className="absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl">
-            <Button
-              onClick={() => navigate("/full-raids-na")}
-              variant="header"
-            >
-              <CastleTurret className="text-gray-100" size={30} />
+          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl'>
+            <Button onClick={() => navigate('/full-raids-na')} variant='header'>
+              <CastleTurret className='text-gray-100' size={30} />
               Full Raids
             </Button>
-            <Button onClick={() => navigate("/curves-na")} variant="header">
-              <Church className="text-gray-100" size={30} />
+            <Button onClick={() => navigate('/curves-na')} variant='header'>
+              <Church className='text-gray-100' size={30} />
               Curves
             </Button>
             <Button
-              onClick={() => navigate("/mythic-raids-na")}
-              variant="header"
+              onClick={() => navigate('/mythic-raids-na')}
+              variant='header'
             >
-              <CastleTurret
-                className="text-gray-100"
-                size={30}
-                weight="fill"
-              />
+              <CastleTurret className='text-gray-100' size={30} weight='fill' />
               Mythic Raids
             </Button>
-            <Button onClick={() => navigate("/legacy-na")} variant="header">
-              <Hourglass className="text-gray-100" size={30} />
+            <Button onClick={() => navigate('/legacy-na')} variant='header'>
+              <Hourglass className='text-gray-100' size={30} />
               Legacy
             </Button>
           </div>
@@ -124,14 +117,12 @@ export function Header({ variant = "default" }: HeaderProps) {
       <div
         onMouseEnter={() => setIsHoveringNA(true)}
         onMouseLeave={() => setIsHoveringNA(false)}
-        className="relative"
-      >
-      </div>
-      <Button variant="header">
-        <SignOut className="text-gray-100" size={30} />
+        className='relative'
+      ></div>
+      <Button variant='header'>
+        <SignOut className='text-gray-100' size={30} />
         Logout
       </Button>
-
     </header>
   )
 }

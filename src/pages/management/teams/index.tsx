@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from "react"
-import { Button } from "../../../components/button"
-import { teamData } from "../../../assets/team-data"
-import { DotsThreeVertical } from "@phosphor-icons/react"
+import { useState, useEffect, useRef } from 'react'
+import { Button } from '../../../components/button'
+import { teamData } from '../../../assets/team-data'
+import { DotsThreeVertical } from '@phosphor-icons/react'
 
 export function TeamsManagement() {
   const columns = [
-    teamData.filter((row) => row.team === "1"),
-    teamData.filter((row) => row.team === "2"),
-    teamData.filter((row) => row.team === "3"),
-    teamData.filter((row) => row.team === "advertiser"),
+    teamData.filter((row) => row.team === '1'),
+    teamData.filter((row) => row.team === '2'),
+    teamData.filter((row) => row.team === '3'),
+    teamData.filter((row) => row.team === 'advertiser'),
   ]
 
   // Gerenciar o estado para saber qual menu suspenso está aberto
@@ -43,72 +43,72 @@ export function TeamsManagement() {
   }
 
   useEffect(() => {
-    document.addEventListener("click", handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
     return () => {
-      document.removeEventListener("click", handleClickOutside)
+      document.removeEventListener('click', handleClickOutside)
     }
   }, [])
 
   return (
     <div
-      className="bg-zinc-700 text-gray-100 absolute inset-0 flex flex-col
-      rounded-xl shadow-2xl m-8 overflow-y-auto scrollbar-thin"
+      className='bg-zinc-700 text-gray-100 absolute inset-0 flex flex-col
+      rounded-xl shadow-2xl m-8 overflow-y-auto scrollbar-thin'
     >
-      <div className="m-4 flex gap-2 items-center">
+      <div className='m-4 flex gap-2 items-center'>
         Add Player:
         <input
-          className="rounded-md text-zinc-700 pl-2"
-          placeholder="Player"
-          type="text"
+          className='rounded-md text-zinc-700 pl-2'
+          placeholder='Player'
+          type='text'
         />
         <input
-          className="rounded-md text-zinc-700 pl-2"
-          placeholder="Discord"
-          type="text"
+          className='rounded-md text-zinc-700 pl-2'
+          placeholder='Discord'
+          type='text'
         />
-        <select className="rounded-md text-zinc-700 pl-2 p-0.5" name="select">
-          <option value="team1">Team 1</option>
-          <option value="team2">Team 2</option>
-          <option value="team3">Team 3</option>
-          <option value="advertiser">Advertiser</option>
+        <select className='rounded-md text-zinc-700 pl-2 p-0.5' name='select'>
+          <option value='team1'>Team 1</option>
+          <option value='team2'>Team 2</option>
+          <option value='team3'>Team 3</option>
+          <option value='advertiser'>Advertiser</option>
         </select>
-        <Button variant="submit" size="reset">
+        <Button variant='submit' size='reset'>
           ADD
         </Button>
       </div>
 
-      <table className="min-w-full border-collapse">
-        <thead className="table-header-group">
-          <tr className="text-md bg-zinc-400 text-gray-700">
-            <th className="p-2 border border-r-black" colSpan={3}>
+      <table className='min-w-full border-collapse'>
+        <thead className='table-header-group'>
+          <tr className='text-md bg-zinc-400 text-gray-700'>
+            <th className='p-2 border border-r-black' colSpan={3}>
               Team 1
             </th>
-            <th className="p-2 border border-r-black" colSpan={3}>
+            <th className='p-2 border border-r-black' colSpan={3}>
               Team 2
             </th>
-            <th className="p-2 border" colSpan={3}>
+            <th className='p-2 border' colSpan={3}>
               Team 3
             </th>
-            <th className="p-2 border" colSpan={3}>
+            <th className='p-2 border' colSpan={3}>
               Advertisers
             </th>
           </tr>
-          <tr className="text-md bg-zinc-300 text-gray-800">
-            <th className="p-2 border w-1/12">Player</th>
-            <th className="p-2 border w-1/12">Discord</th>
-            <th className="p-2 border border-r-black w-1/12">Actions</th>
-            <th className="p-2 border w-1/12">Player</th>
-            <th className="p-2 border w-1/12">Discord</th>
-            <th className="p-2 border border-r-black w-1/12">Actions</th>
-            <th className="p-2 border w-1/12">Player</th>
-            <th className="p-2 border w-1/12">Discord</th>
-            <th className="p-2 border border-r-black w-1/12">Actions</th>
-            <th className="p-2 border w-1/12">Player</th>
-            <th className="p-2 border w-1/12">Discord</th>
-            <th className="p-2 border w-1/12">Actions</th>
+          <tr className='text-md bg-zinc-300 text-gray-800'>
+            <th className='p-2 border w-1/12'>Player</th>
+            <th className='p-2 border w-1/12'>Discord</th>
+            <th className='p-2 border border-r-black w-1/12'>Actions</th>
+            <th className='p-2 border w-1/12'>Player</th>
+            <th className='p-2 border w-1/12'>Discord</th>
+            <th className='p-2 border border-r-black w-1/12'>Actions</th>
+            <th className='p-2 border w-1/12'>Player</th>
+            <th className='p-2 border w-1/12'>Discord</th>
+            <th className='p-2 border border-r-black w-1/12'>Actions</th>
+            <th className='p-2 border w-1/12'>Player</th>
+            <th className='p-2 border w-1/12'>Discord</th>
+            <th className='p-2 border w-1/12'>Actions</th>
           </tr>
         </thead>
-        <tbody className="table-row-group text-sm font-medium text-zinc-900 bg-zinc-200">
+        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
           {Array.from(
             {
               length: Math.max(
@@ -119,7 +119,7 @@ export function TeamsManagement() {
             (_, rowIndex) => (
               <tr
                 className={`text-center ${
-                  rowIndex % 2 === 0 ? "bg-white" : "bg-zinc-200"
+                  rowIndex % 2 === 0 ? 'bg-white' : 'bg-zinc-200'
                 }`}
                 key={`row-${rowIndex}`}
               >
@@ -127,38 +127,38 @@ export function TeamsManagement() {
                   teamData[rowIndex] ? (
                     <>
                       <td
-                        className="p-2 border border-b-black"
+                        className='p-2 border border-b-black'
                         key={`player-${teamIndex}-${rowIndex}`}
                       >
                         {teamData[rowIndex].player}
                       </td>
                       <td
-                        className="p-2 border border-b-black"
+                        className='p-2 border border-b-black'
                         key={`discord-${teamIndex}-${rowIndex}`}
                       >
                         {teamData[rowIndex].discord}
                       </td>
                       <td
-                        className="relative p-2 border border-b-black border-r-black"
+                        className='relative p-2 border border-b-black border-r-black'
                         key={`actions-${teamIndex}-${rowIndex}`}
                       >
                         <button
-                          className="text-white px-2 py-1 rounded cursor-pointer relative z-10"
+                          className='text-white px-2 py-1 rounded cursor-pointer relative z-10'
                           onClick={(e) => {
                             e.stopPropagation()
                             toggleMenu(teamIndex, rowIndex)
                           }}
                         >
-                          <DotsThreeVertical color="black" weight="bold" />
+                          <DotsThreeVertical color='black' weight='bold' />
                         </button>
                         {openMenu?.teamIndex === teamIndex &&
                           openMenu?.rowIndex === rowIndex && (
                             <div
-                              className="absolute right-0 mt-2 bg-white border shadow-lg rounded-lg w-32 z-50"
+                              className='absolute right-0 mt-2 bg-white border shadow-lg rounded-lg w-32 z-50'
                               ref={menuRef}
                             >
                               <button
-                                className="block px-3 py-2 text-sm hover:bg-gray-200 w-full"
+                                className='block px-3 py-2 text-sm hover:bg-gray-200 w-full'
                                 onClick={() =>
                                   handleEdit(
                                     teamData[rowIndex].player,
@@ -169,7 +169,7 @@ export function TeamsManagement() {
                                 Edit
                               </button>
                               <button
-                                className="block px-3 py-2 text-sm hover:bg-gray-200 w-full"
+                                className='block px-3 py-2 text-sm hover:bg-gray-200 w-full'
                                 onClick={() =>
                                   handleDelete(
                                     teamData[rowIndex].player,
@@ -186,19 +186,19 @@ export function TeamsManagement() {
                   ) : (
                     <>
                       <td
-                        className="p-2 border border-b-black"
+                        className='p-2 border border-b-black'
                         key={`empty-player-${teamIndex}-${rowIndex}`}
                       >
                         -
                       </td>
                       <td
-                        className="p-2 border border-b-black"
+                        className='p-2 border border-b-black'
                         key={`empty-discord-${teamIndex}-${rowIndex}`}
                       >
                         -
                       </td>
                       <td
-                        className="p-2 border border-b-black"
+                        className='p-2 border border-b-black'
                         key={`empty-actions-${teamIndex}-${rowIndex}`}
                       >
                         -

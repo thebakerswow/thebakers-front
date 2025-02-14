@@ -1,4 +1,4 @@
-import React, { useRef } from "react"
+import React, { useRef } from 'react'
 
 interface ModalProps {
   onClose: () => void
@@ -16,12 +16,12 @@ export const Modal = ({ onClose, children }: ModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+      className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
       onClick={handleClickOutside}
     >
       <div
         ref={modalRef}
-        className="bg-zinc-200 flex text-black p-4 rounded-md shadow-lg relative"
+        className='bg-zinc-200 flex text-black p-4 rounded-md shadow-lg relative'
         onClick={(e) => e.stopPropagation()}
       >
         <div>{children}</div>

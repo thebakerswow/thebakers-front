@@ -1,10 +1,10 @@
-import { CaretLeft, CaretRight, Megaphone, Eye } from "@phosphor-icons/react"
-import { Button } from "../../../components/button"
-import { format, parseISO } from "date-fns"
-import { useState, useMemo } from "react"
-import { Modal } from "../../../components/modal"
-import { BuyersDataGrid } from "./run/buyers-data-grid"
-import { buyersData } from "../../../assets/buyers-data" // Importe os dados mockados
+import { CaretLeft, CaretRight, Megaphone, Eye } from '@phosphor-icons/react'
+import { Button } from '../../../components/button'
+import { format, parseISO } from 'date-fns'
+import { useState, useMemo } from 'react'
+import { Modal } from '../../../components/modal'
+import { BuyersDataGrid } from './run/buyers-data-grid'
+import { buyersData } from '../../../assets/buyers-data' // Importe os dados mockados
 
 interface RunsGridProps {
   data: Array<{
@@ -92,51 +92,51 @@ export function RunsDataGrid({
   const filledData = [...currentData]
   while (filledData.length < itemsPerPage) {
     filledData.push({
-      name: "",
-      raid: "",
-      status: "",
-      date: "",
-      time: "",
-      buyers: "",
-      difficulty: "",
-      loot: "",
-      team: "",
-      collector: "",
-      leader: "",
-      note: "",
+      name: '',
+      raid: '',
+      status: '',
+      date: '',
+      time: '',
+      buyers: '',
+      difficulty: '',
+      loot: '',
+      team: '',
+      collector: '',
+      leader: '',
+      note: '',
     })
   }
 
   return (
-    <div className="overflow-x-auto rounded-sm relative">
-      <table className="min-w-full border-collapse">
-        <thead className="table-header-group">
-          <tr className="text-md bg-zinc-400 text-gray-700 text-left">
-            <th className="p-2 border">Preview</th>
+    <div className='overflow-x-auto rounded-sm relative'>
+      <table className='min-w-full border-collapse'>
+        <thead className='table-header-group'>
+          <tr className='text-md bg-zinc-400 text-gray-700 text-left'>
+            <th className='p-2 border'>Preview</th>
             <th
-              className="p-2 border cursor-pointer"
+              className='p-2 border cursor-pointer'
               onClick={handleSortByDate}
             >
-              Date {isDateSortedAsc ? "▲" : "▼"}
+              Date {isDateSortedAsc ? '▲' : '▼'}
             </th>
-            <th className="p-2 border">Time</th>
-            <th className="p-2 border">Raid</th>
-            <th className="p-2 border">Run Type</th>
-            <th className="p-2 border">Difficulty</th>
-            <th className="p-2 border">Buyers</th>
-            <th className="p-2 border">Leader</th>
-            <th className="p-2 border">Gold Collector</th>
-            <th className="p-2 border">Status</th>
-            <th className="p-2 border"></th>
+            <th className='p-2 border'>Time</th>
+            <th className='p-2 border'>Raid</th>
+            <th className='p-2 border'>Run Type</th>
+            <th className='p-2 border'>Difficulty</th>
+            <th className='p-2 border'>Buyers</th>
+            <th className='p-2 border'>Leader</th>
+            <th className='p-2 border'>Gold Collector</th>
+            <th className='p-2 border'>Status</th>
+            <th className='p-2 border'></th>
           </tr>
         </thead>
-        <tbody className="table-row-group text-sm font-medium text-zinc-900 bg-zinc-200">
+        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
           {filledData.map((row, index) => (
-            <tr key={index} className="border border-gray-300 ">
-              <td className="p-2 flex justify-center">
+            <tr key={index} className='border border-gray-300 '>
+              <td className='p-2 flex justify-center'>
                 {row.date ? (
                   <Eye
-                    className="cursor-pointer"
+                    className='cursor-pointer'
                     size={20}
                     onClick={() => handleOpenPreview()}
                   />
@@ -144,26 +144,26 @@ export function RunsDataGrid({
                   <span>-</span>
                 )}
               </td>
-              <td className="p-2">
+              <td className='p-2'>
                 {row.date ? (
-                  format(parseISO(row.date), "EEEE LL/dd")
+                  format(parseISO(row.date), 'EEEE LL/dd')
                 ) : (
                   <span>-</span>
                 )}
               </td>
-              <td className="p-2">{row.time || <span>-</span>}</td>
-              <td className="p-2">{row.raid || <span>-</span>}</td>
-              <td className="p-2">{row.loot || <span>-</span>}</td>
-              <td className="p-2">{row.difficulty || <span>-</span>}</td>
-              <td className="p-2">{row.buyers || <span>-</span>}</td>
-              <td className="p-2">{row.leader || <span>-</span>}</td>
-              <td className="p-2">{row.collector || <span>-</span>}</td>
-              <td className="p-2">{row.status || <span>-</span>}</td>
-              <td className="p-2 flex justify-center">
-                {row.time && row.note !== "" ? (
+              <td className='p-2'>{row.time || <span>-</span>}</td>
+              <td className='p-2'>{row.raid || <span>-</span>}</td>
+              <td className='p-2'>{row.loot || <span>-</span>}</td>
+              <td className='p-2'>{row.difficulty || <span>-</span>}</td>
+              <td className='p-2'>{row.buyers || <span>-</span>}</td>
+              <td className='p-2'>{row.leader || <span>-</span>}</td>
+              <td className='p-2'>{row.collector || <span>-</span>}</td>
+              <td className='p-2'>{row.status || <span>-</span>}</td>
+              <td className='p-2 flex justify-center'>
+                {row.time && row.note !== '' ? (
                   <Megaphone
-                    className="text-red-500"
-                    weight="fill"
+                    className='text-red-500'
+                    weight='fill'
                     onClick={() => handleOpenNote(row)}
                   />
                 ) : (
@@ -174,40 +174,40 @@ export function RunsDataGrid({
           ))}
         </tbody>
       </table>
-      <div className="flex justify-end gap-4 items-center mt-4 text-gray-100">
+      <div className='flex justify-end gap-4 items-center mt-4 text-gray-100'>
         <Button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
-          variant="pagination"
-          size="pagination"
+          variant='pagination'
+          size='pagination'
         >
-          <CaretLeft weight="bold" />
+          <CaretLeft weight='bold' />
         </Button>
-        <span className="text-sm">
+        <span className='text-sm'>
           Page {currentPage} of {totalPages}
         </span>
         <Button
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
-          variant="pagination"
-          size="pagination"
+          variant='pagination'
+          size='pagination'
         >
-          <CaretRight weight="bold" />
+          <CaretRight weight='bold' />
         </Button>
       </div>
 
       {isNoteOpen && selectedRow && (
         <Modal onClose={handleCloseNote}>
-          <div className="p-4">
+          <div className='p-4'>
             <h2>Nota</h2>
-            <p>{selectedRow.note || "Sem nota"}</p>
+            <p>{selectedRow.note || 'Sem nota'}</p>
           </div>
         </Modal>
       )}
 
       {isPreviewOpen && (
         <Modal onClose={handleClosePreview}>
-          <div className="w-full max-w-[95vw] h-[500px] overflow-y-auto overflow-x-hidden">
+          <div className='w-full max-w-[95vw] h-[500px] overflow-y-auto overflow-x-hidden'>
             <BuyersDataGrid data={buyersData} />
           </div>
         </Modal>

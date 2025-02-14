@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react"
-import DatePicker from "react-datepicker"
-import "react-datepicker/dist/react-datepicker.css"
+import { useState, useCallback } from 'react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import {
   format,
   eachDayOfInterval,
@@ -9,8 +9,8 @@ import {
   endOfWeek,
   isSameMonth,
   startOfWeek,
-} from "date-fns"
-import { Button } from "../../../components/button"
+} from 'date-fns'
+import { Button } from '../../../components/button'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
@@ -34,7 +34,9 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
       const firstDayOfMonth = new Date(year, month, 1)
       const lastDayOfMonth = new Date(year, month + 1, 0)
       const tempWeeks = []
-      let currentStartOfWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 })
+      let currentStartOfWeek = startOfWeek(firstDayOfMonth, {
+        weekStartsOn: 0,
+      })
 
       if (!isSameMonth(currentStartOfWeek, firstDayOfMonth)) {
         currentStartOfWeek = firstDayOfMonth
@@ -117,23 +119,23 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
   }
 
   return (
-    <div className="flex flex-col text-lg pt-6 items-center gap-4">
-      <label className=" flex flex-col pl-16">
+    <div className='flex flex-col text-lg pt-6 items-center gap-4'>
+      <label className=' flex flex-col pl-16'>
         <p>Select Month:</p>
-        <div className="flex items-center gap-4">
+        <div className='flex items-center gap-4'>
           <DatePicker
             selected={selectedMonth}
             onChange={handleMonthChange}
-            dateFormat="MM/yyyy"
+            dateFormat='MM/yyyy'
             showMonthYearPicker
-            className="text-zinc-900 pl-2 font-normal p-1 rounded-md flex-1 w-56"
-            placeholderText="Month"
+            className='text-zinc-900 pl-2 font-normal p-1 rounded-md flex-1 w-56'
+            placeholderText='Month'
             open={isCalendarOpen}
             onClickOutside={() => setIsCalendarOpen(false)}
             onSelect={() => setIsCalendarOpen(false)}
             onFocus={() => setIsCalendarOpen(true)}
           />
-          <Button onClick={handleFilterReset} variant="submit" size="reset">
+          <Button onClick={handleFilterReset} variant='submit' size='reset'>
             Reset
           </Button>
         </div>
@@ -141,17 +143,17 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
 
       {weeks.length > 0 && (
         <div>
-          <label className="flex flex-col mr-2">
+          <label className='flex flex-col mr-2'>
             Select Week:
             <select
-              className="text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md"
+              className='text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md'
               onChange={(e) => handleWeekSelect(Number(e.target.value))}
               value={selectedWeekIndex} // Atualiza o valor selecionado
             >
               {weeks.map((week, index) => (
                 <option key={index} value={index}>
-                  Week {index + 1} ({format(week.start, "MM/dd")} -{" "}
-                  {format(week.end, "MM/dd")})
+                  Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
+                  {format(week.end, 'MM/dd')})
                 </option>
               ))}
             </select>
@@ -160,22 +162,22 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
       )}
 
       {days.length > 0 && (
-        <div className="">
-          <p className="pl-2">Select Day:</p>
+        <div className=''>
+          <p className='pl-2'>Select Day:</p>
           <div>
             {days.map((day) => (
               <button
                 className={`${
                   selectedDay &&
-                  format(day, "yyyy-MM-dd") ===
-                    format(selectedDay, "yyyy-MM-dd")
-                    ? "bg-zinc-500 text-gray-100 font-medium border border-gray-100"
-                    : "bg-zinc-100 text-zinc-900"
+                  format(day, 'yyyy-MM-dd') ===
+                    format(selectedDay, 'yyyy-MM-dd')
+                    ? 'bg-zinc-500 text-gray-100 font-medium border border-gray-100'
+                    : 'bg-zinc-100 text-zinc-900'
                 } gap-2 border-gray-100 m-2 p-2 rounded-md text-sm`}
                 key={day.toISOString()}
                 onClick={() => handleDaySelect(day)}
               >
-                {format(day, "EEEE, dd MMM")}
+                {format(day, 'EEEE, dd MMM')}
               </button>
             ))}
           </div>
