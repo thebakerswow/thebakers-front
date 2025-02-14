@@ -14,10 +14,10 @@ export function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem('jwt')
     if (!token) return
-
+    console.log('chegou')
     try {
       const decoded = jwtDecode<DiscordTokenPayload>(token)
-
+      console.log(decoded)
       setUsername(decoded.username)
     } catch (error) {
       console.error('Erro ao decodificar o token:', error)
@@ -29,6 +29,7 @@ export function HomePage() {
       <div>
         Welcome to TheBakers <span className='text-red-700 font-bold'>Hub</span>
       </div>
+
       {username && (
         <div className='text-2xl mt-4'>
           Olá, <span className='text-red-500'>{username}</span>!

@@ -14,17 +14,21 @@ import {
 import { Button } from './button'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../context/auth-context' // Para utilizar o contexto de autenticação
 
-type HeaderProps = {
-  variant?: 'default' | 'login'
-}
-
-export function Header({ variant = 'default' }: HeaderProps) {
+export function Header() {
   const navigate = useNavigate()
+  const { logout, isAuthenticated } = useAuth() // Acessa a função de logout e a autenticação do contexto
   const [isHoveringNA, setIsHoveringNA] = useState(false)
   const [isHoveringManagement, setIsHoveringManagement] = useState(false)
 
-  if (variant === 'login') {
+  const handleLogout = () => {
+    logout() // Chama a função de logout
+    navigate('/') // Redireciona para a página de login após o logout
+  }
+
+  // Exibe o header com os botões de menu apenas se o usuário estiver autenticado
+  if (!isAuthenticated) {
     return (
       <header className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative'>
         TheBakers <span className='text-red-700 '>Hub</span>
@@ -34,7 +38,7 @@ export function Header({ variant = 'default' }: HeaderProps) {
 
   return (
     <header className='h-[60px] bg-zinc-900 flex gap-40 items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
-      <Button onClick={() => navigate('/')} variant='home'>
+      <Button onClick={() => navigate('/home')} variant='home'>
         TheBakers <span className='text-red-700 '>Hub</span>
       </Button>
       <Button onClick={() => navigate('/balance')} variant='header'>
@@ -114,12 +118,7 @@ export function Header({ variant = 'default' }: HeaderProps) {
           </div>
         )}
       </div>
-      <div
-        onMouseEnter={() => setIsHoveringNA(true)}
-        onMouseLeave={() => setIsHoveringNA(false)}
-        className='relative'
-      ></div>
-      <Button variant='header'>
+      <Button onClick={handleLogout} variant='header'>
         <SignOut className='text-gray-100' size={30} />
         Logout
       </Button>
