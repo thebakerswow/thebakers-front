@@ -157,35 +157,16 @@ export function Attendance() {
   )
 
   const percentages = ['0%', '25%', '50%', '75%', '100%']
-  const columnHeaders = [
-    'R1',
-    'R2',
-    'R3',
-    'A1',
-    'A2',
-    'A3',
-    'R4',
-    'R5',
-    'R6',
-    'A4',
-    'A5',
-    'A6',
-    'R7',
-    'R8',
-    'R9',
-    'A7',
-    'A8',
-    'A9',
-  ]
+  const columnHeaders = ['R1', 'R2', 'R3', 'A1', 'A2', 'A3']
 
   const getColumnClass = (index: number) => {
-    if (index >= 0 && index <= 5) {
+    if (selectedTeam === 'team1') {
       return index % 2 === 0 ? 'bg-red-400' : 'bg-red-300'
     }
-    if (index >= 6 && index <= 11) {
+    if (selectedTeam === 'team2') {
       return index % 2 === 0 ? 'bg-blue-400' : 'bg-blue-300'
     }
-    if (index >= 12) {
+    if (selectedTeam === 'team3') {
       return index % 2 === 0 ? 'bg-green-400' : 'bg-green-300'
     }
   }
@@ -265,7 +246,7 @@ export function Attendance() {
                 }`}
                 key={`row-${rowIndex}`}
               >
-                <td className='p-2 border'>{row.player}</td>
+                <td className='p-2 border w-10'>{row.player}</td>
                 {columnHeaders.map((_, cellIndex) => (
                   <td
                     key={`cell-${rowIndex}-${cellIndex}`}

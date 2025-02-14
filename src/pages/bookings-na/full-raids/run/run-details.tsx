@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { RunInfo } from './run-info'
 import { BuyersDataGrid } from './buyers-data-grid'
-import { buyersData, RowData } from '../../../../assets/buyers-data'
+import { buyersData, BuyersData } from '../../../../assets/buyers-data'
 
 export function RunDetails() {
-  const [rows] = useState<RowData[]>(buyersData)
+  const [rows] = useState<BuyersData[]>(buyersData)
 
   return (
     <div

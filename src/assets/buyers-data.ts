@@ -1,4 +1,4 @@
-export interface RowData {
+export interface BuyersData {
   status: string
   name: string
   faction: string
@@ -12,7 +12,7 @@ export interface RowData {
   actions: string
 }
 
-export const buyersData: RowData[] = [
+export const buyersData: BuyersData[] = [
   {
     status: '',
     name: 'Player1-Azralon',

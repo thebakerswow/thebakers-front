@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Megaphone, Pencil, Users, UserPlus } from '@phosphor-icons/react'
+import { Megaphone, Pencil, UserPlus } from '@phosphor-icons/react'
 import amirdrassilCover from '../../../../assets/amirdrassil.png'
 import { Modal } from '../../../../components/modal'
-import { bookingData, RowData } from '../../../../assets/booking-data'
+import { bookingData, RunData } from '../../../../assets/runs-data'
 
 export function RunInfo() {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
@@ -16,7 +16,7 @@ export function RunInfo() {
   }
 
   // Seleciona os dados da run (pode ser dinâmico no futuro)
-  const run: RowData = bookingData[0]
+  const run: RunData = bookingData[0]
 
   return (
     <div className='flex m-4 gap-4 rounded-md'>
@@ -28,7 +28,7 @@ export function RunInfo() {
       <div className='grid grid-cols-4 flex-1 text-center bg-gray-300 rounded-md text-zinc-900'>
         <div className='col-span-3'>
           <h1 className='font-semibold text-lg'>
-            {run.name} - {run.date} @ {run.time}
+            {run.raid} {run.difficulty} @ {run.time}
           </h1>
           <div className='grid grid-cols-3 gap-4 mt-4 text-start ml-24'>
             <p>
@@ -48,18 +48,18 @@ export function RunInfo() {
               {run.buyers}
             </p>
             <p>
-              <span className='font-bold text-base'>
-                Slots Available:{' '}
-              </span>{' '}
+              <span className='font-bold text-base'>Slots Available: </span>
+              {run.slotsAvailable}
             </p>
             <p>
-              <span className='font-bold text-base'>Backups: </span>{' '}
+              <span className='font-bold text-base'>Backups: </span>
+              {run.backups}
             </p>
             <p>
               <span className='font-bold text-base'>Leader: </span> {run.leader}
             </p>
             <p>
-              <span className='font-bold text-base'>Gold Collector: </span>{' '}
+              <span className='font-bold text-base'>Gold Collector: </span>
               {run.collector}
             </p>
             <p className='text-yellow-500 font-semibold'>
@@ -69,10 +69,12 @@ export function RunInfo() {
               {run.status}
             </p>
             <p>
-              <span className='font-bold text-base'>Potential Pot: </span>{' '}
+              <span className='font-bold text-base'>Potential Pot: </span>
+              {run.potentialPot}
             </p>
             <p>
               <span className='font-bold text-base'>Actual Pot: </span>{' '}
+              {run.actualPot}
             </p>
           </div>
         </div>
@@ -87,10 +89,6 @@ export function RunInfo() {
           <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'>
             <Pencil size={18} />
             Edit Raid
-          </button>
-          <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'>
-            <Users size={18} />
-            Change Slots
           </button>
           <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'>
             <Megaphone size={18} />

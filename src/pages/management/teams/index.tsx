@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { Button } from '../../../components/button'
 import { teamData } from '../../../assets/team-data'
 import { DotsThreeVertical } from '@phosphor-icons/react'
 
@@ -72,9 +71,9 @@ export function TeamsManagement() {
           <option value='team3'>Team 3</option>
           <option value='advertiser'>Advertiser</option>
         </select>
-        <Button variant='submit' size='reset'>
+        <button className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-1 text-sm font-normal px-2'>
           ADD
-        </Button>
+        </button>
       </div>
 
       <table className='min-w-full border-collapse'>

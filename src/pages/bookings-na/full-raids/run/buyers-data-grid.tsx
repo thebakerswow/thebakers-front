@@ -15,7 +15,7 @@ import Warlock from '../../../../assets/class_icons/warlock.png'
 import Warrior from '../../../../assets/class_icons/warrior.png'
 
 interface BuyerData {
-  status: string // Assegure-se de que esta propriedade esteja sempre como string
+  status: string
   name: string
   faction: string
   class: string
@@ -61,8 +61,7 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
 
   const handleStatusChange = (index: number, newStatus: string) => {
     const updatedData = [...sortedData]
-    updatedData[index].status = newStatus || '' // Usa string vazia se newStatus for undefined ou null
-    // Reordena os dados após a atualização do status
+    updatedData[index].status = newStatus || ''
     const orderData = updatedData.sort((a, b) => {
       const priorityA = statusPriorities[a.status] || 99
       const priorityB = statusPriorities[b.status] || 99
@@ -100,11 +99,11 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
       case 'Evoker':
         return Evoker
       default:
-        return '' // Retorna uma string vazia se a classe não for reconhecida
+        return ''
     }
   }
 
-  function getRowColor(status: string): string {
+  function getBuyerColor(status: string): string {
     switch (status) {
       case 'waiting':
         return 'bg-yellow-200'
@@ -132,7 +131,7 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
           <UserPlus size={18} />
           Invite Buyers
         </button>
-        <div className=' gap-2 flex p-2 mb-2 rounded-md bg-zinc-200 text-gray-700'>
+        <div className='gap-2 flex p-2 mb-2 rounded-md bg-zinc-200 text-gray-700'>
           <span className=''>Waiting: {waitingCount}</span>
           <span className=''>Group: {groupCount}</span>
         </div>
@@ -154,18 +153,17 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
-          {sortedData.map((row, index) => (
+          {sortedData.map((buyer, index) => (
             <tr
               key={index}
-              className={`border border-gray-300 ${getRowColor(row.status)}`}
+              className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
             >
-              <td className='p-2 text-center'>{index + 1}</td>{' '}
-              {/* Gera slots automaticamente com base no índice */}
+              <td className='p-2 text-center'>{index + 1}</td>
               <td className='p-2'>
                 <form action=''>
                   <select
                     className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                    value={row.status || ''} // Use uma string vazia como valor padrão
+                    value={buyer.status || ''}
                     onChange={(e) => handleStatusChange(index, e.target.value)}
                   >
                     <option value='' disabled hidden>
@@ -180,27 +178,27 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
                   </select>
                 </form>
               </td>
-              <td className='p-2 text-center'>{row.name}</td>
-              <td className='p-2 text-center'>{row.faction}</td>
+              <td className='p-2 text-center'>{buyer.name}</td>
+              <td className='p-2 text-center'>{buyer.faction}</td>
               <td className='p-2 flex gap-2 justify-center'>
-                {row.class}
-                {getClassImage(row.class) ? (
+                {buyer.class}
+                {getClassImage(buyer.class) ? (
                   <img
-                    src={getClassImage(row.class)}
-                    alt={row.class}
+                    src={getClassImage(buyer.class)}
+                    alt={buyer.class}
                     className='w-6 h-6'
                   />
                 ) : (
                   <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
-                    ? {/* Placeholder para imagem não encontrada */}
+                    ?
                   </div>
                 )}
               </td>
-              <td className='p-2 text-center'>{row.advertiser}</td>
-              <td className='p-2 text-center'>{row.collectedBy}</td>
+              <td className='p-2 text-center'>{buyer.advertiser}</td>
+              <td className='p-2 text-center'>{buyer.collectedBy}</td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
-                  {row.paidFull === 'check' ? (
+                  {buyer.paidFull === 'check' ? (
                     <CheckFat
                       className='text-green-500 border bg-white rounded-xl'
                       size={22}
@@ -215,8 +213,8 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
                   )}
                 </div>
               </td>
-              <td className='p-2 text-center'>{row.note}</td>
-              <td className='p-2 text-center'>{row.actions}</td>
+              <td className='p-2 text-center'>{buyer.note}</td>
+              <td className='p-2 text-center'>{buyer.actions}</td>
             </tr>
           ))}
         </tbody>

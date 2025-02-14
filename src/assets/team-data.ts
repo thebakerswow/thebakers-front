@@ -1,4 +1,4 @@
-export interface RowData {
+export interface TeamData {
   player: string
   discord: string
   team: string
@@ -20,7 +20,7 @@ export interface RowData {
   sundayShop: string
 }
 
-export const teamData: RowData[] = [
+export const teamData: TeamData[] = [
   {
     player: 'Sivirino',
     discord: '@sivirino1',

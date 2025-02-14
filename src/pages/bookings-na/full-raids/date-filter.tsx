@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+// DateFilter.tsx
+import { useState, useCallback, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
@@ -10,23 +11,20 @@ import {
   isSameMonth,
   startOfWeek,
 } from 'date-fns'
-import { Button } from '../../../components/button'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
-  onReset: () => void
 }
 
-export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
+export function DateFilter({ onDaySelect }: DateFilterProps) {
   const currentMonth = new Date()
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(currentMonth)
   const [weeks, setWeeks] = useState<{ start: Date; end: Date }[]>([])
   const [days, setDays] = useState<Date[]>([])
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0) // Adicionado para controle da semana selecionada
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
-  // Função para definir semanas e dias com base no mês selecionado
   const setWeeksAndDays = useCallback(
     (date: Date) => {
       const year = date.getFullYear()
@@ -34,9 +32,7 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
       const firstDayOfMonth = new Date(year, month, 1)
       const lastDayOfMonth = new Date(year, month + 1, 0)
       const tempWeeks = []
-      let currentStartOfWeek = startOfWeek(firstDayOfMonth, {
-        weekStartsOn: 0,
-      })
+      let currentStartOfWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 })
 
       if (!isSameMonth(currentStartOfWeek, firstDayOfMonth)) {
         currentStartOfWeek = firstDayOfMonth
@@ -55,25 +51,58 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
       }
       setWeeks(tempWeeks)
 
-      // Exibe todos os dias da primeira semana
-      const firstWeekDays = eachDayOfInterval({
-        start: tempWeeks[0].start,
-        end: tempWeeks[0].end,
-      })
-      setDays(firstWeekDays)
-      setSelectedDay(null)
-      onDaySelect(null)
+      // Encontrar a semana que contém a data atual
+      const today = new Date()
+      let targetWeekIndex = 0
+      if (
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear()
+      ) {
+        const todayWeekIndex = tempWeeks.findIndex(
+          (week) => today >= week.start && today <= week.end
+        )
+        if (todayWeekIndex !== -1) {
+          targetWeekIndex = todayWeekIndex
+        }
+      }
 
-      // Configura a semana selecionada para a primeira semana
-      setSelectedWeekIndex(0)
+      const targetWeek = tempWeeks[targetWeekIndex]
+      const daysInWeek = eachDayOfInterval({
+        start: targetWeek.start,
+        end: targetWeek.end,
+      })
+      setDays(daysInWeek)
+      setSelectedWeekIndex(targetWeekIndex)
+
+      // Selecionar o dia atual se estiver no mês
+      if (
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear()
+      ) {
+        const todayFormatted = format(today, 'yyyy-MM-dd')
+        const todayInDays = daysInWeek.find(
+          (day) => format(day, 'yyyy-MM-dd') === todayFormatted
+        )
+        if (todayInDays) {
+          setSelectedDay(today)
+          onDaySelect(today)
+        } else {
+          setSelectedDay(null)
+          onDaySelect(null)
+        }
+      } else {
+        setSelectedDay(null)
+        onDaySelect(null)
+      }
     },
     [onDaySelect]
   )
 
-  // Configuração inicial da data e semanas
-  if (selectedMonth && weeks.length === 0) {
-    setWeeksAndDays(selectedMonth)
-  }
+  useEffect(() => {
+    if (selectedMonth && weeks.length === 0) {
+      setWeeksAndDays(selectedMonth)
+    }
+  }, [selectedMonth, weeks, setWeeksAndDays])
 
   const handleMonthChange = useCallback(
     (date: Date | null) => {
@@ -87,16 +116,12 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
   )
 
   function handleWeekSelect(weekIndex: number) {
-    if (weekIndex < 0 || weekIndex >= weeks.length) {
-      return
-    }
+    if (weekIndex < 0 || weekIndex >= weeks.length) return
     const { start, end } = weeks[weekIndex]
     const daysInWeek = eachDayOfInterval({ start, end })
     setDays(daysInWeek)
     setSelectedDay(null)
     onDaySelect(null)
-
-    // Atualiza o índice da semana selecionada
     setSelectedWeekIndex(weekIndex)
   }
 
@@ -108,14 +133,7 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
   function handleFilterReset() {
     const newMonth = new Date()
     setSelectedMonth(newMonth)
-
-    // Atualiza as semanas e dias para o novo mês
     setWeeksAndDays(newMonth)
-
-    // Reseta o dia selecionado e chama a função de reset
-    setSelectedDay(null)
-    setSelectedWeekIndex(0) // Define a seleção da semana para a primeira semana
-    onReset()
   }
 
   return (
@@ -135,9 +153,12 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
             onSelect={() => setIsCalendarOpen(false)}
             onFocus={() => setIsCalendarOpen(true)}
           />
-          <Button onClick={handleFilterReset} variant='submit' size='reset'>
+          <button
+            onClick={handleFilterReset}
+            className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-1 text-sm font-normal px-2'
+          >
             Reset
-          </Button>
+          </button>
         </div>
       </label>
 
@@ -148,7 +169,7 @@ export function DateFilter({ onDaySelect, onReset }: DateFilterProps) {
             <select
               className='text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md'
               onChange={(e) => handleWeekSelect(Number(e.target.value))}
-              value={selectedWeekIndex} // Atualiza o valor selecionado
+              value={selectedWeekIndex}
             >
               {weeks.map((week, index) => (
                 <option key={index} value={index}>

@@ -10,9 +10,6 @@ import { Balance } from './pages/balance'
 import { TeamsManagement } from './pages/management/teams'
 import { Attendance } from './pages/management/attendance'
 import { FullRaidsNa } from './pages/bookings-na/full-raids'
-import { CurvesNa } from './pages/bookings-na/curves'
-import { MythicRaidsNa } from './pages/bookings-na/mythic-raids'
-import { LegacyNa } from './pages/bookings-na/legacy'
 import { RunDetails } from './pages/bookings-na/full-raids/run/run-details'
 import { Login } from './pages/login'
 import { AuthCallback } from './pages/callback'
@@ -49,7 +46,6 @@ export function App() {
                 <Route path='/' element={<Login />} />
                 <Route path='/login/callback' element={<AuthCallback />} />
                 <Route path='/not-allowed' element={<NotAllowed />} />
-
                 {/* Rotas privadas - exigem autenticação */}
                 <Route
                   path='*'
@@ -74,18 +70,6 @@ export function App() {
                 <Route
                   path='/full-raids-na'
                   element={<PrivateRoute element={<FullRaidsNa />} />}
-                />
-                <Route
-                  path='/curves-na'
-                  element={<PrivateRoute element={<CurvesNa />} />}
-                />
-                <Route
-                  path='/mythic-raids-na'
-                  element={<PrivateRoute element={<MythicRaidsNa />} />}
-                />
-                <Route
-                  path='/legacy-na'
-                  element={<PrivateRoute element={<LegacyNa />} />}
                 />
                 <Route
                   path='/full-raids-na/run/'

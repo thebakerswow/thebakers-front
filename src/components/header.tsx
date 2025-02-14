@@ -5,13 +5,10 @@ import {
   CaretUp,
   CaretDown,
   CastleTurret,
-  Church,
-  Hourglass,
   SignOut,
   UsersFour,
   CheckCircle,
 } from '@phosphor-icons/react'
-import { Button } from './button'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/auth-context' // Para utilizar o contexto de autenticação
@@ -41,20 +38,23 @@ export function Header() {
 
   return (
     <header className='h-[60px] bg-zinc-900 flex gap-40 justify-evenly items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
-      <Button onClick={() => navigate('/home')} variant='home'>
+      <button className='text-3xl font-bold' onClick={() => navigate('/home')}>
         TheBakers <span className='text-red-700 '>Hub</span>
-      </Button>
-      <Button onClick={() => navigate('/balance')} variant='header'>
+      </button>
+      <button
+        className='text-gray-300 flex gap-4 text-lg font-semibold'
+        onClick={() => navigate('/balance')}
+      >
         <Coins className='text-gray-100' size={30} />
         Balance
-      </Button>
+      </button>
 
       <div
         onMouseEnter={() => setIsHoveringManagement(true)}
         onMouseLeave={() => setIsHoveringManagement(false)}
         className='relative'
       >
-        <Button variant='header'>
+        <button className='text-gray-300 flex gap-4 text-lg font-semibold'>
           <Briefcase className='text-gray-100' size={30} />
           Management
           {isHoveringManagement ? (
@@ -62,22 +62,24 @@ export function Header() {
           ) : (
             <CaretDown className='text-red-400' size={20} />
           )}
-        </Button>
-
+        </button>
         {/* Dropdown abaixo do header */}
         {isHoveringManagement && (
-          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl'>
-            <Button
+          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
+            <button
+              className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
               onClick={() => navigate('/management-teams')}
-              variant='header'
             >
               <UsersFour className='text-gray-100' size={30} />
               Teams
-            </Button>
-            <Button onClick={() => navigate('/freelancers')} variant='header'>
+            </button>
+            <button
+              className='text-gray-300 flex gap-4 text-lg font-semibold w-full items-center pl-5'
+              onClick={() => navigate('/freelancers')}
+            >
               <CheckCircle className='text-gray-100' size={30} />
               Attendance
-            </Button>
+            </button>
           </div>
         )}
       </div>
@@ -86,7 +88,7 @@ export function Header() {
         onMouseLeave={() => setIsHoveringNA(false)}
         className='relative'
       >
-        <Button variant='header'>
+        <button className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'>
           <CalendarBlank className='text-gray-100' size={30} />
           Bookings (NA)
           {isHoveringNA ? (
@@ -94,37 +96,28 @@ export function Header() {
           ) : (
             <CaretDown className='text-red-400' size={20} />
           )}
-        </Button>
+        </button>
 
         {/* Dropdown abaixo do header */}
         {isHoveringNA && (
-          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl'>
-            <Button onClick={() => navigate('/full-raids-na')} variant='header'>
+          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
+            <button
+              className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+              onClick={() => navigate('/full-raids-na')}
+            >
               <CastleTurret className='text-gray-100' size={30} />
               Full Raids
-            </Button>
-            <Button onClick={() => navigate('/curves-na')} variant='header'>
-              <Church className='text-gray-100' size={30} />
-              Curves
-            </Button>
-            <Button
-              onClick={() => navigate('/mythic-raids-na')}
-              variant='header'
-            >
-              <CastleTurret className='text-gray-100' size={30} weight='fill' />
-              Mythic Raids
-            </Button>
-            <Button onClick={() => navigate('/legacy-na')} variant='header'>
-              <Hourglass className='text-gray-100' size={30} />
-              Legacy
-            </Button>
+            </button>
           </div>
         )}
       </div>
-      <Button onClick={handleLogout} variant='header'>
+      <button
+        className='text-gray-300 flex gap-4 text-lg font-semibold'
+        onClick={handleLogout}
+      >
         <SignOut className='text-gray-100' size={30} />
         Logout
-      </Button>
+      </button>
     </header>
   )
 }

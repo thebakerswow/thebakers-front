@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
-import { bookingData, RowData } from '../../../assets/booking-data'
+import { bookingData, RowData } from '../../../assets/runs-data'
 import { format, parseISO } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { Modal } from '../../../components/modal'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RowData[]>(bookingData)
-  const [currentPage, setCurrentPage] = useState(1)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
 
   function handleOpenAddRun() {
@@ -28,17 +27,11 @@ export function FullRaidsNa() {
     } else {
       setRows(bookingData)
     }
-    setCurrentPage(1) // Redefine a página para 1
-  }
-
-  function onFilterReset() {
-    setRows(bookingData)
-    setCurrentPage(1) // Redefine a página para 1
   }
 
   return (
     <div className='bg-zinc-700 text-gray-100 w-full flex flex-col items-center justify-center font-semibold rounded-xl shadow-2xl m-8'>
-      <DateFilter onDaySelect={onDaySelect} onReset={onFilterReset} />
+      <DateFilter onDaySelect={onDaySelect} />
       <div className='container mx-auto mt-2 p-4'>
         <div className='flex items-center justify-between mb-2'>
           <button
@@ -53,11 +46,7 @@ export function FullRaidsNa() {
           </h1>
         </div>
 
-        <RunsDataGrid
-          data={rows}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-        />
+        <RunsDataGrid data={rows} />
         {isAddRunOpen && (
           <Modal onClose={handleCloseAddRun}>
             <div className='w-full max-w-[95vw] h-[450px] overflow-y-auto overflow-x-hidden flex flex-col'>
