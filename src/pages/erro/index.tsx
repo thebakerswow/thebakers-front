@@ -7,7 +7,7 @@ export function ErrorPage() {
       <p className='mt-4'>
         A página que você procurou não existe ou ocorreu um erro.
       </p>
-      <img src={erroImage} className='w-96 mt-4' alt='' />
+      <img src={erroImage} className='w-96 mt-4' />
     </div>
   )
 }

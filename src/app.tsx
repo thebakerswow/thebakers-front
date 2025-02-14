@@ -19,6 +19,7 @@ import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
 import { ErrorPage } from './pages/erro'
+import { NotAllowed } from './pages/not-allowed'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -29,7 +30,8 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to='/' /> // Redireciona para o login se não estiver autenticado
+    // Redireciona para a página de login caso não esteja autenticado
+    return <Navigate to='/' />
   }
 
   return element
@@ -46,9 +48,13 @@ export function App() {
               <Routes>
                 <Route path='/' element={<Login />} />
                 <Route path='/login/callback' element={<AuthCallback />} />
-                <Route path='/erro' element={<ErrorPage />} />
-                <Route path='*' element={<ErrorPage />} />
+                <Route path='/not-allowed' element={<NotAllowed />} />
+
                 {/* Rotas privadas - exigem autenticação */}
+                <Route
+                  path='*'
+                  element={<PrivateRoute element={<ErrorPage />} />}
+                />
                 <Route
                   path='/home'
                   element={<PrivateRoute element={<HomePage />} />}
