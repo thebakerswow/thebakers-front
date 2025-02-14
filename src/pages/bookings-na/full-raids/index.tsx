@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
-import { bookingData, RowData } from '../../../assets/runs-data'
+import { bookingData, RunData } from '../../../assets/runs-data'
 import { format, parseISO } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { Modal } from '../../../components/modal'
 
 export function FullRaidsNa() {
-  const [rows, setRows] = useState<RowData[]>(bookingData)
+  const [rows, setRows] = useState<RunData[]>(bookingData)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
 
   function handleOpenAddRun() {
