@@ -13,7 +13,7 @@ export function HomePage() {
   const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("discordToken");
+    const token = localStorage.getItem("jwt");
     if (!token) return;
 
     try {
