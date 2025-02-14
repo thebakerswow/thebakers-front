@@ -30,14 +30,17 @@ export function Header() {
   // Exibe o header com os botões de menu apenas se o usuário estiver autenticado
   if (!isAuthenticated) {
     return (
-      <header className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative'>
+      <header
+        className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 
+      shadow-bottom-strong z-10 relative'
+      >
         TheBakers <span className='text-red-700 '>Hub</span>
       </header>
     )
   }
 
   return (
-    <header className='h-[60px] bg-zinc-900 flex gap-40 items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
+    <header className='h-[60px] bg-zinc-900 flex gap-40 justify-evenly items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
       <Button onClick={() => navigate('/home')} variant='home'>
         TheBakers <span className='text-red-700 '>Hub</span>
       </Button>

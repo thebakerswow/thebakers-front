@@ -18,6 +18,7 @@ import { Login } from './pages/login'
 import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
+import { ErrorPage } from './pages/erro'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -45,6 +46,8 @@ export function App() {
               <Routes>
                 <Route path='/' element={<Login />} />
                 <Route path='/login/callback' element={<AuthCallback />} />
+                <Route path='/erro' element={<ErrorPage />} />
+                <Route path='*' element={<ErrorPage />} />
                 {/* Rotas privadas - exigem autenticação */}
                 <Route
                   path='/home'

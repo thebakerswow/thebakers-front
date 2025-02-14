@@ -14,7 +14,8 @@ export function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem('jwt')
     if (!token) return
-    console.log('chegou')
+    console.log(token)
+
     try {
       const decoded = jwtDecode<DiscordTokenPayload>(token)
       console.log(decoded)
