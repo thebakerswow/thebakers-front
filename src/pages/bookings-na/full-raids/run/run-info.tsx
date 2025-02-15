@@ -62,12 +62,6 @@ export function RunInfo() {
               <span className='font-bold text-base'>Gold Collector: </span>
               {run.collector}
             </p>
-            <p className='text-yellow-500 font-semibold'>
-              <span className='font-bold text-base text-zinc-900'>
-                Status:{' '}
-              </span>
-              {run.status}
-            </p>
             <p>
               <span className='font-bold text-base'>Potential Pot: </span>
               {run.potentialPot}

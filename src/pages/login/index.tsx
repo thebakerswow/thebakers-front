@@ -19,6 +19,12 @@ export function Login() {
       const response = await axios.post(
         import.meta.env.VITE_DISCORD_LOGIN_URL ||
           'http://localhost:8000/v1/login/discord'
+        // {},
+        // {
+        //   headers: {
+        //     APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+        //   },
+        // }
       )
 
       if (response.data.data) {
@@ -30,9 +36,9 @@ export function Login() {
   }
 
   return (
-    <div className='bg-zinc-700 text-gray-100 p-4 h-[300px] w-[800px] text-4xl flex flex-col gap-4 items-center justify-center font-semibold rounded-xl shadow-2xl mt-20'>
+    <div className='bg-zinc-700 text-gray-100 h-[400px] w-[800px] text-4xl flex flex-col gap-4 items-center justify-center font-semibold rounded-xl shadow-2xl mt-20'>
       <button
-        className='px-4 bg-red-600 rounded-md font-semibold hover:bg-red-500'
+        className='px-8 py-4 bg-red-500 rounded-md text-xl font-semibold hover:bg-red-600'
         onClick={handleLogin}
       >
         Login

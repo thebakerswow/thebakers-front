@@ -54,7 +54,7 @@ export function Header() {
         onMouseLeave={() => setIsHoveringManagement(false)}
         className='relative'
       >
-        <button className='text-gray-300 flex gap-4 text-lg font-semibold'>
+        <button className='text-gray-300 flex gap-4 text-lg font-semibold items-center'>
           <Briefcase className='text-gray-100' size={30} />
           Management
           {isHoveringManagement ? (

@@ -17,7 +17,6 @@ interface RunsGridProps {
     buyers: string
     leader: string
     collector: string
-    status: string
     note: string
   }>
 }
@@ -82,7 +81,6 @@ export function RunsDataGrid({ data }: RunsGridProps) {
             <th className='p-2 border'>Buyers</th>
             <th className='p-2 border w-[150px]'>Raid Leader</th>
             <th className='p-2 border w-[150px]'>Gold Collector</th>
-            <th className='p-2 border'>Status</th>
             <th className='p-2 border'></th>
           </tr>
         </thead>
@@ -118,7 +116,6 @@ export function RunsDataGrid({ data }: RunsGridProps) {
               <td className='p-2'>{run.buyers || <span>-</span>}</td>
               <td className='p-2'>{run.leader || <span>-</span>}</td>
               <td className='p-2'>{run.collector || <span>-</span>}</td>
-              <td className='p-2'>{run.status || <span>-</span>}</td>
               <td className='p-2 text-center align-middle'>
                 <div className='flex justify-center items-center h-full'>
                   {run.note !== '' ? (

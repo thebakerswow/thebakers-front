@@ -5,6 +5,7 @@ type DiscordTokenPayload = {
   username: string
   discriminator: string
   avatar: string
+  roles: string
   id: string
 }
 

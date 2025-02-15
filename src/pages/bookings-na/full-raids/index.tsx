@@ -4,7 +4,7 @@ import { DateFilter } from './date-filter'
 import { bookingData, RunData } from '../../../assets/runs-data'
 import { format, parseISO } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
-import { Modal } from '../../../components/modal'
+import { InputRun } from './input-run'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RunData[]>(bookingData)
@@ -47,81 +47,8 @@ export function FullRaidsNa() {
         </div>
 
         <RunsDataGrid data={rows} />
-        {isAddRunOpen && (
-          <Modal onClose={handleCloseAddRun}>
-            <div className='w-full max-w-[95vw] h-[450px] overflow-y-auto overflow-x-hidden flex flex-col'>
-              <form action='' className='grid grid-cols-2 gap-4'>
-                <input
-                  type='text'
-                  placeholder='Run Name'
-                  className='col-span-2 p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Raid'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Status'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Date'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Time'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
 
-                <input
-                  type='text'
-                  placeholder='Max Buyers'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Difficulty'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Loot Type'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <select className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'>
-                  <option value='' disabled selected hidden>
-                    Team
-                  </option>
-                  <option value='team1'>Team 1</option>
-                  <option value='team2'>Team 2</option>
-                  <option value='team3'>Team 3</option>
-                </select>
-                <input
-                  type='text'
-                  placeholder='Gold Collector'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Raid Leader'
-                  className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-                <input
-                  type='text'
-                  placeholder='Note'
-                  className='col-span-2 p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                />
-              </form>
-              <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mt-4 justify-center'>
-                <UserPlus size={20} /> Add Run
-              </button>
-            </div>
-          </Modal>
-        )}
+        {isAddRunOpen && <InputRun onClose={handleCloseAddRun} />}
       </div>
     </div>
   )

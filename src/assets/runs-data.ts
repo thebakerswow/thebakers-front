@@ -9,7 +9,6 @@ export interface RunData {
   buyers: string
   leader: string
   collector: string
-  status: string
   note: string
   loot: string
   slotsAvailable: string
@@ -30,7 +29,6 @@ export const bookingData: RunData[] = [
     buyers: '17',
     leader: 'Calmakarai-Area52',
     collector: 'Calmakarai-Area52',
-    status: 'Locked',
     note: 'Nota teste',
     loot: 'Saved',
     slotsAvailable: '2',
@@ -49,7 +47,6 @@ export const bookingData: RunData[] = [
     buyers: '17',
     leader: 'Calmakarai-Area52',
     collector: 'Calmakarai-Area52',
-    status: 'Locked',
     note: 'Nota teste',
     loot: 'Saved',
     slotsAvailable: '2',
@@ -68,7 +65,6 @@ export const bookingData: RunData[] = [
     buyers: '17',
     leader: 'Calmakarai-Area52',
     collector: 'Calmakarai-Area52',
-    status: 'Locked',
     note: 'Nota teste',
     loot: 'Saved',
     slotsAvailable: '2',
@@ -87,7 +83,6 @@ export const bookingData: RunData[] = [
     buyers: '17',
     leader: 'Calmakarai-Area52',
     collector: 'Calmakarai-Area52',
-    status: 'Locked',
     note: 'Nota teste',
     loot: 'Saved',
     slotsAvailable: '2',
@@ -106,7 +101,6 @@ export const bookingData: RunData[] = [
     buyers: '17',
     leader: 'Calmakarai-Area52',
     collector: 'Calmakarai-Area52',
-    status: 'Locked',
     note: 'Nota teste',
     loot: 'Saved',
     slotsAvailable: '2',
