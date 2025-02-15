@@ -246,7 +246,6 @@ export function InputRun({ onClose }: InputRunProps) {
           </select>
           <input
             type='text'
-            required
             placeholder='Note'
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -255,7 +254,7 @@ export function InputRun({ onClose }: InputRunProps) {
           <div className='col-span-2 flex justify-center'>
             <button
               type='submit'
-              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mt-4'
+              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2'
             >
               <UserPlus size={20} /> Add Run
             </button>
