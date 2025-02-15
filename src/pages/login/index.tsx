@@ -15,16 +15,17 @@ export function Login() {
   }, [isAuthenticated, navigate])
 
   const handleLogin = async () => {
+    console.log(import.meta.env.VITE_APP_TOKEN)
     try {
       const response = await axios.post(
         import.meta.env.VITE_DISCORD_LOGIN_URL ||
-          'http://localhost:8000/v1/login/discord'
-        // {},
-        // {
-        //   headers: {
-        //     APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-        //   },
-        // }
+          'http://localhost:8000/v1/login/discord',
+        {},
+        {
+          headers: {
+            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+          },
+        }
       )
 
       if (response.data.data) {
