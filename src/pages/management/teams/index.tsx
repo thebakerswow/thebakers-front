@@ -51,7 +51,7 @@ export function TeamsManagement() {
 
         const orderedTeams = teamOrder.map((teamName) => ({
           name: teamName,
-          members: (response.data.data[teamName] || []).map((member: any) => ({
+          members: (response.data.info[teamName] || []).map((member: any) => ({
             global_name: member.global_name,
             username: member.username,
           })),

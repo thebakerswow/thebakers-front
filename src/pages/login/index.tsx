@@ -27,8 +27,8 @@ export function Login() {
         }
       )
 
-      if (response.data.data) {
-        window.location.href = response.data.data // Redireciona para o Discord
+      if (response.data.info) {
+        window.location.href = response.data.info // Redireciona para o Discord
       }
     } catch (error) {
       console.error('Erro ao iniciar login com Discord:', error)

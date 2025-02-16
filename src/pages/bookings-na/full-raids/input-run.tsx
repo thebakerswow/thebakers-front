@@ -1,25 +1,59 @@
 import { useState, useEffect, useRef } from 'react'
 import { UserPlus } from '@phosphor-icons/react'
 import { Modal } from '../../../components/modal'
+import axios from 'axios'
 
 interface MultiSelectDropdownProps {
   onChange: (selected: string[]) => void
 }
 
+interface ApiOption {
+  username: string
+  global_name: string
+}
+
 const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   const [selected, setSelected] = useState<string[]>([])
   const [open, setOpen] = useState(false)
-
-  const options = [
-    { value: 'wellster', label: 'wellster' },
-    { value: 'flykzuzuzu__', label: 'flykzuzuzu__' },
-    { value: 'glauber', label: 'glauber' },
-    { value: 'jaorayol', label: 'jaorayol' },
-    { value: 'dinheiros', label: 'dinheiros' },
-    { value: 'ngbnewsoficial', label: 'ngbnewsoficial' },
-  ]
+  const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  function getSpecificTeamUrl(teamId: string) {
+    return `${import.meta.env.VITE_GET_SPECIFIC_TEAM_URL}${teamId}`
+  }
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const teamId = '1148721174088532040'
+        const response = await axios.get(
+          getSpecificTeamUrl(teamId) ||
+            'http://localhost:8000/v1/team/1148721174088532040',
+          {
+            headers: {
+              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+            },
+          }
+        )
+
+        console.log('response: ', response.data.info.members)
+
+        if (response.data.info.members) {
+          setApiOptions(response.data.info.members)
+        }
+      } catch (err) {
+        console.error('Erro ao buscar usuários:', err)
+        setError('Falha ao carregar opções')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOptions()
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -30,13 +64,11 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
         setOpen(false)
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Chama onChange sempre que "selected" for atualizado
   useEffect(() => {
     onChange(selected)
   }, [selected, onChange])
@@ -59,23 +91,36 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
       >
         {selected.length > 0 ? selected.join(', ') : 'Raid Leader'}
       </div>
+
       {open && (
-        <div className='absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md'>
-          {options.map((option) => (
-            <div
-              key={option.value}
-              className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
-              onClick={() => handleSelect(option.value)}
-            >
-              <input
-                type='checkbox'
-                checked={selected.includes(option.value)}
-                readOnly
-                className='mr-2'
-              />
-              <span className='text-black'>{option.label}</span>
+        <div className='absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-y-auto'>
+          {loading && (
+            <div className='p-2 text-gray-500 text-center'>
+              Loading options...
             </div>
-          ))}
+          )}
+
+          {error && <div className='p-2 text-red-500 text-center'>{error}</div>}
+
+          {!loading &&
+            !error &&
+            apiOptions.map((option) => (
+              <div
+                key={option.username}
+                className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
+                onClick={() => handleSelect(option.username)}
+              >
+                <input
+                  type='checkbox'
+                  checked={selected.includes(option.username)}
+                  readOnly
+                  className='mr-2'
+                />
+                <span className='text-black'>
+                  {option.username || option.global_name}
+                </span>
+              </div>
+            ))}
         </div>
       )}
     </div>
