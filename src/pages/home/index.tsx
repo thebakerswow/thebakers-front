@@ -15,11 +15,9 @@ export function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem('jwt')
     if (!token) return
-    console.log(token)
 
     try {
       const decoded = jwtDecode<DiscordTokenPayload>(token)
-      console.log(decoded)
       setUsername(decoded.username)
     } catch (error) {
       console.error('Erro ao decodificar o token:', error)

@@ -15,7 +15,6 @@ export function Login() {
   }, [isAuthenticated, navigate])
 
   const handleLogin = async () => {
-    console.log(import.meta.env.VITE_APP_TOKEN)
     try {
       const response = await axios.post(
         import.meta.env.VITE_DISCORD_LOGIN_URL ||

@@ -114,7 +114,6 @@ export function InputRun({ onClose }: InputRunProps) {
       loot,
       note,
     }
-    console.log(formData)
   }
 
   return (
