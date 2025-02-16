@@ -13,7 +13,7 @@ export function HomePage() {
   const [username, setUsername] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt')
+    const token = sessionStorage.getItem('jwt')
     if (!token) return
 
     try {

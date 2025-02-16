@@ -10,109 +10,120 @@ import {
   endOfWeek,
   isSameMonth,
   startOfWeek,
+  startOfDay,
 } from 'date-fns'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
 }
 
+function computeWeeksAndDays(date: Date) {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const firstDayOfMonth = new Date(year, month, 1)
+  const lastDayOfMonth = new Date(year, month + 1, 0)
+  const tempWeeks = []
+  let currentStartOfWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 })
+
+  if (!isSameMonth(currentStartOfWeek, firstDayOfMonth)) {
+    currentStartOfWeek = firstDayOfMonth
+  }
+
+  while (currentStartOfWeek <= lastDayOfMonth) {
+    const currentEndOfWeek = endOfWeek(currentStartOfWeek, { weekStartsOn: 0 })
+    tempWeeks.push({
+      start: currentStartOfWeek,
+      end: isBefore(currentEndOfWeek, lastDayOfMonth)
+        ? currentEndOfWeek
+        : lastDayOfMonth,
+    })
+    currentStartOfWeek = addDays(currentEndOfWeek, 1)
+  }
+
+  const today = startOfDay(new Date())
+  let targetWeekIndex = 0
+  if (
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  ) {
+    const todayWeekIndex = tempWeeks.findIndex(
+      (week) => today >= startOfDay(week.start) && today <= startOfDay(week.end)
+    )
+    if (todayWeekIndex !== -1) {
+      targetWeekIndex = todayWeekIndex
+    }
+  }
+
+  const targetWeek = tempWeeks[targetWeekIndex]
+  const daysInWeek = eachDayOfInterval({
+    start: targetWeek.start,
+    end: targetWeek.end,
+  })
+
+  let computedDay = null
+  if (
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  ) {
+    const todayFormatted = format(today, 'yyyy-MM-dd')
+    const todayInDays = daysInWeek.find(
+      (day) => format(startOfDay(day), 'yyyy-MM-dd') === todayFormatted
+    )
+    if (todayInDays) {
+      computedDay = today
+    }
+  }
+
+  return {
+    weeks: tempWeeks,
+    selectedWeekIndex: targetWeekIndex,
+    days: daysInWeek,
+    selectedDay: computedDay,
+  }
+}
+
 export function DateFilter({ onDaySelect }: DateFilterProps) {
   const currentMonth = new Date()
+  const initialData = computeWeeksAndDays(currentMonth)
+
+  // filterDay representa o dia usado para filtrar os dados da tabela.
+  // Ele é atualizado somente quando o usuário seleciona um dia.
+  const [filterDay, setFilterDay] = useState<Date | null>(
+    initialData.selectedDay
+  )
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(currentMonth)
-  const [weeks, setWeeks] = useState<{ start: Date; end: Date }[]>([])
-  const [days, setDays] = useState<Date[]>([])
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0)
+  const [weeks, setWeeks] = useState(initialData.weeks)
+  const [days, setDays] = useState(initialData.days)
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(
+    initialData.selectedWeekIndex
+  )
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
-  const setWeeksAndDays = useCallback(
-    (date: Date) => {
-      const year = date.getFullYear()
-      const month = date.getMonth()
-      const firstDayOfMonth = new Date(year, month, 1)
-      const lastDayOfMonth = new Date(year, month + 1, 0)
-      const tempWeeks = []
-      let currentStartOfWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 })
-
-      if (!isSameMonth(currentStartOfWeek, firstDayOfMonth)) {
-        currentStartOfWeek = firstDayOfMonth
-      }
-
-      while (currentStartOfWeek <= lastDayOfMonth) {
-        const currentEndOfWeek = endOfWeek(currentStartOfWeek)
-
-        tempWeeks.push({
-          start: currentStartOfWeek,
-          end: isBefore(currentEndOfWeek, lastDayOfMonth)
-            ? currentEndOfWeek
-            : lastDayOfMonth,
-        })
-        currentStartOfWeek = addDays(currentEndOfWeek, 1)
-      }
-      setWeeks(tempWeeks)
-
-      // Encontrar a semana que contém a data atual
-      const today = new Date()
-      let targetWeekIndex = 0
-      if (
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear()
-      ) {
-        const todayWeekIndex = tempWeeks.findIndex(
-          (week) => today >= week.start && today <= week.end
-        )
-        if (todayWeekIndex !== -1) {
-          targetWeekIndex = todayWeekIndex
-        }
-      }
-
-      const targetWeek = tempWeeks[targetWeekIndex]
-      const daysInWeek = eachDayOfInterval({
-        start: targetWeek.start,
-        end: targetWeek.end,
-      })
-      setDays(daysInWeek)
-      setSelectedWeekIndex(targetWeekIndex)
-
-      // Selecionar o dia atual se estiver no mês
-      if (
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear()
-      ) {
-        const todayFormatted = format(today, 'yyyy-MM-dd')
-        const todayInDays = daysInWeek.find(
-          (day) => format(day, 'yyyy-MM-dd') === todayFormatted
-        )
-        if (todayInDays) {
-          setSelectedDay(today)
-          onDaySelect(today)
-        } else {
-          setSelectedDay(null)
-          onDaySelect(null)
-        }
-      } else {
-        setSelectedDay(null)
-        onDaySelect(null)
-      }
-    },
-    [onDaySelect]
-  )
-
+  // Apenas na montagem inicial configuramos o filtro para o dia atual.
   useEffect(() => {
-    if (selectedMonth && weeks.length === 0) {
-      setWeeksAndDays(selectedMonth)
-    }
-  }, [selectedMonth, weeks, setWeeksAndDays])
+    console.log('Filtro enviado:', filterDay)
+    onDaySelect(filterDay)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Atualiza os controles (seção de semanas e dias) sem alterar o filtro atual.
+  const updateWeeksAndDays = useCallback((date: Date) => {
+    const data = computeWeeksAndDays(date)
+    setWeeks(data.weeks)
+    setDays(data.days)
+    setSelectedWeekIndex(data.selectedWeekIndex)
+    // NÃO atualizamos filterDay aqui para manter os dados da tabela inalterados.
+  }, [])
 
   const handleMonthChange = useCallback(
     (date: Date | null) => {
       if (date) {
         setSelectedMonth(date)
-        setWeeksAndDays(date)
+        updateWeeksAndDays(date)
       }
       setIsCalendarOpen(false)
     },
-    [setWeeksAndDays]
+    [updateWeeksAndDays]
   )
 
   function handleWeekSelect(weekIndex: number) {
@@ -120,25 +131,32 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     const { start, end } = weeks[weekIndex]
     const daysInWeek = eachDayOfInterval({ start, end })
     setDays(daysInWeek)
-    setSelectedDay(null)
-    onDaySelect(null)
     setSelectedWeekIndex(weekIndex)
+    // NÃO alteramos filterDay aqui; o filtro continua o mesmo.
   }
 
   function handleDaySelect(day: Date) {
-    setSelectedDay(day)
+    setFilterDay(day)
+    console.log('Filtro enviado:', day)
     onDaySelect(day)
   }
 
+  // No reset, tudo volta ao dia atual, atualizando inclusive o filtro.
   function handleFilterReset() {
     const newMonth = new Date()
     setSelectedMonth(newMonth)
-    setWeeksAndDays(newMonth)
+    const data = computeWeeksAndDays(newMonth)
+    setWeeks(data.weeks)
+    setDays(data.days)
+    setSelectedWeekIndex(data.selectedWeekIndex)
+    setFilterDay(data.selectedDay)
+    console.log('Filtro enviado:', data.selectedDay)
+    onDaySelect(data.selectedDay)
   }
 
   return (
     <div className='flex flex-col text-lg pt-6 items-center gap-4'>
-      <label className=' flex flex-col pl-16'>
+      <label className='flex flex-col pl-16'>
         <p>Select Month:</p>
         <div className='flex items-center gap-4'>
           <DatePicker
@@ -183,15 +201,15 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
       )}
 
       {days.length > 0 && (
-        <div className=''>
+        <div>
           <p className='pl-2'>Select Day:</p>
           <div>
             {days.map((day) => (
               <button
                 className={`${
-                  selectedDay &&
-                  format(day, 'yyyy-MM-dd') ===
-                    format(selectedDay, 'yyyy-MM-dd')
+                  filterDay &&
+                  format(startOfDay(day), 'yyyy-MM-dd') ===
+                    format(startOfDay(filterDay), 'yyyy-MM-dd')
                     ? 'bg-zinc-500 text-gray-100 font-medium border border-gray-100'
                     : 'bg-zinc-100 text-zinc-900'
                 } gap-2 border-gray-100 m-2 p-2 rounded-md text-sm`}

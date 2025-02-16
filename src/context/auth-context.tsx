@@ -20,8 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    // Simula o carregamento do estado de autenticação (pode ser via localStorage, cookies, etc.)
-    const user = localStorage.getItem('jwt') // Exemplo de verificação de autenticação
+    const user = sessionStorage.getItem('jwt') // Exemplo de verificação de autenticação
     if (user) {
       setIsAuthenticated(true)
     }
@@ -30,12 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (token: string) => {
     setIsAuthenticated(true)
-    localStorage.setItem('jwt', token)
+    sessionStorage.setItem('jwt', token)
   }
 
   const logout = () => {
     setIsAuthenticated(false)
-    localStorage.removeItem('jwt')
+    sessionStorage.removeItem('jwt')
   }
 
   return (
