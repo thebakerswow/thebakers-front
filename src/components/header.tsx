@@ -75,7 +75,7 @@ export function Header() {
             </button>
             <button
               className='text-gray-300 flex gap-4 text-lg font-semibold w-full items-center pl-5'
-              onClick={() => navigate('/freelancers')}
+              onClick={() => navigate('/attendance')}
             >
               <CheckCircle className='text-gray-100' size={30} />
               Attendance
