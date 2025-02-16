@@ -15,8 +15,9 @@ import { Login } from './pages/login'
 import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
-import { ErrorPage } from './pages/erro'
-import { NotAllowed } from './pages/not-allowed'
+import { ErrorPage } from './pages/error-pages/not-found'
+import { AccessDenied } from './pages/error-pages/access-denied'
+import { LoginErro } from './pages/error-pages/login-erro'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -45,7 +46,8 @@ export function App() {
               <Routes>
                 <Route path='/' element={<Login />} />
                 <Route path='/login/callback' element={<AuthCallback />} />
-                <Route path='/not-allowed' element={<NotAllowed />} />
+                <Route path='/login/error' element={<LoginErro />} />
+                <Route path='/access-denied' element={<AccessDenied />} />
                 {/* Rotas privadas - exigem autenticação */}
                 <Route
                   path='*'
@@ -64,7 +66,7 @@ export function App() {
                   element={<PrivateRoute element={<TeamsManagement />} />}
                 />
                 <Route
-                  path='/freelancers'
+                  path='/attendance'
                   element={<PrivateRoute element={<Attendance />} />}
                 />
                 <Route

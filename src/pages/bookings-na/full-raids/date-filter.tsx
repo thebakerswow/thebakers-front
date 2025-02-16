@@ -103,7 +103,6 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   useEffect(() => {
     console.log('Filtro enviado:', filterDay)
     onDaySelect(filterDay)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Atualiza os controles (seção de semanas e dias) sem alterar o filtro atual.
