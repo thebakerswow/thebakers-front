@@ -8,6 +8,7 @@ interface MultiSelectDropdownProps {
 }
 
 interface ApiOption {
+  id: string
   username: string
   global_name: string
 }
@@ -82,9 +83,14 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   // Função para obter os nomes de exibição
   const getDisplayNames = () => {
     return selected
-      .map((username) => {
-        const user = apiOptions.find((u) => u.username === username)
-        return user?.global_name || username
+      .map((value) => {
+        // Divide o valor armazenado em user_id e username
+        const [id, username] = value.split(';')
+        // Encontra o usuário correspondente
+        const user = apiOptions.find(
+          (u) => u.id === id && u.username === username
+        )
+        return user?.global_name || value // Exibe o global_name ou o valor como fallback
       })
       .join(', ')
   }
@@ -116,11 +122,11 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
               <div
                 key={option.username}
                 className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
-                onClick={() => handleSelect(option.username)}
+                onClick={() => handleSelect(`${option.id};${option.username}`)}
               >
                 <input
                   type='checkbox'
-                  checked={selected.includes(option.username)}
+                  checked={selected.includes(`${option.id};${option.username}`)}
                   readOnly
                   className='mr-2'
                 />
@@ -142,22 +148,26 @@ export function InputRun({ onClose }: InputRunProps) {
   const [time, setTime] = useState('')
   const [raid, setRaid] = useState('')
   const [runType, setRunType] = useState('')
-  const [difficulty, setDifficulty] = useState('')
+  const [dificult, setDificult] = useState('')
   const [team, setTeam] = useState('')
   const [maxBuyers, setMaxBuyers] = useState('')
   const [raidLeader, setRaidLeader] = useState<string[]>([])
   const [goldCollector, setGoldCollector] = useState('')
   const [loot, setLoot] = useState('')
   const [note, setNote] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = {
+    setIsSubmitting(true)
+
+    const data = {
       date,
       time,
       raid,
       runType,
-      difficulty,
+      dificult,
       team,
       maxBuyers,
       raidLeader,
@@ -165,152 +175,196 @@ export function InputRun({ onClose }: InputRunProps) {
       loot,
       note,
     }
-    console.log(formData)
+
+    try {
+      const jwt = sessionStorage.getItem('jwt')
+      await axios.post(
+        import.meta.env.VITE_POST_RUN_URL || 'http://localhost:8000/v1/run',
+        data,
+        {
+          headers: {
+            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
+      setIsSuccess(true)
+      setTimeout(() => {
+        onClose()
+      }, 3000)
+    } catch (error) {
+      console.error('Error adding run:', error)
+    } finally {
+      setIsSubmitting(false) // Desativa o loading em qualquer caso
+    }
   }
 
   return (
     <Modal onClose={onClose}>
       <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
-        <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
-          <input
-            type='date'
-            required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
-          />
-          <input
-            type='time'
-            required
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
-          />
-          <input
-            type='text'
-            required
-            placeholder='Raid'
-            value={raid}
-            onChange={(e) => setRaid(e.target.value)}
-            className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-          />
-          <select
-            required
-            value={runType}
-            onChange={(e) => setRunType(e.target.value)}
-            className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
-          >
-            <option value='' disabled hidden className='text-zinc-400'>
-              Run Type
-            </option>
-            <option value='fullraid' className='text-black'>
-              Full Raid
-            </option>
-            <option value='aotc' className='text-black'>
-              AOTC
-            </option>
-            <option value='legacy' className='text-black'>
-              Legacy
-            </option>
-          </select>
-          <select
-            required
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
-          >
-            <option value='' disabled hidden className='text-zinc-400'>
-              Difficulty
-            </option>
-            <option className='text-black' value='normal'>
-              Normal
-            </option>
-            <option className='text-black' value='heroic'>
-              Heroic
-            </option>
-            <option className='text-black' value='mythic'>
-              Mythic
-            </option>
-          </select>
-          <select
-            required
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
-            className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
-          >
-            <option value='' disabled hidden className='text-zinc-400'>
-              Team
-            </option>
-            <option className='text-black' value='1119092171157541006'>
-              Padeirinho
-            </option>
-            <option className='text-black' value='1153459315907235971'>
-              Garçom
-            </option>
-            <option className='text-black' value='1224792109241077770'>
-              Confeiteiros
-            </option>
-            <option className='text-black' value='1328892768034226217'>
-              Jackfruit
-            </option>
-            <option className='text-black' value='1328938639949959209'>
-              Milharal
-            </option>
-            <option className='text-black' value='1337818949831626753'>
-              APAE
-            </option>
-          </select>
-          <input
-            type='text'
-            required
-            placeholder='Max Buyers'
-            value={maxBuyers}
-            onChange={(e) => setMaxBuyers(e.target.value)}
-            className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-          />
-          <MultiSelectDropdown
-            onChange={(selected) => setRaidLeader(selected)}
-          />
-          <input
-            type='text'
-            required
-            placeholder='Gold Collector'
-            value={goldCollector}
-            onChange={(e) => setGoldCollector(e.target.value)}
-            className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-          />
-          <select
-            required
-            value={loot}
-            onChange={(e) => setLoot(e.target.value)}
-            className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
-          >
-            <option value='' disabled hidden className='text-zinc-400'>
-              Loot
-            </option>
-            <option className='text-black' value='saved'>
-              Saved
-            </option>
-            <option className='text-black' value='unsaved'>
-              Unsaved
-            </option>
-          </select>
-          <input
-            type='text'
-            placeholder='Note'
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className='p-2 col-span-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-          />
-          <div className='col-span-2 flex justify-center'>
-            <button
-              type='submit'
-              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2'
-            >
-              <UserPlus size={20} /> Add Run
-            </button>
+        {isSuccess ? (
+          <div className='p-6 text-center'>
+            <div className='text-green-500 text-4xl mb-4'>✓</div>
+            <h2 className='text-2xl font-bold mb-2'>
+              Run created successfully!
+            </h2>
+            <p className='text-zinc-400'>
+              The modal will close automatically in 3 seconds...
+            </p>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+            <input
+              type='date'
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
+            />
+            <input
+              type='time'
+              required
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
+            />
+            <input
+              type='text'
+              required
+              placeholder='Raid'
+              value={raid}
+              onChange={(e) => setRaid(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+            />
+            <select
+              required
+              value={runType}
+              onChange={(e) => setRunType(e.target.value)}
+              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+            >
+              <option value='' disabled hidden className='text-zinc-400'>
+                Run Type
+              </option>
+              <option value='Full Raid' className='text-black'>
+                Full Raid
+              </option>
+              <option value='AOTC' className='text-black'>
+                AOTC
+              </option>
+              <option value='Legacy' className='text-black'>
+                Legacy
+              </option>
+            </select>
+            <select
+              required
+              value={dificult}
+              onChange={(e) => setDificult(e.target.value)}
+              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+            >
+              <option value='' disabled hidden className='text-zinc-400'>
+                Difficulty
+              </option>
+              <option className='text-black' value='Normal'>
+                Normal
+              </option>
+              <option className='text-black' value='Heroic'>
+                Heroic
+              </option>
+              <option className='text-black' value='Mythic'>
+                Mythic
+              </option>
+            </select>
+            <select
+              required
+              value={team}
+              onChange={(e) => setTeam(e.target.value)}
+              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+            >
+              <option value='' disabled hidden className='text-zinc-400'>
+                Team
+              </option>
+              <option className='text-black' value='1119092171157541006'>
+                Padeirinho
+              </option>
+              <option className='text-black' value='1153459315907235971'>
+                Garçom
+              </option>
+              <option className='text-black' value='1224792109241077770'>
+                Confeiteiros
+              </option>
+              <option className='text-black' value='1328892768034226217'>
+                Jackfruit
+              </option>
+              <option className='text-black' value='1328938639949959209'>
+                Milharal
+              </option>
+              <option className='text-black' value='1337818949831626753'>
+                APAE
+              </option>
+            </select>
+            <input
+              type='text'
+              required
+              placeholder='Max Buyers'
+              value={maxBuyers}
+              onChange={(e) => setMaxBuyers(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+            />
+            <MultiSelectDropdown
+              onChange={(selected) => setRaidLeader(selected)}
+            />
+            <input
+              type='text'
+              required
+              placeholder='Gold Collector'
+              value={goldCollector}
+              onChange={(e) => setGoldCollector(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+            />
+            <select
+              required
+              value={loot}
+              onChange={(e) => setLoot(e.target.value)}
+              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+            >
+              <option value='' disabled hidden className='text-zinc-400'>
+                Loot
+              </option>
+              <option className='text-black' value='Saved'>
+                Saved
+              </option>
+              <option className='text-black' value='Unsaved'>
+                Unsaved
+              </option>
+            </select>
+            <textarea
+              placeholder='Note'
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition col-span-2'
+            />
+            <div className='flex items-center justify-center gap-4 col-span-2'>
+              <button
+                type='submit'
+                disabled={isSubmitting}
+                className={`flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={20} /> Add Run
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </Modal>
   )

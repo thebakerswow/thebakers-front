@@ -101,7 +101,6 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
 
   // Apenas na montagem inicial configuramos o filtro para o dia atual.
   useEffect(() => {
-    console.log('Filtro enviado:', filterDay)
     onDaySelect(filterDay)
   }, [])
 
@@ -133,10 +132,9 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     setSelectedWeekIndex(weekIndex)
     // NÃO alteramos filterDay aqui; o filtro continua o mesmo.
   }
-
   function handleDaySelect(day: Date) {
     setFilterDay(day)
-    console.log('Filtro enviado:', day)
+    // Aqui removemos a chamada à API e apenas enviamos a data para o componente pai
     onDaySelect(day)
   }
 
@@ -149,7 +147,6 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     setDays(data.days)
     setSelectedWeekIndex(data.selectedWeekIndex)
     setFilterDay(data.selectedDay)
-    console.log('Filtro enviado:', data.selectedDay)
     onDaySelect(data.selectedDay)
   }
 

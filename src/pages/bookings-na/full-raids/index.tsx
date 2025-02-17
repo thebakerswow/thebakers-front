@@ -1,32 +1,88 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
-import { bookingData, RunData } from '../../../assets/runs-data'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { InputRun } from './input-run'
+import axios from 'axios'
+
+interface RaidLeader {
+  idDiscord: string
+  username: string
+}
+
+interface RunData {
+  date: string
+  time: string
+  raid: string
+  runType: string
+  difficulty: string
+  team: string
+  maxBuyers: string
+  raidLeaders: RaidLeader[]
+  goldCollector: string
+  note: string
+  loot: string
+}
 
 export function FullRaidsNa() {
-  const [rows, setRows] = useState<RunData[]>(bookingData)
+  const [rows, setRows] = useState<RunData[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (selectedDate) {
+      setIsLoading(true) // Inicia o loading
+
+      axios
+        .get(
+          import.meta.env.VITE_GET_RUN_URL || 'http://localhost:8000/v1/run',
+          {
+            params: { date: format(selectedDate, 'yyyy-MM-dd') },
+            headers: {
+              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+            },
+          }
+        )
+        .then((response) => {
+          const runs = response.data.info
+
+          if (runs) {
+            const formattedData = Array.isArray(runs)
+              ? runs.map((run: any) => ({
+                  ...run,
+                }))
+              : []
+
+            setRows(formattedData)
+          } else {
+            setRows([])
+          }
+        })
+        .catch((error) => {
+          console.error('Erro ao buscar runs:', error)
+          setRows([])
+        })
+        .finally(() => {
+          setIsLoading(false) // Finaliza o loading
+        })
+    } else {
+      setRows([])
+    }
+  }, [selectedDate])
+
+  function onDaySelect(day: Date | null) {
+    setSelectedDate(day)
+  }
 
   function handleOpenAddRun() {
     setIsAddRunOpen(true)
   }
+
   function handleCloseAddRun() {
     setIsAddRunOpen(false)
-  }
-
-  function onDaySelect(day: Date | null) {
-    if (day) {
-      const filteredRows = bookingData.filter((row) => {
-        const rowDate = parseISO(row.date)
-        return format(rowDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
-      })
-      setRows(filteredRows)
-    } else {
-      setRows(bookingData)
-    }
   }
 
   return (
@@ -46,7 +102,7 @@ export function FullRaidsNa() {
           </h1>
         </div>
 
-        <RunsDataGrid data={rows} />
+        <RunsDataGrid data={rows} isLoading={isLoading} />
 
         {isAddRunOpen && <InputRun onClose={handleCloseAddRun} />}
       </div>
