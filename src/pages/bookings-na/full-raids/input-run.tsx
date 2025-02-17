@@ -39,8 +39,6 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
           }
         )
 
-        console.log('response: ', response.data.info.members)
-
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
         }
@@ -81,6 +79,16 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
     )
   }
 
+  // Função para obter os nomes de exibição
+  const getDisplayNames = () => {
+    return selected
+      .map((username) => {
+        const user = apiOptions.find((u) => u.username === username)
+        return user?.global_name || username
+      })
+      .join(', ')
+  }
+
   return (
     <div ref={dropdownRef} className='relative'>
       <div
@@ -89,7 +97,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
         }`}
         onClick={() => setOpen(!open)}
       >
-        {selected.length > 0 ? selected.join(', ') : 'Raid Leader'}
+        {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
       </div>
 
       {open && (
@@ -116,9 +124,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
                   readOnly
                   className='mr-2'
                 />
-                <span className='text-black'>
-                  {option.username || option.global_name}
-                </span>
+                <span className='text-black'>{option.global_name}</span>
               </div>
             ))}
         </div>
