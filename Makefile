@@ -1,4 +1,4 @@
-.PHONY: dev build format preview docker-up docker-down docker-build
+.PHONY: dev build format preview run clean docker-build
 
 dev:
 	docker-compose up
