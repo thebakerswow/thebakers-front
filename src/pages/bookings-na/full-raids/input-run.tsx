@@ -158,6 +158,13 @@ export function InputRun({ onClose }: InputRunProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    if (/^[0-9]*$/.test(newValue)) {
+      setMaxBuyers(newValue)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -307,7 +314,7 @@ export function InputRun({ onClose }: InputRunProps) {
               required
               placeholder='Max Buyers'
               value={maxBuyers}
-              onChange={(e) => setMaxBuyers(e.target.value)}
+              onChange={handleChange}
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <MultiSelectDropdown
