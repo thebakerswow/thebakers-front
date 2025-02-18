@@ -43,9 +43,10 @@ export function RunInfo({ run }: RunInfoProps) {
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const data = {
+      id_run: run.id,
       paymentRealm,
       paymentFaction,
       nameAndRealm,
@@ -56,6 +57,18 @@ export function RunInfo({ run }: RunInfoProps) {
       buyerNote,
     }
     console.log('Dados do formulário:', data)
+
+    try {
+      const jwt = sessionStorage.getItem('jwt')
+      await axios.post('http://localhost:8000/v1/buyer', data, {
+        headers: {
+          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+    } catch (error) {
+      console.error('Error adding buyer:', error)
+    }
   }
 
   useEffect(() => {

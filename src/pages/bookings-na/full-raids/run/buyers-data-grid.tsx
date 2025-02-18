@@ -14,21 +14,23 @@ import Shaman from '../../../../assets/class_icons/shaman.png'
 import Warlock from '../../../../assets/class_icons/warlock.png'
 import Warrior from '../../../../assets/class_icons/warrior.png'
 
-interface BuyerData {
+export interface BuyerData {
+  id: string
   status: string
-  name: string
-  faction: string
-  class: string
-  source: string
-  advertiser: string
-  collectedBy: string
-  paidFull: string
-  note: string
-  actions: string
+  idBuyerAdvertiser: string
+  buyerNote: string
+  buyerPot: string
+  isPaid: boolean
+  nameAndRealm: string
+  paymentFaction: string
+  paymentRealm: string
+  playerClass: string
+  idRegister: string
 }
 
 interface BuyersGridProps {
   data: BuyerData[]
+  goldCollector: string
 }
 
 const statusPriorities: Record<string, number> = {
@@ -40,7 +42,7 @@ const statusPriorities: Record<string, number> = {
   closed: 6,
 }
 
-export function BuyersDataGrid({ data }: BuyersGridProps) {
+export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
 
   useEffect(() => {
@@ -149,7 +151,6 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
             <th className='p-2 border'>Collected By</th>
             <th className='p-2 border'>Paid Full</th>
             <th className='p-2 border'>Note</th>
-            <th className='p-2 border'>Actions</th>
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
@@ -178,14 +179,14 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
                   </select>
                 </form>
               </td>
-              <td className='p-2 text-center'>{buyer.name}</td>
-              <td className='p-2 text-center'>{buyer.faction}</td>
+              <td className='p-2 text-center'>{buyer.nameAndRealm}</td>
+              <td className='p-2 text-center'>{buyer.paymentFaction}</td>
               <td className='p-2 flex gap-2 justify-center'>
-                {buyer.class}
-                {getClassImage(buyer.class) ? (
+                {buyer.playerClass}
+                {getClassImage(buyer.playerClass) ? (
                   <img
-                    src={getClassImage(buyer.class)}
-                    alt={buyer.class}
+                    src={getClassImage(buyer.playerClass)}
+                    alt={buyer.playerClass}
                     className='w-6 h-6'
                   />
                 ) : (
@@ -194,11 +195,11 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
                   </div>
                 )}
               </td>
-              <td className='p-2 text-center'>{buyer.advertiser}</td>
-              <td className='p-2 text-center'>{buyer.collectedBy}</td>
+              <td className='p-2 text-center'>{buyer.idBuyerAdvertiser}</td>
+              <td className='p-2 text-center'>{goldCollector}</td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
-                  {buyer.paidFull === 'check' ? (
+                  {buyer.isPaid === true ? (
                     <CheckFat
                       className='text-green-500 border bg-white rounded-xl'
                       size={22}
@@ -213,8 +214,7 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
                   )}
                 </div>
               </td>
-              <td className='p-2 text-center'>{buyer.note}</td>
-              <td className='p-2 text-center'>{buyer.actions}</td>
+              <td className='p-2 text-center'>{buyer.buyerNote}</td>
             </tr>
           ))}
         </tbody>

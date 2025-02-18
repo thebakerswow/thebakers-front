@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../../components/modal'
-import { BuyersDataGrid } from './run/buyers-data-grid'
-import { buyersData } from '../../../assets/buyers-data'
+// import { BuyersDataGrid } from './run/buyers-data-grid'
+// import { buyersData } from '../../../assets/buyers-data'
 
 interface RaidLeader {
   idDiscord: string
@@ -193,7 +193,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
       {isPreviewOpen && (
         <Modal onClose={handleClosePreview}>
           <div className='w-full max-w-[95vw] h-[500px] overflow-y-auto overflow-x-hidden'>
-            <BuyersDataGrid data={buyersData} />
+            {/* <BuyersDataGrid  /> */}
           </div>
         </Modal>
       )}
