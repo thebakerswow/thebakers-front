@@ -43,7 +43,6 @@ export function RunDetails() {
               Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
             },
           }
-         
         )
         setRunData(response.data.info)
         console.log(response.data)

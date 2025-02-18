@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Megaphone, Pencil, UserPlus } from '@phosphor-icons/react'
 import amirdrassilCover from '../../../../assets/amirdrassil.png'
 import { Modal } from '../../../../components/modal'
 import { RunData } from './run-details'
+import axios from 'axios'
 
 interface RunInfoProps {
   run: RunData
+}
+
+interface Advertiser {
+  id: string
+  id_discord: string
+  name: string
+  username: string
 }
 
 export function RunInfo({ run }: RunInfoProps) {
@@ -18,6 +26,7 @@ export function RunInfo({ run }: RunInfoProps) {
   const [isPaid, setIsPaid] = useState<boolean | undefined>(undefined)
   const [idBuyerAdvertiser, setIdBuyerAdvertiser] = useState('')
   const [buyerNote, setBuyerNote] = useState('')
+  const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
 
   function handleOpenAddBuyer() {
     setIsAddBuyerOpen(true)
@@ -48,6 +57,28 @@ export function RunInfo({ run }: RunInfoProps) {
     }
     console.log('Dados do formulário:', data)
   }
+
+  useEffect(() => {
+    async function fetchAdvertisers() {
+      try {
+        const response = await axios.get(
+          import.meta.env.VITE_API_ADVERTISERS_URL ||
+            'http://localhost:8000/v1/users/ghost',
+          {
+            headers: {
+              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+            },
+          }
+        )
+        console.log(response.data.info)
+        setAdvertisers(response.data.info)
+      } catch (error) {
+        console.error('Erro ao buscar os advertisers:', error)
+      }
+    }
+    fetchAdvertisers()
+  }, [])
 
   return (
     <div className='flex m-4 gap-4 rounded-md'>
@@ -208,10 +239,11 @@ export function RunInfo({ run }: RunInfoProps) {
                 <option value='' disabled hidden>
                   Advertiser
                 </option>
-                <option value='ID do Canguru'>Canguru</option>
-                <option value='ID do Europeu'>Europeu</option>
-                <option value='ID do Maylin'>Maylin</option>
-                <option value='ID do Padaria'>Padaria</option>
+                {advertisers.map((advertiser) => (
+                  <option key={advertiser.id} value={advertiser.id}>
+                    {advertiser.username}
+                  </option>
+                ))}
               </select>
 
               <input
