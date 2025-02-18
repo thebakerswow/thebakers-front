@@ -10,14 +10,38 @@ import {
   CheckCircle,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/auth-context' // Para utilizar o contexto de autenticação
+import { jwtDecode } from 'jwt-decode'
+
+interface JwtPayload {
+  roles: string[]
+}
 
 export function Header() {
   const navigate = useNavigate()
   const { logout, isAuthenticated } = useAuth() // Acessa a função de logout e a autenticação do contexto
   const [isHoveringNA, setIsHoveringNA] = useState(false)
   const [isHoveringManagement, setIsHoveringManagement] = useState(false)
+  const [userRoles, setUserRoles] = useState<string[]>([])
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('jwt')
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token)
+        console.log(decoded)
+        setUserRoles(decoded.roles || [])
+      } catch (error) {
+        console.error('Erro ao decodificar JWT:', error)
+        setUserRoles([])
+      }
+    }
+  }, [])
+
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((role) => userRoles.includes(role))
+  }
 
   const handleLogout = () => {
     logout() // Chama a função de logout
@@ -66,13 +90,16 @@ export function Header() {
         {/* Dropdown abaixo do header */}
         {isHoveringManagement && (
           <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
-            <button
-              className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
-              onClick={() => navigate('/management-teams')}
-            >
-              <UsersFour className='text-gray-100' size={30} />
-              Teams
-            </button>
+            {hasRequiredRole(['1101231955120496650']) && (
+              <button
+                className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+                onClick={() => navigate('/management-teams')}
+              >
+                <UsersFour className='text-gray-100' size={30} />
+                Teams
+              </button>
+            )}
+
             <button
               className='text-gray-300 flex gap-4 text-lg font-semibold w-full items-center pl-5'
               onClick={() => navigate('/attendance')}

@@ -1,8 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pencil, UserPlus } from '@phosphor-icons/react'
 import twwLogo from '../../../assets/baker-and-employees.png'
 import { RunData } from './index'
 import { AddBuyer } from '../../../components/add-buyer'
+import { EditRun } from '../../../components/edit-run'
+import { jwtDecode } from 'jwt-decode'
+
+interface JwtPayload {
+  roles: string[]
+}
 
 interface RunInfoProps {
   run: RunData
@@ -11,6 +17,39 @@ interface RunInfoProps {
 
 export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [userRoles, setUserRoles] = useState<string[]>([])
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('jwt')
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token)
+        console.log(decoded)
+        setUserRoles(decoded.roles || [])
+      } catch (error) {
+        console.error('Erro ao decodificar JWT:', error)
+        setUserRoles([])
+      }
+    }
+  }, [])
+
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((role) => userRoles.includes(role))
+  }
+
+  const handleOpenEditModal = () => {
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+  }
+
+  const handleRunAddedReload = () => {
+    // Aqui você pode colocar a lógica para recarregar os dados, caso necessário
+    console.log('Run adicionada. Recarregue os dados aqui.')
+  }
 
   function handleOpenAddBuyer() {
     setIsAddBuyerOpen(true)
@@ -81,10 +120,19 @@ export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
             <UserPlus size={18} />
             Add Buyer
           </button>
-          <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'>
-            <Pencil size={18} />
-            Edit Raid
-          </button>
+          {hasRequiredRole([
+            '1101231955120496650',
+            '1244711458541928608',
+            '1148721174088532040',
+          ]) && (
+            <button
+              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'
+              onClick={handleOpenEditModal}
+            >
+              <Pencil size={18} />
+              Edit Raid
+            </button>
+          )}
         </div>
       </div>
 
@@ -93,6 +141,14 @@ export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
           run={run}
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
+        />
+      )}
+      {isEditModalOpen && (
+        <EditRun
+          key={run.id}
+          run={run}
+          onClose={handleCloseEditModal}
+          onRunAddedReload={handleRunAddedReload}
         />
       )}
     </div>

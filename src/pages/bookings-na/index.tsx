@@ -7,12 +7,36 @@ import { UserPlus } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
 import axios from 'axios'
 import { RunData } from './run'
+import { jwtDecode } from 'jwt-decode'
+
+interface JwtPayload {
+  roles: string[]
+}
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RunData[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [userRoles, setUserRoles] = useState<string[]>([])
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('jwt')
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token)
+        console.log(decoded)
+        setUserRoles(decoded.roles || [])
+      } catch (error) {
+        console.error('Erro ao decodificar JWT:', error)
+        setUserRoles([])
+      }
+    }
+  }, [])
+
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((role) => userRoles.includes(role))
+  }
 
   // Função para buscar os runs
   async function fetchRuns() {
@@ -72,13 +96,16 @@ export function FullRaidsNa() {
       <DateFilter onDaySelect={onDaySelect} />
       <div className='container mx-auto mt-2 p-4'>
         <div className='flex items-center justify-between mb-2'>
-          <button
-            className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center'
-            onClick={handleOpenAddRun}
-          >
-            <UserPlus size={18} />
-            Add Run
-          </button>
+          {hasRequiredRole(['1101231955120496650']) && (
+            <button
+              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center'
+              onClick={handleOpenAddRun}
+            >
+              <UserPlus size={18} />
+              Add Run
+            </button>
+          )}
+
           <h1 className='text-2xl font-bold text-center flex-grow mr-24'>
             NA Raids
           </h1>

@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
-import { UserPlus } from '@phosphor-icons/react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Pencil } from '@phosphor-icons/react'
 import { Modal } from './modal'
 import axios from 'axios'
+import { RunData } from '../pages/bookings-na/run'
 
 interface MultiSelectDropdownProps {
   onChange: (selected: string[]) => void
+  initialSelected: string[] // Adicione esta linha
 }
 
 interface ApiOption {
@@ -13,8 +15,11 @@ interface ApiOption {
   global_name: string
 }
 
-const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
-  const [selected, setSelected] = useState<string[]>([])
+const MultiSelectDropdown = ({
+  onChange,
+  initialSelected,
+}: MultiSelectDropdownProps) => {
+  const [selected, setSelected] = useState<string[]>(initialSelected)
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,6 +60,10 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   }, [])
 
   useEffect(() => {
+    setSelected(initialSelected)
+  }, [initialSelected])
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -72,25 +81,27 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
     onChange(selected)
   }, [selected, onChange])
 
+  useEffect(() => {
+    if (JSON.stringify(selected) !== JSON.stringify(initialSelected)) {
+      setSelected(initialSelected)
+    }
+  }, [initialSelected])
+
   const handleSelect = (value: string) => {
-    setSelected((prev) =>
-      prev.includes(value)
+    setSelected((prev) => {
+      const newSelection = prev.includes(value)
         ? prev.filter((item) => item !== value)
         : [...prev, value]
-    )
+      console.log('Nova seleção:', newSelection) // Para depuração
+      return newSelection
+    })
   }
 
-  // Função para obter os nomes de exibição
   const getDisplayNames = () => {
     return selected
       .map((value) => {
-        // Divide o valor armazenado em user_id e username
-        const [id, username] = value.split(';')
-        // Encontra o usuário correspondente
-        const user = apiOptions.find(
-          (u) => u.id === id && u.username === username
-        )
-        return user?.global_name || value // Exibe o global_name ou o valor como fallback
+        const parts = value.split(';')
+        return parts.length >= 2 ? parts[1] : value
       })
       .join(', ')
   }
@@ -120,7 +131,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
             !error &&
             apiOptions.map((option) => (
               <div
-                key={option.username}
+                key={option.id}
                 className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
                 onClick={() => handleSelect(`${option.id};${option.username}`)}
               >
@@ -130,9 +141,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
                   readOnly
                   className='mr-2'
                 />
-                <span className='text-balck font-normal'>
-                  {option.global_name}
-                </span>
+                <span className='text-black'>{option.username}</span>
               </div>
             ))}
         </div>
@@ -141,25 +150,33 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   )
 }
 
-export interface AddRunProps {
+export interface EditRunProps {
+  run: RunData
   onClose: () => void
   onRunAddedReload: () => void
 }
 
-export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-  const [raid, setRaid] = useState('')
-  const [runType, setRunType] = useState('')
-  const [difficulty, setDifficulty] = useState('')
-  const [team, setTeam] = useState('')
-  const [maxBuyers, setMaxBuyers] = useState('')
-  const [raidLeader, setRaidLeader] = useState<string[]>([])
-  const [goldCollector, setGoldCollector] = useState('')
-  const [loot, setLoot] = useState('')
-  const [note, setNote] = useState('')
+export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
+  const [date, setDate] = useState(run.date)
+  const [time, setTime] = useState(run.time)
+  const [raid, setRaid] = useState(run.raid)
+  const [runType, setRunType] = useState(run.runType)
+  const [difficulty, setDifficulty] = useState(run.difficulty)
+  const [team, setTeam] = useState(run.team)
+  const [maxBuyers, setMaxBuyers] = useState(run.maxBuyers)
+  const [raidLeader, setRaidLeader] = useState<string[]>(
+    run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || []
+  )
+  const [goldCollector, setGoldCollector] = useState(run.goldCollector)
+  const [loot, setLoot] = useState(run.loot)
+  const [note, setNote] = useState(run.note)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+
+  const initialSelected = useMemo(
+    () => run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
+    [run.raidLeaders] // ⬅️ Só recalcula se raidLeaders mudar
+  )
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -180,16 +197,25 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       difficulty,
       team,
       maxBuyers,
-      raidLeader,
+      raidLeader: raidLeader.map((value) => {
+        const parts = value.split(';')
+        return `${parts[0]};${parts[1]}`
+      }),
       goldCollector,
       loot,
       note,
     }
+    // Dentro do handleSubmit, antes do axios.put:
+    console.log('Dados enviados:', {
+      ...data,
+      raidLeader: raidLeader, // Verifique se está atualizado aqui
+    })
 
     try {
       const jwt = sessionStorage.getItem('jwt')
-      await axios.post(
-        import.meta.env.VITE_POST_RUN_URL || 'http://localhost:8000/v1/run',
+      // Alterado para PUT e incluído o ID da run na URL
+      await axios.put(
+        `${import.meta.env.VITE_POST_RUN_URL || 'http://localhost:8000/v1/run'}/${run.id}`,
         data,
         {
           headers: {
@@ -200,15 +226,12 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       )
 
       onRunAddedReload()
-
       setIsSuccess(true)
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      setTimeout(() => onClose(), 3000)
     } catch (error) {
-      console.error('Error adding run:', error)
+      console.error('Error editing run:', error)
     } finally {
-      setIsSubmitting(false) // Desativa o loading em qualquer caso
+      setIsSubmitting(false)
     }
   }
 
@@ -219,7 +242,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
           <div className='p-6 text-center'>
             <div className='text-green-500 text-4xl mb-4'>✓</div>
             <h2 className='text-2xl font-bold mb-2'>
-              Run created successfully!
+              Run edited successfully!
             </h2>
             <p className='text-zinc-400'>
               The modal will close automatically in 3 seconds...
@@ -324,6 +347,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <MultiSelectDropdown
+              initialSelected={initialSelected}
               onChange={(selected) => setRaidLeader(selected)}
             />
             <input
@@ -367,11 +391,11 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 {isSubmitting ? (
                   <>
                     <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                    Creating...
+                    Editing...
                   </>
                 ) : (
                   <>
-                    <UserPlus size={20} /> Add Run
+                    <Pencil size={20} /> Edit Run
                   </>
                 )}
               </button>

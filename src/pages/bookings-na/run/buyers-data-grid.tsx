@@ -145,7 +145,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
             <th className='p-2 border'>Slot</th>
             <th className='p-2 border w-[100px]'>Status</th>
             <th className='p-2 border'>Name-Realm</th>
-            <th className='p-2 border'>Payment-Realm</th>
+            <th className='p-2 border'>Payment Realm</th>
             <th className='p-2 border'>Faction</th>
             <th className='p-2 border'>Class</th>
             <th className='p-2 border'>Advertiser</th>
