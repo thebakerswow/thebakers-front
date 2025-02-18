@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Pencil, UserPlus } from '@phosphor-icons/react'
 import twwLogo from '../../../assets/baker-and-employees.png'
 import { RunData } from './index'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
-import { jwtDecode } from 'jwt-decode'
-
-interface JwtPayload {
-  roles: string[]
-}
+import { useAuth } from '../../../context/auth-context' // Importe o hook de autenticação
 
 interface RunInfoProps {
   run: RunData
@@ -18,24 +14,12 @@ interface RunInfoProps {
 export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [userRoles, setUserRoles] = useState<string[]>([])
-
-  useEffect(() => {
-    const token = sessionStorage.getItem('jwt')
-    if (token) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(token)
-        console.log(decoded)
-        setUserRoles(decoded.roles || [])
-      } catch (error) {
-        console.error('Erro ao decodificar JWT:', error)
-        setUserRoles([])
-      }
-    }
-  }, [])
+  const { userRoles } = useAuth() // Obtenha as roles do contexto
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((role) => userRoles.includes(role))
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
+    )
   }
 
   const handleOpenEditModal = () => {

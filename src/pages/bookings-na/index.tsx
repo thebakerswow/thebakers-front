@@ -1,4 +1,3 @@
-// FullRaidsNa.tsx
 import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
@@ -7,38 +6,22 @@ import { UserPlus } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
 import axios from 'axios'
 import { RunData } from './run'
-import { jwtDecode } from 'jwt-decode'
-
-interface JwtPayload {
-  roles: string[]
-}
+import { useAuth } from '../../context/auth-context' // Importe o useAuth
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RunData[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [userRoles, setUserRoles] = useState<string[]>([])
-
-  useEffect(() => {
-    const token = sessionStorage.getItem('jwt')
-    if (token) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(token)
-        console.log(decoded)
-        setUserRoles(decoded.roles || [])
-      } catch (error) {
-        console.error('Erro ao decodificar JWT:', error)
-        setUserRoles([])
-      }
-    }
-  }, [])
+  const { userRoles } = useAuth() // Obtenha as roles do contexto
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((role) => userRoles.includes(role))
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
+    )
   }
 
-  // Função para buscar os runs
+  // Função para buscar os runs (mantida igual)
   async function fetchRuns() {
     if (!selectedDate) {
       setRows([])

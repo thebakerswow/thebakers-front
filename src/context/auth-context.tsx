@@ -1,3 +1,4 @@
+import { jwtDecode } from 'jwt-decode'
 import {
   createContext,
   useState,
@@ -6,39 +7,73 @@ import {
   useContext,
 } from 'react'
 
+interface JwtPayload {
+  roles: string[] // Definido como obrigatório conforme sua necessidade
+}
+
 type AuthContextType = {
   isAuthenticated: boolean
   loading: boolean
   login: (token: string) => void
   logout: () => void
+  userRoles: string[]
+  isPermissionAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(true) // Mantemos o estado de loading
+  const [userRoles, setUserRoles] = useState<string[]>([])
+
+  const checkAuth = () => {
+    const token = sessionStorage.getItem('jwt')
+    setLoading(true) // Inicia o loading
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token)
+        setUserRoles(decoded.roles.map((r) => r.toString()))
+        setIsAuthenticated(true)
+      } catch (error) {
+        setUserRoles([])
+        setIsAuthenticated(false)
+      }
+    } else {
+      setUserRoles([])
+      setIsAuthenticated(false)
+    }
+    setLoading(false) // Finaliza o loading após verificação
+  }
 
   useEffect(() => {
-    const user = sessionStorage.getItem('jwt') // Exemplo de verificação de autenticação
-    if (user) {
-      setIsAuthenticated(true)
-    }
-    setLoading(false) // Após carregar o estado de autenticação, desativa o loading
+    checkAuth()
+    window.addEventListener('storage', checkAuth)
+    return () => window.removeEventListener('storage', checkAuth)
   }, [])
 
   const login = (token: string) => {
-    setIsAuthenticated(true)
     sessionStorage.setItem('jwt', token)
+    checkAuth() // Atualiza o estado após login
   }
 
   const logout = () => {
-    setIsAuthenticated(false)
     sessionStorage.removeItem('jwt')
+    setUserRoles([])
+    setIsAuthenticated(false)
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        loading,
+        login,
+        logout,
+        userRoles,
+        isPermissionAuthenticated: userRoles.length > 0,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

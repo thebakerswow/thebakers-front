@@ -24,15 +24,14 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div className='flex justify-center items-center h-screen'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-red-400'></div>
+      </div>
+    )
   }
 
-  if (!isAuthenticated) {
-    // Redireciona para a página de login caso não esteja autenticado
-    return <Navigate to='/' />
-  }
-
-  return element
+  return isAuthenticated ? element : <Navigate to='/' />
 }
 
 export function App() {
@@ -44,15 +43,13 @@ export function App() {
             <Header />
             <main className='bg-zinc-300 relative flex-grow flex justify-center overflow-y-auto'>
               <Routes>
+                {/* Rotas públicas */}
                 <Route path='/' element={<Login />} />
                 <Route path='/login/callback' element={<AuthCallback />} />
                 <Route path='/login/error' element={<LoginErro />} />
                 <Route path='/access-denied' element={<AccessDenied />} />
-                {/* Rotas privadas - exigem autenticação */}
-                <Route
-                  path='*'
-                  element={<PrivateRoute element={<ErrorPage />} />}
-                />
+
+                {/* Rotas privadas */}
                 <Route
                   path='/home'
                   element={<PrivateRoute element={<HomePage />} />}
@@ -77,6 +74,9 @@ export function App() {
                   path='/bookings-na/run/:id'
                   element={<PrivateRoute element={<RunDetails />} />}
                 />
+
+                {/* Rota catch-all */}
+                <Route path='*' element={<ErrorPage />} />
               </Routes>
             </main>
           </div>

@@ -10,57 +10,30 @@ import {
   CheckCircle,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { useAuth } from '../context/auth-context' // Para utilizar o contexto de autenticação
-import { jwtDecode } from 'jwt-decode'
-
-interface JwtPayload {
-  roles: string[]
-}
+import { useState } from 'react'
+import { useAuth } from '../context/auth-context'
 
 export function Header() {
   const navigate = useNavigate()
-  const { logout, isAuthenticated } = useAuth() // Acessa a função de logout e a autenticação do contexto
+  const { logout, isAuthenticated, userRoles } = useAuth()
   const [isHoveringNA, setIsHoveringNA] = useState(false)
   const [isHoveringManagement, setIsHoveringManagement] = useState(false)
-  const [userRoles, setUserRoles] = useState<string[]>([])
-
-  useEffect(() => {
-    const token = sessionStorage.getItem('jwt')
-    if (token) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(token)
-        console.log('Decoded JWT (produção):', decoded)
-        setUserRoles(decoded.roles || [])
-        console.log('Tipo da role:', typeof decoded.roles[0])
-      } catch (error) {
-        console.error('Erro ao decodificar JWT:', error)
-        setUserRoles([])
-      }
-    }
-  }, [])
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return userRoles.some((userRole) =>
-      requiredRoles.some(
-        (required) => required.toString() === userRole.toString()
-      )
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
     )
   }
 
   const handleLogout = () => {
-    logout() // Chama a função de logout
-    navigate('/') // Redireciona para a página de login após o logout
+    logout()
+    navigate('/')
   }
 
-  // Exibe o header com os botões de menu apenas se o usuário estiver autenticado
   if (!isAuthenticated) {
     return (
-      <header
-        className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 
-      shadow-bottom-strong z-10 relative'
-      >
-        TheBakers <span className='text-red-700 '>Hub</span>
+      <header className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative'>
+        TheBakers <span className='text-red-700'>Hub</span>
       </header>
     )
   }
@@ -68,8 +41,9 @@ export function Header() {
   return (
     <header className='h-[60px] bg-zinc-900 flex gap-40 justify-evenly items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
       <button className='text-3xl font-bold' onClick={() => navigate('/home')}>
-        TheBakers <span className='text-red-700 '>Hub</span>
+        TheBakers <span className='text-red-700'>Hub</span>
       </button>
+
       <button
         className='text-gray-300 flex gap-4 text-lg font-semibold'
         onClick={() => navigate('/balance')}
@@ -92,7 +66,7 @@ export function Header() {
             <CaretDown className='text-red-400' size={20} />
           )}
         </button>
-        {/* Dropdown abaixo do header */}
+
         {isHoveringManagement && (
           <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
             {hasRequiredRole(['1101231955120496650']) && (
@@ -115,6 +89,7 @@ export function Header() {
           </div>
         )}
       </div>
+
       <div
         onMouseEnter={() => setIsHoveringNA(true)}
         onMouseLeave={() => setIsHoveringNA(false)}
@@ -130,7 +105,6 @@ export function Header() {
           )}
         </button>
 
-        {/* Dropdown abaixo do header */}
         {isHoveringNA && (
           <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
             <button
@@ -143,6 +117,7 @@ export function Header() {
           </div>
         )}
       </div>
+
       <button
         className='text-gray-300 flex gap-4 text-lg font-semibold'
         onClick={handleLogout}
