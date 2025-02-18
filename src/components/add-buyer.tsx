@@ -55,12 +55,16 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
     try {
       const jwt = sessionStorage.getItem('jwt')
-      await axios.post('http://localhost:8000/v1/buyer', data, {
-        headers: {
-          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-          Authorization: `Bearer ${jwt}`,
-        },
-      })
+      await axios.post(
+        import.meta.env.VITE_POST_BUYER_URL || 'http://localhost:8000/v1/buyer',
+        data,
+        {
+          headers: {
+            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
 
       onBuyerAddedReload()
 
