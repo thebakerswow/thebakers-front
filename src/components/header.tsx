@@ -30,8 +30,9 @@ export function Header() {
     if (token) {
       try {
         const decoded = jwtDecode<JwtPayload>(token)
-        console.log(decoded)
+        console.log('Decoded JWT (produção):', decoded)
         setUserRoles(decoded.roles || [])
+        console.log('Tipo da role:', typeof decoded.roles[0])
       } catch (error) {
         console.error('Erro ao decodificar JWT:', error)
         setUserRoles([])
@@ -40,7 +41,11 @@ export function Header() {
   }, [])
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((role) => userRoles.includes(role))
+    return userRoles.some((userRole) =>
+      requiredRoles.some(
+        (required) => required.toString() === userRole.toString()
+      )
+    )
   }
 
   const handleLogout = () => {
