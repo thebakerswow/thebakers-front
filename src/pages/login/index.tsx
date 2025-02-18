@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import axios from 'axios'
+import { DiscordLogo } from '@phosphor-icons/react'
 
 export function Login() {
   const { isAuthenticated } = useAuth()
@@ -38,10 +39,11 @@ export function Login() {
   return (
     <div className='bg-zinc-700 text-gray-100 h-[400px] w-[800px] text-4xl flex flex-col gap-4 items-center justify-center font-semibold rounded-xl shadow-2xl mt-20'>
       <button
-        className='px-8 py-4 bg-red-500 rounded-md text-xl font-semibold hover:bg-red-600'
+        className='flex gap-2 items-center px-8 py-4 bg-indigo-500 rounded-md text-xl font-semibold hover:bg-indigo-600 transition-all'
         onClick={handleLogin}
       >
-        Login
+        <DiscordLogo size={40} weight='fill' />
+        Sign in with Discord
       </button>
     </div>
   )

@@ -1,11 +1,12 @@
+// FullRaidsNa.tsx
 import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
 import { format } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
-import { InputRun } from './input-run'
+import { AddRun } from '../../components/add-run'
 import axios from 'axios'
-import { RunData } from './run/run-details'
+import { RunData } from './run'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RunData[]>([])
@@ -13,47 +14,45 @@ export function FullRaidsNa() {
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    if (selectedDate) {
-      setIsLoading(true)
-
-      axios
-        .get(
-          import.meta.env.VITE_GET_RUN_URL || 'http://localhost:8000/v1/run',
-          {
-            params: { date: format(selectedDate, 'yyyy-MM-dd') },
-            headers: {
-              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
-            },
-          }
-        )
-        .then((response) => {
-          console.log(response.data.info)
-          const runs = response.data.info
-
-          if (runs) {
-            const formattedData = Array.isArray(runs)
-              ? runs.map((run: any) => ({
-                  ...run,
-                }))
-              : []
-
-            setRows(formattedData)
-          } else {
-            setRows([])
-          }
-        })
-        .catch((error) => {
-          console.error('Erro ao buscar runs:', error)
-          setRows([])
-        })
-        .finally(() => {
-          setIsLoading(false) // Finaliza o loading
-        })
-    } else {
+  // Função para buscar os runs
+  async function fetchRuns() {
+    if (!selectedDate) {
       setRows([])
+      return
     }
+
+    setIsLoading(true)
+    try {
+      const response = await axios.get(
+        import.meta.env.VITE_GET_RUN_URL || 'http://localhost:8000/v1/run',
+        {
+          params: { date: format(selectedDate, 'yyyy-MM-dd') },
+          headers: {
+            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+            Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+          },
+        }
+      )
+
+      const runs = response.data.info
+      if (runs) {
+        const formattedData = Array.isArray(runs)
+          ? runs.map((run: any) => ({ ...run }))
+          : []
+        setRows(formattedData)
+      } else {
+        setRows([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar runs:', error)
+      setRows([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchRuns()
   }, [selectedDate])
 
   function onDaySelect(day: Date | null) {
@@ -87,7 +86,12 @@ export function FullRaidsNa() {
 
         <RunsDataGrid data={rows} isLoading={isLoading} />
 
-        {isAddRunOpen && <InputRun onClose={handleCloseAddRun} />}
+        {isAddRunOpen && (
+          <AddRun
+            onClose={handleCloseAddRun}
+            onRunAddedReload={fetchRuns} // Passa a função para recarregar a lista
+          />
+        )}
       </div>
     </div>
   )

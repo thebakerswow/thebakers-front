@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { CheckFat, UserPlus, XCircle } from '@phosphor-icons/react'
-import DeathKnight from '../../../../assets/class_icons/deathknight.png'
-import DemonHunter from '../../../../assets/class_icons/demonhunter.png'
-import Druid from '../../../../assets/class_icons/druid.png'
-import Evoker from '../../../../assets/class_icons/evoker.png'
-import Hunter from '../../../../assets/class_icons/hunter.png'
-import Mage from '../../../../assets/class_icons/mage.png'
-import Monk from '../../../../assets/class_icons/monk.png'
-import Paladin from '../../../../assets/class_icons/paladin.png'
-import Priest from '../../../../assets/class_icons/priest.png'
-import Rogue from '../../../../assets/class_icons/rogue.png'
-import Shaman from '../../../../assets/class_icons/shaman.png'
-import Warlock from '../../../../assets/class_icons/warlock.png'
-import Warrior from '../../../../assets/class_icons/warrior.png'
+import DeathKnight from '../../../assets/class_icons/deathknight.png'
+import DemonHunter from '../../../assets/class_icons/demonhunter.png'
+import Druid from '../../../assets/class_icons/druid.png'
+import Evoker from '../../../assets/class_icons/evoker.png'
+import Hunter from '../../../assets/class_icons/hunter.png'
+import Mage from '../../../assets/class_icons/mage.png'
+import Monk from '../../../assets/class_icons/monk.png'
+import Paladin from '../../../assets/class_icons/paladin.png'
+import Priest from '../../../assets/class_icons/priest.png'
+import Rogue from '../../../assets/class_icons/rogue.png'
+import Shaman from '../../../assets/class_icons/shaman.png'
+import Warlock from '../../../assets/class_icons/warlock.png'
+import Warrior from '../../../assets/class_icons/warrior.png'
 
 export interface BuyerData {
   id: string
@@ -145,6 +145,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
             <th className='p-2 border'>Slot</th>
             <th className='p-2 border w-[100px]'>Status</th>
             <th className='p-2 border'>Name-Realm</th>
+            <th className='p-2 border'>Payment-Realm</th>
             <th className='p-2 border'>Faction</th>
             <th className='p-2 border'>Class</th>
             <th className='p-2 border'>Advertiser</th>
@@ -179,7 +180,12 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
                   </select>
                 </form>
               </td>
-              <td className='p-2 text-center'>{buyer.nameAndRealm}</td>
+              <td className='p-2 text-center'>
+                {buyer.nameAndRealm === '****'
+                  ? 'Encrypted'
+                  : buyer.nameAndRealm}
+              </td>
+              <td className='p-2 text-center'>{buyer.paymentRealm}</td>
               <td className='p-2 text-center'>{buyer.paymentFaction}</td>
               <td className='p-2 flex gap-2 justify-center'>
                 {buyer.playerClass}

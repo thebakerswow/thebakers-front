@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { UserPlus } from '@phosphor-icons/react'
-import { Modal } from '../../../components/modal'
+import { Modal } from './modal'
 import axios from 'axios'
 
 interface MultiSelectDropdownProps {
@@ -39,6 +39,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
             },
           }
         )
+        console.log(response.data.info.members)
 
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
@@ -139,16 +140,17 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   )
 }
 
-export interface InputRunProps {
+export interface AddRunProps {
   onClose: () => void
+  onRunAddedReload: () => void
 }
 
-export function InputRun({ onClose }: InputRunProps) {
+export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [raid, setRaid] = useState('')
   const [runType, setRunType] = useState('')
-  const [dificult, setDificult] = useState('')
+  const [difficulty, setDifficulty] = useState('')
   const [team, setTeam] = useState('')
   const [maxBuyers, setMaxBuyers] = useState('')
   const [raidLeader, setRaidLeader] = useState<string[]>([])
@@ -174,7 +176,7 @@ export function InputRun({ onClose }: InputRunProps) {
       time,
       raid,
       runType,
-      dificult,
+      difficulty,
       team,
       maxBuyers,
       raidLeader,
@@ -195,6 +197,11 @@ export function InputRun({ onClose }: InputRunProps) {
           },
         }
       )
+
+      console.log('post: ', data)
+
+      onRunAddedReload()
+
       setIsSuccess(true)
       setTimeout(() => {
         onClose()
@@ -264,8 +271,8 @@ export function InputRun({ onClose }: InputRunProps) {
             </select>
             <select
               required
-              value={dificult}
-              onChange={(e) => setDificult(e.target.value)}
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
             >
               <option value='' disabled hidden className='text-zinc-400'>

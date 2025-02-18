@@ -2,9 +2,7 @@ import { Megaphone, Eye } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { Modal } from '../../../components/modal'
-// import { BuyersDataGrid } from './run/buyers-data-grid'
-// import { buyersData } from '../../../assets/buyers-data'
+import { Modal } from '../../components/modal'
 
 interface RaidLeader {
   idDiscord: string
