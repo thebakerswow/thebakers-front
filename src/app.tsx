@@ -70,11 +70,11 @@ export function App() {
                   element={<PrivateRoute element={<Attendance />} />}
                 />
                 <Route
-                  path='/full-raids-na'
+                  path='/bookings-na'
                   element={<PrivateRoute element={<FullRaidsNa />} />}
                 />
                 <Route
-                  path='/full-raids-na/run/'
+                  path='/bookings-na/run/:id'
                   element={<PrivateRoute element={<RunDetails />} />}
                 />
               </Routes>

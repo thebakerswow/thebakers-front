@@ -1,4 +1,5 @@
 import { Megaphone, Eye } from '@phosphor-icons/react'
+import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../../components/modal'
@@ -12,22 +13,24 @@ interface RaidLeader {
 
 interface RunsDataProps {
   data: Array<{
+    id: string
     date: string
     time: string
     raid: string
     runType: string
     difficulty: string
     team: string
-    maxBuyers: string // Corrigir tipo para number
+    maxBuyers: string
     raidLeaders: RaidLeader[]
     goldCollector: string
     note: string
-    loot: string // Adicionar campo loot
+    loot: string
   }>
   isLoading: boolean
 }
 
 export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
+  const navigate = useNavigate()
   const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<{ note: string } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
@@ -49,6 +52,10 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
 
   function handleClosePreview() {
     setIsPreviewOpen(false)
+  }
+
+  const handleRedirect = (id: string) => {
+    navigate(`/bookings-na/run/${id}`) // Altere '/sua-url' para o caminho desejado
   }
 
   const sortedData = useMemo(() => {
@@ -100,8 +107,9 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
 
         <tbody className='bg-zinc-200 overflow-y-auto'>
           {isLoading && (
-            <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex items-center justify-center'>
+            <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex gap-4 flex-col items-center justify-center'>
               <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600'></td>
+              <p>Loading...</p>
             </tr>
           )}
           {!isLoading && sortedData.length === 0 ? (
@@ -112,7 +120,11 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
             </tr>
           ) : (
             sortedData.map((run, index) => (
-              <tr key={index} className='border border-gray-300'>
+              <tr
+                onDoubleClick={() => handleRedirect(run.id)}
+                key={index}
+                className='border border-gray-300'
+              >
                 <td className='p-2 text-center align-middle'>
                   <div className='flex justify-center items-center h-full'>
                     {run.date ? (

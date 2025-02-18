@@ -103,7 +103,7 @@ export function Header() {
           <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
             <button
               className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
-              onClick={() => navigate('/full-raids-na')}
+              onClick={() => navigate('/bookings-na')}
             >
               <CastleTurret className='text-gray-100' size={30} />
               Full Raids

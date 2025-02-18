@@ -5,25 +5,7 @@ import { format } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { InputRun } from './input-run'
 import axios from 'axios'
-
-interface RaidLeader {
-  idDiscord: string
-  username: string
-}
-
-interface RunData {
-  date: string
-  time: string
-  raid: string
-  runType: string
-  difficulty: string
-  team: string
-  maxBuyers: string
-  raidLeaders: RaidLeader[]
-  goldCollector: string
-  note: string
-  loot: string
-}
+import { RunData } from './run/run-details'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RunData[]>([])
@@ -33,7 +15,7 @@ export function FullRaidsNa() {
 
   useEffect(() => {
     if (selectedDate) {
-      setIsLoading(true) // Inicia o loading
+      setIsLoading(true)
 
       axios
         .get(
@@ -47,6 +29,7 @@ export function FullRaidsNa() {
           }
         )
         .then((response) => {
+          console.log(response.data.info)
           const runs = response.data.info
 
           if (runs) {

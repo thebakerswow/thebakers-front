@@ -2,10 +2,22 @@ import { useState } from 'react'
 import { Megaphone, Pencil, UserPlus } from '@phosphor-icons/react'
 import amirdrassilCover from '../../../../assets/amirdrassil.png'
 import { Modal } from '../../../../components/modal'
-import { bookingData, RunData } from '../../../../assets/runs-data'
+import { RunData } from './run-details'
 
-export function RunInfo() {
+interface RunInfoProps {
+  run: RunData
+}
+
+export function RunInfo({ run }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
+  const [paymentRealm, setPaymentRealm] = useState('')
+  const [paymentFaction, setPaymentFaction] = useState('')
+  const [nameAndRealm, setNameAndRealm] = useState('')
+  const [playerClass, setPlayerClass] = useState('')
+  const [buyerPot, setBuyerPot] = useState('')
+  const [isPaid, setIsPaid] = useState<boolean | undefined>(undefined)
+  const [idBuyerAdvertiser, setIdBuyerAdvertiser] = useState('')
+  const [buyerNote, setBuyerNote] = useState('')
 
   function handleOpenAddBuyer() {
     setIsAddBuyerOpen(true)
@@ -15,8 +27,27 @@ export function RunInfo() {
     setIsAddBuyerOpen(false)
   }
 
-  // Seleciona os dados da run (pode ser dinâmico no futuro)
-  const run: RunData = bookingData[0]
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newValue = e.target.value
+    if (/^[0-9]*$/.test(newValue)) {
+      setBuyerPot(newValue)
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const data = {
+      paymentRealm,
+      paymentFaction,
+      nameAndRealm,
+      playerClass,
+      buyerPot,
+      isPaid,
+      idBuyerAdvertiser,
+      buyerNote,
+    }
+    console.log('Dados do formulário:', data)
+  }
 
   return (
     <div className='flex m-4 gap-4 rounded-md'>
@@ -43,32 +74,35 @@ export function RunInfo() {
             </p>
             <p className='text-red-500 font-semibold'>
               <span className='font-bold text-base text-zinc-900'>
-                Buyers:{' '}
+                Max Buyers:{' '}
               </span>
-              {run.buyers}
+              {run.maxBuyers}
             </p>
             <p>
               <span className='font-bold text-base'>Slots Available: </span>
-              {run.slotsAvailable}
             </p>
             <p>
               <span className='font-bold text-base'>Backups: </span>
-              {run.backups}
             </p>
             <p>
-              <span className='font-bold text-base'>Leader: </span> {run.leader}
+              <span className='font-bold text-base'>Leader: </span>{' '}
+              {run.raidLeaders && run.raidLeaders.length > 0 ? (
+                run.raidLeaders
+                  .map((raidLeader) => raidLeader.username)
+                  .join(', ')
+              ) : (
+                <span>-</span>
+              )}
             </p>
             <p>
               <span className='font-bold text-base'>Gold Collector: </span>
-              {run.collector}
+              {run.goldCollector}
             </p>
             <p>
               <span className='font-bold text-base'>Potential Pot: </span>
-              {run.potentialPot}
             </p>
             <p>
               <span className='font-bold text-base'>Actual Pot: </span>{' '}
-              {run.actualPot}
             </p>
           </div>
         </div>
@@ -93,73 +127,107 @@ export function RunInfo() {
 
       {isAddBuyerOpen && (
         <Modal onClose={handleCloseAddBuyer}>
-          <div className='w-full max-w-[95vw] h-[360px] overflow-y-auto overflow-x-hidden flex flex-col'>
-            <form action='' className='grid grid-cols-2 gap-4'>
+          <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
+            <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
               <input
                 type='text'
-                placeholder='Raider.io URL'
-                className='col-span-2 p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-              />
-              <p className='-mt-3 ml-1 col-span-2 text-sm text-gray-400 leading-tight'>
-                (Optional) If you fill this in, the form will be auto-filled
-                with the data from Raider.IO
-              </p>
-              <input
-                type='text'
+                value={paymentRealm}
+                onChange={(e) => setPaymentRealm(e.target.value)}
                 placeholder='Payment Realm'
                 className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
               />
-              <select className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'>
-                <option value='' disabled selected hidden>
+
+              <select
+                value={paymentFaction}
+                onChange={(e) => setPaymentFaction(e.target.value)}
+                className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              >
+                <option value='' disabled hidden>
                   Payment Faction
                 </option>
-                <option value='horde'>Horde</option>
-                <option value='alliance'>Alliance</option>
+                <option value='Horde'>Horde</option>
+                <option value='Alliance'>Alliance</option>
               </select>
+
               <input
                 type='text'
+                value={nameAndRealm}
+                onChange={(e) => setNameAndRealm(e.target.value)}
                 placeholder='Buyer Name-Realm'
                 className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
               />
-              <select className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'>
-                <option value='' disabled selected hidden>
+
+              <select
+                value={playerClass}
+                onChange={(e) => setPlayerClass(e.target.value)}
+                className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              >
+                <option value='' disabled hidden>
                   Class
                 </option>
-                <option value='warrior'>Warrior</option>
-                <option value='paladin'>Paladin</option>
-                <option value='hunter'>Hunter</option>
-                <option value='rogue'>Rogue</option>
-                <option value='priest'>Priest</option>
-                <option value='shaman'>Shaman</option>
-                <option value='mage'>Mage</option>
-                <option value='warlock'>Warlock</option>
-                <option value='monk'>Monk</option>
-                <option value='druid'>Druid</option>
-                <option value='demonhunter'>Demon Hunter</option>
-                <option value='deathknight'>Death Knight</option>
-                <option value='evoker'>Evoker</option>
+                <option value='Warrior'>Warrior</option>
+                <option value='Paladin'>Paladin</option>
+                <option value='Hunter'>Hunter</option>
+                <option value='Rogue'>Rogue</option>
+                <option value='Priest'>Priest</option>
+                <option value='Shaman'>Shaman</option>
+                <option value='Mage'>Mage</option>
+                <option value='Warlock'>Warlock</option>
+                <option value='Monk'>Monk</option>
+                <option value='Druid'>Druid</option>
+                <option value='Demonhunter'>Demon Hunter</option>
+                <option value='Deathknight'>Death Knight</option>
+                <option value='Evoker'>Evoker</option>
               </select>
+
               <input
                 type='text'
+                value={buyerPot}
+                onChange={handleChange}
                 placeholder='Pot'
                 className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
               />
-              <select className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'>
-                <option value='' disabled selected hidden>
+
+              <select
+                value={isPaid !== undefined ? String(isPaid) : ''}
+                onChange={(e) => setIsPaid(e.target.value === 'true')}
+                className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              >
+                <option value='' disabled hidden>
                   Paid Full
                 </option>
-                <option value='yes'>Yes</option>
-                <option value='no'>No</option>
+                <option value='true'>Yes</option>
+                <option value='false'>No</option>
               </select>
+
+              <select
+                value={idBuyerAdvertiser}
+                onChange={(e) => setIdBuyerAdvertiser(e.target.value)}
+                className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              >
+                <option value='' disabled hidden>
+                  Advertiser
+                </option>
+                <option value='ID do Canguru'>Canguru</option>
+                <option value='ID do Europeu'>Europeu</option>
+                <option value='ID do Maylin'>Maylin</option>
+                <option value='ID do Padaria'>Padaria</option>
+              </select>
+
               <input
                 type='text'
+                value={buyerNote}
+                onChange={(e) => setBuyerNote(e.target.value)}
                 placeholder='Note'
-                className='col-span-2 p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+                className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
               />
+              <button
+                type='submit'
+                className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center col-span-2'
+              >
+                <UserPlus size={20} /> Add Buyer
+              </button>
             </form>
-            <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mt-4 justify-center'>
-              <UserPlus size={20} /> Add Buyer
-            </button>
           </div>
         </Modal>
       )}
