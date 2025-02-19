@@ -52,6 +52,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       idBuyerAdvertiser,
       buyerNote,
     }
+    console.log('buyer eviand:', data)
 
     try {
       const jwt = sessionStorage.getItem('jwt')
@@ -73,7 +74,15 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
         onClose()
       }, 3000)
     } catch (error) {
-      console.error('Error adding buyer:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
     } finally {
       setIsSubmitting(false)
     }

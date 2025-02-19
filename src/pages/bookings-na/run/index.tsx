@@ -69,6 +69,7 @@ export function RunDetails() {
           },
         }
       )
+      console.log('buyer recebido', response.data.info)
 
       setRows(response.data.info ?? [])
     } catch (error) {
@@ -103,7 +104,11 @@ export function RunDetails() {
         <div className='text-4xl'>Run not found</div>
       ) : (
         <div>
-          <RunInfo run={runData} onBuyerAddedReload={fetchBuyersData} />
+          <RunInfo
+            run={runData}
+            onBuyerAddedReload={fetchBuyersData}
+            onRunEdit={fetchRunData}
+          />
           <div className='container mx-auto mt-2 p-4'>
             {isLoadingBuyers ? (
               <div className='flex flex-col items-center mt-40'>

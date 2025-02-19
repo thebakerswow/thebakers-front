@@ -153,10 +153,10 @@ const MultiSelectDropdown = ({
 export interface EditRunProps {
   run: RunData
   onClose: () => void
-  onRunAddedReload: () => void
+  onRunEdit: () => void
 }
 
-export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
+export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [date, setDate] = useState(run.date)
   const [time, setTime] = useState(run.time)
   const [raid, setRaid] = useState(run.raid)
@@ -226,7 +226,8 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
         }
       )
 
-      onRunAddedReload()
+      onRunEdit()
+
       setIsSuccess(true)
       setTimeout(() => onClose(), 3000)
     } catch (error) {

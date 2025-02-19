@@ -9,9 +9,10 @@ import { useAuth } from '../../../context/auth-context' // Importe o hook de aut
 interface RunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
+  onRunEdit: () => void
 }
 
-export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
+export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { userRoles } = useAuth() // Obtenha as roles do contexto
@@ -28,11 +29,6 @@ export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false)
-  }
-
-  const handleRunAddedReload = () => {
-    // Aqui você pode colocar a lógica para recarregar os dados, caso necessário
-    console.log('Run adicionada. Recarregue os dados aqui.')
   }
 
   function handleOpenAddBuyer() {
@@ -132,7 +128,7 @@ export function RunInfo({ run, onBuyerAddedReload }: RunInfoProps) {
           key={run.id}
           run={run}
           onClose={handleCloseEditModal}
-          onRunAddedReload={handleRunAddedReload}
+          onRunEdit={onRunEdit}
         />
       )}
     </div>

@@ -13,11 +13,13 @@ import Rogue from '../../../assets/class_icons/rogue.png'
 import Shaman from '../../../assets/class_icons/shaman.png'
 import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
+import { InviteBuyers } from '../../../components/invite-buyers'
 
 export interface BuyerData {
   id: string
   status: string
   idBuyerAdvertiser: string
+  nameOwnerBuyer: string
   buyerNote: string
   buyerPot: string
   isPaid: boolean
@@ -44,6 +46,15 @@ const statusPriorities: Record<string, number> = {
 
 export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
+  const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
+
+  function handleOpenInviteBuyersModal() {
+    setIsInviteBuyersOpen(true)
+  }
+
+  function handleCloseInviteBuyersModal() {
+    setIsInviteBuyersOpen(false)
+  }
 
   useEffect(() => {
     const orderData = [...data].sort((a, b) => {
@@ -129,7 +140,10 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
   return (
     <div>
       <div className='flex items-center gap-2'>
-        <button className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'>
+        <button
+          onClick={handleOpenInviteBuyersModal}
+          className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
+        >
           <UserPlus size={18} />
           Invite Buyers
         </button>
@@ -202,7 +216,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
                   </div>
                 )}
               </td>
-              <td className='p-2 text-center'>{buyer.idBuyerAdvertiser}</td>
+              <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
               <td className='p-2 text-center'>
                 {/* Verificação condicional para exibir o goldCollector */}
                 {buyer.status === 'group' || buyer.status === 'done'
@@ -231,6 +245,10 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
           ))}
         </tbody>
       </table>
+
+      {isInviteBuyersOpen && (
+        <InviteBuyers onClose={handleCloseInviteBuyersModal} />
+      )}
     </div>
   )
 }
