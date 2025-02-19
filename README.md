@@ -4,7 +4,7 @@
 
 - [] Deve ser possível realizar login;
 - [] Deve ser cadastrar uma run;
-- [] Deve ser possível visualizar um preview da run;
+- [x] Deve ser possível visualizar um preview da run;
 - [] Deve ser possível filtrar por data;
 - [] Deve ser possível cadastrar um buyer;
 - [] Deve ser possível editar as informacoes da raid;

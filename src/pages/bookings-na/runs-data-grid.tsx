@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
+import { BuyerData, BuyersDataGrid } from './run/buyers-data-grid'
+import axios from 'axios'
 
 interface RaidLeader {
   idDiscord: string
@@ -33,6 +35,10 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [selectedRun, setSelectedRun] = useState<{ note: string } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
+  const [buyersData, setBuyersData] = useState<BuyerData[]>([])
+  const [isLoadingBuyers, setIsLoadingBuyers] = useState(false)
+  const [errorBuyers, setErrorBuyers] = useState('')
+  const [selectedGoldCollector, setSelectedGoldCollector] = useState('')
 
   function handleOpenNote(run: { note: string }) {
     setSelectedRun(run)
@@ -44,12 +50,34 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
     setSelectedRun(null)
   }
 
-  function handleOpenPreview() {
-    setIsPreviewOpen(true)
+  const handleOpenPreview = async (runId: string, goldCollector: string) => {
+    try {
+      setIsLoadingBuyers(true)
+      setErrorBuyers('')
+      setSelectedGoldCollector(goldCollector)
+
+      const apiUrl = import.meta.env.VITE_GET_RUN_URL
+      const response = await axios.get(`${apiUrl}/${runId}/buyers`, {
+        headers: {
+          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+          Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+        },
+      })
+
+      setBuyersData(response.data.info ?? [])
+      setIsPreviewOpen(true)
+    } catch (error) {
+      console.error('Erro ao buscar dados dos compradores:', error)
+      setErrorBuyers('Failed to fetch buyers data. Please try again later.')
+    } finally {
+      setIsLoadingBuyers(false)
+    }
   }
 
-  function handleClosePreview() {
+  const handleClosePreview = () => {
     setIsPreviewOpen(false)
+    setBuyersData([])
+    setErrorBuyers('')
   }
 
   const handleRedirect = (id: string) => {
@@ -129,7 +157,9 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                       <Eye
                         className='cursor-pointer'
                         size={20}
-                        onClick={() => handleOpenPreview()}
+                        onClick={() =>
+                          handleOpenPreview(run.id, run.goldCollector)
+                        }
                       />
                     ) : (
                       <span>-</span>
@@ -191,7 +221,25 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
       {isPreviewOpen && (
         <Modal onClose={handleClosePreview}>
           <div className='w-full max-w-[95vw] h-[500px] overflow-y-auto overflow-x-hidden'>
-            {/* <BuyersDataGrid  /> */}
+            {isLoadingBuyers ? (
+              <div className='flex flex-col items-center justify-center h-full'>
+                <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
+                <p className='mt-4 text-lg'>Loading buyers...</p>
+              </div>
+            ) : errorBuyers ? (
+              <div className='text-red-500 text-2xl text-center'>
+                {errorBuyers}
+              </div>
+            ) : buyersData.length > 0 ? (
+              <BuyersDataGrid
+                data={buyersData}
+                goldCollector={selectedGoldCollector}
+              />
+            ) : (
+              <div className='flex flex-col items-center justify-center h-full'>
+                <p className='mt-4 text-lg'>No buyers found</p>
+              </div>
+            )}
           </div>
         </Modal>
       )}

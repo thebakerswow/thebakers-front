@@ -190,6 +190,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
     setIsSubmitting(true)
 
     const data = {
+      id: run.id,
       date,
       time,
       raid,
