@@ -197,7 +197,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
       runType,
       difficulty,
       team,
-      maxBuyers,
+      maxBuyers: maxBuyers.toString(),
       raidLeader: raidLeader.map((value) => {
         const parts = value.split(';')
         return `${parts[0]};${parts[1]}`
@@ -216,7 +216,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
       const jwt = sessionStorage.getItem('jwt')
       // Alterado para PUT e incluído o ID da run na URL
       await axios.put(
-        `${import.meta.env.VITE_POST_RUN_URL || 'http://localhost:8000/v1/run'}/${run.id}`,
+        import.meta.env.VITE_PUT_RUN_URL || 'http://localhost:8000/v1/run',
         data,
         {
           headers: {
@@ -230,7 +230,15 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
       setIsSuccess(true)
       setTimeout(() => onClose(), 3000)
     } catch (error) {
-      console.error('Error editing run:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -253,6 +261,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
             <input
               type='date'
+              id='date'
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -260,6 +269,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             />
             <input
               type='time'
+              id='time'
               required
               value={time}
               onChange={(e) => setTime(e.target.value)}
@@ -267,6 +277,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             />
             <input
               type='text'
+              id='raid'
               required
               placeholder='Raid'
               value={raid}
@@ -275,6 +286,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             />
             <select
               required
+              id='runType'
               value={runType}
               onChange={(e) => setRunType(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
@@ -293,6 +305,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
               </option>
             </select>
             <select
+              id='difficulty'
               required
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
@@ -313,6 +326,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             </select>
             <select
               required
+              id='team'
               value={team}
               onChange={(e) => setTeam(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
@@ -341,6 +355,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             </select>
             <input
               type='text'
+              id='maxBuyers'
               required
               placeholder='Max Buyers'
               value={maxBuyers}
@@ -353,6 +368,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             />
             <input
               type='text'
+              id='goldCollector'
               required
               placeholder='Gold Collector'
               value={goldCollector}
@@ -361,6 +377,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             />
             <select
               required
+              id='loot'
               value={loot}
               onChange={(e) => setLoot(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
@@ -377,6 +394,7 @@ export function EditRun({ onClose, onRunAddedReload, run }: EditRunProps) {
             </select>
             <textarea
               placeholder='Note'
+              id='note'
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition col-span-2'

@@ -162,8 +162,9 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
             >
               <td className='p-2 text-center'>{index + 1}</td>
               <td className='p-2'>
-                <form action=''>
+                <form>
                   <select
+                    id='status'
                     className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
                     value={buyer.status || ''}
                     onChange={(e) => handleStatusChange(index, e.target.value)}
@@ -202,7 +203,12 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
                 )}
               </td>
               <td className='p-2 text-center'>{buyer.idBuyerAdvertiser}</td>
-              <td className='p-2 text-center'>{goldCollector}</td>
+              <td className='p-2 text-center'>
+                {/* Verificação condicional para exibir o goldCollector */}
+                {buyer.status === 'group' || buyer.status === 'done'
+                  ? goldCollector
+                  : '-'}
+              </td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
                   {buyer.isPaid === true ? (

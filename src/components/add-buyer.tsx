@@ -92,7 +92,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             },
           }
         )
-
+        console.log(response.data.info)
         setAdvertisers(response.data.info)
       } catch (error) {
         console.error('Erro ao buscar os advertisers:', error)
@@ -118,6 +118,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
             <input
               type='text'
+              id='paymentRealm'
               required
               value={paymentRealm}
               onChange={(e) => setPaymentRealm(e.target.value)}
@@ -126,6 +127,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             />
 
             <select
+              id='paymentFaction'
               value={paymentFaction}
               required
               onChange={(e) => setPaymentFaction(e.target.value)}
@@ -144,6 +146,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
             <input
               type='text'
+              id='nameAndRealm'
               required
               value={nameAndRealm}
               onChange={(e) => setNameAndRealm(e.target.value)}
@@ -152,6 +155,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             />
 
             <select
+              id='playerClass'
               value={playerClass}
               required
               onChange={(e) => setPlayerClass(e.target.value)}
@@ -203,6 +207,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
             <input
               type='text'
+              id='buyerPot'
               required
               value={buyerPot}
               onChange={handleChange}
@@ -211,6 +216,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             />
 
             <select
+              id='isPaid'
               value={isPaid !== undefined ? String(isPaid) : ''}
               required
               onChange={(e) => setIsPaid(e.target.value === 'true')}
@@ -228,6 +234,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             </select>
 
             <select
+              id='idBuyerAdvertiser'
               value={idBuyerAdvertiser}
               onChange={(e) => setIdBuyerAdvertiser(e.target.value)}
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400'
@@ -239,7 +246,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 <option
                   className='text-black'
                   key={advertiser.id}
-                  value={advertiser.id}
+                  value={advertiser.id_discord}
                 >
                   {advertiser.username}
                 </option>
@@ -248,6 +255,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
             <input
               type='text'
+              id='buyerNote'
               value={buyerNote}
               onChange={(e) => setBuyerNote(e.target.value)}
               placeholder='Note'

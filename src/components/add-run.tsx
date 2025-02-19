@@ -229,6 +229,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
             <input
               type='date'
+              id='date'
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -236,6 +237,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <input
               type='time'
+              id='time'
               required
               value={time}
               onChange={(e) => setTime(e.target.value)}
@@ -243,6 +245,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <input
               type='text'
+              id='raid'
               required
               placeholder='Raid'
               value={raid}
@@ -250,6 +253,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <select
+              id='runType'
               required
               value={runType}
               onChange={(e) => setRunType(e.target.value)}
@@ -269,6 +273,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               </option>
             </select>
             <select
+              id='difficulty'
               required
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
@@ -288,6 +293,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               </option>
             </select>
             <select
+              id='team'
               required
               value={team}
               onChange={(e) => setTeam(e.target.value)}
@@ -317,6 +323,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </select>
             <input
               type='text'
+              id='maxBuyers'
               required
               placeholder='Max Buyers'
               value={maxBuyers}
@@ -328,6 +335,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <input
               type='text'
+              id='goldCollector'
               required
               placeholder='Gold Collector'
               value={goldCollector}
@@ -336,6 +344,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <select
               required
+              id='loot'
               value={loot}
               onChange={(e) => setLoot(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
@@ -352,6 +361,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </select>
             <textarea
               placeholder='Note'
+              id='note'
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition col-span-2'

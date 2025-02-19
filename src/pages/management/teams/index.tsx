@@ -45,6 +45,7 @@ export function TeamsManagement() {
           {
             headers: {
               APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
             },
           }
         )
