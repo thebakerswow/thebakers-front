@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckFat, UserPlus, XCircle } from '@phosphor-icons/react'
+import { CheckFat, XCircle } from '@phosphor-icons/react'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -13,7 +13,6 @@ import Rogue from '../../../assets/class_icons/rogue.png'
 import Shaman from '../../../assets/class_icons/shaman.png'
 import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
-import { InviteBuyers } from '../../../components/invite-buyers'
 import axios from 'axios'
 
 export interface BuyerData {
@@ -47,7 +46,6 @@ const statusPriorities: Record<string, number> = {
 
 export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
-  const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
 
   const handleTogglePaid = async (buyerId: string) => {
     const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
@@ -108,8 +106,6 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
       status: newStatus,
     }
 
-    console.log('Dados enviados para atualização de status:', data)
-
     try {
       const jwt = sessionStorage.getItem('jwt')
 
@@ -148,14 +144,6 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
     }
   }
 
-  function handleOpenInviteBuyersModal() {
-    setIsInviteBuyersOpen(true)
-  }
-
-  function handleCloseInviteBuyersModal() {
-    setIsInviteBuyersOpen(false)
-  }
-
   useEffect(() => {
     const orderData = [...data].sort((a, b) => {
       const priorityA = statusPriorities[a.status] || 99
@@ -168,13 +156,6 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
 
     setSortedData(orderData)
   }, [data])
-
-  const countStatus = (status: string) => {
-    return sortedData.filter((item) => item.status === status).length
-  }
-
-  const waitingCount = countStatus('waiting')
-  const groupCount = countStatus('group')
 
   function getClassImage(className: string): string {
     switch (className) {
@@ -232,19 +213,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
 
   return (
     <div>
-      <div className='flex items-center gap-2'>
-        <button
-          onClick={handleOpenInviteBuyersModal}
-          className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
-        >
-          <UserPlus size={18} />
-          Invite Buyers
-        </button>
-        <div className='gap-2 flex p-2 mb-2 rounded-md bg-zinc-200 text-gray-700'>
-          <span className=''>Waiting: {waitingCount}</span>
-          <span className=''>Group: {groupCount}</span>
-        </div>
-      </div>
+      <div className='flex items-center gap-2'></div>
 
       <table className='min-w-full border-collapse'>
         <thead className='table-header-group'>
@@ -345,10 +314,6 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
           ))}
         </tbody>
       </table>
-
-      {isInviteBuyersOpen && (
-        <InviteBuyers onClose={handleCloseInviteBuyersModal} />
-      )}
     </div>
   )
 }

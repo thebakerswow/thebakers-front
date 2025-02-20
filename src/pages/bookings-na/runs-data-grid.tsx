@@ -1,10 +1,11 @@
-import { Megaphone, Eye } from '@phosphor-icons/react'
+import { Megaphone, Eye, UserPlus } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
 import { BuyerData, BuyersDataGrid } from './run/buyers-data-grid'
 import axios from 'axios'
+import { InviteBuyers } from '../../components/invite-buyers'
 
 interface RaidLeader {
   idDiscord: string
@@ -34,7 +35,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<{
     note: string
-    id: string
+    id?: string // Adicionando a propriedade 'id' aqui
   } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
@@ -42,6 +43,15 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [isLoadingBuyers, setIsLoadingBuyers] = useState(false)
   const [errorBuyers, setErrorBuyers] = useState('')
   const [selectedGoldCollector, setSelectedGoldCollector] = useState('')
+  const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
+
+  function handleOpenInviteBuyersModal() {
+    setIsInviteBuyersOpen(true)
+  }
+
+  function handleCloseInviteBuyersModal() {
+    setIsInviteBuyersOpen(false)
+  }
 
   function handleOpenNote(run: { note: string; id: string }) {
     setSelectedRun(run)
@@ -58,6 +68,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
       setIsLoadingBuyers(true)
       setErrorBuyers('')
       setSelectedGoldCollector(goldCollector)
+      setSelectedRun({ note: '', id: runId })
 
       const apiUrl = import.meta.env.VITE_GET_RUN_URL
       const response = await axios.get(`${apiUrl}/${runId}/buyers`, {
@@ -138,7 +149,6 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
           {isLoading && (
             <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex gap-4 flex-col items-center justify-center'>
               <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600'></td>
-              <p>Loading...</p>
             </tr>
           )}
           {!isLoading && sortedData.length === 0 ? (
@@ -223,7 +233,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
 
       {isPreviewOpen && (
         <Modal onClose={handleClosePreview}>
-          <div className='w-full max-w-[95vw] h-[500px] overflow-y-auto overflow-x-hidden'>
+          <div className='w-full max-w-[95vw]  overflow-y-auto overflow-x-hidden'>
             {isLoadingBuyers ? (
               <div className='flex flex-col items-center justify-center h-full'>
                 <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
@@ -234,10 +244,20 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                 {errorBuyers}
               </div>
             ) : buyersData.length > 0 ? (
-              <BuyersDataGrid
-                data={buyersData}
-                goldCollector={selectedGoldCollector}
-              />
+              <div>
+                <button
+                  onClick={handleOpenInviteBuyersModal}
+                  className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
+                >
+                  <UserPlus size={18} />
+                  Invite Buyers
+                </button>
+
+                <BuyersDataGrid
+                  data={buyersData}
+                  goldCollector={selectedGoldCollector}
+                />
+              </div>
             ) : (
               <div className='flex flex-col items-center justify-center h-full'>
                 <p className='mt-4 text-lg'>No buyers found</p>
@@ -245,6 +265,14 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
             )}
           </div>
         </Modal>
+      )}
+      {isInviteBuyersOpen && selectedRun?.id ? (
+        <InviteBuyers
+          onClose={handleCloseInviteBuyersModal}
+          runId={selectedRun.id}
+        />
+      ) : (
+        <div>Run ID not available</div>
       )}
     </div>
   )

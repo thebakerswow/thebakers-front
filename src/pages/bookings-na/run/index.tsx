@@ -3,6 +3,8 @@ import { RunInfo } from './run-info'
 import { BuyerData, BuyersDataGrid } from './buyers-data-grid'
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
+import { UserPlus } from '@phosphor-icons/react'
+import { InviteBuyers } from '../../../components/invite-buyers'
 
 interface RaidLeader {
   idDiscord: string
@@ -32,6 +34,15 @@ export function RunDetails() {
   const [rows, setRows] = useState<BuyerData[] | null>(null)
   const [errorRun, setErrorRun] = useState('') // Estado para erro na run
   const [errorBuyers, setErrorBuyers] = useState('') // Estado para erro nos buyers
+  const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
+
+  function handleOpenInviteBuyersModal() {
+    setIsInviteBuyersOpen(true)
+  }
+
+  function handleCloseInviteBuyersModal() {
+    setIsInviteBuyersOpen(false)
+  }
 
   // Função para buscar os dados da run
   async function fetchRunData() {
@@ -69,7 +80,6 @@ export function RunDetails() {
           },
         }
       )
-      console.log('buyer recebido', response.data.info)
 
       setRows(response.data.info ?? [])
     } catch (error) {
@@ -86,6 +96,7 @@ export function RunDetails() {
       fetchBuyersData()
     }
   }, [id])
+
   return (
     <div
       className={`bg-zinc-700 text-gray-100 absolute inset-0 flex flex-col
@@ -118,10 +129,19 @@ export function RunDetails() {
             ) : errorBuyers ? ( // Exibe mensagem de erro dos buyers
               <div className='text-red-500 text-2xl'>{errorBuyers}</div>
             ) : rows && rows.length > 0 ? (
-              <BuyersDataGrid
-                data={rows}
-                goldCollector={runData.goldCollector}
-              />
+              <div>
+                <button
+                  onClick={handleOpenInviteBuyersModal}
+                  className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
+                >
+                  <UserPlus size={18} />
+                  Invite Buyers
+                </button>
+                <BuyersDataGrid
+                  data={rows}
+                  goldCollector={runData.goldCollector}
+                />
+              </div>
             ) : (
               <div className='flex flex-col items-center mt-40'>
                 <p className='mt-4 text-lg'>No buyers found</p>
@@ -129,6 +149,12 @@ export function RunDetails() {
             )}
           </div>
         </div>
+      )}
+      {isInviteBuyersOpen && runData && (
+        <InviteBuyers
+          onClose={handleCloseInviteBuyersModal}
+          runId={runData.id}
+        />
       )}
     </div>
   )

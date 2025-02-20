@@ -1,15 +1,14 @@
 import axios from 'axios'
 import { Modal } from './modal'
-import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
 
 interface InviteBuyersProps {
   onClose: () => void
+  runId: string | undefined
 }
 
-export function InviteBuyers({ onClose }: InviteBuyersProps) {
-  const { id } = useParams<{ id: string }>()
+export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
   const [inviteBuyersData, setInviteBuyersData] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -19,8 +18,8 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
     try {
       const apiUrl = import.meta.env.VITE_GET_RUN_URL
       const response = await axios.get(
-        `${apiUrl}/${id}/buyers/invite` ||
-          `http://localhost:8000/v1/run/${id}/buyers/invite`,
+        `${apiUrl}/${runId}/buyers/invite` ||
+          `http://localhost:8000/v1/run/${runId}/buyers/invite`,
         {
           headers: {
             APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
@@ -28,7 +27,6 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
           },
         }
       )
-
       setInviteBuyersData(response.data.info)
       setError(null)
     } catch (error) {
@@ -50,7 +48,7 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
 
   useEffect(() => {
     fetchInviteBuyersData()
-  }, [id])
+  }, [runId])
 
   function handleCopy() {
     const textToCopy = inviteBuyersData.join('\n')
@@ -70,10 +68,10 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
 
       {inviteBuyersData.length > 0 && (
         <div className='modal-content flex flex-col items-end gap-2'>
-          <div>
+          <div className='text-start'>
             {inviteBuyersData.map((item, index) => (
               <div key={index}>
-                <p>{item}</p>
+                <p className='font-normal'>{item}</p>
               </div>
             ))}
           </div>

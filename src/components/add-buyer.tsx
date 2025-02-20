@@ -52,7 +52,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       idBuyerAdvertiser,
       buyerNote,
     }
-    console.log('buyer eviand:', data)
 
     try {
       const jwt = sessionStorage.getItem('jwt')
@@ -101,7 +100,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             },
           }
         )
-        console.log(response.data.info)
         setAdvertisers(response.data.info)
       } catch (error) {
         console.error('Erro ao buscar os advertisers:', error)

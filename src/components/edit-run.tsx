@@ -92,7 +92,6 @@ const MultiSelectDropdown = ({
       const newSelection = prev.includes(value)
         ? prev.filter((item) => item !== value)
         : [...prev, value]
-      console.log('Nova seleção:', newSelection) // Para depuração
       return newSelection
     })
   }
@@ -206,11 +205,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       loot,
       note,
     }
-    // Dentro do handleSubmit, antes do axios.put:
-    console.log('Dados enviados:', {
-      ...data,
-      raidLeader: raidLeader, // Verifique se está atualizado aqui
-    })
 
     try {
       const jwt = sessionStorage.getItem('jwt')
