@@ -7,7 +7,7 @@ import { RunData } from '../pages/bookings-na/run'
 interface AddBuyerProps {
   run: RunData
   onClose: () => void
-  onBuyerAddedReload: () => void
+  onBuyerAddedReload: () => Promise<void>
 }
 
 interface Advertiser {
@@ -69,6 +69,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       onBuyerAddedReload()
 
       setIsSuccess(true)
+      await onBuyerAddedReload()
       setTimeout(() => {
         onClose()
       }, 3000)

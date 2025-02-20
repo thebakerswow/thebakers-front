@@ -32,6 +32,9 @@ export interface BuyerData {
 
 interface BuyersGridProps {
   data: BuyerData[]
+  onBackupUpdate?: (newBackups: number) => void
+  onPotUpdate?: (newPot: number) => void
+  onSlotsUpdate?: (newSlotsAvailable: number) => void
 }
 
 const statusPriorities: Record<string, number> = {
@@ -43,15 +46,38 @@ const statusPriorities: Record<string, number> = {
   closed: 6,
 }
 
-export function BuyersDataGrid({ data }: BuyersGridProps) {
+export function BuyersDataGrid({
+  data,
+  onBackupUpdate,
+  onPotUpdate,
+}: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
 
+  const calculateActualPot = (buyers: BuyerData[]): number => {
+    return buyers
+      .filter(
+        (buyer) =>
+          (buyer.status === 'group' || buyer.status === 'done') && buyer.isPaid
+      )
+      .reduce((total, buyer) => total + parseFloat(buyer.buyerPot || '0'), 0)
+  }
+
   const handleTogglePaid = async (buyerId: string) => {
-    setSortedData((prevData) =>
-      prevData.map((buyer) =>
+    setSortedData((prevData) => {
+      const updatedData = prevData.map((buyer) =>
         buyer.id === buyerId ? { ...buyer, isPaid: !buyer.isPaid } : buyer
       )
-    )
+
+      // Calcula o novo valor de actualPot
+      const newActualPot = calculateActualPot(updatedData)
+
+      // Chama a função para atualizar o actualPot no componente pai
+      if (onPotUpdate) {
+        onPotUpdate(newActualPot)
+      }
+
+      return updatedData
+    })
 
     const data = {
       id_buyer: buyerId,
@@ -72,7 +98,6 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
     }
   }
 
-
   const handleStatusChange = async (buyerId: string, newStatus: string) => {
     const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
     if (!currentBuyer) return
@@ -85,6 +110,7 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
     try {
       const jwt = sessionStorage.getItem('jwt')
 
+      // Atualiza o status do buyer no backend
       await axios.put('http://localhost:8000/v1/buyer/status', data, {
         headers: {
           APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
@@ -98,7 +124,8 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
           buyer.id === buyerId ? { ...buyer, status: newStatus } : buyer
         )
 
-        return updatedData.sort((a, b) => {
+        // Reordena os dados
+        const sortedUpdatedData = updatedData.sort((a, b) => {
           const priorityA = statusPriorities[a.status] || 99
           const priorityB = statusPriorities[b.status] || 99
 
@@ -106,6 +133,26 @@ export function BuyersDataGrid({ data }: BuyersGridProps) {
           if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
           return 0 // Mantém a ordem original
         })
+
+        // Calcula o novo número de backups
+        const newBackups = sortedUpdatedData.filter(
+          (buyer) => buyer.status === 'backup'
+        ).length
+
+        // Chama a função para atualizar o número de backups no componente pai
+        if (onBackupUpdate) {
+          onBackupUpdate(newBackups)
+        }
+
+        // Calcula o novo valor de actualPot
+        const newActualPot = calculateActualPot(sortedUpdatedData)
+
+        // Chama a função para atualizar o actualPot no componente pai
+        if (onPotUpdate) {
+          onPotUpdate(newActualPot)
+        }
+
+        return sortedUpdatedData
       })
     } catch (error) {
       if (axios.isAxiosError(error)) {

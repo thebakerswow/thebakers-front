@@ -61,10 +61,15 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               {run.maxBuyers}
             </p>
             <p>
-              <span className='font-bold text-base'>Slots Available: </span>
+              <span className='font-bold text-base'>
+                Slots Available:{' '}
+                <span className='font-normal'>{run.slotAvailable}</span>
+              </span>
             </p>
             <p>
-              <span className='font-bold text-base'>Backups: </span>
+              <span className='font-bold text-base'>
+                Backups: <span className='font-normal'>{run.backups}</span>
+              </span>
             </p>
             <p>
               <span className='font-bold text-base'>Raid Leader(s): </span>{' '}
@@ -77,7 +82,10 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               )}
             </p>
             <p>
-              <span className='font-bold text-base'>Gold Collected: </span>{' '}
+              <span className='font-bold text-base'>
+                Gold Collected:{' '}
+                <span className='font-normal'>{run.actualPot}</span>
+              </span>
             </p>
           </div>
         </div>
@@ -109,7 +117,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         <AddBuyer
           run={run}
           onClose={handleCloseAddBuyer}
-          onBuyerAddedReload={onBuyerAddedReload}
+          onBuyerAddedReload={async () => {
+            await onBuyerAddedReload()
+          }}
         />
       )}
       {isEditModalOpen && (

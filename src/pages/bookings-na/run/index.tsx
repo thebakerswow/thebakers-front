@@ -19,6 +19,9 @@ export interface RunData {
   runType: string
   difficulty: string
   team: string
+  backups: number
+  actualPot: number
+  slotAvailable: number
   maxBuyers: string
   raidLeaders: RaidLeader[]
   loot: string
@@ -34,6 +37,36 @@ export function RunDetails() {
   const [errorRun, setErrorRun] = useState('') // Estado para erro na run
   const [errorBuyers, setErrorBuyers] = useState('') // Estado para erro nos buyers
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
+
+  // Função para atualizar o número de backups localmente
+  const handleBackupUpdate = (newBackups: number) => {
+    setRunData((prevRunData) => {
+      if (!prevRunData) return prevRunData
+      return { ...prevRunData, backups: newBackups }
+    })
+  }
+
+  // Função para atualizar o número de gold localmente
+  const handleActualPotUpdate = (newPot: number) => {
+    setRunData((prevRunData) => {
+      if (!prevRunData) return prevRunData
+      return { ...prevRunData, actualPot: newPot }
+    })
+  }
+
+  // Função para atualizar o número de gold localmente
+  const handleSlotsAvailableUpdate = (newSlotsAvailable: number) => {
+    setRunData((prevRunData) => {
+      if (!prevRunData) return prevRunData
+      return { ...prevRunData, actualPot: newSlotsAvailable }
+    })
+  }
+
+  // Função para recarregar TODOS os dados (run e buyers)
+  const reloadAllData = async () => {
+    await fetchRunData() // Atualiza dados da run
+    await fetchBuyersData() // Atualiza lista de buyers
+  }
 
   function handleOpenInviteBuyersModal() {
     setIsInviteBuyersOpen(true)
@@ -56,7 +89,12 @@ export function RunDetails() {
           },
         }
       )
-      setRunData(response.data.info)
+      const data = response.data.info
+      setRunData({
+        ...data,
+        slotAvailable: Number(data.slotAvailable),
+        maxBuyers: Number(data.maxBuyers),
+      })
     } catch (error) {
       console.error('Erro ao buscar os dados da run:', error)
       setErrorRun('Failed to fetch run data. Please try again later.')
@@ -116,7 +154,7 @@ export function RunDetails() {
         <div>
           <RunInfo
             run={runData}
-            onBuyerAddedReload={fetchBuyersData}
+            onBuyerAddedReload={reloadAllData}
             onRunEdit={fetchRunData}
           />
           <div className='container mx-auto mt-2 p-4'>
@@ -138,6 +176,9 @@ export function RunDetails() {
                 </button>
                 <BuyersDataGrid
                   data={rows}
+                  onBackupUpdate={handleBackupUpdate}
+                  onPotUpdate={handleActualPotUpdate}
+                  onSlotsUpdate={handleSlotsAvailableUpdate}
                 />
               </div>
             ) : (
