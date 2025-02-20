@@ -23,7 +23,6 @@ interface RunsDataProps {
     team: string
     maxBuyers: string
     raidLeaders: RaidLeader[]
-    goldCollector: string
     note: string
     loot: string
   }>
@@ -42,7 +41,6 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [buyersData, setBuyersData] = useState<BuyerData[]>([])
   const [isLoadingBuyers, setIsLoadingBuyers] = useState(false)
   const [errorBuyers, setErrorBuyers] = useState('')
-  const [selectedGoldCollector, setSelectedGoldCollector] = useState('')
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
 
   function handleOpenInviteBuyersModal() {
@@ -63,11 +61,10 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
     setSelectedRun(null)
   }
 
-  const handleOpenPreview = async (runId: string, goldCollector: string) => {
+  const handleOpenPreview = async (runId: string) => {
     try {
       setIsLoadingBuyers(true)
       setErrorBuyers('')
-      setSelectedGoldCollector(goldCollector)
       setSelectedRun({ note: '', id: runId })
 
       const apiUrl = import.meta.env.VITE_GET_RUN_URL
@@ -140,8 +137,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
             <th className='p-2 border'>Loot</th>
             <th className='p-2 border'>Buyers</th>
             <th className='p-2 border w-[150px]'>Raid Leader</th>
-            <th className='p-2 border w-[150px]'>Gold Collector</th>
-            <th className='p-2 border'></th>
+            <th className='p-2 border'>Note</th>
           </tr>
         </thead>
 
@@ -170,9 +166,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                       <Eye
                         className='cursor-pointer'
                         size={20}
-                        onClick={() =>
-                          handleOpenPreview(run.id, run.goldCollector)
-                        }
+                        onClick={() => handleOpenPreview(run.id)}
                       />
                     ) : (
                       <span>-</span>
@@ -202,7 +196,6 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                     <span>-</span>
                   )}
                 </td>
-                <td className='p-2'>{run.goldCollector || <span>-</span>}</td>
                 <td className='p-2 text-center align-middle'>
                   <div className='flex justify-center items-center h-full'>
                     {run.note !== '' ? (
@@ -253,14 +246,11 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                   Invite Buyers
                 </button>
 
-                <BuyersDataGrid
-                  data={buyersData}
-                  goldCollector={selectedGoldCollector}
-                />
+                <BuyersDataGrid data={buyersData} />
               </div>
             ) : (
               <div className='flex flex-col items-center justify-center h-full'>
-                <p className='mt-4 text-lg'>No buyers found</p>
+                <p className='text-lg'>No buyers found</p>
               </div>
             )}
           </div>

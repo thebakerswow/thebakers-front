@@ -18,7 +18,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, _] = useState<string | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -39,13 +39,20 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
             },
           }
         )
-
+        console.log(response.data.info.members)
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
         }
-      } catch (err) {
-        console.error('Erro ao buscar usuários:', err)
-        setError('Falha ao carregar opções')
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error('Erro detalhado:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          })
+        } else {
+          console.error('Erro inesperado:', error)
+        }
       } finally {
         setLoading(false)
       }
@@ -155,7 +162,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [team, setTeam] = useState('')
   const [maxBuyers, setMaxBuyers] = useState('')
   const [raidLeader, setRaidLeader] = useState<string[]>([])
-  const [goldCollector, setGoldCollector] = useState('')
   const [loot, setLoot] = useState('')
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -181,7 +187,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       team,
       maxBuyers,
       raidLeader,
-      goldCollector,
       loot,
       note,
     }
@@ -332,15 +337,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <MultiSelectDropdown
               onChange={(selected) => setRaidLeader(selected)}
-            />
-            <input
-              type='text'
-              id='goldCollector'
-              required
-              placeholder='Gold Collector'
-              value={goldCollector}
-              onChange={(e) => setGoldCollector(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <select
               required

@@ -21,7 +21,6 @@ export interface RunData {
   team: string
   maxBuyers: string
   raidLeaders: RaidLeader[]
-  goldCollector: string
   loot: string
   note: string
 }
@@ -139,7 +138,6 @@ export function RunDetails() {
                 </button>
                 <BuyersDataGrid
                   data={rows}
-                  goldCollector={runData.goldCollector}
                 />
               </div>
             ) : (

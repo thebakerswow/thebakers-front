@@ -166,7 +166,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [raidLeader, setRaidLeader] = useState<string[]>(
     run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || []
   )
-  const [goldCollector, setGoldCollector] = useState(run.goldCollector)
   const [loot, setLoot] = useState(run.loot)
   const [note, setNote] = useState(run.note)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -201,7 +200,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         const parts = value.split(';')
         return `${parts[0]};${parts[1]}`
       }),
-      goldCollector,
       loot,
       note,
     }
@@ -360,15 +358,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
             <MultiSelectDropdown
               initialSelected={initialSelected}
               onChange={(selected) => setRaidLeader(selected)}
-            />
-            <input
-              type='text'
-              id='goldCollector'
-              required
-              placeholder='Gold Collector'
-              value={goldCollector}
-              onChange={(e) => setGoldCollector(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <select
               required

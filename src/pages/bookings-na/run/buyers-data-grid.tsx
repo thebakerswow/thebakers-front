@@ -32,7 +32,6 @@ export interface BuyerData {
 
 interface BuyersGridProps {
   data: BuyerData[]
-  goldCollector: string
 }
 
 const statusPriorities: Record<string, number> = {
@@ -44,18 +43,19 @@ const statusPriorities: Record<string, number> = {
   closed: 6,
 }
 
-export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
+export function BuyersDataGrid({ data }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
 
   const handleTogglePaid = async (buyerId: string) => {
-    const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
-    if (!currentBuyer) return
-
-    const newPaidStatus = !currentBuyer.isPaid // Captura o novo status
+    setSortedData((prevData) =>
+      prevData.map((buyer) =>
+        buyer.id === buyerId ? { ...buyer, isPaid: !buyer.isPaid } : buyer
+      )
+    )
 
     const data = {
       id_buyer: buyerId,
-      is_paid: newPaidStatus,
+      is_paid: !sortedData.find((buyer) => buyer.id === buyerId)?.isPaid,
     }
 
     try {
@@ -67,35 +67,11 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
           Authorization: `Bearer ${jwt}`,
         },
       })
-
-      // Atualiza o estado local
-      setSortedData((prevData) => {
-        const updatedData = prevData.map((buyer) =>
-          buyer.id === buyerId ? { ...buyer, isPaid: newPaidStatus } : buyer
-        )
-
-        // Reaplica a ordenação
-        return updatedData.sort((a, b) => {
-          const priorityA = statusPriorities[a.status] || 99
-          const priorityB = statusPriorities[b.status] || 99
-
-          if (priorityA !== priorityB) return priorityA - priorityB
-          if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
-          return a.nameAndRealm.localeCompare(b.nameAndRealm)
-        })
-      })
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Erro detalhado:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        console.error('Erro inesperado:', error)
-      }
+      console.error('Erro ao atualizar isPaid:', error)
     }
   }
+
 
   const handleStatusChange = async (buyerId: string, newStatus: string) => {
     const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
@@ -128,7 +104,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
 
           if (priorityA !== priorityB) return priorityA - priorityB
           if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
-          return a.nameAndRealm.localeCompare(b.nameAndRealm)
+          return 0 // Mantém a ordem original
         })
       })
     } catch (error) {
@@ -234,7 +210,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
           {sortedData.map((buyer, index) => (
             <tr
-              key={index}
+              key={buyer.id}
               className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
             >
               <td className='p-2 text-center'>{index + 1}</td>
@@ -284,10 +260,7 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
               <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
               <td className='p-2 text-center'>
                 {/* Verificação condicional para exibir o goldCollector */}
-                {(buyer.status === 'group' || buyer.status === 'done') &&
-                buyer.isPaid === true
-                  ? goldCollector
-                  : '-'}
+                new gold collector logic
               </td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
