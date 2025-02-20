@@ -48,10 +48,6 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             {run.raid} {run.difficulty} @ {run.time}
           </h1>
           <div className='grid grid-cols-3 gap-4 mt-4 text-start ml-24'>
-            <p>
-              <span className='font-bold text-base'>Raid Id: </span>
-              {run.id}
-            </p>
             <p className='text-yellow-500 font-semibold'>
               <span className='font-bold text-base text-zinc-900'>
                 Loot Type:{' '}
@@ -81,14 +77,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               )}
             </p>
             <p>
-              <span className='font-bold text-base'>Gold Collector: </span>
-              {run.goldCollector}
-            </p>
-            <p>
-              <span className='font-bold text-base'>Potential Pot: </span>
-            </p>
-            <p>
-              <span className='font-bold text-base'>Actual Pot: </span>{' '}
+              <span className='font-bold text-base'>Gold Collected: </span>{' '}
             </p>
           </div>
         </div>

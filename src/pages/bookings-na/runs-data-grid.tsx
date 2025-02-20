@@ -32,7 +32,10 @@ interface RunsDataProps {
 export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const navigate = useNavigate()
   const [isNoteOpen, setIsNoteOpen] = useState(false)
-  const [selectedRun, setSelectedRun] = useState<{ note: string } | null>(null)
+  const [selectedRun, setSelectedRun] = useState<{
+    note: string
+    id: string
+  } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
   const [buyersData, setBuyersData] = useState<BuyerData[]>([])
@@ -40,7 +43,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [errorBuyers, setErrorBuyers] = useState('')
   const [selectedGoldCollector, setSelectedGoldCollector] = useState('')
 
-  function handleOpenNote(run: { note: string }) {
+  function handleOpenNote(run: { note: string; id: string }) {
     setSelectedRun(run)
     setIsNoteOpen(true)
   }

@@ -14,6 +14,7 @@ import Shaman from '../../../assets/class_icons/shaman.png'
 import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
 import { InviteBuyers } from '../../../components/invite-buyers'
+import axios from 'axios'
 
 export interface BuyerData {
   id: string
@@ -48,6 +49,105 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
 
+  const handleTogglePaid = async (buyerId: string) => {
+    const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
+    if (!currentBuyer) return
+
+    const newPaidStatus = !currentBuyer.isPaid // Captura o novo status
+
+    const data = {
+      id_buyer: buyerId,
+      is_paid: newPaidStatus,
+    }
+
+    try {
+      const jwt = sessionStorage.getItem('jwt')
+
+      await axios.put('http://localhost:8000/v1/buyer/paid', data, {
+        headers: {
+          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+
+      // Atualiza o estado local
+      setSortedData((prevData) => {
+        const updatedData = prevData.map((buyer) =>
+          buyer.id === buyerId ? { ...buyer, isPaid: newPaidStatus } : buyer
+        )
+
+        // Reaplica a ordenação
+        return updatedData.sort((a, b) => {
+          const priorityA = statusPriorities[a.status] || 99
+          const priorityB = statusPriorities[b.status] || 99
+
+          if (priorityA !== priorityB) return priorityA - priorityB
+          if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
+          return a.nameAndRealm.localeCompare(b.nameAndRealm)
+        })
+      })
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
+    }
+  }
+
+  const handleStatusChange = async (buyerId: string, newStatus: string) => {
+    const currentBuyer = sortedData.find((buyer) => buyer.id === buyerId)
+    if (!currentBuyer) return
+
+    const data = {
+      id_buyer: buyerId,
+      status: newStatus,
+    }
+
+    console.log('Dados enviados para atualização de status:', data)
+
+    try {
+      const jwt = sessionStorage.getItem('jwt')
+
+      await axios.put('http://localhost:8000/v1/buyer/status', data, {
+        headers: {
+          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+
+      // Atualiza o status e reordena os dados
+      setSortedData((prevData) => {
+        const updatedData = prevData.map((buyer) =>
+          buyer.id === buyerId ? { ...buyer, status: newStatus } : buyer
+        )
+
+        return updatedData.sort((a, b) => {
+          const priorityA = statusPriorities[a.status] || 99
+          const priorityB = statusPriorities[b.status] || 99
+
+          if (priorityA !== priorityB) return priorityA - priorityB
+          if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
+          return a.nameAndRealm.localeCompare(b.nameAndRealm)
+        })
+      })
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
+    }
+  }
+
   function handleOpenInviteBuyersModal() {
     setIsInviteBuyersOpen(true)
   }
@@ -60,8 +160,12 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
     const orderData = [...data].sort((a, b) => {
       const priorityA = statusPriorities[a.status] || 99
       const priorityB = statusPriorities[b.status] || 99
-      return priorityA - priorityB
+
+      if (priorityA !== priorityB) return priorityA - priorityB
+      if (a.isPaid !== b.isPaid) return a.isPaid ? -1 : 1
+      return 0 // Mantém a ordem original sem ordenar por nome
     })
+
     setSortedData(orderData)
   }, [data])
 
@@ -71,17 +175,6 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
 
   const waitingCount = countStatus('waiting')
   const groupCount = countStatus('group')
-
-  const handleStatusChange = (index: number, newStatus: string) => {
-    const updatedData = [...sortedData]
-    updatedData[index].status = newStatus || ''
-    const orderData = updatedData.sort((a, b) => {
-      const priorityA = statusPriorities[a.status] || 99
-      const priorityB = statusPriorities[b.status] || 99
-      return priorityA - priorityB
-    })
-    setSortedData(orderData)
-  }
 
   function getClassImage(className: string): string {
     switch (className) {
@@ -163,8 +256,9 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
             <th className='p-2 border'>Faction</th>
             <th className='p-2 border'>Class</th>
             <th className='p-2 border'>Advertiser</th>
-            <th className='p-2 border'>Collected By</th>
+            <th className='p-2 border'>Collector</th>
             <th className='p-2 border'>Paid Full</th>
+            <th className='p-2 border'>Pot</th>
             <th className='p-2 border'>Note</th>
           </tr>
         </thead>
@@ -181,7 +275,9 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
                     id='status'
                     className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
                     value={buyer.status || ''}
-                    onChange={(e) => handleStatusChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleStatusChange(buyer.id, e.target.value)
+                    }
                   >
                     <option value='' disabled hidden>
                       ----------
@@ -219,27 +315,31 @@ export function BuyersDataGrid({ data, goldCollector }: BuyersGridProps) {
               <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
               <td className='p-2 text-center'>
                 {/* Verificação condicional para exibir o goldCollector */}
-                {buyer.status === 'group' || buyer.status === 'done'
+                {(buyer.status === 'group' || buyer.status === 'done') &&
+                buyer.isPaid === true
                   ? goldCollector
                   : '-'}
               </td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
-                  {buyer.isPaid === true ? (
-                    <CheckFat
-                      className='text-green-500 border bg-white rounded-xl'
-                      size={22}
-                      weight='fill'
-                    />
-                  ) : (
-                    <XCircle
-                      className='text-red-600 border bg-white rounded-xl'
-                      size={22}
-                      weight='fill'
-                    />
-                  )}
+                  <button onClick={() => handleTogglePaid(buyer.id)}>
+                    {buyer.isPaid ? (
+                      <CheckFat
+                        className='text-green-500 border bg-white rounded-xl cursor-pointer'
+                        size={22}
+                        weight='fill'
+                      />
+                    ) : (
+                      <XCircle
+                        className='text-red-600 border bg-white rounded-xl cursor-pointer'
+                        size={22}
+                        weight='fill'
+                      />
+                    )}
+                  </button>
                 </div>
               </td>
+              <td className='p-2 text-center'>{buyer.buyerPot}</td>
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
             </tr>
           ))}

@@ -2,6 +2,7 @@ import axios from 'axios'
 import { Modal } from './modal'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { Check } from '@phosphor-icons/react'
 
 interface InviteBuyersProps {
   onClose: () => void
@@ -9,9 +10,10 @@ interface InviteBuyersProps {
 
 export function InviteBuyers({ onClose }: InviteBuyersProps) {
   const { id } = useParams<{ id: string }>()
-  const [inviteBuyersData, setInviteBuyersData] = useState<string[]>([]) // Estado para os dados (array de strings)
-  const [loading, setLoading] = useState(true) // Estado de carregamento
-  const [error, setError] = useState<string | null>(null) // Estado de erro
+  const [inviteBuyersData, setInviteBuyersData] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   async function fetchInviteBuyersData() {
     try {
@@ -27,8 +29,7 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
         }
       )
 
-      console.log(response.data) // Verifique o retorno no console
-      setInviteBuyersData(response.data.info) // Assumindo que response.data é o array de strings
+      setInviteBuyersData(response.data.info)
       setError(null)
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -47,10 +48,19 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
     }
   }
 
-  // Executar a busca quando o componente montar
   useEffect(() => {
     fetchInviteBuyersData()
   }, [id])
+
+  function handleCopy() {
+    const textToCopy = inviteBuyersData.join('\n')
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => setCopied(true))
+      .catch(() => alert('Erro ao copiar os dados.'))
+
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <Modal onClose={onClose}>
@@ -58,8 +68,8 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
 
       {error && <p className='error-message'>{error}</p>}
 
-      {inviteBuyersData.length > 0 && ( // Verifica se há dados no array
-        <div className='modal-content'>
+      {inviteBuyersData.length > 0 && (
+        <div className='modal-content flex flex-col items-end gap-2'>
           <div>
             {inviteBuyersData.map((item, index) => (
               <div key={index}>
@@ -67,6 +77,16 @@ export function InviteBuyers({ onClose }: InviteBuyersProps) {
               </div>
             ))}
           </div>
+          {copied ? (
+            <Check className='text-green-500' size={24} />
+          ) : (
+            <button
+              className='bg-zinc-400 text-white rounded-md px-3 p-1'
+              onClick={handleCopy}
+            >
+              Copy
+            </button>
+          )}
         </div>
       )}
 
