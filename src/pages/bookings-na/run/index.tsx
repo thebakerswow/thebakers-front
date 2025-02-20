@@ -11,6 +11,12 @@ interface RaidLeader {
   username: string
 }
 
+interface SumPot {
+  idDiscord: string
+  username: string
+  sumPot: number
+}
+
 export interface RunData {
   id: string
   date: string
@@ -26,6 +32,7 @@ export interface RunData {
   raidLeaders: RaidLeader[]
   loot: string
   note: string
+  sumPot: SumPot[]
 }
 
 export function RunDetails() {
@@ -89,6 +96,7 @@ export function RunDetails() {
           },
         }
       )
+      console.log(response.data.info)
       const data = response.data.info
       setRunData({
         ...data,
@@ -117,6 +125,7 @@ export function RunDetails() {
           },
         }
       )
+      console.log('buyer data:', response.data.info)
 
       setRows(response.data.info ?? [])
     } catch (error) {
@@ -157,7 +166,7 @@ export function RunDetails() {
             onBuyerAddedReload={reloadAllData}
             onRunEdit={fetchRunData}
           />
-          <div className='container mx-auto mt-2 p-4'>
+          <div className='w-[95%] mx-auto mt-2 p-4'>
             {isLoadingBuyers ? (
               <div className='flex flex-col items-center mt-40'>
                 <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-white' />
@@ -175,6 +184,7 @@ export function RunDetails() {
                   Invite Buyers
                 </button>
                 <BuyersDataGrid
+                  run={runData}
                   data={rows}
                   onBackupUpdate={handleBackupUpdate}
                   onPotUpdate={handleActualPotUpdate}

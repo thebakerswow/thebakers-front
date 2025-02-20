@@ -40,8 +40,21 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   }
 
   return (
-    <div className='flex m-4 gap-4 rounded-md'>
-      <img className='w-[400px] rounded-md' src={twwLogo} alt='Run Cover' />
+    <div className='flex m-4 gap-2 rounded-md'>
+      <img className='w-[300px] rounded-md' src={twwLogo} alt='Run Cover' />
+      <div className='bg-zinc-300 p-4 text-black rounded-md'>
+        <h2 className='text-lg font-semibold'>Gold Collectors</h2>
+        <table className='w-full table-auto'>
+          <tbody>
+            {run.sumPot?.map((item) => (
+              <tr key={item.idDiscord}>
+                <td className='p-2'>{item.username}</td>
+                <td className='p-2'>{item.sumPot}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className='grid grid-cols-4 flex-1 text-center bg-gray-300 rounded-md text-zinc-900'>
         <div className='col-span-3 flex flex-col'>
           <h1 className='font-semibold text-lg mt-3 mb-3'>

@@ -14,6 +14,7 @@ import Shaman from '../../../assets/class_icons/shaman.png'
 import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
 import axios from 'axios'
+import { RunData } from './index'
 
 export interface BuyerData {
   id: string
@@ -31,6 +32,7 @@ export interface BuyerData {
 }
 
 interface BuyersGridProps {
+  run: RunData
   data: BuyerData[]
   onBackupUpdate?: (newBackups: number) => void
   onPotUpdate?: (newPot: number) => void
@@ -50,6 +52,7 @@ export function BuyersDataGrid({
   data,
   onBackupUpdate,
   onPotUpdate,
+  run,
 }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
 
@@ -86,7 +89,7 @@ export function BuyersDataGrid({
 
     try {
       const jwt = sessionStorage.getItem('jwt')
-
+      console.log('payload enviado: ', data)
       await axios.put('http://localhost:8000/v1/buyer/paid', data, {
         headers: {
           APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
@@ -94,7 +97,15 @@ export function BuyersDataGrid({
         },
       })
     } catch (error) {
-      console.error('Erro ao atualizar isPaid:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
     }
   }
 
@@ -237,7 +248,6 @@ export function BuyersDataGrid({
   return (
     <div>
       <div className='flex items-center gap-2'></div>
-
       <table className='min-w-full border-collapse'>
         <thead className='table-header-group'>
           <tr className='text-md bg-zinc-400 text-gray-700'>
@@ -306,8 +316,9 @@ export function BuyersDataGrid({
               </td>
               <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
               <td className='p-2 text-center'>
-                {/* Verificação condicional para exibir o goldCollector */}
-                new gold collector logic
+                {run.sumPot.map((pot, index) => (
+                  <div key={index}>{pot.username}</div>
+                ))}
               </td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
