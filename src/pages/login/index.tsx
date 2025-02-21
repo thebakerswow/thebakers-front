@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
-import axios from 'axios'
 import { DiscordLogo } from '@phosphor-icons/react'
+import { authApi } from '../../services/axiosConfig'
 
 export function Login() {
   const { isAuthenticated } = useAuth()
@@ -17,9 +17,8 @@ export function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_DISCORD_LOGIN_URL ||
-          'http://localhost:8000/v1/login/discord',
+      const response = await authApi.post(
+        '/',
         {},
         {
           headers: {
@@ -29,7 +28,7 @@ export function Login() {
       )
 
       if (response.data.info) {
-        window.location.href = response.data.info // Redireciona para o Discord
+        window.location.href = response.data.info
       }
     } catch (error) {
       console.error('Erro ao iniciar login com Discord:', error)

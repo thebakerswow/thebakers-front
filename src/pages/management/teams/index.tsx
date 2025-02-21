@@ -1,53 +1,28 @@
 import { useEffect, useState } from 'react'
+import { api } from '../../../services/axiosConfig'
+import {
+  Team,
+  TeamOrder,
+  teamOrder,
+  teamColors,
+} from '../../../types/team-interface'
+import { LoadingSpinner } from '../../../components/loading-spinner'
 import axios from 'axios'
-
-interface TeamMember {
-  global_name: string
-  username: string
-}
-
-interface Team {
-  name: string
-  members: TeamMember[]
-}
-
-const teamOrder = [
-  'Padeirinho',
-  'Garçom',
-  'Confeiteiros',
-  'Jackfruit',
-  'Milharal',
-  'APAE',
-  'Advertiser',
-]
-
-const teamColors: { [key: string]: string } = {
-  Padeirinho: 'bg-yellow-400',
-  Garçom: 'bg-green-600',
-  Confeiteiros: 'bg-pink-400',
-  Jackfruit: 'bg-green-300',
-  Milharal: 'bg-yellow-200',
-  APAE: 'bg-red-400',
-  Advertiser: 'bg-gray-300',
-}
+import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 
 export function TeamsManagement() {
   const [teams, setTeams] = useState<Team[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   useEffect(() => {
     const fetchTeams = async () => {
       try {
         setIsLoading(true)
-        const response = await axios.get(
-          import.meta.env.VITE_GET_TEAMS_URL ||
-            'http://localhost:8000/v1/teams',
-          {
-            headers: {
-              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
-            },
-          }
+        console.log('fez o get')
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/teams` ||
+            'http://localhost:8000/v1/teams'
         )
 
         const orderedTeams = teamOrder.map((teamName) => ({
@@ -60,7 +35,22 @@ export function TeamsManagement() {
 
         setTeams(orderedTeams)
       } catch (error) {
-        console.error('Erro ao buscar teams:', error)
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          console.error('Erro detalhado:', errorDetails)
+          setError(errorDetails)
+        } else {
+          const genericError = {
+            message: 'Erro inesperado',
+            response: error,
+          }
+          console.error('Erro genérico:', error)
+          setError(genericError)
+        }
       } finally {
         setIsLoading(false)
       }
@@ -78,16 +68,17 @@ export function TeamsManagement() {
 
   const maxRows = Math.max(...columns.map((team) => team.length), 0)
 
+  if (error) {
+    return <ErrorComponent error={error} />
+  }
+
   if (isLoading) {
     return (
       <div
         className='bg-zinc-700 text-gray-100 absolute inset-0 flex items-center justify-center 
         rounded-xl shadow-2xl m-8'
       >
-        <div className='flex flex-col items-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-white'></div>
-          <p className='mt-4 text-lg'>Loading...</p>
-        </div>
+        <LoadingSpinner />
       </div>
     )
   }
@@ -99,8 +90,8 @@ export function TeamsManagement() {
           <tr className='text-md text-gray-700'>
             {teams.map((team, index) => (
               <th
-                className={`p-2 border ${index !== teams.length - 1 ? 'border-r-black' : ''} ${
-                  teamColors[team.name] || 'bg-zinc-400'
+                className={`p-2 border ${index !== teams.length - 1 ? '' : ''} ${
+                  teamColors[team.name as TeamOrder] || 'bg-zinc-400'
                 }`}
                 colSpan={2}
                 key={`team-${index}`}
@@ -114,7 +105,7 @@ export function TeamsManagement() {
               const isLastTeam = index === teams.length - 1
               return [
                 <th
-                  className={`p-2 border ${!isLastTeam ? 'border-r-black' : ''}`}
+                  className={'p-2 border border-r-black'}
                   key={`player-header-${index}`}
                 >
                   Player
@@ -140,7 +131,7 @@ export function TeamsManagement() {
                 const isLastTeam = teamIndex === teams.length - 1
                 return [
                   <td
-                    className={`p-2 border border-b-black ${!isLastTeam ? 'border-r-black' : ''}`}
+                    className={'p-2 border border-b-black border-r-black'}
                     key={`player-${teamIndex}-${rowIndex}`}
                   >
                     {member?.player || '-'}

@@ -1,0 +1,36 @@
+import axios from 'axios'
+
+// Instância para chamadas sem autenticação (ex: Login)
+export const authApi = axios.create({
+  baseURL:
+    import.meta.env.VITE_DISCORD_LOGIN_URL ||
+    'http://localhost:8000/v1/login/discord',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// Instância para chamadas autenticadas (requisições que precisam de token)
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/v1',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+  },
+})
+
+// Interceptor para adicionar automaticamente o token nas requisições autenticadas
+api.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('jwt') // Obtém o token da sessão
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
