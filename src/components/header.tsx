@@ -72,6 +72,15 @@ export function Header() {
             {hasRequiredRole(['1101231955120496650']) && (
               <button
                 className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+                onClick={() => navigate('/admin')}
+              >
+                <UsersFour className='text-gray-100' size={30} />
+                Admin
+              </button>
+            )}
+            {hasRequiredRole(['1101231955120496650']) && (
+              <button
+                className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
                 onClick={() => navigate('/management-teams')}
               >
                 <UsersFour className='text-gray-100' size={30} />

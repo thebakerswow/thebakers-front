@@ -15,6 +15,7 @@ interface RaidLeader {
 interface RunsDataProps {
   data: Array<{
     id: string
+    idTeam: string
     date: string
     time: string
     raid: string

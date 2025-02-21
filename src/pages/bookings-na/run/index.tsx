@@ -19,6 +19,7 @@ interface SumPot {
 
 export interface RunData {
   id: string
+  idTeam: string
   date: string
   time: string
   raid: string
@@ -41,8 +42,8 @@ export function RunDetails() {
   const [isLoadingRun, setIsLoadingRun] = useState(true)
   const [isLoadingBuyers, setIsLoadingBuyers] = useState(true)
   const [rows, setRows] = useState<BuyerData[] | null>(null)
-  const [errorRun, setErrorRun] = useState('') // Estado para erro na run
-  const [errorBuyers, setErrorBuyers] = useState('') // Estado para erro nos buyers
+  const [errorRun] = useState('') // Estado para erro na run
+  const [errorBuyers] = useState('') // Estado para erro nos buyers
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
 
   // Função para atualizar o número de backups localmente
@@ -96,7 +97,7 @@ export function RunDetails() {
           },
         }
       )
-      console.log(response.data.info)
+      console.log('Dados da run: ', response.data.info)
       const data = response.data.info
       setRunData({
         ...data,
@@ -104,8 +105,15 @@ export function RunDetails() {
         maxBuyers: Number(data.maxBuyers),
       })
     } catch (error) {
-      console.error('Erro ao buscar os dados da run:', error)
-      setErrorRun('Failed to fetch run data. Please try again later.')
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
     } finally {
       setIsLoadingRun(false)
     }
@@ -129,8 +137,15 @@ export function RunDetails() {
 
       setRows(response.data.info ?? [])
     } catch (error) {
-      console.error('Erro ao buscar os dados dos buyers:', error)
-      setErrorBuyers('Failed to fetch buyers data. Please try again later.')
+      if (axios.isAxiosError(error)) {
+        console.error('Erro detalhado:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        console.error('Erro inesperado:', error)
+      }
     } finally {
       setIsLoadingBuyers(false)
     }

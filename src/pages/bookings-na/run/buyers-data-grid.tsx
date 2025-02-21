@@ -25,6 +25,7 @@ export interface BuyerData {
   buyerPot: string
   isPaid: boolean
   nameAndRealm: string
+  nameCollector: string
   paymentFaction: string
   paymentRealm: string
   playerClass: string
@@ -32,7 +33,7 @@ export interface BuyerData {
 }
 
 interface BuyersGridProps {
-  run: RunData
+  run?: RunData
   data: BuyerData[]
   onBackupUpdate?: (newBackups: number) => void
   onPotUpdate?: (newPot: number) => void
@@ -52,7 +53,6 @@ export function BuyersDataGrid({
   data,
   onBackupUpdate,
   onPotUpdate,
-  run,
 }: BuyersGridProps) {
   const [sortedData, setSortedData] = useState<BuyerData[]>(data)
 
@@ -315,11 +315,7 @@ export function BuyersDataGrid({
                 )}
               </td>
               <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
-              <td className='p-2 text-center'>
-                {run.sumPot.map((pot, index) => (
-                  <div key={index}>{pot.username}</div>
-                ))}
-              </td>
+              <td className='p-2 text-center'>{buyer.nameCollector}</td>
               <td className='p-2 w-20 text-center'>
                 <div className='flex justify-center items-center'>
                   <button onClick={() => handleTogglePaid(buyer.id)}>

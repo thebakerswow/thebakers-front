@@ -161,7 +161,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [raid, setRaid] = useState(run.raid)
   const [runType, setRunType] = useState(run.runType)
   const [difficulty, setDifficulty] = useState(run.difficulty)
-  const [team, setTeam] = useState(run.team)
+  const [idTeam, setIdTeam] = useState(run.idTeam)
   const [maxBuyers, setMaxBuyers] = useState(run.maxBuyers)
   const [raidLeader, setRaidLeader] = useState<string[]>(
     run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || []
@@ -194,7 +194,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       raid,
       runType,
       difficulty,
-      team,
+      idTeam,
       maxBuyers: maxBuyers.toString(),
       raidLeader: raidLeader.map((value) => {
         const parts = value.split(';')
@@ -217,7 +217,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
           },
         }
       )
-
+      console.log('payload do edit: ', data)
       onRunEdit()
 
       setIsSuccess(true)
@@ -320,8 +320,8 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
             <select
               required
               id='team'
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
+              value={idTeam}
+              onChange={(e) => setIdTeam(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
             >
               <option value='' disabled hidden className='text-zinc-400'>

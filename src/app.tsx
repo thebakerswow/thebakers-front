@@ -18,6 +18,7 @@ import { useAuth } from './context/auth-context'
 import { ErrorPage } from './pages/error-pages/not-found'
 import { AccessDenied } from './pages/error-pages/access-denied'
 import { LoginErro } from './pages/error-pages/login-erro'
+import { AdminPage } from './pages/admin'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -73,6 +74,10 @@ export function App() {
                 <Route
                   path='/bookings-na/run/:id'
                   element={<PrivateRoute element={<RunDetails />} />}
+                />
+                <Route
+                  path='/admin'
+                  element={<PrivateRoute element={<AdminPage />} />}
                 />
 
                 {/* Rota catch-all */}

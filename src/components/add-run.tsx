@@ -39,7 +39,6 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
             },
           }
         )
-        console.log(response.data.info.members)
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
         }
@@ -159,7 +158,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [raid, setRaid] = useState('')
   const [runType, setRunType] = useState('')
   const [difficulty, setDifficulty] = useState('')
-  const [team, setTeam] = useState('')
+  const [idTeam, setIdTeam] = useState('')
   const [maxBuyers, setMaxBuyers] = useState('')
   const [raidLeader, setRaidLeader] = useState<string[]>([])
   const [loot, setLoot] = useState('')
@@ -184,7 +183,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       raid,
       runType,
       difficulty,
-      team,
+      idTeam,
       maxBuyers,
       raidLeader,
       loot,
@@ -300,8 +299,8 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <select
               id='team'
               required
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
+              value={idTeam}
+              onChange={(e) => setIdTeam(e.target.value)}
               className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
             >
               <option value='' disabled hidden className='text-zinc-400'>

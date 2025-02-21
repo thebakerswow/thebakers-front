@@ -40,8 +40,9 @@ export function FullRaidsNa() {
           },
         }
       )
-
+      console.log('params: ', format(selectedDate, 'yyyy-MM-dd'))
       const runs = response.data.info
+      console.log('get runs:', runs)
       if (runs) {
         const formattedData = Array.isArray(runs)
           ? runs.map((run: any) => ({ ...run }))
