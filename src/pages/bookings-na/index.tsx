@@ -115,7 +115,11 @@ export function FullRaidsNa() {
           </h1>
         </div>
 
-        <RunsDataGrid data={rows} isLoading={isLoading} />
+        <RunsDataGrid
+          data={rows}
+          isLoading={isLoading}
+          onDeleteSuccess={fetchRuns}
+        />
 
         {isAddRunOpen && (
           <AddRun onClose={handleCloseAddRun} onRunAddedReload={fetchRuns} />

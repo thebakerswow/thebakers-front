@@ -1,16 +1,27 @@
-import { Megaphone, Eye, UserPlus } from '@phosphor-icons/react'
+import {
+  Megaphone,
+  Eye,
+  UserPlus,
+  DotsThreeVertical,
+} from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
-import { BuyerData, BuyersDataGrid } from './run/buyers-data-grid'
+import { BuyersDataGrid } from './run/buyers-data-grid'
 import axios from 'axios'
 import { InviteBuyers } from '../../components/invite-buyers'
 import { RunsDataProps } from '../../types/runs-interface'
 import { api } from '../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { BuyerData } from '../../types/buyer-interface'
+import { DeleteRun } from '../../components/delete-run'
 
-export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
+export function RunsDataGrid({
+  data,
+  isLoading,
+  onDeleteSuccess,
+}: RunsDataProps) {
   const navigate = useNavigate()
   const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<{
@@ -24,6 +35,33 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [errorBuyers, setErrorBuyers] = useState('')
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
+  const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
+    id: string
+    raid: string
+    date: string
+  } | null>(null)
+  const [openActionsDropdown, setOpenActionsDropdown] = useState<string | null>(
+    null
+  )
+
+  const toggleActionsDropdown = (runId: string) => {
+    setOpenActionsDropdown(openActionsDropdown === runId ? null : runId)
+  }
+
+  const handleOpenDeleteRunModal = (run: {
+    id: string
+    raid: string
+    date: string
+  }) => {
+    setSelectedRunToDelete(run)
+    setIsDeleteRunModalOpen(true)
+  }
+
+  const handleCloseDeleteRunModal = () => {
+    setIsDeleteRunModalOpen(false)
+    setSelectedRunToDelete(null)
+  }
 
   function handleOpenInviteBuyersModal() {
     setIsInviteBuyersOpen(true)
@@ -138,6 +176,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
             <th className='p-2 border'>Buyers</th>
             <th className='p-2 border w-[150px]'>Raid Leader</th>
             <th className='p-2 border'>Note</th>
+            <th className='p-2 border' />
           </tr>
         </thead>
 
@@ -209,11 +248,34 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
                     )}
                   </div>
                 </td>
+                <td className='text-center'>
+                  <button onClick={() => toggleActionsDropdown(run.id)}>
+                    <DotsThreeVertical size={20} />
+                  </button>
+                  {openActionsDropdown === run.id && (
+                    <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
+                      <button
+                        onClick={() => handleOpenDeleteRunModal(run)}
+                        className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      {isDeleteRunModalOpen && selectedRunToDelete && (
+        <DeleteRun
+          run={selectedRunToDelete}
+          onClose={handleCloseDeleteRunModal}
+          onDeleteSuccess={onDeleteSuccess}
+        />
+      )}
 
       {isNoteOpen && selectedRun && (
         <Modal onClose={handleCloseNote}>

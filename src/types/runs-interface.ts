@@ -16,6 +16,7 @@ export interface RunsDataProps {
     loot: string
   }>
   isLoading: boolean
+  onDeleteSuccess: () => void
 }
 
 interface SumPot {
