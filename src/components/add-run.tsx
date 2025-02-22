@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { UserPlus } from '@phosphor-icons/react'
 import { Modal } from './modal'
 import axios from 'axios'
+import { api } from '../services/axiosConfig'
+import { ErrorComponent, ErrorDetails } from './error-display'
 
 interface MultiSelectDropdownProps {
   onChange: (selected: string[]) => void
@@ -18,39 +20,41 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, _] = useState<string | null>(null)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   function getSpecificTeamUrl(teamId: string) {
-    return `${import.meta.env.VITE_GET_SPECIFIC_TEAM_URL}${teamId}`
+    return `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
   }
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         const teamId = '1148721174088532040'
-        const response = await axios.get(
+        const response = await api.get(
           getSpecificTeamUrl(teamId) ||
-            'http://localhost:8000/v1/team/1148721174088532040',
-          {
-            headers: {
-              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            },
-          }
+            'http://localhost:8000/v1/team/1148721174088532040'
         )
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.error('Erro detalhado:', {
+          const errorDetails = {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
-          })
+          }
+          console.error('Erro detalhado:', errorDetails)
+          setError(errorDetails)
         } else {
-          console.error('Erro inesperado:', error)
+          const genericError = {
+            message: 'Erro inesperado',
+            response: error,
+          }
+          console.error('Erro genérico:', error)
+          setError(genericError)
         }
       } finally {
         setLoading(false)
@@ -59,6 +63,10 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
 
     fetchOptions()
   }, [])
+
+  if (error) {
+    return <ErrorComponent error={error} />
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,13 +86,13 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
     onChange(selected)
   }, [selected, onChange])
 
-  const handleSelect = (value: string) => {
+  const handleSelect = useCallback((value: string) => {
     setSelected((prev) =>
       prev.includes(value)
         ? prev.filter((item) => item !== value)
         : [...prev, value]
     )
-  }
+  }, [])
 
   // Função para obter os nomes de exibição
   const getDisplayNames = () => {
@@ -153,6 +161,7 @@ export interface AddRunProps {
 }
 
 export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
+  const [error, setError] = useState<ErrorDetails | null>(null)
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [raid, setRaid] = useState('')
@@ -191,29 +200,43 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     }
 
     try {
-      const jwt = sessionStorage.getItem('jwt')
-      await axios.post(
-        import.meta.env.VITE_POST_RUN_URL || 'http://localhost:8000/v1/run',
-        data,
-        {
-          headers: {
-            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
+      await api.post(
+        `${import.meta.env.VITE_API_BASE_URL}/run` ||
+          'http://localhost:8000/v1/run',
+        data
       )
 
       onRunAddedReload()
 
       setIsSuccess(true)
+
       setTimeout(() => {
         onClose()
       }, 3000)
     } catch (error) {
-      console.error('Error adding run:', error)
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        console.error('Erro detalhado:', errorDetails)
+        setError(errorDetails)
+      } else {
+        const genericError = {
+          message: 'Erro inesperado',
+          response: error,
+        }
+        console.error('Erro genérico:', error)
+        setError(genericError)
+      }
     } finally {
       setIsSubmitting(false) // Desativa o loading em qualquer caso
     }
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} />
   }
 
   return (

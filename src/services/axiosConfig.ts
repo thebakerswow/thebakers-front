@@ -1,16 +1,5 @@
 import axios from 'axios'
 
-// Instância para chamadas sem autenticação (ex: Login)
-export const authApi = axios.create({
-  baseURL:
-    import.meta.env.VITE_DISCORD_LOGIN_URL ||
-    'http://localhost:8000/v1/login/discord',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
 // Instância para chamadas autenticadas (requisições que precisam de token)
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/v1',

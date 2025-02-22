@@ -1,10 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { DiscordLogo } from '@phosphor-icons/react'
-import { authApi } from '../../services/axiosConfig'
+import { api } from '../../services/axiosConfig'
+import axios from 'axios'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 
 export function Login() {
+  const [error, setError] = useState<ErrorDetails | null>(null)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
@@ -17,22 +20,33 @@ export function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await authApi.post(
-        '/',
-        {},
-        {
-          headers: {
-            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-          },
-        }
-      )
+      const response = await api.post('/login/discord')
 
       if (response.data.info) {
         window.location.href = response.data.info
       }
     } catch (error) {
-      console.error('Erro ao iniciar login com Discord:', error)
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        console.error('Erro detalhado:', errorDetails)
+        setError(errorDetails)
+      } else {
+        const genericError = {
+          message: 'Erro inesperado',
+          response: error,
+        }
+        console.error('Erro genérico:', error)
+        setError(genericError)
+      }
     }
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} />
   }
 
   return (

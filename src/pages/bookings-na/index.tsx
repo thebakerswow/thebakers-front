@@ -4,24 +4,25 @@ import { DateFilter } from './date-filter'
 import { format } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
-import axios from 'axios'
 import { RunData } from './run'
-import { useAuth } from '../../context/auth-context' // Importe o useAuth
+import { useAuth } from '../../context/auth-context'
+import { api } from '../../services/axiosConfig'
+import axios from 'axios'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 
 export function FullRaidsNa() {
+  const [error, setError] = useState<ErrorDetails | null>(null)
   const [rows, setRows] = useState<RunData[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { userRoles } = useAuth() // Obtenha as roles do contexto
+  const { userRoles } = useAuth()
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
     return requiredRoles.some((required) =>
       userRoles.some((userRole) => userRole.toString() === required.toString())
     )
   }
-
-  // Função para buscar os runs (mantida igual)
   async function fetchRuns() {
     if (!selectedDate) {
       setRows([])
@@ -30,19 +31,14 @@ export function FullRaidsNa() {
 
     setIsLoading(true)
     try {
-      const response = await axios.get(
-        import.meta.env.VITE_GET_RUN_URL || 'http://localhost:8000/v1/run',
+      const response = await api.get(
+        `${import.meta.env.VITE_API_BASE_URL}/run` ||
+          'http://localhost:8000/v1/run',
         {
           params: { date: format(selectedDate, 'yyyy-MM-dd') },
-          headers: {
-            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
-          },
         }
       )
-      console.log('params: ', format(selectedDate, 'yyyy-MM-dd'))
       const runs = response.data.info
-      console.log('get runs:', runs)
       if (runs) {
         const formattedData = Array.isArray(runs)
           ? runs.map((run: any) => ({ ...run }))
@@ -52,11 +48,29 @@ export function FullRaidsNa() {
         setRows([])
       }
     } catch (error) {
-      console.error('Erro ao buscar runs:', error)
-      setRows([])
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        console.error('Erro detalhado:', errorDetails)
+        setError(errorDetails)
+      } else {
+        const genericError = {
+          message: 'Erro inesperado',
+          response: error,
+        }
+        console.error('Erro genérico:', error)
+        setError(genericError)
+      }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} />
   }
 
   useEffect(() => {
@@ -80,6 +94,7 @@ export function FullRaidsNa() {
       <DateFilter onDaySelect={onDaySelect} />
       <div className='container mx-auto mt-2 p-4'>
         <div className='flex items-center justify-between mb-2'>
+          {/* Apenas Chefe de Cozinha pode ver */}
           {hasRequiredRole(['1101231955120496650']) && (
             <button
               className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center'
@@ -98,10 +113,7 @@ export function FullRaidsNa() {
         <RunsDataGrid data={rows} isLoading={isLoading} />
 
         {isAddRunOpen && (
-          <AddRun
-            onClose={handleCloseAddRun}
-            onRunAddedReload={fetchRuns} // Passa a função para recarregar a lista
-          />
+          <AddRun onClose={handleCloseAddRun} onRunAddedReload={fetchRuns} />
         )}
       </div>
     </div>

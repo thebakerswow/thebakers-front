@@ -1,34 +1,14 @@
 import { Megaphone, Eye, UserPlus } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
 import { BuyerData, BuyersDataGrid } from './run/buyers-data-grid'
 import axios from 'axios'
 import { InviteBuyers } from '../../components/invite-buyers'
-
-interface RaidLeader {
-  idDiscord: string
-  username: string
-}
-
-interface RunsDataProps {
-  data: Array<{
-    id: string
-    idTeam: string
-    date: string
-    time: string
-    raid: string
-    runType: string
-    difficulty: string
-    team: string
-    maxBuyers: string
-    raidLeaders: RaidLeader[]
-    note: string
-    loot: string
-  }>
-  isLoading: boolean
-}
+import { RunsDataProps } from '../../types/runs-interface'
+import { api } from '../../services/axiosConfig'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 
 export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const navigate = useNavigate()
@@ -43,6 +23,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   const [isLoadingBuyers, setIsLoadingBuyers] = useState(false)
   const [errorBuyers, setErrorBuyers] = useState('')
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   function handleOpenInviteBuyersModal() {
     setIsInviteBuyersOpen(true)
@@ -68,19 +49,31 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
       setErrorBuyers('')
       setSelectedRun({ note: '', id: runId })
 
-      const apiUrl = import.meta.env.VITE_GET_RUN_URL
-      const response = await axios.get(`${apiUrl}/${runId}/buyers`, {
-        headers: {
-          APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-          Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
-        },
-      })
+      const response = await api.get(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers` ||
+          `http://localhost:8000/v1/run/${runId}/buyers`
+      )
 
-      setBuyersData(response.data.info ?? [])
+      setBuyersData(response.data.info)
+
       setIsPreviewOpen(true)
     } catch (error) {
-      console.error('Erro ao buscar dados dos compradores:', error)
-      setErrorBuyers('Failed to fetch buyers data. Please try again later.')
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        console.error('Erro detalhado:', errorDetails)
+        setError(errorDetails)
+      } else {
+        const genericError = {
+          message: 'Erro inesperado',
+          response: error,
+        }
+        console.error('Erro genérico:', error)
+        setError(genericError)
+      }
     } finally {
       setIsLoadingBuyers(false)
     }
@@ -96,15 +89,16 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
     navigate(`/bookings-na/run/${id}`) // Altere '/sua-url' para o caminho desejado
   }
 
+  const convertTimeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+
   const sortedData = useMemo(() => {
     const sorted = [...data].sort((a, b) => {
       if (!a.time || !b.time) return 0
 
       // Converter tempo para minutos para comparação
-      const convertTimeToMinutes = (time: string) => {
-        const [hours, minutes] = time.split(':').map(Number)
-        return hours * 60 + minutes
-      }
 
       const timeA = convertTimeToMinutes(a.time)
       const timeB = convertTimeToMinutes(b.time)
@@ -114,14 +108,18 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
     return sorted
   }, [data, isTimeSortedAsc])
 
-  const handleSortByTime = () => {
-    setIsTimeSortedAsc(!isTimeSortedAsc)
+  const handleSortByTime = useCallback(() => {
+    setIsTimeSortedAsc((prev) => !prev)
+  }, [])
+
+  if (error) {
+    return <ErrorComponent error={error} />
   }
 
   return (
     <div className='overflow-x-auto rounded-sm relative max-h-[350px] text-zinc-700 text-center text-base min-h-[400px]'>
       <table className='min-w-full border-collapse table-fixed'>
-        <thead className='bg-zinc-400 text-gray-700 text-left sticky top-0'>
+        <thead className='bg-zinc-400 text-gray-700 text-left'>
           <tr>
             <th className='p-2 border w-[100px]'>Preview</th>
             <th className='p-2 border cursor-pointer w-[150px]'>Date</th>
@@ -145,7 +143,7 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
         <tbody className='bg-zinc-200 overflow-y-auto'>
           {isLoading && (
             <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex gap-4 flex-col items-center justify-center'>
-              <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600'></td>
+              <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
             </tr>
           )}
           {!isLoading && sortedData.length === 0 ? (
