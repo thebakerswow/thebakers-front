@@ -33,15 +33,12 @@ export function Login() {
           response: error.response?.data,
           status: error.response?.status,
         }
-        console.error('Erro detalhado:', errorDetails)
         setError(errorDetails)
       } else {
-        const genericError = {
+        setError({
           message: 'Erro inesperado',
           response: error,
-        }
-        console.error('Erro genérico:', error)
-        setError(genericError)
+        })
       }
     }
   }
