@@ -37,14 +37,6 @@ export function RunDetails() {
   //   setAttendance(updatedAttendance)
   // }
 
-  // Função para atualizar o número de backups localmente
-  const handleBackupUpdate = (newBackups: number) => {
-    setRunData((prevRunData) => {
-      if (!prevRunData) return prevRunData
-      return { ...prevRunData, backups: newBackups }
-    })
-  }
-
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
     await fetchRunData() // Atualiza dados da run
@@ -66,7 +58,6 @@ export function RunDetails() {
         `${import.meta.env.VITE_API_BASE_URL}/run/${id}` ||
           `http://localhost:8000/v1/run/${id}`
       )
-      console.log('Dados da run: ', response.data.info)
       const data = response.data.info
       setRunData({
         ...data,
@@ -103,7 +94,6 @@ export function RunDetails() {
         `${import.meta.env.VITE_API_BASE_URL}/run/${id}/buyers` ||
           `http://localhost:8000/v1/run/${id}/buyers`
       )
-      console.log('buyer data:', response.data.info)
 
       setRows(response.data.info)
     } catch (error) {
@@ -179,8 +169,8 @@ export function RunDetails() {
                 </button>
                 <BuyersDataGrid
                   data={rows}
-                  onBuyerEdit={reloadAllData}
-                  onBackupUpdate={handleBackupUpdate}
+                  onBuyerStatusEdit={reloadAllData}
+                  onBuyerNameNoteEdit={fetchBuyersData}
                 />
               </div>
             )}

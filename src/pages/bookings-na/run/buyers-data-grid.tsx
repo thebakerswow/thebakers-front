@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckFat, XCircle } from '@phosphor-icons/react'
+import { CheckFat, DotsThreeVertical, XCircle } from '@phosphor-icons/react'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -18,13 +18,13 @@ import { BuyerData } from '../../../types/buyer-interface'
 import { api } from '../../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { Modal } from '../../../components/modal'
+import { DeleteBuyer } from '../../../components/delete-buyer'
+import { EditBuyer } from '../../../components/edit-buyer'
 
 interface BuyersGridProps {
   data: BuyerData[]
-  onBuyerEdit: () => void
-  onBackupUpdate?: (newBackups: number) => void
-  onPotUpdate?: (newPot: number) => void
-  onSlotsUpdate?: (newSlotsAvailable: number) => void
+  onBuyerStatusEdit: () => void
+  onBuyerNameNoteEdit: () => void
 }
 
 // const statusPriorities: Record<string, number> = {
@@ -36,8 +36,35 @@ interface BuyersGridProps {
 //   closed: 6,
 // }
 
-export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
+export function BuyersDataGrid({
+  data,
+  onBuyerStatusEdit,
+  onBuyerNameNoteEdit,
+}: BuyersGridProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [openActionsDropdown, setOpenActionsDropdown] = useState(null)
+  const [openModal, setOpenModal] = useState(false)
+  const [editingBuyer, setEditingBuyer] = useState<{
+    id: string
+    nameAndRealm: string
+    buyerNote: string
+  } | null>(null)
+  const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
+
+  const toggleActionsDropdown = (buyerId: any) => {
+    setOpenActionsDropdown(openActionsDropdown === buyerId ? null : buyerId)
+  }
+
+  const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
+    setEditingBuyer({
+      id: buyer.id,
+      nameAndRealm: buyer.nameAndRealm,
+      buyerNote: buyer.buyerNote,
+    })
+    setModalType(type)
+    setOpenModal(true)
+    setOpenActionsDropdown(null)
+  }
 
   const handleTogglePaid = async (buyerId: string) => {
     const payload = {
@@ -52,7 +79,7 @@ export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
         payload
       )
 
-      onBuyerEdit()
+      onBuyerStatusEdit()
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -83,7 +110,7 @@ export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
         payload
       )
 
-      onBuyerEdit()
+      onBuyerStatusEdit()
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -178,6 +205,7 @@ export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
             <th className='p-2 border'>Paid Full</th>
             <th className='p-2 border'>Pot</th>
             <th className='p-2 border'>Note</th>
+            <th className='p-2 border' />
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
@@ -253,10 +281,55 @@ export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
               </td>
               <td className='p-2 text-center'>{buyer.buyerPot}</td>
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
+              <td className='text-center'>
+                <button onClick={() => toggleActionsDropdown(buyer.id)}>
+                  <DotsThreeVertical size={20} />
+                </button>
+                {openActionsDropdown === buyer.id && (
+                  <div className='absolute right-16 w-32 bg-white border rounded shadow-md'>
+                    <button
+                      onClick={() => handleOpenModal(buyer, 'edit')}
+                      className='block w-full px-4 py-2 text-left hover:bg-gray-100'
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleOpenModal(buyer, 'delete')}
+                      className='block w-full px-4 py-2 text-left hover:bg-gray-100'
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {openModal && editingBuyer && (
+        <Modal onClose={() => setOpenModal(false)}>
+          {modalType === 'edit' ? (
+            <EditBuyer
+              buyer={{
+                id: editingBuyer.id,
+                nameAndRealm: editingBuyer.nameAndRealm,
+                buyerNote: editingBuyer.buyerNote,
+              }}
+              onClose={() => setOpenModal(false)}
+              onEditSuccess={onBuyerNameNoteEdit}
+            />
+          ) : (
+            <DeleteBuyer
+              buyer={{
+                id: editingBuyer.id,
+                nameAndRealm: editingBuyer.nameAndRealm,
+              }}
+              onClose={() => setOpenModal(false)}
+              onDeleteSuccess={onBuyerNameNoteEdit}
+            />
+          )}
+        </Modal>
+      )}
     </div>
   )
 }
