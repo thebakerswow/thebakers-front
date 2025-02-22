@@ -1,21 +1,18 @@
-import {
-  Megaphone,
-  Eye,
-  UserPlus,
-  DotsThreeVertical,
-} from '@phosphor-icons/react'
+import { Megaphone, Eye, DotsThreeVertical } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
-import { BuyersDataGrid } from './run/buyers-data-grid'
-import axios from 'axios'
-import { InviteBuyers } from '../../components/invite-buyers'
-import { RunsDataProps } from '../../types/runs-interface'
-import { api } from '../../services/axiosConfig'
+import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { BuyerData } from '../../types/buyer-interface'
 import { DeleteRun } from '../../components/delete-run'
+import { BuyersPreview } from '../../components/buyers-preview'
+
+interface RunsDataProps {
+  data: RunData[]
+  isLoading: boolean
+  onDeleteSuccess: () => void
+}
 
 export function RunsDataGrid({
   data,
@@ -28,12 +25,7 @@ export function RunsDataGrid({
     note: string
     id?: string // Adicionando a propriedade 'id' aqui
   } | null>(null)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
-  const [buyersData, setBuyersData] = useState<BuyerData[]>([])
-  const [isLoadingBuyers, setIsLoadingBuyers] = useState(false)
-  const [errorBuyers, setErrorBuyers] = useState('')
-  const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
   const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
@@ -44,6 +36,18 @@ export function RunsDataGrid({
   const [openActionsDropdown, setOpenActionsDropdown] = useState<string | null>(
     null
   )
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+
+  const handleOpenPreview = (runId: string) => {
+    setSelectedRunId(runId)
+    setIsPreviewOpen(true)
+  }
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false)
+    setSelectedRunId(null)
+  }
 
   const toggleActionsDropdown = (runId: string) => {
     setOpenActionsDropdown(openActionsDropdown === runId ? null : runId)
@@ -63,14 +67,6 @@ export function RunsDataGrid({
     setSelectedRunToDelete(null)
   }
 
-  function handleOpenInviteBuyersModal() {
-    setIsInviteBuyersOpen(true)
-  }
-
-  function handleCloseInviteBuyersModal() {
-    setIsInviteBuyersOpen(false)
-  }
-
   function handleOpenNote(run: { note: string; id: string }) {
     setSelectedRun(run)
     setIsNoteOpen(true)
@@ -79,45 +75,6 @@ export function RunsDataGrid({
   function handleCloseNote() {
     setIsNoteOpen(false)
     setSelectedRun(null)
-  }
-
-  const handleOpenPreview = async (runId: string) => {
-    try {
-      setIsLoadingBuyers(true)
-      setErrorBuyers('')
-      setSelectedRun({ note: '', id: runId })
-
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers` ||
-          `http://localhost:8000/v1/run/${runId}/buyers`
-      )
-
-      setBuyersData(response.data.info)
-
-      setIsPreviewOpen(true)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
-    } finally {
-      setIsLoadingBuyers(false)
-    }
-  }
-
-  const handleClosePreview = () => {
-    setIsPreviewOpen(false)
-    setBuyersData([])
-    setErrorBuyers('')
   }
 
   const handleRedirect = (id: string) => {
@@ -286,45 +243,8 @@ export function RunsDataGrid({
         </Modal>
       )}
 
-      {isPreviewOpen && (
-        <Modal onClose={handleClosePreview}>
-          <div className='w-full max-w-[95vw]  overflow-y-auto overflow-x-hidden'>
-            {isLoadingBuyers ? (
-              <div className='flex flex-col items-center justify-center h-full'>
-                <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
-                <p className='mt-4 text-lg'>Loading buyers...</p>
-              </div>
-            ) : errorBuyers ? (
-              <div className='text-red-500 text-2xl text-center'>
-                {errorBuyers}
-              </div>
-            ) : buyersData.length > 0 ? (
-              <div>
-                <button
-                  onClick={handleOpenInviteBuyersModal}
-                  className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
-                >
-                  <UserPlus size={18} />
-                  Invite Buyers
-                </button>
-
-                <BuyersDataGrid data={buyersData} />
-              </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center h-full'>
-                <p className='text-lg'>No buyers found</p>
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
-      {isInviteBuyersOpen && selectedRun?.id ? (
-        <InviteBuyers
-          onClose={handleCloseInviteBuyersModal}
-          runId={selectedRun.id}
-        />
-      ) : (
-        <div>Run ID not available</div>
+      {isPreviewOpen && selectedRunId && (
+        <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
       )}
     </div>
   )
