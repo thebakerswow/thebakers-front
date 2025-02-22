@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { Pencil } from '@phosphor-icons/react'
 import { Modal } from './modal'
 import axios from 'axios'
-import { RunData } from '../pages/bookings-na/run'
+import { RunData } from '../types/runs-interface'
+import { api } from '../services/axiosConfig'
+import { ErrorComponent, ErrorDetails } from './error-display'
 
 interface MultiSelectDropdownProps {
   onChange: (selected: string[]) => void
@@ -23,34 +25,41 @@ const MultiSelectDropdown = ({
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   function getSpecificTeamUrl(teamId: string) {
-    return `${import.meta.env.VITE_GET_SPECIFIC_TEAM_URL}${teamId}`
+    return `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
   }
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
+        // prefeitos
         const teamId = '1148721174088532040'
-        const response = await axios.get(
+        const response = await api.get(
           getSpecificTeamUrl(teamId) ||
-            'http://localhost:8000/v1/team/1148721174088532040',
-          {
-            headers: {
-              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            },
-          }
+            'http://localhost:8000/v1/team/1148721174088532040'
         )
 
         if (response.data.info.members) {
           setApiOptions(response.data.info.members)
         }
-      } catch (err) {
-        console.error('Erro ao buscar usuários:', err)
-        setError('Falha ao carregar opções')
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          setError(errorDetails)
+        } else {
+          setError({
+            message: 'Erro inesperado',
+            response: error,
+          })
+        }
       } finally {
         setLoading(false)
       }
@@ -115,7 +124,6 @@ const MultiSelectDropdown = ({
       >
         {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
       </div>
-
       {open && (
         <div className='absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-y-auto'>
           {loading && (
@@ -123,9 +131,6 @@ const MultiSelectDropdown = ({
               Loading options...
             </div>
           )}
-
-          {error && <div className='p-2 text-red-500 text-center'>{error}</div>}
-
           {!loading &&
             !error &&
             apiOptions.map((option) => (
@@ -170,6 +175,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [note, setNote] = useState(run.note)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   const initialSelected = useMemo(
     () => run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
@@ -205,32 +211,30 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     }
 
     try {
-      const jwt = sessionStorage.getItem('jwt')
-      // Alterado para PUT e incluído o ID da run na URL
       await axios.put(
-        import.meta.env.VITE_PUT_RUN_URL || 'http://localhost:8000/v1/run',
-        data,
-        {
-          headers: {
-            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
+        `${import.meta.env.VITE_API_BASE_URL}/run` ||
+          'http://localhost:8000/v1/run',
+        data
       )
-      console.log('payload do edit: ', data)
+
       onRunEdit()
 
       setIsSuccess(true)
+
       setTimeout(() => onClose(), 3000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Erro detalhado:', {
+        const errorDetails = {
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
-        })
+        }
+        setError(errorDetails)
       } else {
-        console.error('Erro inesperado:', error)
+        setError({
+          message: 'Erro inesperado',
+          response: error,
+        })
       }
     } finally {
       setIsSubmitting(false)
@@ -240,7 +244,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   return (
     <Modal onClose={onClose}>
       <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
-        {isSuccess ? (
+        {error ? (
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : isSuccess ? (
           <div className='p-6 text-center'>
             <div className='text-green-500 text-4xl mb-4'>✓</div>
             <h2 className='text-2xl font-bold mb-2'>

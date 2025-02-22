@@ -64,15 +64,12 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
           response: error.response?.data,
           status: error.response?.status,
         }
-        console.error('Erro detalhado:', errorDetails)
         setError(errorDetails)
       } else {
-        const genericError = {
+        setError({
           message: 'Erro inesperado',
           response: error,
-        }
-        console.error('Erro genérico:', error)
-        setError(genericError)
+        })
       }
     } finally {
       setIsLoadingBuyers(false)
@@ -113,7 +110,11 @@ export function RunsDataGrid({ data, isLoading }: RunsDataProps) {
   }, [])
 
   if (error) {
-    return <ErrorComponent error={error} />
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
   return (

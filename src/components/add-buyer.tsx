@@ -2,7 +2,9 @@ import { UserPlus } from '@phosphor-icons/react'
 import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { Modal } from './modal'
-import { RunData } from '../pages/bookings-na/run'
+import { RunData } from '../types/runs-interface'
+import { api } from '../services/axiosConfig'
+import { ErrorComponent, ErrorDetails } from './error-display'
 
 interface AddBuyerProps {
   run: RunData
@@ -29,6 +31,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newValue = e.target.value
@@ -54,34 +57,34 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }
 
     try {
-      const jwt = sessionStorage.getItem('jwt')
-      await axios.post(
-        import.meta.env.VITE_POST_BUYER_URL || 'http://localhost:8000/v1/buyer',
-        data,
-        {
-          headers: {
-            APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
+      await api.post(
+        `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
+          'http://localhost:8000/v1/buyer',
+        data
       )
 
       onBuyerAddedReload()
 
       setIsSuccess(true)
+
       await onBuyerAddedReload()
+
       setTimeout(() => {
         onClose()
       }, 3000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Erro detalhado:', {
+        const errorDetails = {
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
-        })
+        }
+        setError(errorDetails)
       } else {
-        console.error('Erro inesperado:', error)
+        setError({
+          message: 'Erro inesperado',
+          response: error,
+        })
       }
     } finally {
       setIsSubmitting(false)
@@ -91,19 +94,25 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   useEffect(() => {
     async function fetchAdvertisers() {
       try {
-        const response = await axios.get(
-          import.meta.env.VITE_API_ADVERTISERS_URL ||
-            'http://localhost:8000/v1/users/ghost',
-          {
-            headers: {
-              APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
-              Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
-            },
-          }
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/users/ghost` ||
+            'http://localhost:8000/v1/users/ghost'
         )
         setAdvertisers(response.data.info)
       } catch (error) {
-        console.error('Erro ao buscar os advertisers:', error)
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          setError(errorDetails)
+        } else {
+          setError({
+            message: 'Erro inesperado',
+            response: error,
+          })
+        }
       }
     }
     fetchAdvertisers()
@@ -112,7 +121,9 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   return (
     <Modal onClose={onClose}>
       <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
-        {isSuccess ? (
+        {error ? (
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : isSuccess ? (
           <div className='p-6 text-center'>
             <div className='text-green-500 text-4xl mb-4'>✓</div>
             <h2 className='text-2xl font-bold mb-2'>

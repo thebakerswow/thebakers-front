@@ -7,6 +7,7 @@ import { ErrorComponent, ErrorDetails } from './error-display'
 
 interface MultiSelectDropdownProps {
   onChange: (selected: string[]) => void
+  onError: (error: ErrorDetails) => void
 }
 
 interface ApiOption {
@@ -15,7 +16,10 @@ interface ApiOption {
   global_name: string
 }
 
-const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
+const MultiSelectDropdown = ({
+  onChange,
+  onError,
+}: MultiSelectDropdownProps) => {
   const [selected, setSelected] = useState<string[]>([])
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
@@ -31,6 +35,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
+        //team Prefeitos
         const teamId = '1148721174088532040'
         const response = await api.get(
           getSpecificTeamUrl(teamId) ||
@@ -46,15 +51,15 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
             response: error.response?.data,
             status: error.response?.status,
           }
-          console.error('Erro detalhado:', errorDetails)
           setError(errorDetails)
+          onError(errorDetails) // Notifica o componente pai
         } else {
           const genericError = {
             message: 'Erro inesperado',
             response: error,
           }
-          console.error('Erro genérico:', error)
           setError(genericError)
+          onError(genericError) // Notifica o componente pai
         }
       } finally {
         setLoading(false)
@@ -62,11 +67,7 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
     }
 
     fetchOptions()
-  }, [])
-
-  if (error) {
-    return <ErrorComponent error={error} />
-  }
+  }, [onError])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -119,7 +120,6 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
       >
         {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
       </div>
-
       {open && (
         <div className='absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-y-auto'>
           {loading && (
@@ -127,9 +127,6 @@ const MultiSelectDropdown = ({ onChange }: MultiSelectDropdownProps) => {
               Loading options...
             </div>
           )}
-
-          {error && <div className='p-2 text-red-500 text-center'>{error}</div>}
-
           {!loading &&
             !error &&
             apiOptions.map((option) => (
@@ -174,6 +171,10 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+
+  const handleDropdownError = useCallback((error: ErrorDetails) => {
+    setError(error)
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -220,29 +221,24 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
           response: error.response?.data,
           status: error.response?.status,
         }
-        console.error('Erro detalhado:', errorDetails)
         setError(errorDetails)
       } else {
-        const genericError = {
+        setError({
           message: 'Erro inesperado',
           response: error,
-        }
-        console.error('Erro genérico:', error)
-        setError(genericError)
+        })
       }
     } finally {
-      setIsSubmitting(false) // Desativa o loading em qualquer caso
+      setIsSubmitting(false)
     }
-  }
-
-  if (error) {
-    return <ErrorComponent error={error} />
   }
 
   return (
     <Modal onClose={onClose}>
       <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
-        {isSuccess ? (
+        {error ? (
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : isSuccess ? (
           <div className='p-6 text-center'>
             <div className='text-green-500 text-4xl mb-4'>✓</div>
             <h2 className='text-2xl font-bold mb-2'>
@@ -359,6 +355,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             />
             <MultiSelectDropdown
               onChange={(selected) => setRaidLeader(selected)}
+              onError={handleDropdownError}
             />
             <select
               required

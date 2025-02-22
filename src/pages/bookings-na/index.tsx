@@ -4,11 +4,12 @@ import { DateFilter } from './date-filter'
 import { format } from 'date-fns'
 import { UserPlus } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
-import { RunData } from './run'
 import { useAuth } from '../../context/auth-context'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { RunData } from '../../types/runs-interface'
+import { Modal } from '../../components/modal'
 
 export function FullRaidsNa() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -70,7 +71,11 @@ export function FullRaidsNa() {
   }
 
   if (error) {
-    return <ErrorComponent error={error} />
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
   useEffect(() => {

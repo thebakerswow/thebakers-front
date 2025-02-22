@@ -1,8 +1,8 @@
-import React, { useRef } from 'react'
+import React, { ReactNode, useRef } from 'react'
 
 interface ModalProps {
   onClose: () => void
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export const Modal = ({ onClose, children }: ModalProps) => {

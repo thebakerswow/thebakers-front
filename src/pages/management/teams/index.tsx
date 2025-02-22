@@ -9,6 +9,7 @@ import {
 import { LoadingSpinner } from '../../../components/loading-spinner'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
+import { Modal } from '../../../components/modal'
 
 export function TeamsManagement() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -19,7 +20,6 @@ export function TeamsManagement() {
     const fetchTeams = async () => {
       try {
         setIsLoading(true)
-        console.log('fez o get')
         const response = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/teams` ||
             'http://localhost:8000/v1/teams'
@@ -41,15 +41,12 @@ export function TeamsManagement() {
             response: error.response?.data,
             status: error.response?.status,
           }
-          console.error('Erro detalhado:', errorDetails)
           setError(errorDetails)
         } else {
-          const genericError = {
+          setError({
             message: 'Erro inesperado',
             response: error,
-          }
-          console.error('Erro genérico:', error)
-          setError(genericError)
+          })
         }
       } finally {
         setIsLoading(false)
@@ -69,7 +66,11 @@ export function TeamsManagement() {
   const maxRows = Math.max(...columns.map((team) => team.length), 0)
 
   if (error) {
-    return <ErrorComponent error={error} />
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
   if (isLoading) {

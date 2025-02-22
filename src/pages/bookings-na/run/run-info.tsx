@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Pencil, UserPlus } from '@phosphor-icons/react'
 import twwLogo from '../../../assets/baker-and-employees.png'
-import { RunData } from './index'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
-import { useAuth } from '../../../context/auth-context' // Importe o hook de autenticação
+import { useAuth } from '../../../context/auth-context' 
+import { RunData } from '../../../types/runs-interface'
 
 interface RunInfoProps {
   run: RunData
@@ -110,6 +110,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             <UserPlus size={18} />
             Add Buyer
           </button>
+          {/* Permissoes prefeito, chefe de cozinha, staff */}
           {hasRequiredRole([
             '1101231955120496650',
             '1244711458541928608',
