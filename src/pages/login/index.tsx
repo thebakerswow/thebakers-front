@@ -5,6 +5,7 @@ import { DiscordLogo } from '@phosphor-icons/react'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { Modal } from '../../components/modal'
 
 export function Login() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -46,7 +47,11 @@ export function Login() {
   }
 
   if (error) {
-    return <ErrorComponent error={error} />
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
   return (
