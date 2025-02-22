@@ -120,7 +120,7 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
             <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
             <p className='mt-4 text-lg'>Loading buyers...</p>
           </div>
-        ) : rows.length > 0 ? (
+        ) : rows?.length > 0 ? (
           <div>
             <button
               onClick={handleOpenInviteBuyersModal}
