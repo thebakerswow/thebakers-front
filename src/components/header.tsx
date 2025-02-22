@@ -7,7 +7,6 @@ import {
   CastleTurret,
   SignOut,
   UsersFour,
-  CheckCircle,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -74,7 +73,7 @@ export function Header() {
                 className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
                 onClick={() => navigate('/admin')}
               >
-                <UsersFour className='text-gray-100' size={30} />
+                <Briefcase className='text-gray-100' size={30} />
                 Admin
               </button>
             )}
@@ -88,14 +87,6 @@ export function Header() {
                 Teams
               </button>
             )}
-
-            <button
-              className='text-gray-300 flex gap-4 text-lg font-semibold w-full items-center pl-5'
-              onClick={() => navigate('/attendance')}
-            >
-              <CheckCircle className='text-gray-100' size={30} />
-              Attendance
-            </button>
           </div>
         )}
       </div>

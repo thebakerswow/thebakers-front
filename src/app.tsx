@@ -8,7 +8,6 @@ import { Header } from './components/header'
 import { HomePage } from './pages/home'
 import { Balance } from './pages/balance'
 import { TeamsManagement } from './pages/management/teams'
-import { Attendance } from './pages/management/attendance'
 import { FullRaidsNa } from './pages/bookings-na'
 import { RunDetails } from './pages/bookings-na/run'
 import { Login } from './pages/login'
@@ -62,10 +61,6 @@ export function App() {
                 <Route
                   path='/management-teams'
                   element={<PrivateRoute element={<TeamsManagement />} />}
-                />
-                <Route
-                  path='/attendance'
-                  element={<PrivateRoute element={<Attendance />} />}
                 />
                 <Route
                   path='/bookings-na'
