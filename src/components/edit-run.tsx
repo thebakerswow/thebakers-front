@@ -211,7 +211,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     }
 
     try {
-      await axios.put(
+      await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run` ||
           'http://localhost:8000/v1/run',
         data

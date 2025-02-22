@@ -78,6 +78,7 @@ export function Header() {
                 Admin
               </button>
             )}
+            {/* chefe de cozinha */}
             {hasRequiredRole(['1101231955120496650']) && (
               <button
                 className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'

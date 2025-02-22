@@ -14,14 +14,12 @@ import Shaman from '../../../assets/class_icons/shaman.png'
 import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
 import axios from 'axios'
-import { RunData } from '../../../types/runs-interface'
 import { BuyerData } from '../../../types/buyer-interface'
 import { api } from '../../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { Modal } from '../../../components/modal'
 
 interface BuyersGridProps {
-  run?: RunData
   data: BuyerData[]
   onBuyerEdit: () => void
   onBackupUpdate?: (newBackups: number) => void
@@ -183,7 +181,7 @@ export function BuyersDataGrid({ data, onBuyerEdit }: BuyersGridProps) {
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
-          {data.map((buyer, index) => (
+          {data?.map((buyer, index) => (
             <tr
               key={buyer.id}
               className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}

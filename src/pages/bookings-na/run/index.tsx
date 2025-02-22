@@ -178,7 +178,6 @@ export function RunDetails() {
                   Invite Buyers
                 </button>
                 <BuyersDataGrid
-                  run={runData}
                   data={rows}
                   onBuyerEdit={reloadAllData}
                   onBackupUpdate={handleBackupUpdate}
