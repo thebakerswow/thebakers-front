@@ -71,7 +71,6 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
       )
 
       setRows(response.data.info)
-      console.log('buyers', response.data.info)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
