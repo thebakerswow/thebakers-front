@@ -79,7 +79,7 @@ export function BuyersDataGrid({
         payload
       )
 
-      onBuyerStatusEdit()
+      await onBuyerStatusEdit()
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {

@@ -26,7 +26,7 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
         `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}` ||
           `http://localhost:8000/v1/run/${run.id}`
       )
-      onDeleteSuccess()
+      await onDeleteSuccess()
       onClose()
     } catch (error) {
       if (axios.isAxiosError(error)) {

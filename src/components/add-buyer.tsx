@@ -63,8 +63,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
         data
       )
 
-      onBuyerAddedReload()
-
       setIsSuccess(true)
 
       await onBuyerAddedReload()

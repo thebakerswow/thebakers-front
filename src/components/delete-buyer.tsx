@@ -26,7 +26,7 @@ export function DeleteBuyer({
 
     try {
       await api.delete(`/buyer/${buyer.id}`)
-      onDeleteSuccess()
+      await onDeleteSuccess()
       onClose()
     } catch (error) {
       if (axios.isAxiosError(error)) {

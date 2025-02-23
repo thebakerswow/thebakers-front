@@ -207,7 +207,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
         data
       )
 
-      onRunAddedReload()
+      await onRunAddedReload()
 
       setIsSuccess(true)
 

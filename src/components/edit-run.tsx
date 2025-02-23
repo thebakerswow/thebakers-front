@@ -217,7 +217,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         data
       )
 
-      onRunEdit()
+      await onRunEdit()
 
       setIsSuccess(true)
 

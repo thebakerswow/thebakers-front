@@ -36,7 +36,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
         payload
       )
 
-      onEditSuccess()
+      await onEditSuccess()
       onClose()
     } catch (error) {
       if (axios.isAxiosError(error)) {
