@@ -23,19 +23,10 @@ export function Attendance({
   runId,
 }: AttendanceProps) {
   const [currentPage, setCurrentPage] = useState(1) // Estado para controlar a página atual
-  const [isAttendanceSubmitOpen, setIsAttendanceSubmitOpen] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const playersPerPage = 10 // Número de players por página
-
-  const handleOpenAttendanceSubmit = () => {
-    setIsAttendanceSubmitOpen(true)
-  }
-
-  const handleCloseAttendanceSubmit = () => {
-    setIsAttendanceSubmitOpen(false)
-  }
 
   // Função para obter a cor com base no percentual
   const getColorForPercentage = (percentage: number) => {
@@ -232,35 +223,8 @@ export function Attendance({
                 'Save'
               )}
             </button>
-            <button
-              onClick={handleOpenAttendanceSubmit}
-              className='px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded'
-            >
-              Send
-            </button>
           </div>
         </div>
-        {isAttendanceSubmitOpen && (
-          <Modal onClose={handleCloseAttendanceSubmit}>
-            <h2 className='text-lg font-semibold mb-4'>Confirm Submition</h2>
-            <p>Are you sure you want to submit?</p>
-            <div className='flex gap-2 mt-4'>
-              <button
-                className={
-                  'bg-green-500 hover:bg-green-600 transition-color text-white px-4 py-2 rounded'
-                }
-              >
-                Submit
-              </button>
-              <button
-                onClick={handleCloseAttendanceSubmit}
-                className='bg-gray-300 hover:bg-gray-400 transition-color text-black px-4 py-2 rounded'
-              >
-                Cancel
-              </button>
-            </div>{' '}
-          </Modal>
-        )}
       </div>
     </div>
   )

@@ -3,7 +3,7 @@ import { Pencil, UserPlus } from '@phosphor-icons/react'
 import twwLogo from '../../../assets/baker-and-employees.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
-import { useAuth } from '../../../context/auth-context' 
+import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
 
 interface RunInfoProps {
@@ -131,9 +131,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         <AddBuyer
           run={run}
           onClose={handleCloseAddBuyer}
-          onBuyerAddedReload={async () => {
-            await onBuyerAddedReload()
-          }}
+          onBuyerAddedReload={onBuyerAddedReload}
         />
       )}
       {isEditModalOpen && (
