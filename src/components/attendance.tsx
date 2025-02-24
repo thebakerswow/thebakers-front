@@ -74,24 +74,15 @@ export function Attendance({
       percentage: player.percentage,
     }))
 
-    console.log('Dados enviados:', payload)
-    console.log(
-      'URL da requisição:',
-      `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance`
-    )
-
     try {
       // Fazer a requisição PUT com os dados armazenados
-      const response = await api.put(
+      await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance` ||
           `http://localhost:8000/v1/run/${runId}/attendance`,
         payload
       )
 
-      // Exibir a resposta da API no console
-      console.log('Resposta da API:', response.data)
-
-      onAttendanceUpdate() // Atualiza a lista após sucesso
+      await onAttendanceUpdate() // Atualiza a lista após sucesso
       setIsSuccess(true)
       setTimeout(() => {
         setIsSuccess(false) // Resetar o estado de sucesso após 2 segundos
