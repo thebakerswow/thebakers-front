@@ -17,7 +17,7 @@ import { useAuth } from './context/auth-context'
 import { ErrorPage } from './pages/error-pages/not-found'
 import { AccessDenied } from './pages/error-pages/access-denied'
 import { LoginErro } from './pages/error-pages/login-erro'
-import { AdminPage } from './pages/admin'
+import { AdminPage } from './pages/management/admin'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {

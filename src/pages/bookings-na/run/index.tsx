@@ -81,6 +81,8 @@ export function RunDetails() {
       )
 
       setRows(response.data.info)
+
+      console.log('buyer', response.data.info)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -108,6 +110,7 @@ export function RunDetails() {
           `http://localhost:8000/v1/run/${id}/attendance`
       )
       const data = response.data.info
+      console.log('attendance', data)
       setAttendance({ info: data })
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -127,31 +127,42 @@ export function Attendance({
           </tbody>
         </table>
 
-        {/* Controles de paginação */}
-        <div className='flex justify-center items-center gap-4 mt-4 w-[50%]'>
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className='px-4 py-2 bg-zinc-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            Previous
-          </button>
-          <span className='text-sm text-zinc-200'>
-            {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className='px-4 py-2 bg-zinc-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            Next
-          </button>
-          <button
-            onClick={handleOpenAttendanceSubmit}
-            className='px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded'
-          >
-            Send
-          </button>
+        {/* Controles de paginação e botões */}
+        <div className='flex justify-center items-center mt-4 w-[50%] relative'>
+          {/* Grupo de paginação centralizado */}
+          <div className='flex justify-center items-center gap-4'>
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className='px-4 py-2 bg-zinc-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              Previous
+            </button>
+            <span className='text-sm text-zinc-200'>
+              {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className='px-4 py-2 bg-zinc-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              Next
+            </button>
+          </div>
+          <div className='absolute right-0 flex gap-4'>
+            <button
+              onClick={handleOpenAttendanceSubmit}
+              className='px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded'
+            >
+              Save
+            </button>
+            <button
+              onClick={handleOpenAttendanceSubmit}
+              className='px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded'
+            >
+              Send
+            </button>
+          </div>
         </div>
         {isAttendanceSubmitOpen && (
           <Modal onClose={handleCloseAttendanceSubmit}>

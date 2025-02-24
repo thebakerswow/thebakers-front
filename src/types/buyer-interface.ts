@@ -4,7 +4,8 @@ export interface BuyerData {
   idBuyerAdvertiser: string
   nameOwnerBuyer: string
   buyerNote: string
-  buyerPot: string
+  buyerPot: number
+  buyerActualPot: number
   isPaid: boolean
   nameAndRealm: string
   nameCollector: string
