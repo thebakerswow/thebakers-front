@@ -25,6 +25,7 @@ interface BuyersGridProps {
   data: BuyerData[]
   onBuyerStatusEdit: () => void
   onBuyerNameNoteEdit: () => void
+  onDeleteSuccess: () => void
 }
 
 // const statusPriorities: Record<string, number> = {
@@ -40,6 +41,7 @@ export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
+  onDeleteSuccess,
 }: BuyersGridProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [openActionsDropdown, setOpenActionsDropdown] = useState(null)
@@ -203,7 +205,8 @@ export function BuyersDataGrid({
             <th className='p-2 border'>Advertiser</th>
             <th className='p-2 border'>Collector</th>
             <th className='p-2 border'>Paid Full</th>
-            <th className='p-2 border'>Pot</th>
+            <th className='p-2 border'>Total Pot</th>
+            <th className='p-2 border'>Run Pot</th>
             <th className='p-2 border'>Note</th>
             <th className='p-2 border' />
           </tr>
@@ -280,6 +283,7 @@ export function BuyersDataGrid({
                 </div>
               </td>
               <td className='p-2 text-center'>{buyer.buyerPot}</td>
+              <td className='p-2 text-center'>{buyer.buyerPot}</td>
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
               <td className='text-center'>
                 <button onClick={() => toggleActionsDropdown(buyer.id)}>
@@ -325,7 +329,7 @@ export function BuyersDataGrid({
                 nameAndRealm: editingBuyer.nameAndRealm,
               }}
               onClose={() => setOpenModal(false)}
-              onDeleteSuccess={onBuyerNameNoteEdit}
+              onDeleteSuccess={onDeleteSuccess}
             />
           )}
         </Modal>

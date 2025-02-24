@@ -33,6 +33,7 @@ export function AdminPage() {
           {Array.from({ length: 15 }).map((_, index) => (
             <tr key={index} className='border border-gray-300'>
               <td className='p-2 text-center'>Player {index + 1} </td>
+              <td className='p-2 text-center'>Gold ganho {index + 1}</td>
               <td className='p-2 text-center'>Valor coletado {index + 1}</td>
             </tr>
           ))}
@@ -42,7 +43,7 @@ export function AdminPage() {
         <thead className='table-header-group '>
           <tr className='text-md bg-zinc-400 text-gray-700'>
             {/* Cabeçalhos com selects */}
-            <th className='p-2 border w-[150px]'>GOLD SOBRANDO DO BALANCE</th>
+            <th className='p-2 border w-[150px]'>BALANCE TOTAL</th>
             <th className='p-2 border w-[150px]'>CALCULADORA</th>
           </tr>
         </thead>
@@ -63,8 +64,8 @@ export function AdminPage() {
           <tr className='text-md bg-zinc-400 text-gray-700'>
             {/* Cabeçalhos com selects */}
             <th className='p-2 border w-[150px]'>GBANKS</th>
-            <th className='p-2 border w-[150px]'>CALCULADORA</th>
             <th className='p-2 border w-[150px]'>SALDO</th>
+            <th className='p-2 border w-[150px]'>CALCULADORA</th>
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
@@ -72,10 +73,10 @@ export function AdminPage() {
           {Array.from({ length: 15 }).map((_, index) => (
             <tr key={index} className='border border-gray-300'>
               <td className='p-2 text-center'> </td>
+              <td className='p-2 text-center'> </td>
               <td className='p-2 text-center'>
                 <input type='text' />
               </td>
-              <td className='p-2 text-center'> </td>
             </tr>
           ))}
         </tbody>

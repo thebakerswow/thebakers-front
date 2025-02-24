@@ -9,7 +9,7 @@ import { ErrorComponent, ErrorDetails } from './error-display'
 interface AddBuyerProps {
   run: RunData
   onClose: () => void
-  onBuyerAddedReload: () => Promise<void>
+  onBuyerAddedReload: () => void
 }
 
 interface Advertiser {
@@ -50,12 +50,12 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       paymentFaction,
       nameAndRealm,
       playerClass,
-      buyerPot,
+      buyerPot: Number(buyerPot),
       isPaid,
       idBuyerAdvertiser,
       buyerNote,
     }
-
+    console.log('payload', data)
     try {
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||

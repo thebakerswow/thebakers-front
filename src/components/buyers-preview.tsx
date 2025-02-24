@@ -133,6 +133,7 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
               data={rows}
               onBuyerStatusEdit={reloadAllData}
               onBuyerNameNoteEdit={fetchBuyersData}
+              onDeleteSuccess={reloadAllData}
             />
           </div>
         ) : (

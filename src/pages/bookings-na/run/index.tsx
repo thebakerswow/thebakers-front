@@ -204,6 +204,7 @@ export function RunDetails() {
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}
                   onBuyerNameNoteEdit={fetchBuyersData}
+                  onDeleteSuccess={reloadAllData}
                 />
               </div>
             )}
