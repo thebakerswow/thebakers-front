@@ -212,12 +212,15 @@ export function RunDetails() {
               </div>
             )}
           </div>
-
-          <Attendance
-            attendance={attendance}
-            markAllAsFull={markAllAsFull}
-            handleAttendanceClick={handleAttendanceClick}
-          />
+          {runData && (
+            <Attendance
+              attendance={attendance}
+              markAllAsFull={markAllAsFull}
+              handleAttendanceClick={handleAttendanceClick}
+              onAttendanceUpdate={fetchAttendanceData}
+              runId={runData.id}
+            />
+          )}
         </div>
       )}
       {isInviteBuyersOpen && runData && (

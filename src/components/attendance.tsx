@@ -1,21 +1,32 @@
 import { useState } from 'react'
 import { Modal } from './modal'
+import axios from 'axios'
+import { ErrorComponent, ErrorDetails } from './error-display'
+import { api } from '../services/axiosConfig'
+import { Check, CircleNotch } from '@phosphor-icons/react'
 
 interface AttendanceProps {
   attendance: {
     info: Array<{ idDiscord: string; username: string; percentage: number }>
   }
+  runId: string | undefined
   markAllAsFull: () => void
   handleAttendanceClick: (playerId: string, value: number) => void
+  onAttendanceUpdate: () => void
 }
 
 export function Attendance({
   attendance,
   markAllAsFull,
   handleAttendanceClick,
+  onAttendanceUpdate,
+  runId,
 }: AttendanceProps) {
   const [currentPage, setCurrentPage] = useState(1) // Estado para controlar a página atual
   const [isAttendanceSubmitOpen, setIsAttendanceSubmitOpen] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const playersPerPage = 10 // Número de players por página
 
   const handleOpenAttendanceSubmit = () => {
@@ -52,6 +63,64 @@ export function Attendance({
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
     }
+  }
+
+  // Função para enviar os dados
+  const handleAttendanceSave = async () => {
+    setIsSubmitting(true)
+
+    const payload = attendance.info.map((player) => ({
+      idDiscord: player.idDiscord,
+      percentage: player.percentage,
+    }))
+
+    console.log('Dados enviados:', payload)
+    console.log(
+      'URL da requisição:',
+      `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance`
+    )
+
+    try {
+      // Fazer a requisição PUT com os dados armazenados
+      const response = await api.put(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance` ||
+          `http://localhost:8000/v1/run/${runId}/attendance`,
+        payload
+      )
+
+      // Exibir a resposta da API no console
+      console.log('Resposta da API:', response.data)
+
+      onAttendanceUpdate() // Atualiza a lista após sucesso
+      setIsSuccess(true)
+      setTimeout(() => {
+        setIsSuccess(false) // Resetar o estado de sucesso após 2 segundos
+      }, 2000)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        setError(errorDetails)
+      } else {
+        setError({
+          message: 'Erro inesperado',
+          response: error,
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (error) {
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
   return (
@@ -151,10 +220,26 @@ export function Attendance({
           </div>
           <div className='absolute right-0 flex gap-4'>
             <button
-              onClick={handleOpenAttendanceSubmit}
-              className='px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded'
+              onClick={handleAttendanceSave}
+              disabled={isSubmitting || isSuccess} // Desabilitar durante o carregamento ou sucesso
+              className={`px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded flex items-center justify-center gap-2 ${
+                isSubmitting || isSuccess ? 'cursor-not-allowed' : ''
+              }`}
             >
-              Save
+              {isSubmitting ? ( // Spinner durante o carregamento
+                <>
+                  <CircleNotch className='animate-spin h-5 w-5' />
+                  Saving...
+                </>
+              ) : isSuccess ? ( // Ícone de sucesso
+                <>
+                  <Check className='h-5 w-5' />
+                  Saved!
+                </>
+              ) : (
+                // Estado normal
+                'Save'
+              )}
             </button>
             <button
               onClick={handleOpenAttendanceSubmit}
@@ -174,7 +259,7 @@ export function Attendance({
                   'bg-green-500 hover:bg-green-600 transition-color text-white px-4 py-2 rounded'
                 }
               >
-                Send
+                Submit
               </button>
               <button
                 onClick={handleCloseAttendanceSubmit}
