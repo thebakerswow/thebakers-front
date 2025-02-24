@@ -52,17 +52,17 @@ export function AdminPage() {
     fetchTeams()
   }, [])
 
-  const selectedPlayers =
-    teams.find((team) => team.name === selectedTeam)?.members || []
+  // const selectedPlayers =
+  //   teams.find((team) => team.name === selectedTeam)?.members || []
 
-  const columns = teams.map((team) =>
-    team.members.map((member) => ({
-      player: member.global_name,
-      discord: member.username,
-    }))
-  )
+  // const columns = teams.map((team) =>
+  //   team.members.map((member) => ({
+  //     player: member.global_name,
+  //     discord: member.username,
+  //   }))
+  // )
 
-  const maxRows = Math.max(...columns.map((team) => team.length), 0)
+  // const maxRows = Math.max(...columns.map((team) => team.length), 0)
 
   if (error) {
     return (
