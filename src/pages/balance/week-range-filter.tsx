@@ -82,7 +82,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   }
 
   return (
-    <div className='flex gap-10 p-4 items-center text-black'>
+    <div className='flex gap-10 mt-4 items-center text-black'>
       <div className='flex flex-col'>
         <label className='text-white mb-1 text-sm'>Month</label>
         <div className='relative'>
@@ -91,7 +91,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
             onChange={handleMonthChange}
             dateFormat='MM/yyyy'
             showMonthYearPicker
-            className='text-zinc-900 pl-3 pr-2 py-1.5 font-normal rounded-md w-56
+            className='text-zinc-900 pl-2 pr-8 py-1 font-normal rounded-md
               border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black'
             placeholderText='Select Month'
             open={isCalendarOpen}
@@ -108,7 +108,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
           <select
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(Number(e.target.value))}
-            className='text-zinc-900 pl-3 pr-8 py-1.5 rounded-md w-56
+            className='text-zinc-900 pl-2 pr-8 py-1 rounded-md
               border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black
               bg-white appearance-none'
           >

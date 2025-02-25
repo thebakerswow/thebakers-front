@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRoles, setUserRoles] = useState<string[]>([])
 
   const checkAuth = () => {
-    const token = sessionStorage.getItem('jwt')
+    const token = localStorage.getItem('jwt')
     setLoading(true) // Inicia o loading
     if (token) {
       try {
@@ -53,12 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = (token: string) => {
-    sessionStorage.setItem('jwt', token)
+    localStorage.setItem('jwt', token)
     checkAuth() // Atualiza o estado após login
   }
 
   const logout = () => {
-    sessionStorage.removeItem('jwt')
+    localStorage.removeItem('jwt')
     setUserRoles([])
     setIsAuthenticated(false)
   }
