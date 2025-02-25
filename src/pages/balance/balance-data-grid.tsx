@@ -275,19 +275,19 @@ export function BalanceDataGrid() {
 
       {!isLoadingBalance && (
         <div className=' flex justify-center h-[80%] mt-6'>
-          <table className='border-collapse'>
+          <table className='border-collapse text-lg'>
             <thead className='table-header-group'>
               <tr className='text-md bg-zinc-400 text-gray-700'>
                 <th className='p-2 border w-[200px]'>Player</th>
-                <th className='p-2 border'>Total Balance</th>
+                <th className='p-2 border w-[150px]'>Total Balance</th>
                 {getSortedDates().map((date) => (
-                  <th key={date} className='p-2 border'>
+                  <th key={date} className='p-2 border w-[200px]'>
                     {formatDayHeader(date)}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200 text-center'>
+            <tbody className='table-row-group text-base  font-medium text-zinc-900 bg-zinc-200 text-center'>
               {processBalanceData().length === 0 ? (
                 <tr>
                   <td
@@ -299,9 +299,9 @@ export function BalanceDataGrid() {
                 </tr>
               ) : (
                 processBalanceData().map((player) => (
-                  <tr key={player.id} className='border border-gray-300'>
+                  <tr key={player.id} className='border border-gray-300 '>
                     <td
-                      className='relative p-0 border'
+                      className='relative p-0 border '
                       style={{
                         backgroundColor:
                           playerStyles[player.id]?.background || 'transparent',
