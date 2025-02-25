@@ -1,284 +1,234 @@
-import { useEffect, useRef, useState } from 'react'
-import { teamData } from '../../assets/team-data'
-import { Eye, EyeSlash } from '@phosphor-icons/react'
+import { useEffect, useState } from 'react'
+import { WeekRangeFilter } from './week-range-filter'
+import axios from 'axios'
+import { format, eachDayOfInterval, parseISO } from 'date-fns'
+import { api } from '../../services/axiosConfig'
+import { LoadingSpinner } from '../../components/loading-spinner'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { Modal } from '../../components/modal'
+import { BalanceTeamFilter } from '../../components/balance-team-filter'
 
-// Lista de cores personalizáveis para fundo e texto
-const backgroundColors = [
-  { name: 'Druid', code: '#FF7D0A' },
-  { name: 'Hunter', code: '#ABD473' },
-  { name: 'Mage', code: '#69CCF0' },
-  { name: 'Paladin', code: '#F58CBA' },
-  { name: 'Priest', code: '#FFFFFF' },
-  { name: 'Rogue', code: '#FFF569' },
-  { name: 'Shaman', code: '#0070DE' },
-  { name: 'Warlock', code: '#9482C9' },
-  { name: 'Warrior', code: '#C79C6E' },
-  { name: 'Evoker', code: '#33937F' },
-  { name: 'Death Knight', code: '#C41E3A' },
-  { name: 'Monk', code: '#00FF98' },
-]
+interface BalanceResponse {
+  info: {
+    [date: string]: Array<{
+      id_discord: string
+      username: string
+      value: number
+    }>
+  }
+  errors: string[]
+}
 
-// Função para determinar se o texto deve ser claro ou escuro com base no fundo
-const getTextColorForBackground = (backgroundColor: string): string => {
-  // Convertendo a cor hex para valores RGB
-  const color = backgroundColor.substring(1) // Remove #
-  const r = parseInt(color.substring(0, 2), 16)
-  const g = parseInt(color.substring(2, 4), 16)
-  const b = parseInt(color.substring(4, 6), 16)
-
-  // Cálculo de luminância para definir clareza
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b
-
-  // Se o fundo for claro, usa texto preto, caso contrário, texto branco
-  return luminance > 186 ? 'black' : 'white'
+interface ProcessedPlayer {
+  id: string
+  username: string
+  dailyValues: {
+    [date: string]: number
+  }
 }
 
 export function BalanceDataGrid() {
-  const [playerStyles, setPlayerStyles] = useState<{
-    [key: string]: { background: string; text: string }
-  }>({})
+  const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({})
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-  const [showShopColumns, setShowShopColumns] = useState<boolean>(false)
-  const [menuOpenForPlayer, setMenuOpenForPlayer] = useState<string | null>(
-    null
-  )
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const handleBackgroundChange = (player: string, background: string) => {
-    const textColor = getTextColorForBackground(background) // Calcula a cor ideal para contraste
-    setPlayerStyles((prev) => ({
-      ...prev,
-      [player]: { background, text: textColor },
-    }))
-    setMenuOpenForPlayer(null) // Fecha o dropdown após selecionar a cor
-  }
-  const toggleDropdown = (player: string, event: React.MouseEvent) => {
-    event.stopPropagation() // Evita que o clique se propague para o restante da tabela
-    setMenuOpenForPlayer((prev) => (prev === player ? null : player))
+  const [teams, setTeams] = useState<
+    Array<{ id_discord: string; team_name: string }>
+  >([])
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>()
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
+
+  const getSortedDates = (): string[] => {
+    if (!dateRange) return []
+
+    const startDate = parseISO(dateRange.start)
+    const endDate = parseISO(dateRange.end)
+
+    const dates = eachDayOfInterval({ start: startDate, end: endDate })
+    return dates.map((date) => format(date, 'yyyy-MM-dd'))
   }
 
-  // Fecha o dropdown ao clicar fora dele
+  const formatDayHeader = (dateString: string) => {
+    try {
+      const date = parseISO(dateString)
+      return `${format(date, 'dd/MM')} (${format(date, 'EEEE')})`
+    } catch {
+      return dateString
+    }
+  }
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpenForPlayer(null)
+    const fetchTeams = async () => {
+      try {
+        setIsLoadingTeams(true)
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
+        )
+        const uniqueTeams = response.data.info.reduce(
+          (acc: any[], team: any) => {
+            if (!acc.some((t) => t.team_name === team.team_name)) {
+              acc.push(team)
+            }
+            return acc
+          },
+          []
+        )
+        setTeams(uniqueTeams)
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          setError(errorDetails)
+        } else {
+          setError({
+            message: 'Erro inesperado',
+            response: error,
+          })
+        }
+      } finally {
+        setIsLoadingTeams(false)
+      }
+    }
+    fetchTeams()
+  }, [])
+
+  useEffect(() => {
+    const fetchBalanceData = async () => {
+      if (!dateRange) return
+      try {
+        setIsLoadingBalance(true)
+
+        const params = {
+          id_team: selectedTeam,
+          date_start: dateRange.start,
+          date_end: dateRange.end,
+        }
+
+        console.log('Enviando requisição com:', params)
+        const response = await api.get<BalanceResponse>(
+          `${import.meta.env.VITE_API_BASE_URL}/balance`,
+          {
+            params,
+          }
+        )
+
+        setBalanceData(response.data.info || {})
+        console.log('Dados recebidos:', response.data.info)
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          setError(errorDetails)
+        } else {
+          setError({
+            message: 'Erro inesperado',
+            response: error,
+          })
+        }
+      } finally {
+        setIsLoadingBalance(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    fetchBalanceData()
+  }, [dateRange, selectedTeam])
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const filteredData = selectedTeam
-    ? teamData.filter((row) => row.team === selectedTeam)
-    : teamData
-
-  const toggleShopColumns = () => {
-    setShowShopColumns((prev) => !prev)
+  if (error) {
+    return (
+      <Modal onClose={() => setError(null)}>
+        <ErrorComponent error={error} onClose={() => setError(null)} />
+      </Modal>
+    )
   }
 
-  const formatGold = (value: string | number) => {
-    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value
-    return new Intl.NumberFormat('en-US').format(numericValue)
+  const processBalanceData = () => {
+    const playersMap = new Map<string, ProcessedPlayer>()
+
+    Object.entries(balanceData).forEach(([date, players]) => {
+      players.forEach((player) => {
+        if (!playersMap.has(player.id_discord)) {
+          playersMap.set(player.id_discord, {
+            id: player.id_discord,
+            username: player.username || 'N/A',
+            dailyValues: {},
+          })
+        }
+        const playerData = playersMap.get(player.id_discord)!
+        playerData.dailyValues[date] = Math.round(player.value)
+      })
+    })
+
+    return Array.from(playersMap.values())
   }
 
   return (
-    <div>
-      <div className='m-4 flex items-center'>
-        <label className='mr-2'>Filter by Team:</label>
-        <select
-          value={selectedTeam || ''}
-          onChange={(e) => setSelectedTeam(e.target.value || null)}
-          className='pl-2 border rounded text-black'
-        >
-          <option value=''>All Teams</option>
-          <option value='1'>Team 1</option>
-          <option value='2'>Team 2</option>
-          <option value='3'>Team 3</option>
-          <option value='advertiser'>Advertisers</option>
-        </select>
-
-        <button
-          onClick={toggleShopColumns}
-          className='ml-4 px-4 py-2  rounded text-white'
-        >
-          {showShopColumns ? <EyeSlash size={20} /> : <Eye size={20} />}
-        </button>
+    <div className='min-w-full min-h-full'>
+      <div className='mx-10 flex items-center justify-between'>
+        <BalanceTeamFilter
+          selectedTeam={selectedTeam}
+          teams={teams}
+          isLoadingTeams={isLoadingTeams}
+          onSelectTeam={setSelectedTeam}
+        />
+        <WeekRangeFilter onChange={setDateRange} />
       </div>
 
-      <table className='min-w-full border-collapse'>
-        <thead className='table-header-group'>
-          <tr className='text-md bg-zinc-400 text-gray-700'>
-            <th className='p-2 border' rowSpan={2}>
-              Player
-            </th>
-            <th className='p-2 border' rowSpan={2}>
-              Total Gold
-            </th>
-            {showShopColumns && (
-              <th className='p-2 border' rowSpan={2}>
-                Total Shop
-              </th>
-            )}
-            {[
-              // Dias da semana
-              'Monday',
-              'Tuesday',
-              'Wednesday',
-              'Thursday',
-              'Friday',
-              'Saturday',
-              'Sunday',
-            ].map((day) => (
-              <th
-                key={day}
-                className='p-2 border'
-                colSpan={showShopColumns ? 2 : 1}
-              >
-                {day}
-              </th>
-            ))}
-          </tr>
-          <tr className='text-md bg-zinc-300 text-gray-700'>
-            {Array.from({ length: 7 }, (_, i) => (
-              <>
-                <th key={`gold-${i}`} className='p-2 border'>
-                  Gold
-                </th>
-                {showShopColumns && (
-                  <th key={`shop-${i}`} className='p-2 border'>
-                    $
-                  </th>
-                )}
-              </>
-            ))}
-          </tr>
-        </thead>
-        <tbody className='table-row-group text-sm font-medium text-zinc-900'>
-          {filteredData.map((row, index) => (
-            <tr
-              key={row.player}
-              className={`text-center ${
-                index % 2 === 0 ? 'bg-white' : 'bg-zinc-200'
-              }`}
-            >
-              {/* Primeira célula com o nome do jogador e lógica de estilo */}
-              <td
-                className='relative p-0 border border-b-black border-l-0'
-                style={{
-                  backgroundColor:
-                    playerStyles[row.player]?.background || 'white',
-                  color: playerStyles[row.player]?.text || 'black',
-                }}
-              >
-                <div
-                  className='absolute inset-0 w-2 bg-gray-600 cursor-pointer z-20'
-                  onClick={(e) => toggleDropdown(row.player, e)}
-                ></div>
-                {menuOpenForPlayer === row.player && (
-                  <div
-                    ref={dropdownRef}
-                    className='absolute left-4 top-0 mt-1 w-64 bg-white border shadow-md z-50 p-2'
-                  >
-                    <h4 className='font-semibold mb-1 text-black'>
-                      Background Color
-                    </h4>
-                    {backgroundColors.map((color) => (
-                      <div
-                        key={color.code}
-                        className='cursor-pointer mb-1 p-1'
-                        style={{
-                          backgroundColor: color.code,
-                          borderRadius: '4px',
-                          textAlign: 'center',
-                          color: getTextColorForBackground(color.code),
-                          fontSize: '12px',
-                        }}
-                        onClick={() =>
-                          handleBackgroundChange(row.player, color.code)
-                        }
-                      >
-                        {color.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className='relative z-10 flex items-center justify-center h-full text-sm'>
-                  {row.player}
-                </div>
-              </td>
+      {isLoadingBalance && (
+        <div className='flex justify-center items-center h-[80%]'>
+          <LoadingSpinner />
+        </div>
+      )}
 
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.totalGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>U${row.totalShop}</td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.mondayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.mondayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.tuesdayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.tuesdayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.wednesdayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.wednesdayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.thursdayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.thursdayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.fridayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.fridayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.saturdayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.saturdayShop}
-                </td>
-              )}
-              <td className='p-2 border border-b-black'>
-                {formatGold(row.sundayGold)}g
-              </td>
-              {showShopColumns && (
-                <td className='p-2 border border-b-black'>
-                  U${row.sundayShop}
-                </td>
-              )}
+      {!isLoadingBalance && (
+        <table className='min-w-full border-collapse'>
+          <thead className='table-header-group'>
+            <tr className='text-md bg-zinc-400 text-gray-700'>
+              <th className='p-2 border'>Player</th>
+              <th className='p-2 border'>Total Balance</th>
+              {getSortedDates().map((date) => (
+                <th key={date} className='p-2 border'>
+                  {formatDayHeader(date)}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200 text-center'>
+            {processBalanceData().length === 0 ? (
+              <tr>
+                <td
+                  colSpan={getSortedDates().length + 2}
+                  className='p-2 text-center'
+                >
+                  No data yet
+                </td>
+              </tr>
+            ) : (
+              processBalanceData().map((player) => (
+                <tr key={player.id} className='border border-gray-300'>
+                  <td className='p-2 border'>{player.username}</td>
+                  <td className='p-2 border'>Implementar</td>
+                  {getSortedDates().map((date) => (
+                    <td
+                      key={`${player.id}-${date}`}
+                      className='p-2 border text-center'
+                    >
+                      {player.dailyValues[date]
+                        ? player.dailyValues[date].toLocaleString() + 'g'
+                        : '-'}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }
