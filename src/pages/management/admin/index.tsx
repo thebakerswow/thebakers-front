@@ -28,24 +28,18 @@ export function AdminPage() {
           <thead className='table-header-group sticky top-0 bg-zinc-400 text-gray-700'>
             <tr className='text-md'>
               <th className='p-2 border w-[150px]'>
-                <select className='bg-zinc-100 w-full'>
+                <select className='bg-zinc-100 w-full rounded-md p-1'>
                   <option value=''>Select Team</option>
                 </select>
               </th>
-              <th className='p-2 border w-[150px]'>
-                <select className='bg-zinc-100 w-full'>
+              <th className=' p-2 border w-[150px]' colSpan={2}>
+                <select className='bg-zinc-100 w-full rounded-md p-1'>
                   <option value=''>Select Day</option>
                   <option value='monday'>Monday</option>
                   <option value='tuesday'>Tuesday</option>
                 </select>
               </th>
-              <th className='p-2 border w-[150px]'>
-                <select className='bg-zinc-100 w-full'>
-                  <option value=''>Select Day</option>
-                  <option value='monday'>Monday</option>
-                  <option value='tuesday'>Tuesday</option>
-                </select>
-              </th>
+
               <th className='p-2 border w-[150px]'>BALANCE TOTAL</th>
               <th className='p-2 border'>CALCULADORA</th>
             </tr>
@@ -54,8 +48,8 @@ export function AdminPage() {
             {Array.from({ length: 30 }).map((_, index) => (
               <tr key={index} className='border border-gray-300'>
                 <td className='p-2 text-center'>Player {index + 1}</td>
-                <td className='p-2 text-center'>Gold Coletado {index + 1}</td>
                 <td className='p-2 text-center'>Gold Ganho(cut) {index + 1}</td>
+                <td className='p-2 text-center'>Gold Coletado {index + 1}</td>
                 <td className='p-2 text-center'></td>
                 <td className='p-2 text-center'>
                   <input
@@ -120,14 +114,14 @@ export function AdminPage() {
 
       {/* Terceira Tabela */}
       <div className='w-[20%] h-[90%] overflow-y-auto rounded-md'>
-        <table className='border-collapse w-full'>
+        <table className='border-collapse w-full '>
           <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
             <tr className='text-md'>
               <th className='p-2 border w-[150px]'>GBANKS SOMA</th>
               <th className='p-2 border w-[150px]'>SOMA BALANCE TOTAL</th>
             </tr>
           </thead>
-          <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+          <tbody className='table-row-group text-sm  font-medium text-zinc-900 bg-zinc-200'>
             {Array.from({ length: 1 }).map((_, index) => (
               <tr key={index} className='border border-gray-300'>
                 <td className='p-2 text-center'>10</td>

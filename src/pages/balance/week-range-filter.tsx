@@ -91,7 +91,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
             onChange={handleMonthChange}
             dateFormat='MM/yyyy'
             showMonthYearPicker
-            className='text-zinc-900 pl-2 pr-8 py-1 font-normal rounded-md
+            className='text-zinc-900 pl-4 pr-8 py-1 font-normal rounded-md
               border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black'
             placeholderText='Select Month'
             open={isCalendarOpen}
@@ -108,7 +108,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
           <select
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(Number(e.target.value))}
-            className='text-zinc-900 pl-2 pr-8 py-1 rounded-md
+            className='text-zinc-900 pl-4 pr-8 py-1 rounded-md
               border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black
               bg-white appearance-none'
           >

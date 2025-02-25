@@ -274,8 +274,8 @@ export function BalanceDataGrid() {
       )}
 
       {!isLoadingBalance && (
-        <div className=' flex justify-center h-[80%] mt-6'>
-          <table className='border-collapse text-lg'>
+        <div className=' flex justify-center h-[80%] mt-6 '>
+          <table className='border-collapse text-lg min-w-[1000px]'>
             <thead className='table-header-group'>
               <tr className='text-md bg-zinc-400 text-gray-700'>
                 <th className='p-2 border w-[200px]'>Player</th>
