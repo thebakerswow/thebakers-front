@@ -137,7 +137,7 @@ export function RunsDataGrid({
           </tr>
         </thead>
 
-        <tbody className='bg-zinc-200 overflow-y-auto'>
+        <tbody className='bg-zinc-200 overflow-y-auto cursor-pointer'>
           {isLoading && (
             <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex gap-4 flex-col items-center justify-center'>
               <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />

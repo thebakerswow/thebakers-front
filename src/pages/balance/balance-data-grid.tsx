@@ -17,6 +17,7 @@ interface PlayerBalance {
   id_discord: string
   username: string
   value: number
+  balance_total: number
   color: string // nova propriedade
 }
 
@@ -30,6 +31,7 @@ interface BalanceResponse {
 interface ProcessedPlayer {
   id: string
   username: string
+  balance_total: number
   dailyValues: {
     [date: string]: number
   }
@@ -149,6 +151,7 @@ export function BalanceDataGrid() {
         const response = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
         )
+
         const uniqueTeams = response.data.info.reduce(
           (acc: any[], team: any) => {
             if (!acc.some((t) => t.team_name === team.team_name)) {
@@ -158,7 +161,13 @@ export function BalanceDataGrid() {
           },
           []
         )
+
         setTeams(uniqueTeams)
+
+        // Definir automaticamente o time do usuário como o primeiro da lista
+        if (uniqueTeams.length > 0) {
+          setSelectedTeam(uniqueTeams[0].id_discord)
+        }
       } catch (error) {
         if (axios.isAxiosError(error)) {
           const errorDetails = {
@@ -182,7 +191,8 @@ export function BalanceDataGrid() {
 
   useEffect(() => {
     const fetchBalanceData = async () => {
-      if (!dateRange) return
+      if (!dateRange || !selectedTeam) return // Aguarda o time estar definido
+
       try {
         setIsLoadingBalance(true)
 
@@ -195,29 +205,20 @@ export function BalanceDataGrid() {
         console.log('Enviando requisição com:', params)
         const response = await api.get<BalanceResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/balance`,
-          {
-            params,
-          }
+          { params }
         )
 
-        // Atualiza os dados de balanço
         setBalanceData(response.data.info || {})
-
-        // A atualização do estado de cores será feita pelo useEffect que depende de balanceData
         console.log('Dados recebidos:', response.data.info)
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          const errorDetails = {
+          setError({
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
-          }
-          setError(errorDetails)
-        } else {
-          setError({
-            message: 'Erro inesperado',
-            response: error,
           })
+        } else {
+          setError({ message: 'Erro inesperado', response: error })
         }
       } finally {
         setIsLoadingBalance(false)
@@ -244,6 +245,7 @@ export function BalanceDataGrid() {
           playersMap.set(player.id_discord, {
             id: player.id_discord,
             username: player.username || 'N/A',
+            balance_total: player.balance_total,
             dailyValues: {},
           })
         }
@@ -331,7 +333,7 @@ export function BalanceDataGrid() {
                         {player.username}
                       </span>
                     </td>
-                    <td className='p-2 border'>Implementar</td>
+                    <td className='p-2 border'>{player.balance_total}</td>
                     {getSortedDates().map((date) => (
                       <td
                         key={`${player.id}-${date}`}

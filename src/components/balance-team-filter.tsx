@@ -16,19 +16,15 @@ export function BalanceTeamFilter({
       <label className='mr-2'>Filter by Team:</label>
       <select
         value={selectedTeam || ''}
-        onChange={(e) => onSelectTeam(e.target.value || null)}
-        className='pl-2 pr-8 py-1 rounded-md text-black border border-gray-300'
+        onChange={(e) => onSelectTeam(e.target.value)}
+        disabled={isLoadingTeams}
+        className='border p-1 rounded text-black'
       >
-        <option value=''>All Teams</option>
-        {isLoadingTeams ? (
-          <option disabled>Loading teams...</option>
-        ) : (
-          teams.map((team) => (
-            <option key={team.id_discord} value={team.id_discord}>
-              {team.team_name}
-            </option>
-          ))
-        )}
+        {teams.map((team) => (
+          <option key={team.id_discord} value={team.id_discord}>
+            {team.team_name}
+          </option>
+        ))}
       </select>
     </div>
   )
