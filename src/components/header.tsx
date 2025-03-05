@@ -51,24 +51,24 @@ export function Header() {
         Balance
       </button>
 
-      <div
-        onMouseEnter={() => setIsHoveringManagement(true)}
-        onMouseLeave={() => setIsHoveringManagement(false)}
-        className='relative'
-      >
-        <button className='text-gray-300 flex gap-4 text-lg font-semibold items-center'>
-          <Briefcase className='text-gray-100' size={30} />
-          Management
-          {isHoveringManagement ? (
-            <CaretUp className='text-red-400' size={20} />
-          ) : (
-            <CaretDown className='text-red-400' size={20} />
-          )}
-        </button>
+      {hasRequiredRole(['1101231955120496650']) && (
+        <div
+          onMouseEnter={() => setIsHoveringManagement(true)}
+          onMouseLeave={() => setIsHoveringManagement(false)}
+          className='relative'
+        >
+          <button className='text-gray-300 flex gap-4 text-lg font-semibold items-center'>
+            <Briefcase className='text-gray-100' size={30} />
+            Management
+            {isHoveringManagement ? (
+              <CaretUp className='text-red-400' size={20} />
+            ) : (
+              <CaretDown className='text-red-400' size={20} />
+            )}
+          </button>
 
-        {isHoveringManagement && (
-          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
-            {hasRequiredRole(['1101231955120496650']) && (
+          {isHoveringManagement && (
+            <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
               <button
                 className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
                 onClick={() => navigate('/admin')}
@@ -76,9 +76,6 @@ export function Header() {
                 <Briefcase className='text-gray-100' size={30} />
                 Admin
               </button>
-            )}
-            {/* chefe de cozinha */}
-            {hasRequiredRole(['1101231955120496650']) && (
               <button
                 className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
                 onClick={() => navigate('/management-teams')}
@@ -86,10 +83,10 @@ export function Header() {
                 <UsersFour className='text-gray-100' size={30} />
                 Teams
               </button>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div
         onMouseEnter={() => setIsHoveringNA(true)}
