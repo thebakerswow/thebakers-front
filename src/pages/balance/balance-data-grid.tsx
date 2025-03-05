@@ -12,6 +12,7 @@ import {
   getTextColorForBackground,
   ColorSelector,
 } from '../../components/color-selector'
+import { useAuth } from '../../context/auth-context'
 
 interface PlayerBalance {
   id_discord: string
@@ -54,6 +55,13 @@ export function BalanceDataGrid() {
     null
   )
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { userRoles } = useAuth()
+
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
+    )
+  }
 
   // Ao receber os dados, atualiza o estilo padrão de cada jogador com a cor retornada da API
   useEffect(() => {
@@ -310,10 +318,12 @@ export function BalanceDataGrid() {
                         color: playerStyles[player.id]?.text || 'inherit',
                       }}
                     >
-                      <div
-                        className='absolute inset-y-0 left-0 w-2 bg-gray-600 cursor-pointer hover:w-2 transition-all z-20'
-                        onClick={(e) => toggleDropdown(player.id, e)}
-                      />
+                      {hasRequiredRole(['1101231955120496650']) && (
+                        <div
+                          className='absolute inset-y-0 left-0 w-2 bg-gray-600 cursor-pointer hover:w-2 transition-all z-20'
+                          onClick={(e) => toggleDropdown(player.id, e)}
+                        />
+                      )}
                       {menuOpenForPlayer === player.id && (
                         <div
                           ref={dropdownRef}
