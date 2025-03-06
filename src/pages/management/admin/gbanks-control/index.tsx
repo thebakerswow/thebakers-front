@@ -196,7 +196,7 @@ export function GBanksTable() {
               </td>
             </tr>
           ) : (
-            gbanks.map((gbank, index) => (
+            gbanks?.map((gbank, index) => (
               <tr key={gbank.id} className='border border-gray-300'>
                 <td className='p-2 relative'>
                   <button onClick={() => toggleActionsDropdown(index)}>
