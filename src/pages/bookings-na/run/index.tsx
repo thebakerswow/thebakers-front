@@ -74,7 +74,7 @@ export function RunDetails() {
   // Função para buscar os dados dos buyers
   async function fetchBuyersData() {
     try {
-      setIsLoadingBuyers(true)
+      setIsLoadingBuyers(false)
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/run/${id}/buyers` ||
           `http://localhost:8000/v1/run/${id}/buyers`
@@ -101,6 +101,18 @@ export function RunDetails() {
       setIsLoadingBuyers(false)
     }
   }
+
+  useEffect(() => {
+    if (!id) return
+
+    fetchBuyersData() // Busca inicial
+
+    const interval = setInterval(() => {
+      fetchBuyersData()
+    }, 1000) // Executa a cada 5 segundos
+
+    return () => clearInterval(interval) // Limpa o intervalo quando o componente desmonta
+  }, [id])
 
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
