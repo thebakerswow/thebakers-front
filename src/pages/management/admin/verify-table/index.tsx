@@ -59,20 +59,45 @@ export function VerifyTable() {
           <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
             {isLoading ? (
               <tr>
-                <td colSpan={4} className='p-4 text-center'>
+                <td colSpan={2} className='p-4 text-center'>
                   <span className='animate-spin border-4 border-t-transparent border-gray-600 rounded-full w-6 h-6 inline-block' />
                   <p>Carregando...</p>
                 </td>
               </tr>
             ) : (
-              <tr className='border border-gray-300'>
-                <td className='p-2 text-center'>
-                  {sumsData?.general_balance_gbank ?? 0}
-                </td>
-                <td className='p-2 text-center'>
-                  {sumsData?.general_balance ?? 0}
-                </td>
-              </tr>
+              <>
+                <tr className='border border-gray-300'>
+                  <td className='p-2 text-center'>
+                    {Number(
+                      sumsData?.general_balance_gbank ?? 0
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td className='p-2 text-center'>
+                    {Number(sumsData?.general_balance ?? 0).toLocaleString(
+                      'en-US',
+                      {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2,
+                      }
+                    )}
+                  </td>
+                </tr>
+                <tr className='border border-gray-300 bg-zinc-300'>
+                  <td colSpan={2} className='p-2 text-center font-bold'>
+                    Diferença:{' '}
+                    {(
+                      (sumsData?.general_balance_gbank ?? 0) -
+                      (sumsData?.general_balance ?? 0)
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </tr>
+              </>
             )}
           </tbody>
         </table>

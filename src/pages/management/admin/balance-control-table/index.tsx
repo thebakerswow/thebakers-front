@@ -46,6 +46,17 @@ export function BalanceControlTable({
   const menuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    if (!selectedDate) {
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      const formattedDate = `${year}-${month}-${day}`
+      setSelectedDate(formattedDate)
+    }
+  }, [selectedDate, setSelectedDate])
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpenRowIndex(null)
@@ -307,9 +318,24 @@ export function BalanceControlTable({
             users.map((user) => (
               <tr key={user.idDiscord} className='border border-gray-300'>
                 <td className='p-2 text-center'>{user.username}</td>
-                <td className='p-2 text-center'>{user.gold}</td>
-                <td className='p-2 text-center'>{user.gold_collect}</td>
-                <td className='p-2 text-center'>{user.balance_total}</td>
+                <td className='p-2 text-center'>
+                  {Number(user.gold).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+                <td className='p-2 text-center'>
+                  {Number(user.gold_collect).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+                <td className='p-2 text-center'>
+                  {Number(user.balance_total).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
                 <td className='p-2 text-center'>
                   <input
                     className='p-1 px-2 bg-zinc-100 rounded-md'

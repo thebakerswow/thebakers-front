@@ -20,7 +20,6 @@ interface Advertiser {
 }
 
 export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
-  const [paymentRealm, setPaymentRealm] = useState('')
   const [paymentFaction, setPaymentFaction] = useState('')
   const [nameAndRealm, setNameAndRealm] = useState('')
   const [playerClass, setPlayerClass] = useState('')
@@ -46,7 +45,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
     const data = {
       id_run: run.id,
-      paymentRealm,
       paymentFaction,
       nameAndRealm,
       playerClass,
@@ -133,22 +131,11 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
-            <input
-              type='text'
-              id='paymentRealm'
-              required
-              value={paymentRealm}
-              onChange={(e) => setPaymentRealm(e.target.value)}
-              placeholder='Payment Realm'
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition '
-            />
-
             <select
               id='paymentFaction'
               value={paymentFaction}
-              required
               onChange={(e) => setPaymentFaction(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='p-2  border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             >
               <option value='' disabled hidden>
                 Payment Faction
@@ -174,7 +161,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             <select
               id='playerClass'
               value={playerClass}
-              required
               onChange={(e) => setPlayerClass(e.target.value)}
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
             >
@@ -269,14 +255,13 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 </option>
               ))}
             </select>
-
             <input
               type='text'
               id='buyerNote'
               value={buyerNote}
               onChange={(e) => setBuyerNote(e.target.value)}
               placeholder='Note'
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='p-2 col-span-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
             <button
               type='submit'

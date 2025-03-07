@@ -5,6 +5,7 @@ import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
+import { toZonedTime, format as formatTz } from 'date-fns-tz'
 
 interface RunInfoProps {
   run: RunData
@@ -49,7 +50,13 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             {run.sumPot?.map((item) => (
               <tr key={item.idDiscord}>
                 <td className='p-2'>{item.username}</td>
-                <td className='p-2'>{item.sumPot}</td>
+
+                <td className='p-2'>
+                  {Number(item.sumPot).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -58,8 +65,21 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
       <div className='grid grid-cols-4 flex-1 text-center bg-gray-300 rounded-md text-zinc-900'>
         <div className='col-span-3 flex flex-col'>
           <h1 className='font-semibold text-lg mt-3 mb-3'>
-            {run.raid} {run.difficulty} @ {run.time}
+            {run.raid} {run.difficulty} @{' '}
+            {run.time
+              ? (() => {
+                  const dateISO = `${run.date}T${run.time}:00-03:00` // Assume que o horário original está em UTC-3
+                  const zonedDateEST = toZonedTime(dateISO, 'America/New_York')
+
+                  return (
+                    <>
+                      {formatTz(zonedDateEST, 'HH:mm')} EST || {run.time} UTC-3
+                    </>
+                  )
+                })()
+              : null}
           </h1>
+
           <div className='grid grid-cols-3 gap-4 mt-4 text-start ml-24'>
             <p className='text-yellow-500 font-semibold'>
               <span className='font-bold text-base text-zinc-900'>
@@ -97,7 +117,12 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             <p>
               <span className='font-bold text-base'>
                 Gold Collected:{' '}
-                <span className='font-normal'>{run.actualPot}</span>
+                <span className='font-normal'>
+                  {Number(run.actualPot).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
               </span>
             </p>
           </div>

@@ -1,12 +1,14 @@
 import { Megaphone, Eye, DotsThreeVertical } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { format, parseISO } from 'date-fns'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
 import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
+import { format, parseISO } from 'date-fns'
+import { toZonedTime, format as formatTz } from 'date-fns-tz'
+import { useAuth } from '../../context/auth-context'
 
 interface RunsDataProps {
   data: RunData[]
@@ -38,6 +40,13 @@ export function RunsDataGrid({
   )
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const { userRoles } = useAuth()
+
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
+    )
+  }
 
   const handleOpenPreview = (runId: string) => {
     setSelectedRunId(runId)
@@ -176,7 +185,27 @@ export function RunsDataGrid({
                     <span>-</span>
                   )}
                 </td>
-                <td className='p-2'>{run.time || <span>-</span>}</td>
+                <td className='p-2'>
+                  {run.time ? (
+                    (() => {
+                      const dateISO = `${run.date}T${run.time}:00Z` // Assume que o horário está em UTC
+                      const zonedDateEST = toZonedTime(
+                        dateISO,
+                        'America/New_York'
+                      )
+
+                      return (
+                        <>
+                          {formatTz(zonedDateEST, 'HH:mm')} EST
+                          <br />
+                          {run.time} UTC-3
+                        </>
+                      )
+                    })()
+                  ) : (
+                    <span>-</span>
+                  )}
+                </td>
                 <td className='p-2'>{run.raid || <span>-</span>}</td>
                 <td className='p-2'>{run.runType || <span>-</span>}</td>
                 <td className='p-2'>{run.difficulty || <span>-</span>}</td>
@@ -205,21 +234,23 @@ export function RunsDataGrid({
                     )}
                   </div>
                 </td>
-                <td className='text-center'>
-                  <button onClick={() => toggleActionsDropdown(run.id)}>
-                    <DotsThreeVertical size={20} />
-                  </button>
-                  {openActionsDropdown === run.id && (
-                    <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
-                      <button
-                        onClick={() => handleOpenDeleteRunModal(run)}
-                        className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </td>
+                {hasRequiredRole(['1101231955120496650']) && (
+                  <td className='text-center'>
+                    <button onClick={() => toggleActionsDropdown(run.id)}>
+                      <DotsThreeVertical size={20} />
+                    </button>
+                    {openActionsDropdown === run.id && (
+                      <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
+                        <button
+                          onClick={() => handleOpenDeleteRunModal(run)}
+                          className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                )}
               </tr>
             ))
           )}

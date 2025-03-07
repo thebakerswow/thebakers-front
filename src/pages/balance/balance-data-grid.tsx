@@ -343,14 +343,26 @@ export function BalanceDataGrid() {
                         {player.username}
                       </span>
                     </td>
-                    <td className='p-2 border'>{player.balance_total}</td>
+                    <td className='p-2 border'>
+                      {Number(player.balance_total).toLocaleString('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+
                     {getSortedDates().map((date) => (
                       <td
                         key={`${player.id}-${date}`}
                         className='p-2 border text-center'
                       >
                         {player.dailyValues[date]
-                          ? player.dailyValues[date].toLocaleString() + 'g'
+                          ? Number(player.dailyValues[date]).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }
+                            )
                           : '-'}
                       </td>
                     ))}

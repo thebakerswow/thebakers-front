@@ -282,8 +282,19 @@ export function BuyersDataGrid({
                   </button>
                 </div>
               </td>
-              <td className='p-2 text-center'>{buyer.buyerPot}</td>
-              <td className='p-2 text-center'>{buyer.buyerActualPot}</td>
+              <td className='p-2 text-center'>
+                {Number(buyer.buyerPot).toLocaleString('en-US', {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+              <td className='p-2 text-center'>
+                {Number(buyer.buyerActualPot).toLocaleString('en-US', {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </td>
+
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
               <td className='text-center'>
                 <button onClick={() => toggleActionsDropdown(buyer.id)}>
