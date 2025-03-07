@@ -42,7 +42,10 @@ export function FullRaidsNa() {
       const runs = response.data.info
       if (runs) {
         const formattedData = Array.isArray(runs)
-          ? runs.map((run: any) => ({ ...run }))
+          ? runs.map((run: any) => ({
+              ...run,
+              buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+            }))
           : []
         setRows(formattedData)
       } else {

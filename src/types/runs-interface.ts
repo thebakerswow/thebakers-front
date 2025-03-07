@@ -24,4 +24,5 @@ export interface RunData {
   note: string
   sumPot: SumPot[]
   players: Players[]
+  buyersCount: string
 }

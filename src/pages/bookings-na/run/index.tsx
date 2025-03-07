@@ -24,6 +24,7 @@ export function RunDetails() {
     info: Array<{ idDiscord: string; username: string; percentage: number }>
   }>({ info: [] })
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isActive, setIsActive] = useState(true)
 
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
@@ -107,24 +108,21 @@ export function RunDetails() {
 
     fetchBuyersData()
 
-    // Controla se o intervalo deve continuar rodando
-    const [isActive, setIsActive] = useState(true)
-
     // Função para resetar o temporizador
     const resetActivityTimer = () => {
       setIsActive(true)
       clearTimeout(inactivityTimeout)
       inactivityTimeout = setTimeout(() => {
         setIsActive(false)
-      }, 5000) // Pausa após 5 segundos de inatividade
+      }, 5000)
     }
 
     // Função para monitorar a visibilidade da página
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setIsActive(false) // Página está em segundo plano
+        setIsActive(false)
       } else {
-        setIsActive(true) // Página voltou para o primeiro plano
+        setIsActive(true)
       }
     }
 
@@ -132,23 +130,19 @@ export function RunDetails() {
     let inactivityTimeout: ReturnType<typeof setTimeout>
 
     const handleMouseOrKeyActivity = () => {
-      resetActivityTimer() // Resetando o timer a cada interação
+      resetActivityTimer()
     }
 
-    // Detectar eventos de mouse e teclado
     window.addEventListener('mousemove', handleMouseOrKeyActivity)
     window.addEventListener('keydown', handleMouseOrKeyActivity)
-
-    // Adiciona o evento para visibilidade da página
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     const interval = setInterval(() => {
       if (isActive) {
         fetchBuyersData()
       }
-    }, 2000) // Executa a cada 2 segundos, mas só enquanto o usuário estiver ativo
+    }, 2000)
 
-    // Limpeza do intervalo e dos listeners de eventos
     return () => {
       clearInterval(interval)
       clearTimeout(inactivityTimeout)
@@ -156,7 +150,7 @@ export function RunDetails() {
       window.removeEventListener('keydown', handleMouseOrKeyActivity)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [id])
+  }, [id, isActive]) // Adicione isActive às dependências
 
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
@@ -238,7 +232,7 @@ export function RunDetails() {
           {runData ? (
             <RunInfo
               run={runData}
-              onBuyerAddedReload={fetchBuyersData}
+              onBuyerAddedReload={reloadAllData}
               onRunEdit={fetchRunData}
             />
           ) : (

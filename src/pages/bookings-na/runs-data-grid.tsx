@@ -211,7 +211,7 @@ export function RunsDataGrid({
                 <td className='p-2'>{run.difficulty || <span>-</span>}</td>
                 <td className='p-2'>{run.team || <span>-</span>}</td>
                 <td className='p-2'>{run.loot || <span>-</span>}</td>
-                <td className='p-2'>{run.maxBuyers || <span>-</span>}</td>
+                <td className='p-2'>{run.buyersCount || <span>-</span>}</td>
                 <td className='p-2'>
                   {run.raidLeaders && run.raidLeaders.length > 0 ? (
                     run.raidLeaders
