@@ -234,23 +234,24 @@ export function RunsDataGrid({
                     )}
                   </div>
                 </td>
-                {hasRequiredRole(['1101231955120496650']) && (
-                  <td className='text-center'>
+
+                <td className='text-center'>
+                  {hasRequiredRole(['1101231955120496650']) && (
                     <button onClick={() => toggleActionsDropdown(run.id)}>
                       <DotsThreeVertical size={20} />
                     </button>
-                    {openActionsDropdown === run.id && (
-                      <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
-                        <button
-                          onClick={() => handleOpenDeleteRunModal(run)}
-                          className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                )}
+                  )}
+                  {openActionsDropdown === run.id && (
+                    <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
+                      <button
+                        onClick={() => handleOpenDeleteRunModal(run)}
+                        className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))
           )}
