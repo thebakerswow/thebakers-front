@@ -129,7 +129,7 @@ export function RunDetails() {
     }
 
     // Configuração de eventos para detectar atividade do usuário
-    let inactivityTimeout: NodeJS.Timeout
+    let inactivityTimeout: ReturnType<typeof setTimeout>
 
     const handleMouseOrKeyActivity = () => {
       resetActivityTimer() // Resetando o timer a cada interação
