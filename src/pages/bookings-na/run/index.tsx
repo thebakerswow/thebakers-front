@@ -105,13 +105,57 @@ export function RunDetails() {
   useEffect(() => {
     if (!id) return
 
-    fetchBuyersData() // Busca inicial
+    fetchBuyersData()
+
+    // Controla se o intervalo deve continuar rodando
+    const [isActive, setIsActive] = useState(true)
+
+    // Função para resetar o temporizador
+    const resetActivityTimer = () => {
+      setIsActive(true)
+      clearTimeout(inactivityTimeout)
+      inactivityTimeout = setTimeout(() => {
+        setIsActive(false)
+      }, 5000) // Pausa após 5 segundos de inatividade
+    }
+
+    // Função para monitorar a visibilidade da página
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsActive(false) // Página está em segundo plano
+      } else {
+        setIsActive(true) // Página voltou para o primeiro plano
+      }
+    }
+
+    // Configuração de eventos para detectar atividade do usuário
+    let inactivityTimeout: NodeJS.Timeout
+
+    const handleMouseOrKeyActivity = () => {
+      resetActivityTimer() // Resetando o timer a cada interação
+    }
+
+    // Detectar eventos de mouse e teclado
+    window.addEventListener('mousemove', handleMouseOrKeyActivity)
+    window.addEventListener('keydown', handleMouseOrKeyActivity)
+
+    // Adiciona o evento para visibilidade da página
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     const interval = setInterval(() => {
-      fetchBuyersData()
-    }, 1000) // Executa a cada 5 segundos
+      if (isActive) {
+        fetchBuyersData()
+      }
+    }, 2000) // Executa a cada 2 segundos, mas só enquanto o usuário estiver ativo
 
-    return () => clearInterval(interval) // Limpa o intervalo quando o componente desmonta
+    // Limpeza do intervalo e dos listeners de eventos
+    return () => {
+      clearInterval(interval)
+      clearTimeout(inactivityTimeout)
+      window.removeEventListener('mousemove', handleMouseOrKeyActivity)
+      window.removeEventListener('keydown', handleMouseOrKeyActivity)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [id])
 
   // Função para buscar os dados de atendimento
