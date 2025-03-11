@@ -12,6 +12,7 @@ import { RunData } from '../../../types/runs-interface'
 import { Modal } from '../../../components/modal'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
+import { useAuth } from '../../../context/auth-context'
 
 export function RunDetails() {
   const { id } = useParams<{ id: string }>()
@@ -25,6 +26,12 @@ export function RunDetails() {
   }>({ info: [] })
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isActive, setIsActive] = useState(true)
+  const { userRoles } = useAuth()
+
+  const restrictedRole = '1284914400297226313'
+
+  const isRestrictedUser =
+    userRoles.includes(restrictedRole) && userRoles.length === 1
 
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
@@ -273,7 +280,7 @@ export function RunDetails() {
           )}
         </div>
       )}
-      {isInviteBuyersOpen && runData && (
+      {isInviteBuyersOpen && runData && !isRestrictedUser && (
         <InviteBuyers
           onClose={handleCloseInviteBuyersModal}
           runId={runData.id}
