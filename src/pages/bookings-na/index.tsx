@@ -82,7 +82,13 @@ export function FullRaidsNa() {
   }
 
   useEffect(() => {
-    fetchRuns()
+    fetchRuns() // Executa a primeira chamada imediatamente
+
+    const interval = setInterval(() => {
+      fetchRuns()
+    }, 20000) // Executa a cada 20 segundos
+
+    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [selectedDate])
 
   function onDaySelect(day: Date | null) {
