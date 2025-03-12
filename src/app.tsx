@@ -18,6 +18,7 @@ import { ErrorPage } from './pages/error-pages/not-found'
 import { AccessDenied } from './pages/error-pages/access-denied'
 import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
+import { Register } from './pages/register'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -48,6 +49,7 @@ export function App() {
                 <Route path='/login/callback' element={<AuthCallback />} />
                 <Route path='/login/error' element={<LoginErro />} />
                 <Route path='/access-denied' element={<AccessDenied />} />
+                <Route path='/register' element={<Register />} />
 
                 {/* Rotas privadas */}
                 <Route
