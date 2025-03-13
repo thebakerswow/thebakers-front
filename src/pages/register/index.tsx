@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { Modal } from '../../components/modal'
@@ -10,7 +10,18 @@ export function Register() {
   const [discordId, setDiscordId] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (isConfirmModalOpen) {
+      const timer = setTimeout(() => {
+        setIsConfirmModalOpen(false)
+        navigate('/') // Redireciona para a tela de login
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isConfirmModalOpen, navigate])
 
   const handleRegister = async () => {
     try {
@@ -19,11 +30,7 @@ export function Register() {
         password,
       })
 
-      setIsSuccess(true) // Exibe modal de sucesso
-      setTimeout(() => {
-        setIsSuccess(false)
-        navigate('/') // Redireciona após 2 segundos
-      }, 2000)
+      setIsConfirmModalOpen(true) // Exibe modal de confirmação
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setError({
@@ -72,9 +79,9 @@ export function Register() {
         </div>
       </div>
 
-      {/* Modal de sucesso */}
-      {isSuccess && (
-        <Modal onClose={() => setIsSuccess(false)}>
+      {/* Modal de confirmação */}
+      {isConfirmModalOpen && (
+        <Modal onClose={() => setIsConfirmModalOpen(false)}>
           <div className='text-center p-6'>
             <h2 className='text-xl font-semibold text-green-500'>
               Cadastro realizado com sucesso!

@@ -68,12 +68,12 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             {run.raid} {run.difficulty} @{' '}
             {run.time
               ? (() => {
-                  const dateISO = `${run.date}T${run.time}:00-03:00` // Assume que o horário original está em UTC-3
+                  const dateISO = `${run.date}T${run.time}:00-03:00` // Assume que o horário original está em BRT
                   const zonedDateEST = toZonedTime(dateISO, 'America/New_York')
 
                   return (
                     <>
-                      {formatTz(zonedDateEST, 'HH:mm')} EST || {run.time} UTC-3
+                      {formatTz(zonedDateEST, 'HH:mm')} EST || {run.time} BRT
                     </>
                   )
                 })()

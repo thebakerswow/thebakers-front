@@ -198,7 +198,7 @@ export function RunsDataGrid({
                         <>
                           {formatTz(zonedDateEST, 'HH:mm')} EST
                           <br />
-                          {run.time} UTC-3
+                          {run.time} BRT
                         </>
                       )
                     })()
