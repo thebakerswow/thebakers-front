@@ -24,13 +24,12 @@ export function Register() {
   }, [isConfirmModalOpen, navigate])
 
   const handleRegister = async () => {
+    setIsConfirmModalOpen(true)
     try {
       await api.post('/login/register', {
         id_discord: discordId,
         password,
       })
-
-      setIsConfirmModalOpen(true) // Exibe modal de confirmação
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setError({
@@ -83,9 +82,12 @@ export function Register() {
       {isConfirmModalOpen && (
         <Modal onClose={() => setIsConfirmModalOpen(false)}>
           <div className='text-center p-6'>
-            <h2 className='text-xl font-semibold text-green-500'>
-              Cadastro realizado com sucesso!
+            <h2 className='text-xl font-semibold text-blue-500'>
+              Confirme o cadastro no Discord
             </h2>
+            <p className='text-sm text-black mt-2'>
+              Digite o código enviado no Discord para finalizar o cadastro.
+            </p>
           </div>
         </Modal>
       )}
