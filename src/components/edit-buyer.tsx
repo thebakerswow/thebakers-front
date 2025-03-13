@@ -8,6 +8,7 @@ interface EditBuyerProps {
   buyer: {
     id: string
     nameAndRealm: string
+    buyerPot: number
     buyerNote: string
   }
   onClose: () => void
@@ -16,6 +17,7 @@ interface EditBuyerProps {
 
 export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   const [nameAndRealm, setNameAndRealm] = useState(buyer.nameAndRealm)
+  const [buyerPot, setBuyerPot] = useState(buyer.buyerPot)
   const [buyerNote, setBuyerNote] = useState(buyer.buyerNote)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -26,6 +28,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     const payload = {
       id_buyer: buyer.id,
       nameAndRealm,
+      buyerPot,
       buyerNote,
     }
 
@@ -71,6 +74,13 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
               className='w-full p-2 border rounded mb-4'
               value={nameAndRealm}
               onChange={(e) => setNameAndRealm(e.target.value)}
+            />
+            <label className='block mb-2'>Pot</label>
+            <input
+              type='text'
+              className='w-full p-2 border rounded mb-4'
+              value={buyerPot}
+              onChange={(e) => setBuyerPot(Number(e.target.value))}
             />
             <label className='block mb-2'>Note</label>
             <input

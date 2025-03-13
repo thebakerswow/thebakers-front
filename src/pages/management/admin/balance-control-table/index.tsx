@@ -140,11 +140,11 @@ export function BalanceControlTable({
         value: Number(confirmingCalculator.value),
         id_discord: confirmingCalculator.userId,
       }
-      const response = await api.post(
+      await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/transaction`,
         payload
       )
-      console.log('POST realizado com sucesso:', response.data)
+
       setCalculatorValues((prev) => ({
         ...prev,
         [confirmingCalculator.userId]: '',

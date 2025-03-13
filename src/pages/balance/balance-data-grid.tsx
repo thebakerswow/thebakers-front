@@ -209,15 +209,12 @@ export function BalanceDataGrid() {
           date_start: dateRange.start,
           date_end: dateRange.end,
         }
-
-        console.log('Enviando requisição com:', params)
         const response = await api.get<BalanceResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/balance`,
           { params }
         )
 
         setBalanceData(response.data.info || {})
-        console.log('Dados recebidos:', response.data.info)
       } catch (error) {
         if (axios.isAxiosError(error)) {
           setError({

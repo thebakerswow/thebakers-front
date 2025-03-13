@@ -62,10 +62,6 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
       const startDate = format(start, 'yyyy-MM-dd')
       const endDate = format(end, 'yyyy-MM-dd')
 
-      // Exibe as datas no console
-      console.log('Start Date:', startDate)
-      console.log('End Date:', endDate)
-
       onChange({
         start: startDate,
         end: endDate,

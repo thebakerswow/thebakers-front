@@ -49,8 +49,6 @@ export function Login() {
 
       const response = await api.post('/login', payload)
 
-      console.log(response.data.info)
-
       if (response.data.info) {
         login(response.data.info) // Atualiza o estado global de autenticação
         navigate('/home') // Redireciona após login bem-sucedido

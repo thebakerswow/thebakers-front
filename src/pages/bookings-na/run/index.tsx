@@ -90,7 +90,6 @@ export function RunDetails() {
 
       setRows(response.data.info)
 
-      console.log('buyer', response.data.info)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -146,7 +145,7 @@ export function RunDetails() {
 
     const interval = setInterval(() => {
       if (isActive) {
-        fetchBuyersData()
+        reloadAllData()
       }
     }, 2000)
 
@@ -167,7 +166,7 @@ export function RunDetails() {
           `http://localhost:8000/v1/run/${id}/attendance`
       )
       const data = response.data.info
-      console.log('attendance', data)
+
       setAttendance({ info: data })
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -263,7 +262,7 @@ export function RunDetails() {
                 <BuyersDataGrid
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}
-                  onBuyerNameNoteEdit={fetchBuyersData}
+                  onBuyerNameNoteEdit={reloadAllData}
                   onDeleteSuccess={reloadAllData}
                 />
               </div>

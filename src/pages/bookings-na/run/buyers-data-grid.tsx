@@ -49,6 +49,7 @@ export function BuyersDataGrid({
   const [editingBuyer, setEditingBuyer] = useState<{
     id: string
     nameAndRealm: string
+    buyerPot: number
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
@@ -61,6 +62,7 @@ export function BuyersDataGrid({
     setEditingBuyer({
       id: buyer.id,
       nameAndRealm: buyer.nameAndRealm,
+      buyerPot: buyer.buyerPot,
       buyerNote: buyer.buyerNote,
     })
     setModalType(type)
@@ -297,9 +299,11 @@ export function BuyersDataGrid({
 
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
               <td className='text-center'>
-                <button onClick={() => toggleActionsDropdown(buyer.id)}>
-                  <DotsThreeVertical size={20} />
-                </button>
+                {buyer.nameAndRealm !== '****' && (
+                  <button onClick={() => toggleActionsDropdown(buyer.id)}>
+                    <DotsThreeVertical size={18} />
+                  </button>
+                )}
                 {openActionsDropdown === buyer.id && (
                   <div className='absolute right-16 w-32 bg-white border rounded shadow-md'>
                     <button
@@ -328,6 +332,7 @@ export function BuyersDataGrid({
               buyer={{
                 id: editingBuyer.id,
                 nameAndRealm: editingBuyer.nameAndRealm,
+                buyerPot: editingBuyer.buyerPot,
                 buyerNote: editingBuyer.buyerNote,
               }}
               onClose={() => setOpenModal(false)}

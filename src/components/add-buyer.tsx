@@ -53,7 +53,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       idBuyerAdvertiser,
       buyerNote,
     }
-    console.log('payload', data)
     try {
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
