@@ -28,14 +28,14 @@ interface BuyersGridProps {
   onDeleteSuccess: () => void
 }
 
-// const statusPriorities: Record<string, number> = {
-//   done: 1,
-//   group: 2,
-//   waiting: 3,
-//   backup: 4,
-//   noshow: 5,
-//   closed: 6,
-// }
+const statusPriorities: Record<string, number> = {
+  done: 1,
+  group: 2,
+  waiting: 3,
+  backup: 4,
+  noshow: 5,
+  closed: 6,
+}
 
 export function BuyersDataGrid({
   data,
@@ -69,6 +69,13 @@ export function BuyersDataGrid({
     setOpenModal(true)
     setOpenActionsDropdown(null)
   }
+
+  // Função para ordenar os dados com base na prioridade do status
+  const sortedData = [...data].sort((a, b) => {
+    const priorityA = statusPriorities[a.status || ''] || Infinity
+    const priorityB = statusPriorities[b.status || ''] || Infinity
+    return priorityA - priorityB
+  })
 
   const handleTogglePaid = async (buyerId: string) => {
     const payload = {
@@ -214,7 +221,7 @@ export function BuyersDataGrid({
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
-          {data?.map((buyer, index) => (
+          {sortedData?.map((buyer, index) => (
             <tr
               key={buyer.id}
               className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
