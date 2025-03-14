@@ -163,7 +163,15 @@ export function RunsDataGrid({
               <tr
                 onDoubleClick={() => handleRedirect(run.id)}
                 key={index}
-                className='border border-gray-300'
+                className={`border border-gray-300 ${
+                  run.difficulty === 'Normal'
+                    ? 'bg-green-300'
+                    : run.difficulty === 'Heroic'
+                      ? 'bg-blue-300'
+                      : run.difficulty === 'Mythic'
+                        ? 'bg-purple-300'
+                        : ''
+                }`}
               >
                 <td className='p-2 text-center align-middle'>
                   <div className='flex justify-center items-center h-full'>
@@ -209,7 +217,25 @@ export function RunsDataGrid({
                 <td className='p-2'>{run.raid || <span>-</span>}</td>
                 <td className='p-2'>{run.runType || <span>-</span>}</td>
                 <td className='p-2'>{run.difficulty || <span>-</span>}</td>
-                <td className='p-2'>{run.team || <span>-</span>}</td>
+                <td
+                  className={`p-2 ${
+                    run.team === 'Padeirinho'
+                      ? 'bg-yellow-400'
+                      : run.team === 'Garçom'
+                        ? 'bg-blue-400'
+                        : run.team === 'Confeiteiros'
+                          ? 'bg-purple-400'
+                          : run.team === 'Jackfruit'
+                            ? 'bg-green-400'
+                            : run.team === 'Milharal'
+                              ? 'bg-yellow-300'
+                              : run.team === 'APAE'
+                                ? 'bg-red-400'
+                                : ''
+                  }`}
+                >
+                  {run.team || <span>-</span>}
+                </td>
                 <td className='p-2'>{run.loot || <span>-</span>}</td>
                 <td className='p-2'>{run.buyersCount || <span>-</span>}</td>
                 <td className='p-2'>
