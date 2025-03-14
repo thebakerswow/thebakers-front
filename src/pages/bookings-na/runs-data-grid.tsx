@@ -1,4 +1,4 @@
-import { Megaphone, Eye, DotsThreeVertical } from '@phosphor-icons/react'
+import { Megaphone, Eye, Trash } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
@@ -35,9 +35,6 @@ export function RunsDataGrid({
     raid: string
     date: string
   } | null>(null)
-  const [openActionsDropdown, setOpenActionsDropdown] = useState<string | null>(
-    null
-  )
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const { userRoles } = useAuth()
@@ -56,10 +53,6 @@ export function RunsDataGrid({
   const handleClosePreview = () => {
     setIsPreviewOpen(false)
     setSelectedRunId(null)
-  }
-
-  const toggleActionsDropdown = (runId: string) => {
-    setOpenActionsDropdown(openActionsDropdown === runId ? null : runId)
   }
 
   const handleOpenDeleteRunModal = (run: {
@@ -263,19 +256,9 @@ export function RunsDataGrid({
 
                 <td className='text-center'>
                   {hasRequiredRole(['1101231955120496650']) && (
-                    <button onClick={() => toggleActionsDropdown(run.id)}>
-                      <DotsThreeVertical size={20} />
+                    <button onClick={() => handleOpenDeleteRunModal(run)}>
+                      <Trash size={20} />
                     </button>
-                  )}
-                  {openActionsDropdown === run.id && (
-                    <div className='absolute right-0 w-32 bg-white border rounded shadow-md'>
-                      <button
-                        onClick={() => handleOpenDeleteRunModal(run)}
-                        className='block w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500'
-                      >
-                        Delete
-                      </button>
-                    </div>
                   )}
                 </td>
               </tr>
