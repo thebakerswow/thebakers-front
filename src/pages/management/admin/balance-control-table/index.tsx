@@ -75,7 +75,7 @@ export function BalanceControlTable({
   }
 
   const fetchBalanceAdmin = useCallback(async () => {
-    if (!selectedTeam || !selectedDate) return
+    if (!selectedDate) return
 
     setIsLoading(true)
 
@@ -84,6 +84,7 @@ export function BalanceControlTable({
         id_team: selectedTeam,
         date: selectedDate,
       }
+      console.log(params)
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin`,
         { params }
@@ -301,7 +302,7 @@ export function BalanceControlTable({
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
-          {!selectedTeam || !selectedDate ? (
+          {!selectedDate ? (
             <tr>
               <td colSpan={5} className='p-4 text-center'>
                 É necessário preencher os 2 filtros
