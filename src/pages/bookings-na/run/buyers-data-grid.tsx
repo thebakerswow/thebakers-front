@@ -65,11 +65,13 @@ export function BuyersDataGrid({
   }
 
   // Função para ordenar os dados com base na prioridade do status
-  const sortedData = [...data].sort((a, b) => {
-    const priorityA = statusPriorities[a.status || ''] || Infinity
-    const priorityB = statusPriorities[b.status || ''] || Infinity
-    return priorityA - priorityB
-  })
+  const sortedData = Array.isArray(data)
+    ? [...data].sort((a, b) => {
+        const priorityA = statusPriorities[a.status || ''] || Infinity
+        const priorityB = statusPriorities[b.status || ''] || Infinity
+        return priorityA - priorityB
+      })
+    : []
 
   const handleTogglePaid = async (buyerId: string) => {
     const payload = {
