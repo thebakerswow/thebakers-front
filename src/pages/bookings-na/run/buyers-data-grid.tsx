@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckFat, DotsThreeVertical, XCircle } from '@phosphor-icons/react'
+import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -44,7 +44,6 @@ export function BuyersDataGrid({
   onDeleteSuccess,
 }: BuyersGridProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [openActionsDropdown, setOpenActionsDropdown] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
     id: string
@@ -53,10 +52,6 @@ export function BuyersDataGrid({
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
-
-  const toggleActionsDropdown = (buyerId: any) => {
-    setOpenActionsDropdown(openActionsDropdown === buyerId ? null : buyerId)
-  }
 
   const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
     setEditingBuyer({
@@ -67,7 +62,6 @@ export function BuyersDataGrid({
     })
     setModalType(type)
     setOpenModal(true)
-    setOpenActionsDropdown(null)
   }
 
   // Função para ordenar os dados com base na prioridade do status
@@ -305,25 +299,14 @@ export function BuyersDataGrid({
               </td>
 
               <td className='p-2 text-center'>{buyer.buyerNote}</td>
-              <td className='text-center'>
+              <td className='text-center w-16'>
                 {buyer.nameAndRealm !== '****' && (
-                  <button onClick={() => toggleActionsDropdown(buyer.id)}>
-                    <DotsThreeVertical size={18} />
-                  </button>
-                )}
-                {openActionsDropdown === buyer.id && (
-                  <div className='absolute right-16 w-32 bg-white border rounded shadow-md'>
-                    <button
-                      onClick={() => handleOpenModal(buyer, 'edit')}
-                      className='block w-full px-4 py-2 text-left hover:bg-gray-100'
-                    >
-                      Edit
+                  <div className='flex justify-center gap-2'>
+                    <button onClick={() => handleOpenModal(buyer, 'edit')}>
+                      <Pencil size={18} />
                     </button>
-                    <button
-                      onClick={() => handleOpenModal(buyer, 'delete')}
-                      className='block w-full px-4 py-2 text-left hover:bg-gray-100'
-                    >
-                      Delete
+                    <button onClick={() => handleOpenModal(buyer, 'delete')}>
+                      <Trash size={18} />
                     </button>
                   </div>
                 )}
