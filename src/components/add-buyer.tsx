@@ -33,9 +33,12 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const newValue = e.target.value
-    if (/^[0-9]*$/.test(newValue)) {
-      setBuyerPot(newValue)
+    const rawValue = e.target.value.replace(/\D/g, '') // Remove tudo que não for número
+    if (rawValue) {
+      const formattedValue = Number(rawValue).toLocaleString('en-US')
+      setBuyerPot(formattedValue)
+    } else {
+      setBuyerPot('')
     }
   }
 
@@ -48,7 +51,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       paymentFaction,
       nameAndRealm,
       playerClass,
-      buyerPot: Number(buyerPot),
+      buyerPot: Number(buyerPot.replace(/,/g, '')), // Remove a formatação antes de enviar
       isPaid,
       idBuyerAdvertiser,
       buyerNote,
@@ -61,7 +64,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       )
 
       setIsSuccess(true)
-
       await onBuyerAddedReload()
 
       setTimeout(() => {
@@ -216,25 +218,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               placeholder='Pot'
               className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
             />
-
-            <select
-              id='isPaid'
-              value={isPaid !== undefined ? String(isPaid) : ''}
-              required
-              onChange={(e) => setIsPaid(e.target.value === 'true')}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
-            >
-              <option value='' disabled hidden>
-                Paid Full
-              </option>
-              <option className='text-black' value='true'>
-                Yes
-              </option>
-              <option className='text-black' value='false'>
-                No
-              </option>
-            </select>
-
             <select
               id='idBuyerAdvertiser'
               value={idBuyerAdvertiser}
@@ -254,6 +237,18 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 </option>
               ))}
             </select>
+            <div className='flex gap-2 items-center'>
+              <label htmlFor='isPaid' className='ml-2 text-lg  text-zinc-700'>
+                Paid Full
+              </label>
+              <input
+                type='checkbox'
+                id='isPaid'
+                checked={isPaid ?? false}
+                onChange={(e) => setIsPaid(e.target.checked)}
+                className='accent-zinc-500 cursor-pointer w-5 h-5'
+              />
+            </div>
             <input
               type='text'
               id='buyerNote'
