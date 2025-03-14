@@ -22,7 +22,10 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
         `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers/invite` ||
           `http://localhost:8000/v1/run/${runId}/buyers/invite`
       )
-      setInviteBuyersData(response.data.info)
+      setInviteBuyersData(
+        Array.isArray(response.data.info) ? response.data.info : []
+      )
+
       setError(null)
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -66,7 +69,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
         inviteBuyersData.length > 0 && (
           <div className='modal-content flex flex-col items-end gap-2'>
             <div className='text-start'>
-              {inviteBuyersData.map((item, index) => (
+              {inviteBuyersData?.map((item, index) => (
                 <div key={index}>
                   <p className='font-normal'>{item}</p>
                 </div>
