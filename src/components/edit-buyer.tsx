@@ -17,7 +17,9 @@ interface EditBuyerProps {
 
 export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   const [nameAndRealm, setNameAndRealm] = useState(buyer.nameAndRealm)
-  const [buyerPot, setBuyerPot] = useState(buyer.buyerPot)
+  const [buyerPot, setBuyerPot] = useState(
+    buyer.buyerPot.toLocaleString('en-US')
+  ) // Formatar com vírgulas
   const [buyerNote, setBuyerNote] = useState(buyer.buyerNote)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -25,10 +27,13 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
+    // Remover as vírgulas ao enviar para o backend
+    const buyerPotValue = Number(buyerPot.replace(/,/g, ''))
+
     const payload = {
       id_buyer: buyer.id,
       nameAndRealm,
-      buyerPot,
+      buyerPot: buyerPotValue,
       buyerNote,
     }
 
@@ -60,6 +65,16 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     }
   }
 
+  const handleBuyerPotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '') // Remove tudo que não for número
+    if (rawValue) {
+      const formattedValue = Number(rawValue).toLocaleString('en-US')
+      setBuyerPot(formattedValue)
+    } else {
+      setBuyerPot('')
+    }
+  }
+
   return (
     <Modal onClose={onClose}>
       <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
@@ -80,7 +95,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
               type='text'
               className='w-full p-2 border rounded mb-4'
               value={buyerPot}
-              onChange={(e) => setBuyerPot(Number(e.target.value))}
+              onChange={handleBuyerPotChange} // Chama a função para formatar o valor com vírgulas
             />
             <label className='block mb-2'>Note</label>
             <input
