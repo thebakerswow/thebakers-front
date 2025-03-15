@@ -63,7 +63,13 @@ export function GBanksTable() {
   }
 
   useEffect(() => {
-    fetchGBanks()
+    fetchGBanks() // Faz a primeira chamada imediata
+
+    const interval = setInterval(() => {
+      fetchGBanks()
+    }, 30000) // 30 segundos
+
+    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [])
 
   // Handler para adicionar um novo GBank

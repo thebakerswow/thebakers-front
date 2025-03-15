@@ -41,7 +41,13 @@ export function VerifyTable() {
   }
 
   useEffect(() => {
-    fetchSumsData()
+    fetchSumsData() // Primeira chamada imediata
+
+    const interval = setInterval(() => {
+      fetchSumsData()
+    }, 30000) // Atualiza a cada 20 segundos
+
+    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [])
 
   return (

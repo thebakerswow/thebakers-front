@@ -77,8 +77,6 @@ export function BalanceControlTable({
   const fetchBalanceAdmin = useCallback(async () => {
     if (!selectedDate) return
 
-    setIsLoading(true)
-
     try {
       const params = {
         id_team: selectedTeam,
@@ -110,7 +108,13 @@ export function BalanceControlTable({
   }, [selectedTeam, selectedDate])
 
   useEffect(() => {
-    fetchBalanceAdmin()
+    fetchBalanceAdmin() // Faz a primeira chamada imediata
+
+    const interval = setInterval(() => {
+      fetchBalanceAdmin()
+    }, 5000) // 30 segundos
+
+    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [selectedTeam, selectedDate, fetchBalanceAdmin])
 
   const handleCalculatorChange = (userId: string, value: string) => {
