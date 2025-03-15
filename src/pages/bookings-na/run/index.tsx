@@ -13,6 +13,7 @@ import { Modal } from '../../../components/modal'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
+// import { Freelancers } from '../../../components/freelancers'
 
 export function RunDetails() {
   const { id } = useParams<{ id: string }>()
@@ -89,7 +90,6 @@ export function RunDetails() {
       )
 
       setRows(response.data.info)
-
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -269,13 +269,22 @@ export function RunDetails() {
             )}
           </div>
           {runData && (
-            <Attendance
-              attendance={attendance}
-              markAllAsFull={markAllAsFull}
-              handleAttendanceClick={handleAttendanceClick}
-              onAttendanceUpdate={fetchAttendanceData}
-              runId={runData.id}
-            />
+            <div className='flex'>
+              <Attendance
+                attendance={attendance}
+                markAllAsFull={markAllAsFull}
+                handleAttendanceClick={handleAttendanceClick}
+                onAttendanceUpdate={fetchAttendanceData}
+                runId={runData.id}
+              />
+              {/* <Freelancers
+                attendance={attendance}
+                markAllAsFull={markAllAsFull}
+                handleAttendanceClick={handleAttendanceClick}
+                onAttendanceUpdate={fetchAttendanceData}
+                runId={runData.id}
+              /> */}
+            </div>
           )}
         </div>
       )}

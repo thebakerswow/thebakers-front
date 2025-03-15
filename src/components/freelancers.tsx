@@ -3,7 +3,7 @@ import { Modal } from './modal'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { api } from '../services/axiosConfig'
-import { Check, CircleNotch } from '@phosphor-icons/react'
+import { Check, CircleNotch, Trash } from '@phosphor-icons/react'
 
 interface AttendanceProps {
   attendance: {
@@ -15,7 +15,7 @@ interface AttendanceProps {
   onAttendanceUpdate: () => void
 }
 
-export function Attendance({
+export function Freelancers({
   attendance,
   markAllAsFull,
   handleAttendanceClick,
@@ -75,11 +75,19 @@ export function Attendance({
 
   return (
     <div className='w-[50%] mx-auto mt-2 p-4'>
-      <div className='flex flex-col items-center'>
+      <div className='  flex flex-col items-center'>
+        <div className='flex gap-2 mb-2 w-[80%]'>
+          <input
+            className='p-1 rounded-md text-black'
+            type='text'
+            placeholder='Player'
+          />
+          <button className='bg-red-400 p-1 px-2 rounded-md'>ADD</button>
+        </div>
         <table className='w-[80%] border-collapse'>
           <thead className='table-header-group'>
             <tr className='text-md bg-zinc-400 text-gray-700'>
-              <th className='p-2 border'>Player</th>
+              <th className='p-2 border'>Freelancer</th>
               <th className='p-2 border flex items-center justify-center'>
                 Attendance
                 <button
@@ -89,6 +97,7 @@ export function Attendance({
                   100%
                 </button>
               </th>
+              <th className='p-2 border'>Delete</th>
             </tr>
           </thead>
           <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
@@ -122,6 +131,11 @@ export function Attendance({
                       )}
                     </select>
                   </div>
+                </td>
+                <td className='p-2 text-center'>
+                  <button>
+                    <Trash />
+                  </button>
                 </td>
               </tr>
             ))}
