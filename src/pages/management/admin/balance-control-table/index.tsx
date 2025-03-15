@@ -114,9 +114,15 @@ export function BalanceControlTable({
   }, [selectedTeam, selectedDate, fetchBalanceAdmin])
 
   const handleCalculatorChange = (userId: string, value: string) => {
+    // Permitir apenas números e um único '-' no início
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+
+    const formattedValue =
+      rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
+
     setCalculatorValues((prev) => ({
       ...prev,
-      [userId]: value,
+      [userId]: formattedValue,
     }))
   }
 
@@ -138,7 +144,7 @@ export function BalanceControlTable({
     setIsCalculatorSubmitting(true)
     try {
       const payload = {
-        value: Number(confirmingCalculator.value),
+        value: Number(confirmingCalculator.value.replace(/,/g, '')), // Remove commas
         id_discord: confirmingCalculator.userId,
       }
       await api.post(
@@ -187,7 +193,7 @@ export function BalanceControlTable({
       await Promise.all(
         bulkConfirmingTransactions.map(({ userId, value }) =>
           api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
-            value: Number(value),
+            value: Number(value.replace(/,/g, '')), // Remove commas
             id_discord: userId,
           })
         )

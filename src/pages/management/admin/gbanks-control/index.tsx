@@ -26,6 +26,21 @@ export function GBanksTable() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
+  const formatCalculatorValue = (value: string) => {
+    // Permite números e um único '-' no início
+    const rawValue = value
+      .replace(/[^0-9-]/g, '')
+      .replace(/(?!^)-/g, '') // Remove hífens que não estão no início
+      .replace(/(?<=^-.*)-/g, '') // Remove hífens extras se já tiver um no início
+
+    // Mantém o hífen se for o único caractere
+    if (rawValue === '-') return '-'
+
+    // Formata o número removendo zeros à esquerda não significativos
+    const numberValue = Number(rawValue.replace(/,/g, ''))
+    return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
+  }
+
   // Função para buscar os GBanks
   const fetchGBanks = async () => {
     setIsLoading(true)
@@ -33,7 +48,13 @@ export function GBanksTable() {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks`
       )
-      setGbanks(response.data.info)
+      const formattedGBanks = response.data.info.map((gbank: any) => ({
+        ...gbank,
+        calculatorValue: gbank.calculatorValue
+          ? formatCalculatorValue(gbank.calculatorValue.toString())
+          : '',
+      }))
+      setGbanks(formattedGBanks)
     } catch (error) {
       handleError(error, 'Erro ao carregar GBanks')
     } finally {
@@ -89,17 +110,24 @@ export function GBanksTable() {
     newValue: string
   ) => {
     if (!newValue.trim()) return
+
     setIsSubmitting(true)
     try {
+      const numericValue = Number(
+        newValue
+          .replace(/,/g, '') // Remove formatação
+          .replace(/^-[0]+/, '-0') // Mantém o negativo se for zero
+      )
       const payload = {
         id: gbank.id,
-        balance: Number(newValue),
+        balance: numericValue,
       }
-      // Atualiza o campo "calculatorValue" do GBank via PUT.
+
       await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks/value`,
         payload
       )
+
       await fetchGBanks()
     } catch (error) {
       handleError(error, 'Erro ao atualizar calculadora do GBank')
@@ -236,15 +264,16 @@ export function GBanksTable() {
                     className='p-2 bg-zinc-100 rounded-md'
                     type='text'
                     value={gbank.calculatorValue}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const formatted = formatCalculatorValue(e.target.value)
                       setGbanks((prev) =>
                         prev.map((g) =>
                           g.id === gbank.id
-                            ? { ...g, calculatorValue: e.target.value }
+                            ? { ...g, calculatorValue: formatted }
                             : g
                         )
                       )
-                    }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleUpdateGBankCalculator(
