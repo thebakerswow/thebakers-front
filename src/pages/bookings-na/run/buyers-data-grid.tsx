@@ -217,104 +217,112 @@ export function BuyersDataGrid({
           </tr>
         </thead>
         <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
-          {sortedData?.map((buyer, index) => (
-            <tr
-              key={buyer.id}
-              className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
-            >
-              <td className='p-2 text-center'>{index + 1}</td>
-              <td className='p-2'>
-                <form>
-                  <select
-                    id='status'
-                    className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
-                    value={buyer.status || ''}
-                    onChange={(e) =>
-                      handleStatusChange(buyer.id, e.target.value)
-                    }
-                  >
-                    <option value='' disabled hidden>
-                      ----------
-                    </option>
-                    <option value='waiting'>Waiting</option>
-                    <option value='noshow'>No Show</option>
-                    <option value='closed'>Closed</option>
-                    <option value='backup'>Backup</option>
-                    <option value='group'>Group</option>
-                    <option value='done'>Done</option>
-                  </select>
-                </form>
-              </td>
-              <td className='p-2 text-center'>
-                {buyer.nameAndRealm === '****'
-                  ? 'Encrypted'
-                  : buyer.nameAndRealm}
-              </td>
-
-              <td className='p-2 text-center'>{buyer.paymentFaction}</td>
-              <td className='p-2 flex gap-2 justify-center'>
-                {buyer.playerClass}
-                {getClassImage(buyer.playerClass) ? (
-                  <img
-                    src={getClassImage(buyer.playerClass)}
-                    alt={buyer.playerClass}
-                    className='w-6 h-6'
-                  />
-                ) : (
-                  <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
-                    ?
-                  </div>
-                )}
-              </td>
-              <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
-              <td className='p-2 text-center'>{buyer.nameCollector}</td>
-              <td className='p-2 w-20 text-center'>
-                <div className='flex justify-center items-center'>
-                  <button onClick={() => handleTogglePaid(buyer.id)}>
-                    {buyer.isPaid ? (
-                      <CheckFat
-                        className='text-green-500 border bg-white rounded-xl cursor-pointer'
-                        size={22}
-                        weight='fill'
-                      />
-                    ) : (
-                      <XCircle
-                        className='text-red-600 border bg-white rounded-xl cursor-pointer'
-                        size={22}
-                        weight='fill'
-                      />
-                    )}
-                  </button>
-                </div>
-              </td>
-              <td className='p-2 text-center'>
-                {Number(buyer.buyerPot).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                })}
-              </td>
-              <td className='p-2 text-center'>
-                {Number(buyer.buyerActualPot).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                })}
-              </td>
-
-              <td className='p-2 text-center'>{buyer.buyerNote}</td>
-              <td className='text-center w-16'>
-                {buyer.nameAndRealm !== '****' && (
-                  <div className='flex justify-center gap-2'>
-                    <button onClick={() => handleOpenModal(buyer, 'edit')}>
-                      <Pencil size={18} />
-                    </button>
-                    <button onClick={() => handleOpenModal(buyer, 'delete')}>
-                      <Trash size={18} />
-                    </button>
-                  </div>
-                )}
+          {sortedData.length === 0 ? (
+            <tr>
+              <td colSpan={12} className='p-4 text-center text-gray-500'>
+                No Buyers
               </td>
             </tr>
-          ))}
+          ) : (
+            sortedData?.map((buyer, index) => (
+              <tr
+                key={buyer.id}
+                className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
+              >
+                <td className='p-2 text-center'>{index + 1}</td>
+                <td className='p-2'>
+                  <form>
+                    <select
+                      id='status'
+                      className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+                      value={buyer.status || ''}
+                      onChange={(e) =>
+                        handleStatusChange(buyer.id, e.target.value)
+                      }
+                    >
+                      <option value='' disabled hidden>
+                        ----------
+                      </option>
+                      <option value='waiting'>Waiting</option>
+                      <option value='noshow'>No Show</option>
+                      <option value='closed'>Closed</option>
+                      <option value='backup'>Backup</option>
+                      <option value='group'>Group</option>
+                      <option value='done'>Done</option>
+                    </select>
+                  </form>
+                </td>
+                <td className='p-2 text-center'>
+                  {buyer.nameAndRealm === '****'
+                    ? 'Encrypted'
+                    : buyer.nameAndRealm}
+                </td>
+
+                <td className='p-2 text-center'>{buyer.paymentFaction}</td>
+                <td className='p-2 flex gap-2 justify-center'>
+                  {buyer.playerClass}
+                  {getClassImage(buyer.playerClass) ? (
+                    <img
+                      src={getClassImage(buyer.playerClass)}
+                      alt={buyer.playerClass}
+                      className='w-6 h-6'
+                    />
+                  ) : (
+                    <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
+                      ?
+                    </div>
+                  )}
+                </td>
+                <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
+                <td className='p-2 text-center'>{buyer.nameCollector}</td>
+                <td className='p-2 w-20 text-center'>
+                  <div className='flex justify-center items-center'>
+                    <button onClick={() => handleTogglePaid(buyer.id)}>
+                      {buyer.isPaid ? (
+                        <CheckFat
+                          className='text-green-500 border bg-white rounded-xl cursor-pointer'
+                          size={22}
+                          weight='fill'
+                        />
+                      ) : (
+                        <XCircle
+                          className='text-red-600 border bg-white rounded-xl cursor-pointer'
+                          size={22}
+                          weight='fill'
+                        />
+                      )}
+                    </button>
+                  </div>
+                </td>
+                <td className='p-2 text-center'>
+                  {Number(buyer.buyerPot).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </td>
+                <td className='p-2 text-center'>
+                  {Number(buyer.buyerActualPot).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </td>
+
+                <td className='p-2 text-center'>{buyer.buyerNote}</td>
+                <td className='text-center w-16'>
+                  {buyer.nameAndRealm !== '****' && (
+                    <div className='flex justify-center gap-2'>
+                      <button onClick={() => handleOpenModal(buyer, 'edit')}>
+                        <Pencil size={18} />
+                      </button>
+                      <button onClick={() => handleOpenModal(buyer, 'delete')}>
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       {openModal && editingBuyer && (

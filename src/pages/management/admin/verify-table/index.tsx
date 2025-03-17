@@ -78,7 +78,7 @@ export function VerifyTable() {
                       sumsData?.general_balance_gbank ?? 0
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
+                      maximumFractionDigits: 0,
                     })}
                   </td>
                   <td className='p-2 text-center'>
@@ -86,7 +86,7 @@ export function VerifyTable() {
                       'en-US',
                       {
                         minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
+                        maximumFractionDigits: 0,
                       }
                     )}
                   </td>
@@ -99,7 +99,7 @@ export function VerifyTable() {
                       (sumsData?.general_balance ?? 0)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
+                      maximumFractionDigits: 0,
                     })}
                   </td>
                 </tr>

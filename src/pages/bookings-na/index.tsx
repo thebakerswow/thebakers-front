@@ -30,7 +30,7 @@ export function FullRaidsNa() {
       return
     }
 
-    setIsLoading(true)
+    // setIsLoading(true)
     try {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/run` ||

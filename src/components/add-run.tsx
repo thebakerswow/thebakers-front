@@ -340,6 +340,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               <option className='text-black' value='1328938639949959209'>
                 Milharal
               </option>
+              <option className='text-black' value='1346914505392783372'>
+                Raio
+              </option>
               <option className='text-black' value='1337818949831626753'>
                 APAE
               </option>

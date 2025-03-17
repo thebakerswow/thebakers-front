@@ -88,6 +88,27 @@ export function Attendance({
                 >
                   100%
                 </button>
+                <button
+                  onClick={handleAttendanceSave}
+                  disabled={isSubmitting || isSuccess}
+                  className={`ml-2 px-2 py-1 text-xs font-semibold border rounded flex items-center gap-2 bg-green-500 text-white hover:bg-green-600 transition${
+                    isSubmitting || isSuccess ? 'cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <CircleNotch className='animate-spin h-5 w-5' />
+                      Saving...
+                    </>
+                  ) : isSuccess ? (
+                    <>
+                      <Check className='h-5 w-5' />
+                      Saved!
+                    </>
+                  ) : (
+                    'Save'
+                  )}
+                </button>
               </th>
             </tr>
           </thead>
@@ -127,30 +148,6 @@ export function Attendance({
             ))}
           </tbody>
         </table>
-
-        <div className='flex justify-center items-center mt-4 w-[50%]'>
-          <button
-            onClick={handleAttendanceSave}
-            disabled={isSubmitting || isSuccess}
-            className={`px-4 py-2 bg-green-500 hover:bg-green-600 transition-all text-white rounded flex items-center justify-center gap-2 ${
-              isSubmitting || isSuccess ? 'cursor-not-allowed' : ''
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <CircleNotch className='animate-spin h-5 w-5' />
-                Saving...
-              </>
-            ) : isSuccess ? (
-              <>
-                <Check className='h-5 w-5' />
-                Saved!
-              </>
-            ) : (
-              'Save'
-            )}
-          </button>
-        </div>
       </div>
     </div>
   )

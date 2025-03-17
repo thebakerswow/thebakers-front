@@ -343,7 +343,7 @@ export function BalanceDataGrid() {
                     <td className='p-2 border'>
                       {Number(player.balance_total).toLocaleString('en-US', {
                         minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
+                        maximumFractionDigits: 0,
                       })}
                     </td>
 
@@ -357,7 +357,7 @@ export function BalanceDataGrid() {
                               'en-US',
                               {
                                 minimumFractionDigits: 0,
-                                maximumFractionDigits: 2,
+                                maximumFractionDigits: 0,
                               }
                             )
                           : '-'}

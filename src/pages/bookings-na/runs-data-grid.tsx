@@ -167,9 +167,11 @@ export function RunsDataGrid({
                           ? 'bg-green-300'
                           : run.team === 'Milharal'
                             ? 'bg-yellow-400'
-                            : run.team === 'APAE'
-                              ? 'bg-red-300'
-                              : ''
+                            : run.team === 'Raio'
+                              ? 'bg-yellow-600'
+                              : run.team === 'APAE'
+                                ? 'bg-red-300'
+                                : ''
                 }`}
               >
                 <td className='p-2 text-center align-middle'>
@@ -195,9 +197,16 @@ export function RunsDataGrid({
                 <td className='p-2'>
                   {run.time ? (
                     (() => {
-                      const dateISO = `${run.date}T${run.time}:00Z` // Assume que o horário está em UTC
+                      // Create date object assuming the stored time is in BRT
+                      const dateBRT = parseISO(`${run.date}T${run.time}:00`)
+                      const zonedDateBRT = toZonedTime(
+                        dateBRT,
+                        'America/Sao_Paulo'
+                      )
+
+                      // Convert to EST
                       const zonedDateEST = toZonedTime(
-                        dateISO,
+                        zonedDateBRT,
                         'America/New_York'
                       )
 
@@ -205,7 +214,7 @@ export function RunsDataGrid({
                         <>
                           {formatTz(zonedDateEST, 'HH:mm')} EST
                           <br />
-                          {run.time} BRT
+                          {formatTz(zonedDateBRT, 'HH:mm')} BRT
                         </>
                       )
                     })()

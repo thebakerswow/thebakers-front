@@ -25,6 +25,7 @@ export function TeamsManagement() {
             'http://localhost:8000/v1/teams'
         )
 
+        console.log(response.data.info)
         const orderedTeams = teamOrder.map((teamName) => ({
           name: teamName,
           members: (response.data.info[teamName] || []).map((member: any) => ({

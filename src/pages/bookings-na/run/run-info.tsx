@@ -47,18 +47,19 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         <h2 className='text-lg font-semibold'>Gold Collectors</h2>
         <table className='w-full table-auto'>
           <tbody>
-            {run.sumPot?.map((item) => (
-              <tr key={item.idDiscord}>
-                <td className='p-2'>{item.username}</td>
-
-                <td className='p-2'>
-                  {Number(item.sumPot).toLocaleString('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
-                  })}
-                </td>
-              </tr>
-            ))}
+            {run.sumPot?.map((item) =>
+              item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
+                <tr key={item.idDiscord}>
+                  <td className='p-2'>{item.username}</td>
+                  <td className='p-2'>
+                    {Number(item.sumPot).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                  </td>
+                </tr>
+              ) : null
+            )}
           </tbody>
         </table>
       </div>
@@ -120,7 +121,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 <span className='font-normal'>
                   {Number(run.actualPot).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                   })}
                 </span>
               </span>

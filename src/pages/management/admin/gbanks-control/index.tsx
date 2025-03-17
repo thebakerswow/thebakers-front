@@ -262,7 +262,7 @@ export function GBanksTable() {
                 <td className='p-2 text-center'>
                   {Number(gbank.balance).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                   })}
                 </td>
                 <td className='p-2 text-center'>

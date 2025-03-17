@@ -13,7 +13,7 @@ import { Modal } from '../../../components/modal'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
-// import { Freelancers } from '../../../components/freelancers'
+import { Freelancers } from '../../../components/freelancers'
 
 export function RunDetails() {
   const { id } = useParams<{ id: string }>()
@@ -277,13 +277,7 @@ export function RunDetails() {
                 onAttendanceUpdate={fetchAttendanceData}
                 runId={runData.id}
               />
-              {/* <Freelancers
-                attendance={attendance}
-                markAllAsFull={markAllAsFull}
-                handleAttendanceClick={handleAttendanceClick}
-                onAttendanceUpdate={fetchAttendanceData}
-                runId={runData.id}
-              /> */}
+              <Freelancers runId={runData.id} />
             </div>
           )}
         </div>

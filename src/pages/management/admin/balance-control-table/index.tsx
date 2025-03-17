@@ -269,6 +269,9 @@ export function BalanceControlTable({
           <option className='text-black' value='1328938639949959209'>
             Milharal
           </option>
+          <option className='text-black' value='1346914505392783372'>
+            Raio
+          </option>
           <option className='text-black' value='1337818949831626753'>
             APAE
           </option>
@@ -332,19 +335,19 @@ export function BalanceControlTable({
                 <td className='p-2 text-center'>
                   {Number(user.gold).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                   })}
                 </td>
                 <td className='p-2 text-center'>
                   {Number(user.gold_collect).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                   })}
                 </td>
                 <td className='p-2 text-center'>
                   {Number(user.balance_total).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                   })}
                 </td>
                 <td className='p-2 text-center'>
