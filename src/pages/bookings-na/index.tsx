@@ -24,14 +24,19 @@ export function FullRaidsNa() {
       userRoles.some((userRole) => userRole.toString() === required.toString())
     )
   }
-  async function fetchRuns() {
-    if (!selectedDate) {
-      setRows([])
-      return
+
+  async function fetchRuns(isUserRequest: boolean) {
+    // Ativa loading apenas se for requisição do usuário e houver data selecionada
+    if (isUserRequest && selectedDate) {
+      setIsLoading(true)
     }
 
-    // setIsLoading(true)
     try {
+      if (!selectedDate) {
+        setRows([])
+        return
+      }
+
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/run` ||
           'http://localhost:8000/v1/run',
@@ -69,7 +74,9 @@ export function FullRaidsNa() {
         setError(genericError)
       }
     } finally {
-      setIsLoading(false)
+      if (isUserRequest) {
+        setIsLoading(false) // Desativa loading apenas para requisições do usuário
+      }
     }
   }
 
@@ -82,13 +89,13 @@ export function FullRaidsNa() {
   }
 
   useEffect(() => {
-    fetchRuns() // Executa a primeira chamada imediatamente
+    fetchRuns(true) // Requisição inicial (usuário)
 
     const interval = setInterval(() => {
-      fetchRuns()
-    }, 20000) // Executa a cada 20 segundos
+      fetchRuns(false) // Pooling (não mostra loading)
+    }, 20000)
 
-    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
+    return () => clearInterval(interval)
   }, [selectedDate])
 
   function onDaySelect(day: Date | null) {
@@ -127,11 +134,14 @@ export function FullRaidsNa() {
         <RunsDataGrid
           data={rows}
           isLoading={isLoading}
-          onDeleteSuccess={fetchRuns}
+          onDeleteSuccess={() => fetchRuns(true)}
         />
 
         {isAddRunOpen && (
-          <AddRun onClose={handleCloseAddRun} onRunAddedReload={fetchRuns} />
+          <AddRun
+            onClose={handleCloseAddRun}
+            onRunAddedReload={() => fetchRuns(true)}
+          />
         )}
       </div>
     </div>
