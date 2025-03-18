@@ -116,7 +116,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               <span className='font-bold text-base'>
                 Gold Collected:{' '}
                 <span className='font-normal'>
-                  {Number(run.actualPot).toLocaleString('en-US')}
+                  {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
                 </span>
               </span>
             </p>

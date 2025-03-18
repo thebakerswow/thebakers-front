@@ -48,15 +48,30 @@ export function GBanksTable() {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks`
       )
-      const formattedGBanks = response.data.info.map((gbank: any) => ({
-        ...gbank,
-        calculatorValue: gbank.calculatorValue
-          ? formatCalculatorValue(gbank.calculatorValue.toString())
-          : '',
-      }))
+      const formattedGBanks = response.data?.info?.length
+        ? response.data.info.map((gbank: any) => ({
+            ...gbank,
+            calculatorValue: gbank.calculatorValue
+              ? formatCalculatorValue(gbank.calculatorValue.toString())
+              : '',
+          }))
+        : []
+
       setGbanks(formattedGBanks)
     } catch (error) {
-      handleError(error, 'Erro ao carregar GBanks')
+      if (axios.isAxiosError(error)) {
+        console.error('API Error:', error.response?.data) // Depuração
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({
+          message: 'Erro inesperado',
+          response: error,
+        })
+      }
     } finally {
       setIsLoading(false)
     }
