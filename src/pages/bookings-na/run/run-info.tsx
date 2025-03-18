@@ -52,10 +52,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 <tr key={item.idDiscord}>
                   <td className='p-2'>{item.username}</td>
                   <td className='p-2'>
-                    {Number(item.sumPot).toLocaleString('en-US', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}
+                    {Number(item.sumPot).toLocaleString('en-US')}
                   </td>
                 </tr>
               ) : null
@@ -119,10 +116,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               <span className='font-bold text-base'>
                 Gold Collected:{' '}
                 <span className='font-normal'>
-                  {Number(run.actualPot).toLocaleString('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })}
+                  {Number(run.actualPot).toLocaleString('en-US')}
                 </span>
               </span>
             </p>
