@@ -43,7 +43,6 @@ export function GBanksTable() {
 
   // Função para buscar os GBanks
   const fetchGBanks = async () => {
-    setIsLoading(true)
     try {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks`
@@ -82,7 +81,7 @@ export function GBanksTable() {
 
     const interval = setInterval(() => {
       fetchGBanks()
-    }, 30000) // 30 segundos
+    }, 10000) // 30 segundos
 
     return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [])

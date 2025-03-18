@@ -14,7 +14,6 @@ export function VerifyTable() {
   const [error, setError] = useState<ErrorDetails | null>(null)
 
   const fetchSumsData = async () => {
-    setIsLoading(true)
     try {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks/general`
@@ -45,7 +44,7 @@ export function VerifyTable() {
 
     const interval = setInterval(() => {
       fetchSumsData()
-    }, 30000) // Atualiza a cada 20 segundos
+    }, 5000) // Atualiza a cada 5 segundos
 
     return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [])
