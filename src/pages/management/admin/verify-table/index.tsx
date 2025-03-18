@@ -95,7 +95,7 @@ export function VerifyTable() {
                   <td colSpan={2} className='p-2 text-center font-bold'>
                     Diferença:{' '}
                     {(
-                      (sumsData?.general_balance_gbank ?? 0) +
+                      (sumsData?.general_balance_gbank ?? 0) -
                       (sumsData?.general_balance ?? 0)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
