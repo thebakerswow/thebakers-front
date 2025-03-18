@@ -74,22 +74,22 @@ export function VerifyTable() {
               <>
                 <tr className='border border-gray-300'>
                   <td className='p-2 text-center'>
-                    {Number(
-                      sumsData?.general_balance_gbank ?? 0
+                    {Math.round(
+                      Number(sumsData?.general_balance_gbank ?? 0)
                     ).toLocaleString('en-US')}
                   </td>
                   <td className='p-2 text-center'>
-                    {Number(sumsData?.general_balance ?? 0).toLocaleString(
-                      'en-US'
-                    )}
+                    {Math.round(
+                      Number(sumsData?.general_balance ?? 0)
+                    ).toLocaleString('en-US')}
                   </td>
                 </tr>
                 <tr className='border border-gray-300 bg-zinc-300'>
                   <td colSpan={2} className='p-2 text-center font-bold'>
                     Diferença:{' '}
-                    {(
+                    {Math.round(
                       (sumsData?.general_balance_gbank ?? 0) -
-                      (sumsData?.general_balance ?? 0)
+                        (sumsData?.general_balance ?? 0)
                     ).toLocaleString('en-US')}
                   </td>
                 </tr>

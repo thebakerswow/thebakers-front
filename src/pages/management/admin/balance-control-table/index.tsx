@@ -333,13 +333,17 @@ export function BalanceControlTable({
               <tr key={user.idDiscord} className='border border-gray-300'>
                 <td className='p-2 text-center'>{user.username}</td>
                 <td className='p-2 text-center'>
-                  {Number(user.gold).toLocaleString('en-US')}
+                  {Math.round(Number(user.gold)).toLocaleString('en-US')}
                 </td>
                 <td className='p-2 text-center'>
-                  {Number(user.gold_collect).toLocaleString('en-US')}
+                  {Math.round(Number(user.gold_collect)).toLocaleString(
+                    'en-US'
+                  )}
                 </td>
                 <td className='p-2 text-center'>
-                  {Number(user.balance_total).toLocaleString('en-US')}
+                  {Math.round(Number(user.balance_total)).toLocaleString(
+                    'en-US'
+                  )}
                 </td>
                 <td className='p-2 text-center'>
                   <input

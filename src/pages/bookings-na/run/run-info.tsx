@@ -52,7 +52,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 <tr key={item.idDiscord}>
                   <td className='p-2'>{item.username}</td>
                   <td className='p-2'>
-                    {Number(item.sumPot).toLocaleString('en-US')}
+                    {Math.round(Number(item.sumPot)).toLocaleString('en-US')}
                   </td>
                 </tr>
               ) : null

@@ -341,7 +341,9 @@ export function BalanceDataGrid() {
                       </span>
                     </td>
                     <td className='p-2 border'>
-                      {Number(player.balance_total).toLocaleString('en-US')}
+                      {Math.round(Number(player.balance_total)).toLocaleString(
+                        'en-US'
+                      )}
                     </td>
 
                     {getSortedDates().map((date) => (

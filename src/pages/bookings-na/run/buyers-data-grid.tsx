@@ -295,10 +295,12 @@ export function BuyersDataGrid({
                   </div>
                 </td>
                 <td className='p-2 text-center'>
-                  {Number(buyer.buyerPot).toLocaleString('en-US')}
+                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
                 </td>
                 <td className='p-2 text-center'>
-                  {Number(buyer.buyerActualPot).toLocaleString('en-US')}
+                  {Math.round(Number(buyer.buyerActualPot)).toLocaleString(
+                    'en-US'
+                  )}
                 </td>
 
                 <td className='p-2 text-center'>{buyer.buyerNote}</td>
