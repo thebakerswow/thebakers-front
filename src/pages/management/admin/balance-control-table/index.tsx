@@ -7,11 +7,6 @@ import {
 import { Modal } from '../../../../components/modal'
 import { api } from '../../../../services/axiosConfig'
 
-interface ConfirmingCalculatorData {
-  userId: string
-  value: string
-}
-
 interface BalanceControlTableProps {
   selectedTeam: string
   selectedDate: string
@@ -31,17 +26,7 @@ export function BalanceControlTable({
   const [calculatorValues, setCalculatorValues] = useState<{
     [key: string]: string
   }>({})
-  const [confirmingCalculator, setConfirmingCalculator] =
-    useState<ConfirmingCalculatorData | null>(null)
-  const [isCalculatorSubmitting, setIsCalculatorSubmitting] = useState(false)
-  const [calculatorError, setCalculatorError] = useState<ErrorDetails | null>(
-    null
-  )
-  const [bulkConfirmingTransactions, setBulkConfirmingTransactions] = useState<
-    ConfirmingCalculatorData[]
-  >([])
-  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
-  const [bulkError, setBulkError] = useState<ErrorDetails | null>(null)
+  const [isBulkingSubmitting, setIsBulkingSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -130,26 +115,22 @@ export function BalanceControlTable({
     }))
   }
 
-  const handleCalculatorKeyDown = (
+  const handleCalculatorKeyDown = async (
     event: React.KeyboardEvent<HTMLInputElement>,
     userId: string
   ) => {
     if (event.key === 'Enter') {
-      setConfirmingCalculator({
-        userId,
-        value: calculatorValues[userId],
-      })
+      handleConfirmCalculator(userId)
     }
   }
 
-  const handleConfirmCalculator = async () => {
-    if (!confirmingCalculator) return
+  const handleConfirmCalculator = async (userId: string) => {
+    if (!calculatorValues[userId]) return
 
-    setIsCalculatorSubmitting(true)
     try {
       const payload = {
-        value: Number(confirmingCalculator.value.replace(/,/g, '')), // Remove commas
-        id_discord: confirmingCalculator.userId,
+        value: Number(calculatorValues[userId].replace(/,/g, '')), // Remove vírgulas
+        id_discord: userId,
       }
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/transaction`,
@@ -158,9 +139,8 @@ export function BalanceControlTable({
 
       setCalculatorValues((prev) => ({
         ...prev,
-        [confirmingCalculator.userId]: '',
+        [userId]: '',
       }))
-      setConfirmingCalculator(null)
       await fetchBalanceAdmin()
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -169,15 +149,13 @@ export function BalanceControlTable({
           response: error.response?.data,
           status: error.response?.status,
         }
-        setCalculatorError(errorDetails)
+        setError(errorDetails)
       } else {
-        setCalculatorError({
+        setError({
           message: 'Erro inesperado',
           response: error,
         })
       }
-    } finally {
-      setIsCalculatorSubmitting(false)
     }
   }
 
@@ -185,32 +163,22 @@ export function BalanceControlTable({
     .filter(([, value]) => value.trim() !== '')
     .map(([userId, value]) => ({ userId, value }))
 
-  const handleBulkSend = () => {
-    setBulkConfirmingTransactions(pendingTransactions)
-  }
+  const handleBulkSend = async () => {
+    if (pendingTransactions.length === 0) return
 
-  const handleConfirmBulk = async () => {
-    if (bulkConfirmingTransactions.length === 0) return
+    setIsBulkingSubmitting(true)
 
-    setIsBulkSubmitting(true)
     try {
       await Promise.all(
-        bulkConfirmingTransactions.map(({ userId, value }) =>
+        pendingTransactions.map(({ userId, value }) =>
           api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
-            value: Number(value.replace(/,/g, '')), // Remove commas
+            value: Number(value.replace(/,/g, '')),
             id_discord: userId,
           })
         )
       )
 
-      setCalculatorValues((prev) => {
-        const newValues = { ...prev }
-        bulkConfirmingTransactions.forEach(({ userId }) => {
-          newValues[userId] = ''
-        })
-        return newValues
-      })
-      setBulkConfirmingTransactions([])
+      setCalculatorValues({})
       await fetchBalanceAdmin()
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -219,15 +187,15 @@ export function BalanceControlTable({
           response: error.response?.data,
           status: error.response?.status,
         }
-        setBulkError(errorDetails)
+        setError(errorDetails)
       } else {
-        setBulkError({
+        setError({
           message: 'Erro inesperado',
           response: error,
         })
       }
     } finally {
-      setIsBulkSubmitting(false)
+      setIsBulkingSubmitting(false)
     }
   }
 
@@ -238,10 +206,6 @@ export function BalanceControlTable({
       </Modal>
     )
   }
-
-  const confirmingUser = confirmingCalculator
-    ? users.find((u) => u.idDiscord === confirmingCalculator.userId)
-    : null
 
   return (
     <div className='w-[45%] h-[90%] overflow-y-auto border border-gray-300 rounded-md'>
@@ -300,7 +264,7 @@ export function BalanceControlTable({
           disabled={pendingTransactions.length === 0}
           onClick={handleBulkSend}
         >
-          Send All
+          {isBulkingSubmitting ? 'Sending...' : 'Send All'}
         </button>
       </div>
 
@@ -363,134 +327,6 @@ export function BalanceControlTable({
           )}
         </tbody>
       </table>
-
-      {confirmingCalculator && (
-        <Modal
-          onClose={() => {
-            setConfirmingCalculator(null)
-            setCalculatorError(null)
-          }}
-        >
-          <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
-            {calculatorError ? (
-              <ErrorComponent
-                error={calculatorError}
-                onClose={() => setCalculatorError(null)}
-              />
-            ) : (
-              <>
-                <h2 className='text-lg font-semibold mb-4'>Confirmar Envio</h2>
-                <p>
-                  Você confirma o envio do valor{' '}
-                  <strong>{confirmingCalculator.value}</strong> para o usuário{' '}
-                  <strong>
-                    {confirmingUser
-                      ? confirmingUser.username
-                      : confirmingCalculator.userId}
-                  </strong>
-                  ?
-                </p>
-                <div className='flex gap-2 mt-4'>
-                  <button
-                    className={`bg-red-400 text-white px-4 py-2 rounded ${
-                      isCalculatorSubmitting
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-                    disabled={isCalculatorSubmitting}
-                    onClick={handleConfirmCalculator}
-                  >
-                    {isCalculatorSubmitting ? (
-                      <div className='flex gap-2'>
-                        <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                        Enviando...
-                      </div>
-                    ) : (
-                      'Confirmar'
-                    )}
-                  </button>
-                  <button
-                    className='bg-gray-300 text-black px-4 py-2 rounded'
-                    onClick={() => {
-                      setConfirmingCalculator(null)
-                      setCalculatorError(null)
-                    }}
-                    disabled={isCalculatorSubmitting}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </Modal>
-      )}
-
-      {bulkConfirmingTransactions.length > 0 && (
-        <Modal
-          onClose={() => {
-            setBulkConfirmingTransactions([])
-            setBulkError(null)
-          }}
-        >
-          <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
-            {bulkError ? (
-              <ErrorComponent
-                error={bulkError}
-                onClose={() => setBulkError(null)}
-              />
-            ) : (
-              <>
-                <h2 className='text-lg font-semibold mb-4'>
-                  Confirmar Envio em Lote
-                </h2>
-                <p className='mb-4'>
-                  Você confirma o envio das seguintes transações?
-                </p>
-                <ul className='mb-4'>
-                  {bulkConfirmingTransactions.map(({ userId, value }) => {
-                    const user = users.find((u) => u.idDiscord === userId)
-                    return (
-                      <li key={userId} className='text-sm'>
-                        {user ? user.username : userId}:{' '}
-                        <strong>{value}</strong>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <div className='flex gap-2 mt-4'>
-                  <button
-                    className={`bg-blue-500 text-white px-4 py-2 rounded ${
-                      isBulkSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    disabled={isBulkSubmitting}
-                    onClick={handleConfirmBulk}
-                  >
-                    {isBulkSubmitting ? (
-                      <div className='flex gap-2'>
-                        <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                        Enviando...
-                      </div>
-                    ) : (
-                      'Confirmar'
-                    )}
-                  </button>
-                  <button
-                    className='bg-gray-300 text-black px-4 py-2 rounded'
-                    onClick={() => {
-                      setBulkConfirmingTransactions([])
-                      setBulkError(null)
-                    }}
-                    disabled={isBulkSubmitting}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </Modal>
-      )}
     </div>
   )
 }
