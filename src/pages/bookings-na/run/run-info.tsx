@@ -41,12 +41,22 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
 
   function convertFromEST(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    const adjustedHours = hours + 1 // Apenas soma 1 hora
+    let adjustedHours = hours + 1 // Ajuste para BRT
 
-    // Formata para manter no formato HH:mm
-    return `${adjustedHours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}`
+    // Formatar para 12 horas
+    const period = adjustedHours >= 12 ? 'pm' : 'am'
+    const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
+
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')}${period}`
+  }
+
+  function formatTo12HourEST(timeStr: string) {
+    const [hours, minutes] = timeStr.split(':').map(Number)
+
+    const period = hours >= 12 ? 'pm' : 'am'
+    const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
+
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')}${period}`
   }
 
   return (
@@ -75,7 +85,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             {run.raid} {run.difficulty} @{' '}
             {run.time ? (
               <>
-                {run.time} EST{' '}
+                {formatTo12HourEST(run.time)} EST{' '}
                 {/* Exibe o horário original recebido do backend */}
                 || {convertFromEST(run.time)} BRT
               </>

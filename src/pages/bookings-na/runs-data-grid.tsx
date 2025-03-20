@@ -119,17 +119,22 @@ export function RunsDataGrid({
 
   function convertFromEST(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = hours + 1 // Apenas soma 1 hora
+    let adjustedHours = hours + 1 // Ajuste para BRT
 
-    // Se a soma das horas for 24, ajusta para 00
-    if (adjustedHours === 24) {
-      adjustedHours = 0
-    }
+    // Formatar para 12 horas
+    const period = adjustedHours >= 12 ? 'PM' : 'AM'
+    const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
 
-    // Formata para manter no formato HH:mm
-    return `${adjustedHours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}`
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  function formatTo12HourEST(timeStr: string) {
+    const [hours, minutes] = timeStr.split(':').map(Number)
+
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
+
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
 
   if (error) {
@@ -223,7 +228,7 @@ export function RunsDataGrid({
                 <td className='p-2'>
                   {run.time && run.date ? (
                     <>
-                      {run.time} EST{' '}
+                      {formatTo12HourEST(run.time)} EST{' '}
                       {/* Exibe o horário original recebido do backend */}
                       <br />
                       {convertFromEST(run.time)} BRT
