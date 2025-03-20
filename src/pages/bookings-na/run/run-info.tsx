@@ -53,10 +53,10 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   function formatTo12HourEST(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
 
-    const period = hours >= 12 ? 'pm' : 'am'
+    const period = hours >= 12 ? 'PM' : 'AM'
     const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
 
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')}${period}`
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
 
   return (
