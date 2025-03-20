@@ -114,6 +114,7 @@ export function RunDetails() {
     if (!id) return
 
     fetchBuyersData()
+    fetchRunData()
 
     // Função para resetar o temporizador
     const resetActivityTimer = () => {
@@ -144,14 +145,23 @@ export function RunDetails() {
     window.addEventListener('keydown', handleMouseOrKeyActivity)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    const interval = setInterval(() => {
+    // Intervalo para fetchBuyersData (2 segundos)
+    const buyersInterval = setInterval(() => {
       if (isActive) {
-        reloadAllData()
+        fetchBuyersData()
       }
     }, 2000)
 
+    // Intervalo para fetchRunData (por exemplo, 10 segundos)
+    const runInterval = setInterval(() => {
+      if (isActive) {
+        fetchRunData()
+      }
+    }, 10000)
+
     return () => {
-      clearInterval(interval)
+      clearInterval(buyersInterval)
+      clearInterval(runInterval)
       clearTimeout(inactivityTimeout)
       window.removeEventListener('mousemove', handleMouseOrKeyActivity)
       window.removeEventListener('keydown', handleMouseOrKeyActivity)
