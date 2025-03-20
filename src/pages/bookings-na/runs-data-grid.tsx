@@ -121,6 +121,11 @@ export function RunsDataGrid({
     const [hours, minutes] = timeStr.split(':').map(Number)
     let adjustedHours = hours + 1 // Ajuste para BRT
 
+    // Ajustar caso a conversão ultrapasse 24h
+    if (adjustedHours === 24) {
+      adjustedHours = 0 // Meia-noite
+    }
+
     // Formatar para 12 horas
     const period = adjustedHours >= 12 ? 'PM' : 'AM'
     const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
