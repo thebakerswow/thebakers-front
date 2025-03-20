@@ -52,12 +52,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
     const period = adjustedHours >= 12 ? 'PM' : 'AM'
     const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
 
-    return (
-      <>
-        {formattedHours}:{minutes.toString().padStart(2, '0')}
-        <span className='text-xs'> {period}</span>
-      </>
-    )
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
 
   function formatTo12HourEST(timeStr: string) {
