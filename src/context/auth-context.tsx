@@ -8,7 +8,8 @@ import {
 } from 'react'
 
 interface JwtPayload {
-  roles: string[] // Definido como obrigatório conforme sua necessidade
+  roles: string[]
+  exp: number // Adiciona a expiração do token
 }
 
 type AuthContextType = {
@@ -24,26 +25,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(true) // Mantemos o estado de loading
+  const [loading, setLoading] = useState<boolean>(true)
   const [userRoles, setUserRoles] = useState<string[]>([])
 
   const checkAuth = () => {
-    const token = sessionStorage.getItem('jwt')
-    setLoading(true) // Inicia o loading
+    const token = localStorage.getItem('jwt')
+    setLoading(true)
+
     if (token) {
       try {
         const decoded = jwtDecode<JwtPayload>(token)
+
+        // Verifica se o token expirou
+        const now = Date.now() / 1000 // Tempo atual em segundos
+        if (decoded.exp < now) {
+          console.log('Token expirado, realizando logout.')
+          logout()
+          return
+        }
+
         setUserRoles(decoded.roles.map((r) => r.toString()))
         setIsAuthenticated(true)
       } catch (error) {
-        setUserRoles([])
-        setIsAuthenticated(false)
+        console.error('Erro ao decodificar token:', error)
+        logout()
       }
     } else {
-      setUserRoles([])
-      setIsAuthenticated(false)
+      logout()
     }
-    setLoading(false) // Finaliza o loading após verificação
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -53,12 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = (token: string) => {
-    sessionStorage.setItem('jwt', token)
-    checkAuth() // Atualiza o estado após login
+    localStorage.setItem('jwt', token)
+    checkAuth()
   }
 
   const logout = () => {
-    sessionStorage.removeItem('jwt')
+    localStorage.removeItem('jwt')
     setUserRoles([])
     setIsAuthenticated(false)
   }

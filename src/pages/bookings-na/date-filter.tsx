@@ -150,50 +150,53 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   }
 
   return (
-    <div className='flex flex-col text-lg pt-6 items-center gap-4'>
-      <label className='flex flex-col pl-16'>
-        <p>Select Month:</p>
-        <div className='flex items-center gap-4'>
-          <DatePicker
-            selected={selectedMonth}
-            onChange={handleMonthChange}
-            dateFormat='MM/yyyy'
-            showMonthYearPicker
-            className='text-zinc-900 pl-2 font-normal p-1 rounded-md flex-1 w-56'
-            placeholderText='Month'
-            open={isCalendarOpen}
-            onClickOutside={() => setIsCalendarOpen(false)}
-            onSelect={() => setIsCalendarOpen(false)}
-            onFocus={() => setIsCalendarOpen(true)}
-          />
-          <button
-            onClick={handleFilterReset}
-            className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-1 text-sm font-normal px-2'
-          >
-            Reset
-          </button>
-        </div>
-      </label>
-
-      {weeks.length > 0 && (
-        <div>
-          <label className='flex flex-col mr-2'>
-            Select Week:
-            <select
-              className='text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md'
-              onChange={(e) => handleWeekSelect(Number(e.target.value))}
-              value={selectedWeekIndex}
-            >
-              {weeks.map((week, index) => (
-                <option key={index} value={index}>
-                  Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
-                  {format(week.end, 'MM/dd')})
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
+    <div className='flex flex-col text-lg  items-center gap-4'>
+      <div className='flex gap-8'>
+        <label className='flex flex-col'>
+          <p>Select Month:</p>
+          <div className='flex items-center gap-4'>
+            <DatePicker
+              selected={selectedMonth}
+              onChange={handleMonthChange}
+              dateFormat='MM/yyyy'
+              showMonthYearPicker
+              className='text-zinc-900 pl-2 font-normal p-1 rounded-md flex-1 w-56'
+              placeholderText='Month'
+              open={isCalendarOpen}
+              onClickOutside={() => setIsCalendarOpen(false)}
+              onSelect={() => setIsCalendarOpen(false)}
+              onFocus={() => setIsCalendarOpen(true)}
+            />
+          </div>
+        </label>
+        {weeks.length > 0 && (
+          <div>
+            <label className='flex flex-col mr-2'>
+              Select Week:
+              <div className='flex gap-4'>
+                <select
+                  className='text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md'
+                  onChange={(e) => handleWeekSelect(Number(e.target.value))}
+                  value={selectedWeekIndex}
+                >
+                  {weeks.map((week, index) => (
+                    <option key={index} value={index}>
+                      Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
+                      {format(week.end, 'MM/dd')})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleFilterReset}
+                  className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-1 text-sm font-normal px-2'
+                >
+                  Reset
+                </button>
+              </div>
+            </label>
+          </div>
+        )}
+      </div>
 
       {days.length > 0 && (
         <div>

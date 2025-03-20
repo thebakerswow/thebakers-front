@@ -9,7 +9,6 @@ export interface BuyerData {
   isPaid: boolean
   nameAndRealm: string
   nameCollector: string
-  paymentFaction: string
   paymentRealm: string
   playerClass: string
   idRegister: string

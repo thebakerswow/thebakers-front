@@ -12,7 +12,7 @@ export const api = axios.create({
 // Interceptor para adicionar automaticamente o token nas requisições autenticadas
 api.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem('jwt') // Obtém o token da sessão
+    const token = localStorage.getItem('jwt') // Obtém o token da sessão
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

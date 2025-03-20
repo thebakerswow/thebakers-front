@@ -205,14 +205,13 @@ export function BuyersDataGrid({
             <th className='p-2 border'>Slot</th>
             <th className='p-2 border w-[100px]'>Status</th>
             <th className='p-2 border'>Name-Realm</th>
-            <th className='p-2 border'>Faction</th>
-            <th className='p-2 border'>Class</th>
+            <th className='p-2 border'>Note</th>
             <th className='p-2 border'>Advertiser</th>
             <th className='p-2 border'>Collector</th>
             <th className='p-2 border'>Paid Full</th>
             <th className='p-2 border'>Total Pot</th>
             <th className='p-2 border'>Run Pot</th>
-            <th className='p-2 border'>Note</th>
+            <th className='p-2 border'>Class</th>
             <th className='p-2 border' />
           </tr>
         </thead>
@@ -257,22 +256,8 @@ export function BuyersDataGrid({
                     ? 'Encrypted'
                     : buyer.nameAndRealm}
                 </td>
+                <td className='p-2 text-center'>{buyer.buyerNote}</td>
 
-                <td className='p-2 text-center'>{buyer.paymentFaction}</td>
-                <td className='p-2 flex gap-2 justify-center'>
-                  {buyer.playerClass}
-                  {getClassImage(buyer.playerClass) ? (
-                    <img
-                      src={getClassImage(buyer.playerClass)}
-                      alt={buyer.playerClass}
-                      className='w-6 h-6'
-                    />
-                  ) : (
-                    <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
-                      ?
-                    </div>
-                  )}
-                </td>
                 <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
                 <td className='p-2 text-center'>{buyer.nameCollector}</td>
                 <td className='p-2 w-20 text-center'>
@@ -303,7 +288,20 @@ export function BuyersDataGrid({
                   )}
                 </td>
 
-                <td className='p-2 text-center'>{buyer.buyerNote}</td>
+                <td className='p-2 flex gap-2 justify-center'>
+                  {buyer.playerClass}
+                  {getClassImage(buyer.playerClass) ? (
+                    <img
+                      src={getClassImage(buyer.playerClass)}
+                      alt={buyer.playerClass}
+                      className='w-6 h-6'
+                    />
+                  ) : (
+                    <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
+                      ?
+                    </div>
+                  )}
+                </td>
                 <td className='text-center w-16'>
                   {buyer.nameAndRealm !== '****' && (
                     <div className='flex justify-center gap-2'>

@@ -22,12 +22,12 @@ export interface Team {
 }
 
 export const teamColors: Record<TeamOrder, string> = {
-  Padeirinho: 'bg-yellow-400',
+  Padeirinho: 'bg-yellow-600',
   Garçom: 'bg-green-600',
   Confeiteiros: 'bg-pink-400',
   Jackfruit: 'bg-green-300',
   Milharal: 'bg-yellow-200',
-  Raio: 'bg-yellow-600',
+  Raio: 'bg-yellow-400',
   APAE: 'bg-red-400',
   Advertiser: 'bg-gray-300',
 }

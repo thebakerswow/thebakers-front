@@ -1,4 +1,4 @@
-import { Megaphone, Eye, Trash } from '@phosphor-icons/react'
+import { Eye, Trash } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
@@ -7,7 +7,6 @@ import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
 import { format, parseISO } from 'date-fns'
-import { toZonedTime, format as formatTz } from 'date-fns-tz'
 import { useAuth } from '../../context/auth-context'
 
 interface RunsDataProps {
@@ -45,6 +44,16 @@ export function RunsDataGrid({
     )
   }
 
+  const teamPriority: { [key: string]: number } = {
+    Garçom: 1,
+    Confeiteiros: 2,
+    Jackfruit: 3,
+    Raio: 4,
+    APAE: 5,
+    Milharal: 6,
+    Padeirinho: 7,
+  }
+
   const handleOpenPreview = (runId: string) => {
     setSelectedRunId(runId)
     setIsPreviewOpen(true)
@@ -69,11 +78,6 @@ export function RunsDataGrid({
     setSelectedRunToDelete(null)
   }
 
-  function handleOpenNote(run: { note: string; id: string }) {
-    setSelectedRun(run)
-    setIsNoteOpen(true)
-  }
-
   function handleCloseNote() {
     setIsNoteOpen(false)
     setSelectedRun(null)
@@ -92,19 +96,46 @@ export function RunsDataGrid({
     const sorted = [...data].sort((a, b) => {
       if (!a.time || !b.time) return 0
 
-      // Converter tempo para minutos para comparação
-
       const timeA = convertTimeToMinutes(a.time)
       const timeB = convertTimeToMinutes(b.time)
 
-      return isTimeSortedAsc ? timeA - timeB : timeB - timeA
+      if (timeA !== timeB) {
+        return isTimeSortedAsc ? timeA - timeB : timeB - timeA
+      }
+
+      // Ordenação por prioridade do time se os horários forem iguais
+      const priorityA = teamPriority[a.team] || 999
+      const priorityB = teamPriority[b.team] || 999
+
+      return priorityA - priorityB
     })
+
     return sorted
   }, [data, isTimeSortedAsc])
 
   const handleSortByTime = useCallback(() => {
     setIsTimeSortedAsc((prev) => !prev)
   }, [])
+
+  function convertFromEST(
+    dateStr: string,
+    timeStr: string,
+    targetTimeZone: string
+  ) {
+    // Criar um objeto Date assumindo que o horário recebido está no fuso horário EST
+    const date = new Date(`${dateStr}T${timeStr}:00`)
+
+    // Converter para UTC primeiro, pois EST é UTC-5
+    const dateUTC = new Date(date.getTime() + 1 * 60 * 60 * 1000)
+
+    // Converter para o fuso horário desejado usando Intl.DateTimeFormat
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: targetTimeZone,
+      hour12: false, // Para exibir no formato 24h
+    }).format(dateUTC)
+  }
 
   if (error) {
     return (
@@ -115,7 +146,7 @@ export function RunsDataGrid({
   }
 
   return (
-    <div className='overflow-x-auto rounded-sm relative max-h-[350px] text-zinc-700 text-center text-base min-h-[400px]'>
+    <div className='overflow-x-auto rounded-sm relative max-h-[450px] text-zinc-700 text-center text-base min-h-[400px]'>
       <table className='min-w-full border-collapse table-fixed'>
         <thead className='bg-zinc-400 text-gray-700 text-left'>
           <tr>
@@ -158,7 +189,7 @@ export function RunsDataGrid({
                 key={index}
                 className={`border border-gray-300 ${
                   run.team === 'Padeirinho'
-                    ? 'bg-yellow-200'
+                    ? 'bg-yellow-600'
                     : run.team === 'Garçom'
                       ? 'bg-blue-300'
                       : run.team === 'Confeiteiros'
@@ -168,7 +199,7 @@ export function RunsDataGrid({
                           : run.team === 'Milharal'
                             ? 'bg-yellow-400'
                             : run.team === 'Raio'
-                              ? 'bg-yellow-600'
+                              ? 'bg-yellow-200'
                               : run.team === 'APAE'
                                 ? 'bg-red-300'
                                 : ''
@@ -195,29 +226,18 @@ export function RunsDataGrid({
                   )}
                 </td>
                 <td className='p-2'>
-                  {run.time ? (
-                    (() => {
-                      // Create date object assuming the stored time is in BRT
-                      const dateBRT = parseISO(`${run.date}T${run.time}:00`)
-                      const zonedDateBRT = toZonedTime(
-                        dateBRT,
+                  {run.time && run.date ? (
+                    <>
+                      {run.time} EST{' '}
+                      {/* Exibe o horário original recebido do backend */}
+                      <br />
+                      {convertFromEST(
+                        run.date,
+                        run.time,
                         'America/Sao_Paulo'
-                      )
-
-                      // Convert to EST
-                      const zonedDateEST = toZonedTime(
-                        zonedDateBRT,
-                        'America/New_York'
-                      )
-
-                      return (
-                        <>
-                          {formatTz(zonedDateEST, 'HH:mm')} EST
-                          <br />
-                          {formatTz(zonedDateBRT, 'HH:mm')} BRT
-                        </>
-                      )
-                    })()
+                      )}{' '}
+                      BRT
+                    </>
                   ) : (
                     <span>-</span>
                   )}
@@ -239,15 +259,7 @@ export function RunsDataGrid({
                 </td>
                 <td className='p-2 text-center align-middle'>
                   <div className='flex justify-center items-center h-full'>
-                    {run.note !== '' ? (
-                      <Megaphone
-                        className='text-red-500 cursor-pointer'
-                        weight='fill'
-                        onClick={() => handleOpenNote(run)}
-                      />
-                    ) : (
-                      <span>-</span>
-                    )}
+                    {run.note !== '' ? run.note : <span>-</span>}
                   </div>
                 </td>
 
