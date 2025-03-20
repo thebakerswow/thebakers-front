@@ -5,7 +5,6 @@ import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
-import { toZonedTime, format as formatTz } from 'date-fns-tz'
 
 interface RunInfoProps {
   run: RunData
@@ -40,6 +39,26 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
     setIsAddBuyerOpen(false)
   }
 
+  function convertFromEST(
+    dateStr: string,
+    timeStr: string,
+    targetTimeZone: string
+  ) {
+    // Criar um objeto Date assumindo que o horário recebido está no fuso horário EST
+    const date = new Date(`${dateStr}T${timeStr}:00`)
+
+    // Converter para UTC primeiro, pois EST é UTC-5
+    const dateUTC = new Date(date.getTime() + 1 * 60 * 60 * 1000)
+
+    // Converter para o fuso horário desejado usando Intl.DateTimeFormat
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: targetTimeZone,
+      hour12: false, // Para exibir no formato 24h
+    }).format(dateUTC)
+  }
+
   return (
     <div className='flex m-4 gap-2 rounded-md'>
       <img className='w-[300px] rounded-md' src={twwLogo} alt='Run Cover' />
@@ -64,18 +83,15 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         <div className='col-span-3 flex flex-col'>
           <h1 className='font-semibold text-lg mt-3 mb-3'>
             {run.raid} {run.difficulty} @{' '}
-            {run.time
-              ? (() => {
-                  const dateISO = `${run.date}T${run.time}:00-03:00` // Assume que o horário original está em BRT
-                  const zonedDateEST = toZonedTime(dateISO, 'America/New_York')
-
-                  return (
-                    <>
-                      {formatTz(zonedDateEST, 'HH:mm')} EST || {run.time} BRT
-                    </>
-                  )
-                })()
-              : null}
+            {run.time ? (
+              <>
+                {run.time} EST{' '}
+                {/* Exibe o horário original recebido do backend */}
+                || {convertFromEST(run.date, run.time, 'America/Sao_Paulo')} BRT
+              </>
+            ) : (
+              <span>-</span>
+            )}
           </h1>
 
           <div className='grid grid-cols-3 gap-4 mt-4 text-start ml-24'>

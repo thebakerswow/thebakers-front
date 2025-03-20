@@ -235,7 +235,7 @@ export function RunsDataGrid({
                         run.date,
                         run.time,
                         'America/Sao_Paulo'
-                      )}{' '}
+                      )}
                       BRT
                     </>
                   ) : (
