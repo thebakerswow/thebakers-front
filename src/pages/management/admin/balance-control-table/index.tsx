@@ -67,7 +67,7 @@ export function BalanceControlTable({
         id_team: selectedTeam,
         date: selectedDate,
       }
-      console.log(params)
+
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin`,
         { params }

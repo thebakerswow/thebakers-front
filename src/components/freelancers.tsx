@@ -103,7 +103,6 @@ export function Freelancers({ runId }: FreelancersProps) {
 
     setIsSubmitting(true)
     const payload = { id_discord: selectedUser.id_discord, id_run: runId } // Altere para id_discord
-    console.log(payload)
     try {
       await api.post('/freelancer', payload)
 
@@ -173,7 +172,6 @@ export function Freelancers({ runId }: FreelancersProps) {
       id_run: runId,
       percentage: percentage,
     }
-    console.log('edit: ', payload)
 
     try {
       // Chama a API PUT para atualizar a porcentagem de um freelancer
