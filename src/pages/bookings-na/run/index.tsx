@@ -56,6 +56,7 @@ export function RunDetails() {
           `http://localhost:8000/v1/run/${id}`
       )
       const data = response.data.info
+      console.log('runData: ', data)
       setRunData({
         ...data,
         slotAvailable: Number(data.slotAvailable),
