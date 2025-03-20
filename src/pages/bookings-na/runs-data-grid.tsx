@@ -117,24 +117,14 @@ export function RunsDataGrid({
     setIsTimeSortedAsc((prev) => !prev)
   }, [])
 
-  function convertFromEST(
-    dateStr: string,
-    timeStr: string,
-    targetTimeZone: string
-  ) {
-    // Criar um objeto Date assumindo que o horário recebido está no fuso horário EST
-    const date = new Date(`${dateStr}T${timeStr}:00`)
+  function convertFromEST(timeStr: string) {
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const adjustedHours = hours + 1 // Apenas soma 1 hora
 
-    // Converter para UTC primeiro, pois EST é UTC-5
-    const dateUTC = new Date(date.getTime() + 1 * 60 * 60 * 1000)
-
-    // Converter para o fuso horário desejado usando Intl.DateTimeFormat
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: targetTimeZone,
-      hour12: false, // Para exibir no formato 24h
-    }).format(dateUTC)
+    // Formata para manter no formato HH:mm
+    return `${adjustedHours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}`
   }
 
   if (error) {
@@ -231,11 +221,7 @@ export function RunsDataGrid({
                       {run.time} EST{' '}
                       {/* Exibe o horário original recebido do backend */}
                       <br />
-                      {convertFromEST(
-                        run.date,
-                        run.time,
-                        'America/Sao_Paulo'
-                      )}
+                      {convertFromEST(run.time)}
                       BRT
                     </>
                   ) : (
