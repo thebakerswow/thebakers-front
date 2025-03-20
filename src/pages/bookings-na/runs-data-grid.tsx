@@ -119,7 +119,12 @@ export function RunsDataGrid({
 
   function convertFromEST(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    const adjustedHours = hours + 1 // Apenas soma 1 hora
+    let adjustedHours = hours + 1 // Apenas soma 1 hora
+
+    // Se a soma das horas for 24, ajusta para 00
+    if (adjustedHours === 24) {
+      adjustedHours = 0
+    }
 
     // Formata para manter no formato HH:mm
     return `${adjustedHours.toString().padStart(2, '0')}:${minutes
@@ -221,8 +226,7 @@ export function RunsDataGrid({
                       {run.time} EST{' '}
                       {/* Exibe o horário original recebido do backend */}
                       <br />
-                      {convertFromEST(run.time)}
-                      BRT
+                      {convertFromEST(run.time)} BRT
                     </>
                   ) : (
                     <span>-</span>
