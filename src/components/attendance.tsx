@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Modal } from './modal'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
@@ -26,45 +26,50 @@ export function Attendance({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const getColorForPercentage = (percentage: number) => {
-    if (percentage === 0) return 'bg-red-500 text-white'
-    if (percentage === 100) return 'bg-green-500 text-white'
-    return 'bg-yellow-500 text-white'
-  }
+  // Função para determinar a cor com base na porcentagem de presença
+  const getColorForPercentage = useCallback((percentage: number) => {
+    return percentage === 0
+      ? 'bg-red-500 text-white' // Vermelho para 0%
+      : percentage === 100
+        ? 'bg-green-500 text-white' // Verde para 100%
+        : 'bg-yellow-500 text-white' // Amarelo para valores intermediários
+  }, [])
 
-  const handleAttendanceSave = async () => {
-    setIsSubmitting(true)
-
-    const payload = attendance.info.map((player) => ({
-      idDiscord: player.idDiscord,
-      percentage: player.percentage,
+  // Função para salvar a presença no servidor
+  const handleAttendanceSave = useCallback(async () => {
+    setIsSubmitting(true) // Inicia o estado de submissão
+    const payload = attendance.info.map(({ idDiscord, percentage }) => ({
+      idDiscord,
+      percentage,
     }))
 
     try {
+      // Envia os dados para a API
       await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance` ||
           `http://localhost:8000/v1/run/${runId}/attendance`,
         payload
       )
-
-      await onAttendanceUpdate()
-      setIsSuccess(true)
-      setTimeout(() => setIsSuccess(false), 2000)
+      await onAttendanceUpdate() // Atualiza os dados após salvar
+      setIsSuccess(true) // Indica sucesso
+      setTimeout(() => setIsSuccess(false), 2000) // Reseta o estado de sucesso após 2 segundos
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        setError({ message: 'Erro inesperado', response: error })
-      }
+      // Trata erros da API
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Erro inesperado', response: error }
+      )
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false) // Finaliza o estado de submissão
     }
-  }
+  }, [attendance.info, onAttendanceUpdate, runId])
 
+  // Exibe o modal de erro, se houver
   if (error) {
     return (
       <Modal onClose={() => setError(null)}>
@@ -72,6 +77,10 @@ export function Attendance({
       </Modal>
     )
   }
+
+  // Classes base para botões reutilizáveis
+  const baseButtonClasses =
+    'rounded border px-2 py-1 text-xs font-semibold text-white transition'
 
   return (
     <div className='mx-auto mt-2 w-[50%] p-4'>
@@ -82,16 +91,18 @@ export function Attendance({
               <th className='border p-2'>Player</th>
               <th className='flex items-center justify-center border p-2'>
                 Attendance
+                {/* Botão para marcar todos como 100% */}
                 <button
-                  className='ml-2 rounded border bg-green-500 px-2 py-1 text-xs font-semibold text-white transition hover:bg-green-600'
+                  className={`${baseButtonClasses} ml-2 bg-green-500 hover:bg-green-600`}
                   onClick={markAllAsFull}
                 >
                   100%
                 </button>
+                {/* Botão para salvar a presença */}
                 <button
                   onClick={handleAttendanceSave}
                   disabled={isSubmitting || isSuccess}
-                  className={`ml-2 flex items-center gap-2 rounded border bg-green-500 px-2 py-1 text-xs font-semibold text-white hover:bg-green-600 transition${
+                  className={`${baseButtonClasses} ml-2 flex items-center gap-2 bg-green-500 hover:bg-green-600 ${
                     isSubmitting || isSuccess ? 'cursor-not-allowed' : ''
                   }`}
                 >
@@ -113,25 +124,25 @@ export function Attendance({
             </tr>
           </thead>
           <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
-            {attendance.info.map((player) => (
-              <tr key={player.idDiscord} className='border border-gray-300'>
-                <td className='p-2 text-center'>{player.username}</td>
+            {attendance.info.map(({ idDiscord, username, percentage }) => (
+              <tr key={idDiscord} className='border border-gray-300'>
+                <td className='p-2 text-center'>{username}</td>
                 <td className='p-2 text-center'>
                   <div className='flex justify-center gap-2 px-2'>
+                    {/* Dropdown para selecionar a porcentagem de presença */}
                     <select
-                      value={player.percentage}
+                      value={percentage}
                       onChange={(e) =>
-                        handleAttendanceClick(
-                          player.idDiscord,
-                          Number(e.target.value)
-                        )
+                        handleAttendanceClick(idDiscord, Number(e.target.value))
                       }
                       className={`rounded border px-2 py-1 text-xs transition-colors ${getColorForPercentage(
-                        player.percentage
+                        percentage
                       )}`}
                     >
-                      {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(
-                        (value) => (
+                      {/* Opções de 0% a 100% */}
+                      {[...Array(11)].map((_, i) => {
+                        const value = i * 10
+                        return (
                           <option
                             key={value}
                             value={value}
@@ -140,7 +151,7 @@ export function Attendance({
                             {value}%
                           </option>
                         )
-                      )}
+                      })}
                     </select>
                   </div>
                 </td>

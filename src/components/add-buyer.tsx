@@ -20,6 +20,7 @@ interface Advertiser {
 }
 
 export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
+  // Estado para armazenar os dados do formulário
   const [formData, setFormData] = useState({
     nameAndRealm: '',
     playerClass: '',
@@ -33,6 +34,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
+  // Função para lidar com mudanças nos inputs do formulário
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -43,11 +45,13 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }))
   }
 
+  // Função para formatar o valor do campo "buyerPot"
   const formatBuyerPot = (value: string) => {
     const rawValue = value.replace(/\D/g, '')
     return rawValue ? Number(rawValue).toLocaleString('en-US') : ''
   }
 
+  // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -59,6 +63,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }
 
     try {
+      // Envia os dados do comprador para a API
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
           'http://localhost:8000/v1/buyer',
@@ -66,8 +71,9 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       )
       setIsSuccess(true)
       await onBuyerAddedReload()
-      setTimeout(onClose, 3000)
+      setTimeout(onClose, 1000) // Fecha o modal após 1 segundo
     } catch (error) {
+      // Captura e armazena erros
       setError(
         axios.isAxiosError(error)
           ? {
@@ -82,6 +88,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }
   }
 
+  // Função para buscar a lista de anunciantes
   const fetchAdvertisers = useCallback(async () => {
     try {
       const response = await api.get(
@@ -103,10 +110,10 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   }, [])
 
   useEffect(() => {
-    fetchAdvertisers()
+    fetchAdvertisers() // Busca anunciantes ao carregar o componente
   }, [fetchAdvertisers])
 
-  // Define a reusable class for input and select elements
+  // Classe reutilizável para estilizar inputs e selects
   const inputClass =
     'rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
 
@@ -114,18 +121,21 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     <Modal onClose={onClose}>
       <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
         {error ? (
+          // Exibe componente de erro se houver erro
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : isSuccess ? (
+          // Exibe mensagem de sucesso se o envio for bem-sucedido
           <div className='p-6 text-center'>
             <div className='mb-4 text-4xl text-green-500'>✓</div>
             <h2 className='mb-2 text-2xl font-bold'>
               Buyer added successfully!
             </h2>
             <p className='text-zinc-400'>
-              The modal will close automatically in 3 seconds...
+              The modal will close automatically in 1 second...
             </p>
           </div>
         ) : (
+          // Formulário para adicionar comprador
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
             <input
               type='text'
@@ -147,6 +157,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               <option value='' disabled hidden>
                 Class
               </option>
+              {/* Lista de classes disponíveis */}
               {[
                 'Warrior',
                 'Paladin',
@@ -194,6 +205,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               <option value='' disabled hidden>
                 Advertiser
               </option>
+              {/* Lista de anunciantes */}
               {advertisers.map((advertiser) => (
                 <option
                   key={advertiser.id}

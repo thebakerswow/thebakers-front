@@ -184,7 +184,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
       await onRunAddedReload()
       setIsSuccess(true)
-      setTimeout(onClose, 3000)
+      setTimeout(onClose, 1000)
     } catch (error) {
       setError(
         axios.isAxiosError(error)
@@ -214,7 +214,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               Run created successfully!
             </h2>
             <p className='text-zinc-400'>
-              The modal will close automatically in 3 seconds...
+              The modal will close automatically in 1 second...
             </p>
           </div>
         ) : (
