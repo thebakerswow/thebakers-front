@@ -37,7 +37,7 @@ export function ColorSelector({ onSelectColor }: ColorSelectorProps) {
       {backgroundColors.map((color) => (
         <div
           key={color.code}
-          className='p-2 rounded cursor-pointer text-sm'
+          className='cursor-pointer rounded p-2 text-sm'
           style={{
             backgroundColor: color.code,
             color: getTextColorForBackground(color.code),

@@ -77,43 +77,43 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
 
   return (
     <Modal onClose={onClose}>
-      <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
+      <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
         {error ? (
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : (
           <>
-            <h2 className='text-lg font-semibold mb-4'>Edit Buyer</h2>
-            <label className='block mb-2'>Name-Realm</label>
+            <h2 className='mb-4 text-lg font-semibold'>Edit Buyer</h2>
+            <label className='mb-2 block'>Name-Realm</label>
             <input
               type='text'
-              className='w-full p-2 border rounded mb-4'
+              className='mb-4 w-full rounded border p-2'
               value={nameAndRealm}
               onChange={(e) => setNameAndRealm(e.target.value)}
             />
-            <label className='block mb-2'>Pot</label>
+            <label className='mb-2 block'>Pot</label>
             <input
               type='text'
-              className='w-full p-2 border rounded mb-4'
+              className='mb-4 w-full rounded border p-2'
               value={buyerPot}
               onChange={handleBuyerPotChange} // Chama a função para formatar o valor com vírgulas
             />
-            <label className='block mb-2'>Note</label>
+            <label className='mb-2 block'>Note</label>
             <input
               type='text'
-              className='w-full p-2 border rounded mb-4'
+              className='mb-4 w-full rounded border p-2'
               value={buyerNote}
               onChange={(e) => setBuyerNote(e.target.value)}
             />
             <button
-              className={`bg-red-400 text-white px-4 py-2 rounded ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              className={`rounded bg-red-400 px-4 py-2 text-white ${
+                isSubmitting ? 'cursor-not-allowed opacity-50' : ''
               }`}
               disabled={isSubmitting}
               onClick={handleSubmit}
             >
               {isSubmitting ? (
                 <div className='flex gap-4'>
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                  <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
                   Saving...
                 </div>
               ) : (

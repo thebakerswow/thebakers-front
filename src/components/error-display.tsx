@@ -11,8 +11,8 @@ interface ErrorComponentProps {
 
 export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
   return (
-    <div className='bg-zinc-400 text-red-400 flex flex-col items-center justify-center rounded-xl shadow-2xl p-6'>
-      <div className='bg-zinc-800 p-4 rounded-lg w-full max-w-2xl'>
+    <div className='flex flex-col items-center justify-center rounded-xl bg-zinc-400 p-6 text-red-400 shadow-2xl'>
+      <div className='w-full max-w-2xl rounded-lg bg-zinc-800 p-4'>
         {error.response?.errors?.[0]?.title && (
           <div className='mb-2 text-center'>
             <p className='mt-1 text-xl font-bold'>
@@ -37,7 +37,7 @@ export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
       </div>
 
       <button
-        className='mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors'
+        className='mt-6 rounded bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600'
         onClick={onClose}
       >
         Fechar

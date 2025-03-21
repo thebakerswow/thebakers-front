@@ -234,10 +234,9 @@ export function RunDetails() {
 
   return (
     <div
-      className={`bg-zinc-700 text-gray-100 absolute inset-0 flex flex-col
-    rounded-xl shadow-2xl m-8 overflow-y-auto scrollbar-thin ${
-      isLoadingRun || !runData ? 'justify-center items-center' : ''
-    }`}
+      className={`absolute inset-0 m-8 flex flex-col overflow-y-auto rounded-xl bg-zinc-700 text-gray-100 shadow-2xl scrollbar-thin ${
+        isLoadingRun || !runData ? 'items-center justify-center' : ''
+      }`}
     >
       {isLoadingRun ? (
         <div className='flex flex-col items-center'>
@@ -255,16 +254,16 @@ export function RunDetails() {
             <div>Loading</div>
           )}
 
-          <div className='w-[95%] mx-auto mt-2 p-4'>
+          <div className='mx-auto mt-2 w-[95%] p-4'>
             {isLoadingBuyers ? (
-              <div className='flex flex-col items-center mt-40'>
+              <div className='mt-40 flex flex-col items-center'>
                 <LoadingSpinner />
               </div>
             ) : (
               <div>
                 <button
                   onClick={handleOpenInviteBuyersModal}
-                  className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
+                  className='mb-2 flex items-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
                 >
                   <UserPlus size={18} />
                   Invite Buyers

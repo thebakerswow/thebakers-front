@@ -52,8 +52,8 @@ export function Register() {
   }
 
   return (
-    <div className='bg-zinc-700 text-gray-100 h-[400px] w-[800px] text-4xl flex gap-10 items-center justify-center font-semibold rounded-xl shadow-2xl mt-20'>
-      <div className='flex flex-col gap-2 items-center'>
+    <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-700 text-4xl font-semibold text-gray-100 shadow-2xl'>
+      <div className='flex flex-col items-center gap-2'>
         <input
           className='rounded-md px-2 text-black'
           placeholder='ID Discord'
@@ -71,7 +71,7 @@ export function Register() {
         <div className='flex items-center justify-between'>
           <button
             onClick={handleRegister}
-            className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-2 text-sm font-normal w-28'
+            className='w-28 rounded-md bg-red-400 p-2 text-sm font-normal text-gray-100 shadow-lg hover:bg-red-500'
           >
             Register
           </button>
@@ -81,11 +81,11 @@ export function Register() {
       {/* Modal de confirmação */}
       {isConfirmModalOpen && (
         <Modal onClose={() => setIsConfirmModalOpen(false)}>
-          <div className='text-center p-6'>
+          <div className='p-6 text-center'>
             <h2 className='text-xl font-semibold text-blue-500'>
               Confirme o cadastro no Discord
             </h2>
-            <p className='text-sm text-black mt-2'>
+            <p className='mt-2 text-sm text-black'>
               Digite o código enviado no Discord para finalizar o cadastro.
             </p>
           </div>

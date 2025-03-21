@@ -202,20 +202,20 @@ export function BuyersDataGrid({
       <table className='min-w-full border-collapse'>
         <thead className='table-header-group'>
           <tr className='text-md bg-zinc-400 text-gray-700'>
-            <th className='p-2 border'>Slot</th>
-            <th className='p-2 border w-[100px]'>Status</th>
-            <th className='p-2 border'>Name-Realm</th>
-            <th className='p-2 border'>Note</th>
-            <th className='p-2 border'>Advertiser</th>
-            <th className='p-2 border'>Collector</th>
-            <th className='p-2 border'>Paid Full</th>
-            <th className='p-2 border'>Total Pot</th>
-            <th className='p-2 border'>Run Pot</th>
-            <th className='p-2 border'>Class</th>
-            <th className='p-2 border' />
+            <th className='border p-2'>Slot</th>
+            <th className='w-[100px] border p-2'>Status</th>
+            <th className='border p-2'>Name-Realm</th>
+            <th className='border p-2'>Note</th>
+            <th className='border p-2'>Advertiser</th>
+            <th className='border p-2'>Collector</th>
+            <th className='border p-2'>Paid Full</th>
+            <th className='border p-2'>Total Pot</th>
+            <th className='border p-2'>Run Pot</th>
+            <th className='border p-2'>Class</th>
+            <th className='border p-2' />
           </tr>
         </thead>
-        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
           {sortedData.length === 0 ? (
             <tr>
               <td colSpan={12} className='p-4 text-center text-gray-500'>
@@ -233,7 +233,7 @@ export function BuyersDataGrid({
                   <form>
                     <select
                       id='status'
-                      className='bg-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+                      className='bg-zinc-100 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
                       value={buyer.status || ''}
                       onChange={(e) =>
                         handleStatusChange(buyer.id, e.target.value)
@@ -260,18 +260,18 @@ export function BuyersDataGrid({
 
                 <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
                 <td className='p-2 text-center'>{buyer.nameCollector}</td>
-                <td className='p-2 w-20 text-center'>
-                  <div className='flex justify-center items-center'>
+                <td className='w-20 p-2 text-center'>
+                  <div className='flex items-center justify-center'>
                     <button onClick={() => handleTogglePaid(buyer.id)}>
                       {buyer.isPaid ? (
                         <CheckFat
-                          className='text-green-500 border bg-white rounded-xl cursor-pointer'
+                          className='cursor-pointer rounded-xl border bg-white text-green-500'
                           size={22}
                           weight='fill'
                         />
                       ) : (
                         <XCircle
-                          className='text-red-600 border bg-white rounded-xl cursor-pointer'
+                          className='cursor-pointer rounded-xl border bg-white text-red-600'
                           size={22}
                           weight='fill'
                         />
@@ -288,21 +288,21 @@ export function BuyersDataGrid({
                   )}
                 </td>
 
-                <td className='p-2 flex gap-2 justify-center'>
+                <td className='flex justify-center gap-2 p-2'>
                   {buyer.playerClass}
                   {getClassImage(buyer.playerClass) ? (
                     <img
                       src={getClassImage(buyer.playerClass)}
                       alt={buyer.playerClass}
-                      className='w-6 h-6'
+                      className='h-6 w-6'
                     />
                   ) : (
-                    <div className='w-6 h-6 bg-gray-300 flex justify-center items-center rounded'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded bg-gray-300'>
                       ?
                     </div>
                   )}
                 </td>
-                <td className='text-center w-16'>
+                <td className='w-16 text-center'>
                   {buyer.nameAndRealm !== '****' && (
                     <div className='flex justify-center gap-2'>
                       <button onClick={() => handleOpenModal(buyer, 'edit')}>

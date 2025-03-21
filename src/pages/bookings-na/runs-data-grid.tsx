@@ -151,34 +151,34 @@ export function RunsDataGrid({
   }
 
   return (
-    <div className='overflow-x-auto rounded-sm relative max-h-[450px] text-zinc-700 text-center text-base min-h-[400px]'>
-      <table className='min-w-full border-collapse table-fixed'>
-        <thead className='bg-zinc-400 text-gray-700 text-left'>
+    <div className='relative max-h-[450px] min-h-[400px] overflow-x-auto rounded-sm text-center text-base text-zinc-700'>
+      <table className='min-w-full table-fixed border-collapse'>
+        <thead className='bg-zinc-400 text-left text-gray-700'>
           <tr>
-            <th className='p-2 border w-[100px]'>Preview</th>
-            <th className='p-2 border cursor-pointer w-[150px]'>Date</th>
+            <th className='w-[100px] border p-2'>Preview</th>
+            <th className='w-[150px] cursor-pointer border p-2'>Date</th>
             <th
-              className='p-2 border cursor-pointer'
+              className='cursor-pointer border p-2'
               onClick={handleSortByTime}
             >
               Time {isTimeSortedAsc ? '▲' : '▼'}
             </th>
-            <th className='p-2 border'>Raid</th>
-            <th className='p-2 border'>Run Type</th>
-            <th className='p-2 border'>Difficulty</th>
-            <th className='p-2 border'>Team</th>
-            <th className='p-2 border'>Loot</th>
-            <th className='p-2 border'>Buyers</th>
-            <th className='p-2 border w-[150px]'>Raid Leader</th>
-            <th className='p-2 border'>Note</th>
-            <th className='p-2 border' />
+            <th className='border p-2'>Raid</th>
+            <th className='border p-2'>Run Type</th>
+            <th className='border p-2'>Difficulty</th>
+            <th className='border p-2'>Team</th>
+            <th className='border p-2'>Loot</th>
+            <th className='border p-2'>Buyers</th>
+            <th className='w-[150px] border p-2'>Raid Leader</th>
+            <th className='border p-2'>Note</th>
+            <th className='border p-2' />
           </tr>
         </thead>
 
-        <tbody className='bg-zinc-200 overflow-y-auto cursor-pointer'>
+        <tbody className='cursor-pointer overflow-y-auto bg-zinc-200'>
           {isLoading && (
-            <tr className='absolute inset-0 bg-white bg-opacity-80 z-10 flex gap-4 flex-col items-center justify-center'>
-              <td className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
+            <tr className='absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white bg-opacity-80'>
+              <td className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
             </tr>
           )}
           {!isLoading && sortedData.length === 0 ? (
@@ -211,7 +211,7 @@ export function RunsDataGrid({
                 }`}
               >
                 <td className='p-2 text-center align-middle'>
-                  <div className='flex justify-center items-center h-full'>
+                  <div className='flex h-full items-center justify-center'>
                     {run.date ? (
                       <Eye
                         className='cursor-pointer'
@@ -258,7 +258,7 @@ export function RunsDataGrid({
                   )}
                 </td>
                 <td className='p-2 text-center align-middle'>
-                  <div className='flex justify-center items-center h-full'>
+                  <div className='flex h-full items-center justify-center'>
                     {run.note !== '' ? run.note : <span>-</span>}
                   </div>
                 </td>
@@ -287,7 +287,7 @@ export function RunsDataGrid({
       {isNoteOpen && selectedRun && (
         <Modal onClose={handleCloseNote}>
           <div className='p-4'>
-            <h2 className='font-bold text-xl'>Note</h2>
+            <h2 className='text-xl font-bold'>Note</h2>
             <p className='font-normal'>{selectedRun.note || 'Sem nota'}</p>
           </div>
         </Modal>

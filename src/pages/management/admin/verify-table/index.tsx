@@ -50,22 +50,22 @@ export function VerifyTable() {
   }, [])
 
   return (
-    <div className='w-[20%] h-[90%] overflow-y-auto rounded-md'>
+    <div className='h-[90%] w-[20%] overflow-y-auto rounded-md'>
       {error ? (
         <div className='p-4 text-red-500'>{error.message}</div>
       ) : (
-        <table className='border-collapse w-full'>
+        <table className='w-full border-collapse'>
           <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
             <tr className='text-md'>
-              <th className='p-2 border w-[150px]'>GBANKS SOMA</th>
-              <th className='p-2 border w-[150px]'>SOMA BALANCE TOTAL</th>
+              <th className='w-[150px] border p-2'>GBANKS SOMA</th>
+              <th className='w-[150px] border p-2'>SOMA BALANCE TOTAL</th>
             </tr>
           </thead>
-          <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+          <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
             {isLoading ? (
               <tr>
                 <td colSpan={2} className='p-4 text-center'>
-                  <span className='animate-spin border-4 border-t-transparent border-gray-600 rounded-full w-6 h-6 inline-block' />
+                  <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
                   <p>Carregando...</p>
                 </td>
               </tr>

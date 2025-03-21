@@ -26,8 +26,8 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-screen'>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-red-400'></div>
+      <div className='flex h-screen items-center justify-center'>
+        <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-red-400'></div>
       </div>
     )
   }
@@ -40,9 +40,9 @@ export function App() {
     <div className='flex h-full'>
       <Router>
         <AuthProvider>
-          <div className='flex flex-col flex-grow'>
+          <div className='flex flex-grow flex-col'>
             <Header />
-            <main className='bg-zinc-300 relative flex-grow flex justify-center overflow-y-auto'>
+            <main className='relative flex flex-grow justify-center overflow-y-auto bg-zinc-300'>
               <Routes>
                 {/* Rotas públicas */}
                 <Route path='/' element={<Login />} />

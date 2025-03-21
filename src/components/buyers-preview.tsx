@@ -116,15 +116,15 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
         {error ? (
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : isLoadingBuyers ? (
-          <div className='flex flex-col items-center justify-center h-full'>
-            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-600' />
+          <div className='flex h-full flex-col items-center justify-center'>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
             <p className='mt-4 text-lg'>Loading buyers...</p>
           </div>
         ) : rows?.length > 0 ? (
           <div>
             <button
               onClick={handleOpenInviteBuyersModal}
-              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 mb-2'
+              className='mb-2 flex items-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
             >
               <UserPlus size={18} />
               Invite Buyers
@@ -137,7 +137,7 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
             />
           </div>
         ) : (
-          <div className='flex flex-col items-center justify-center h-full'>
+          <div className='flex h-full flex-col items-center justify-center'>
             <p className='text-lg'>No buyers found</p>
           </div>
         )}

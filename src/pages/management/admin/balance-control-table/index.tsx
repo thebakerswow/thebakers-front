@@ -208,10 +208,10 @@ export function BalanceControlTable({
   }
 
   return (
-    <div className='w-[45%] h-[90%] overflow-y-auto border border-gray-300 rounded-md'>
-      <div className='flex gap-4 p-2 bg-zinc-400 top-0'>
+    <div className='h-[90%] w-[45%] overflow-y-auto rounded-md border border-gray-300'>
+      <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
         <select
-          className='bg-zinc-100 w-[140px] rounded-md p-1 text-black'
+          className='w-[140px] rounded-md bg-zinc-100 p-1 text-black'
           value={selectedTeam}
           onChange={handleTeamChange}
         >
@@ -251,14 +251,14 @@ export function BalanceControlTable({
         </select>
         <input
           type='date'
-          className='bg-zinc-100 w-[150px] rounded-md p-1 px-2 text-black'
+          className='w-[150px] rounded-md bg-zinc-100 p-1 px-2 text-black'
           value={selectedDate}
           onChange={handleDateChange}
         />
         <button
-          className={`bg-red-400 text-white px-4 py-1 rounded-md ${
+          className={`rounded-md bg-red-400 px-4 py-1 text-white ${
             pendingTransactions.length === 0
-              ? 'opacity-50 cursor-not-allowed'
+              ? 'cursor-not-allowed opacity-50'
               : ''
           }`}
           disabled={pendingTransactions.length === 0}
@@ -268,17 +268,17 @@ export function BalanceControlTable({
         </button>
       </div>
 
-      <table className='border-collapse w-full'>
-        <thead className='table-header-group sticky top-0 bg-zinc-400 text-gray-700'>
+      <table className='w-full border-collapse'>
+        <thead className='sticky top-0 table-header-group bg-zinc-400 text-gray-700'>
           <tr className='text-md'>
-            <th className='p-2 border w-[150px]'>Team</th>
-            <th className='p-2 border w-[150px]'>Gold Cut</th>
-            <th className='p-2 border w-[150px]'>Gold Collected</th>
-            <th className='p-2 border w-[150px]'>Balance Total</th>
-            <th className='p-2 border'>Calculadora</th>
+            <th className='w-[150px] border p-2'>Team</th>
+            <th className='w-[150px] border p-2'>Gold Cut</th>
+            <th className='w-[150px] border p-2'>Gold Collected</th>
+            <th className='w-[150px] border p-2'>Balance Total</th>
+            <th className='border p-2'>Calculadora</th>
           </tr>
         </thead>
-        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
           {!selectedDate ? (
             <tr>
               <td colSpan={5} className='p-4 text-center'>
@@ -287,8 +287,8 @@ export function BalanceControlTable({
             </tr>
           ) : isLoading ? (
             <tr>
-              <td colSpan={5} className='p-4 text-center h-full'>
-                <span className='animate-spin border-4 border-t-transparent border-gray-600 rounded-full w-6 h-6 inline-block'></span>
+              <td colSpan={5} className='h-full p-4 text-center'>
+                <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent'></span>
                 <p>Loading...</p>
               </td>
             </tr>
@@ -311,7 +311,7 @@ export function BalanceControlTable({
                 </td>
                 <td className='p-2 text-center'>
                   <input
-                    className='p-1 px-2 bg-zinc-100 rounded-md'
+                    className='rounded-md bg-zinc-100 p-1 px-2'
                     type='text'
                     value={calculatorValues[user.idDiscord] || ''}
                     onChange={(e) =>

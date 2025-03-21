@@ -49,28 +49,28 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
 
   return (
     <Modal onClose={onClose}>
-      <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
+      <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
         {error ? (
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : (
           <>
-            <h2 className='text-lg font-semibold mb-4'>Confirm Deletion</h2>
+            <h2 className='mb-4 text-lg font-semibold'>Confirm Deletion</h2>
             <p>
               Are you sure you want to delete the run for{' '}
               <strong>{run.raid}</strong> on{' '}
               <strong>{new Date(run.date).toLocaleDateString()}</strong>?
             </p>
-            <div className='flex gap-2 mt-4'>
+            <div className='mt-4 flex gap-2'>
               <button
-                className={`bg-red-500 text-white px-4 py-2 rounded ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                className={`rounded bg-red-500 px-4 py-2 text-white ${
+                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
                 }`}
                 disabled={isSubmitting}
                 onClick={handleDelete}
               >
                 {isSubmitting ? (
                   <div className='flex gap-4'>
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
                     Deleting...
                   </div>
                 ) : (
@@ -78,7 +78,7 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
                 )}
               </button>
               <button
-                className='bg-gray-300 text-black px-4 py-2 rounded'
+                className='rounded bg-gray-300 px-4 py-2 text-black'
                 onClick={onClose}
                 disabled={isSubmitting}
               >

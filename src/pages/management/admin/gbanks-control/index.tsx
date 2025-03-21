@@ -206,18 +206,18 @@ export function GBanksTable() {
   }, [])
 
   return (
-    <div className='w-[25%] h-[90%] overflow-y-auto border border-gray-300 rounded-md flex flex-col'>
-      <div className='flex gap-4 p-2 bg-zinc-400 top-0'>
+    <div className='flex h-[90%] w-[25%] flex-col overflow-y-auto rounded-md border border-gray-300'>
+      <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
         <input
-          className='rounded-md text-black px-1'
+          className='rounded-md px-1 text-black'
           type='text'
           value={newGBankName}
           onChange={(e) => setNewGBankName(e.target.value)}
           placeholder='Novo GBank'
         />
         <button
-          className={`bg-red-400 px-4 py-1 rounded-md hover:bg-red-500 transition-colors ${
-            isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+          className={`rounded-md bg-red-400 px-4 py-1 transition-colors hover:bg-red-500 ${
+            isSubmitting ? 'cursor-not-allowed opacity-50' : ''
           }`}
           onClick={handleAddGBank}
           disabled={isSubmitting}
@@ -226,34 +226,34 @@ export function GBanksTable() {
         </button>
       </div>
 
-      <table className='border-collapse w-full'>
+      <table className='w-full border-collapse'>
         <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
           <tr className='text-md'>
-            <th className='p-2 border' />
-            <th className='p-2 border w-[150px]'>GBANKS</th>
-            <th className='p-2 border w-[150px]'>SALDO</th>
-            <th className='p-2 border w-[150px]'>CALCULADORA</th>
+            <th className='border p-2' />
+            <th className='w-[150px] border p-2'>GBANKS</th>
+            <th className='w-[150px] border p-2'>SALDO</th>
+            <th className='w-[150px] border p-2'>CALCULADORA</th>
           </tr>
         </thead>
-        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
           {isLoading ? (
             <tr>
               <td colSpan={4} className='p-4 text-center'>
-                <span className='animate-spin border-4 border-t-transparent border-gray-600 rounded-full w-6 h-6 inline-block' />
+                <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
                 <p>Carregando...</p>
               </td>
             </tr>
           ) : (
             gbanks?.map((gbank, index) => (
               <tr key={gbank.id} className='border border-gray-300'>
-                <td className='p-2 relative'>
+                <td className='relative p-2'>
                   <button onClick={() => toggleActionsDropdown(index)}>
                     <DotsThreeVertical size={20} />
                   </button>
                   {openRowIndex === index && (
                     <div
                       ref={menuRef}
-                      className='absolute left-8 top-0 flex flex-col gap-2 p-2 px-4 bg-white border rounded shadow-md z-50'
+                      className='absolute left-8 top-0 z-50 flex flex-col gap-2 rounded border bg-white p-2 px-4 shadow-md'
                     >
                       <button
                         onClick={() => {
@@ -265,7 +265,7 @@ export function GBanksTable() {
                       </button>
                       <button
                         onClick={() => setDeleteGBank(gbank)}
-                        className='text-left hover:bg-gray-100 text-red-500'
+                        className='text-left text-red-500 hover:bg-gray-100'
                       >
                         Delete
                       </button>
@@ -278,7 +278,7 @@ export function GBanksTable() {
                 </td>
                 <td className='p-2 text-center'>
                   <input
-                    className='p-2 bg-zinc-100 rounded-md'
+                    className='rounded-md bg-zinc-100 p-2'
                     type='text'
                     value={gbank.calculatorValue}
                     onChange={(e) => {
@@ -310,20 +310,20 @@ export function GBanksTable() {
       {/* Modal de Edição */}
       {editGBank && (
         <Modal onClose={() => setEditGBank(null)}>
-          <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
-            <h2 className='text-lg font-semibold mb-4'>Editar GBank</h2>
+          <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
+            <h2 className='mb-4 text-lg font-semibold'>Editar GBank</h2>
             <input
               type='text'
-              className='w-full p-2 mb-4 border rounded'
+              className='mb-4 w-full rounded border p-2'
               value={editGBank.name}
               onChange={(e) =>
                 setEditGBank({ ...editGBank, name: e.target.value })
               }
             />
-            <div className='flex gap-2 justify-end'>
+            <div className='flex justify-end gap-2'>
               <button
-                className={`bg-blue-500 text-white px-4 py-2 rounded ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                className={`rounded bg-blue-500 px-4 py-2 text-white ${
+                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
                 }`}
                 onClick={handleUpdateGBank}
                 disabled={isSubmitting}
@@ -331,7 +331,7 @@ export function GBanksTable() {
                 {isSubmitting ? 'Salvando...' : 'Salvar'}
               </button>
               <button
-                className='bg-gray-300 px-4 py-2 rounded'
+                className='rounded bg-gray-300 px-4 py-2'
                 onClick={() => setEditGBank(null)}
               >
                 Cancelar
@@ -344,13 +344,13 @@ export function GBanksTable() {
       {/* Modal de Exclusão */}
       {deleteGBank && (
         <Modal onClose={() => setDeleteGBank(null)}>
-          <div className='p-4 bg-white rounded-lg shadow-lg w-96'>
-            <h2 className='text-lg font-semibold mb-4'>Confirmar Exclusão</h2>
+          <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
+            <h2 className='mb-4 text-lg font-semibold'>Confirmar Exclusão</h2>
             <p>Tem certeza que deseja excluir o GBank "{deleteGBank.name}"?</p>
-            <div className='flex gap-2 justify-end mt-4'>
+            <div className='mt-4 flex justify-end gap-2'>
               <button
-                className={`bg-red-500 text-white px-4 py-2 rounded ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                className={`rounded bg-red-500 px-4 py-2 text-white ${
+                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
                 }`}
                 onClick={handleDeleteGBank}
                 disabled={isSubmitting}
@@ -358,7 +358,7 @@ export function GBanksTable() {
                 {isSubmitting ? 'Excluindo...' : 'Excluir'}
               </button>
               <button
-                className='bg-gray-300 px-4 py-2 rounded'
+                className='rounded bg-gray-300 px-4 py-2'
                 onClick={() => setDeleteGBank(null)}
               >
                 Cancelar

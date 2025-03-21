@@ -74,16 +74,16 @@ export function Attendance({
   }
 
   return (
-    <div className='w-[50%] mx-auto mt-2 p-4'>
+    <div className='mx-auto mt-2 w-[50%] p-4'>
       <div className='flex flex-col items-center'>
         <table className='w-[80%] border-collapse'>
           <thead className='table-header-group'>
             <tr className='text-md bg-zinc-400 text-gray-700'>
-              <th className='p-2 border'>Player</th>
-              <th className='p-2 border flex items-center justify-center'>
+              <th className='border p-2'>Player</th>
+              <th className='flex items-center justify-center border p-2'>
                 Attendance
                 <button
-                  className='ml-2 px-2 py-1 text-xs font-semibold border rounded bg-green-500 text-white hover:bg-green-600 transition'
+                  className='ml-2 rounded border bg-green-500 px-2 py-1 text-xs font-semibold text-white transition hover:bg-green-600'
                   onClick={markAllAsFull}
                 >
                   100%
@@ -91,13 +91,13 @@ export function Attendance({
                 <button
                   onClick={handleAttendanceSave}
                   disabled={isSubmitting || isSuccess}
-                  className={`ml-2 px-2 py-1 text-xs font-semibold border rounded flex items-center gap-2 bg-green-500 text-white hover:bg-green-600 transition${
+                  className={`ml-2 flex items-center gap-2 rounded border bg-green-500 px-2 py-1 text-xs font-semibold text-white hover:bg-green-600 transition${
                     isSubmitting || isSuccess ? 'cursor-not-allowed' : ''
                   }`}
                 >
                   {isSubmitting ? (
                     <>
-                      <CircleNotch className='animate-spin h-5 w-5' />
+                      <CircleNotch className='h-5 w-5 animate-spin' />
                       Saving...
                     </>
                   ) : isSuccess ? (
@@ -112,12 +112,12 @@ export function Attendance({
               </th>
             </tr>
           </thead>
-          <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+          <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
             {attendance.info.map((player) => (
               <tr key={player.idDiscord} className='border border-gray-300'>
                 <td className='p-2 text-center'>{player.username}</td>
                 <td className='p-2 text-center'>
-                  <div className='flex gap-2 px-2 justify-center'>
+                  <div className='flex justify-center gap-2 px-2'>
                     <select
                       value={player.percentage}
                       onChange={(e) =>
@@ -126,7 +126,7 @@ export function Attendance({
                           Number(e.target.value)
                         )
                       }
-                      className={`px-2 py-1 text-xs border rounded transition-colors ${getColorForPercentage(
+                      className={`rounded border px-2 py-1 text-xs transition-colors ${getColorForPercentage(
                         player.percentage
                       )}`}
                     >

@@ -275,26 +275,26 @@ export function BalanceDataGrid() {
       </div>
 
       {isLoadingBalance && (
-        <div className='flex justify-center items-center h-[80%]'>
+        <div className='flex h-[80%] items-center justify-center'>
           <LoadingSpinner />
         </div>
       )}
 
       {!isLoadingBalance && (
-        <div className=' flex justify-center h-[80%] mt-6 '>
-          <table className='border-collapse text-lg min-w-[1000px]'>
+        <div className='mt-6 flex h-[80%] justify-center'>
+          <table className='min-w-[1000px] border-collapse text-lg'>
             <thead className='table-header-group'>
               <tr className='text-md bg-zinc-400 text-gray-700'>
-                <th className='p-2 border w-[200px]'>Player</th>
-                <th className='p-2 border w-[150px]'>Total Balance</th>
+                <th className='w-[200px] border p-2'>Player</th>
+                <th className='w-[150px] border p-2'>Total Balance</th>
                 {getSortedDates().map((date) => (
-                  <th key={date} className='p-2 border w-[200px]'>
+                  <th key={date} className='w-[200px] border p-2'>
                     {formatDayHeader(date)}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className='table-row-group text-base  font-medium text-zinc-900 bg-zinc-200 text-center'>
+            <tbody className='table-row-group bg-zinc-200 text-center text-base font-medium text-zinc-900'>
               {processBalanceData().length === 0 ? (
                 <tr>
                   <td
@@ -306,9 +306,9 @@ export function BalanceDataGrid() {
                 </tr>
               ) : (
                 processBalanceData().map((player) => (
-                  <tr key={player.id} className='border border-gray-300 '>
+                  <tr key={player.id} className='border border-gray-300'>
                     <td
-                      className='relative p-0 border '
+                      className='relative border p-0'
                       style={{
                         backgroundColor:
                           playerStyles[player.id]?.background || 'transparent',
@@ -317,16 +317,16 @@ export function BalanceDataGrid() {
                     >
                       {hasRequiredRole(['1101231955120496650']) && (
                         <div
-                          className='absolute inset-y-0 left-0 w-2 bg-gray-600 cursor-pointer hover:w-2 transition-all z-20'
+                          className='absolute inset-y-0 left-0 z-20 w-2 cursor-pointer bg-gray-600 transition-all hover:w-2'
                           onClick={(e) => toggleDropdown(player.id, e)}
                         />
                       )}
                       {menuOpenForPlayer === player.id && (
                         <div
                           ref={dropdownRef}
-                          className='absolute left-4 top-0 mt-6 z-50 w-64 bg-white border shadow-lg p-2 rounded'
+                          className='absolute left-4 top-0 z-50 mt-6 w-64 rounded border bg-white p-2 shadow-lg'
                         >
-                          <h4 className='font-semibold mb-2 text-gray-700'>
+                          <h4 className='mb-2 font-semibold text-gray-700'>
                             Class Colors
                           </h4>
                           <ColorSelector
@@ -340,7 +340,7 @@ export function BalanceDataGrid() {
                         {player.username}
                       </span>
                     </td>
-                    <td className='p-2 border'>
+                    <td className='border p-2'>
                       {Math.round(Number(player.balance_total)).toLocaleString(
                         'en-US'
                       )}
@@ -349,7 +349,7 @@ export function BalanceDataGrid() {
                     {getSortedDates().map((date) => (
                       <td
                         key={`${player.id}-${date}`}
-                        className='p-2 border text-center'
+                        className='border p-2 text-center'
                       >
                         {player.dailyValues[date]
                           ? Number(player.dailyValues[date]).toLocaleString(

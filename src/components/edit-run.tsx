@@ -117,7 +117,7 @@ const MultiSelectDropdown = ({
   return (
     <div ref={dropdownRef} className='relative'>
       <div
-        className={`p-2 border rounded-md cursor-pointer bg-white font-normal ${
+        className={`cursor-pointer rounded-md border bg-white p-2 font-normal ${
           selected.length > 0 ? 'text-black' : 'text-zinc-400'
         }`}
         onClick={() => setOpen(!open)}
@@ -125,9 +125,9 @@ const MultiSelectDropdown = ({
         {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
       </div>
       {open && (
-        <div className='absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-y-auto'>
+        <div className='absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-md bg-white shadow-lg'>
           {loading && (
-            <div className='p-2 text-gray-500 text-center'>
+            <div className='p-2 text-center text-gray-500'>
               Loading options...
             </div>
           )}
@@ -136,7 +136,7 @@ const MultiSelectDropdown = ({
             apiOptions.map((option) => (
               <div
                 key={option.id}
-                className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
+                className='flex cursor-pointer items-center p-2 hover:bg-gray-100'
                 onClick={() => handleSelect(`${option.id};${option.username}`)}
               >
                 <input
@@ -243,13 +243,13 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
 
   return (
     <Modal onClose={onClose}>
-      <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
+      <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
         {error ? (
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : isSuccess ? (
           <div className='p-6 text-center'>
-            <div className='text-green-500 text-4xl mb-4'>✓</div>
-            <h2 className='text-2xl font-bold mb-2'>
+            <div className='mb-4 text-4xl text-green-500'>✓</div>
+            <h2 className='mb-2 text-2xl font-bold'>
               Run edited successfully!
             </h2>
             <p className='text-zinc-400'>
@@ -264,7 +264,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
             <input
               type='time'
@@ -272,7 +272,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               required
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
             <input
               type='text'
@@ -281,14 +281,14 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               placeholder='Raid'
               value={raid}
               onChange={(e) => setRaid(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
             <select
               required
               id='runType'
               value={runType}
               onChange={(e) => setRunType(e.target.value)}
-              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Run Type
@@ -308,7 +308,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               required
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Difficulty
@@ -328,7 +328,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               id='team'
               value={idTeam}
               onChange={(e) => setIdTeam(e.target.value)}
-              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Team
@@ -359,7 +359,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               placeholder='Max Buyers'
               value={maxBuyers}
               onChange={handleChange}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
             <MultiSelectDropdown
               initialSelected={initialSelected}
@@ -370,7 +370,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               id='loot'
               value={loot}
               onChange={(e) => setLoot(e.target.value)}
-              className='p-2 font-normal border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Loot
@@ -387,19 +387,19 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
               id='note'
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition col-span-2'
+              className='col-span-2 rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
-            <div className='flex items-center justify-center gap-4 col-span-2'>
+            <div className='col-span-2 flex items-center justify-center gap-4'>
               <button
                 type='submit'
                 disabled={isSubmitting}
-                className={`flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                className={`flex items-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500 ${
+                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
                 }`}
               >
                 {isSubmitting ? (
                   <>
-                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
                     Editing...
                   </>
                 ) : (

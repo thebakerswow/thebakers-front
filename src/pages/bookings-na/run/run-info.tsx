@@ -65,9 +65,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   }
 
   return (
-    <div className='flex m-4 gap-2 rounded-md'>
+    <div className='m-4 flex gap-2 rounded-md'>
       <img className='w-[300px] rounded-md' src={twwLogo} alt='Run Cover' />
-      <div className='bg-zinc-300 p-4 text-black rounded-md'>
+      <div className='rounded-md bg-zinc-300 p-4 text-black'>
         <h2 className='text-lg font-semibold'>Gold Collectors</h2>
         <table className='w-full table-auto'>
           <tbody>
@@ -84,9 +84,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
           </tbody>
         </table>
       </div>
-      <div className='grid grid-cols-4 flex-1 text-center bg-gray-300 rounded-md text-zinc-900'>
+      <div className='grid flex-1 grid-cols-4 rounded-md bg-gray-300 text-center text-zinc-900'>
         <div className='col-span-3 flex flex-col'>
-          <h1 className='font-semibold text-lg mt-3 mb-3'>
+          <h1 className='mb-3 mt-3 text-lg font-semibold'>
             {run.raid} {run.difficulty} @{' '}
             {run.time ? (
               <>
@@ -99,32 +99,32 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             )}
           </h1>
 
-          <div className='grid grid-cols-3 gap-4 mt-4 text-start ml-24'>
-            <p className='text-yellow-500 font-semibold'>
-              <span className='font-bold text-base text-zinc-900'>
+          <div className='ml-24 mt-4 grid grid-cols-3 gap-4 text-start'>
+            <p className='font-semibold text-yellow-500'>
+              <span className='text-base font-bold text-zinc-900'>
                 Loot Type:{' '}
               </span>
               {run.loot}
             </p>
-            <p className='text-red-500 font-semibold'>
-              <span className='font-bold text-base text-zinc-900'>
+            <p className='font-semibold text-red-500'>
+              <span className='text-base font-bold text-zinc-900'>
                 Max Buyers:{' '}
               </span>
               {run.maxBuyers}
             </p>
             <p>
-              <span className='font-bold text-base'>
+              <span className='text-base font-bold'>
                 Slots Available:{' '}
                 <span className='font-normal'>{run.slotAvailable}</span>
               </span>
             </p>
             <p>
-              <span className='font-bold text-base'>
+              <span className='text-base font-bold'>
                 Backups: <span className='font-normal'>{run.backups}</span>
               </span>
             </p>
             <p>
-              <span className='font-bold text-base'>Raid Leader(s): </span>{' '}
+              <span className='text-base font-bold'>Raid Leader(s): </span>{' '}
               {run.raidLeaders && run.raidLeaders.length > 0 ? (
                 run.raidLeaders
                   .map((raidLeader) => raidLeader.username)
@@ -134,7 +134,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               )}
             </p>
             <p>
-              <span className='font-bold text-base'>
+              <span className='text-base font-bold'>
                 Gold Collected:{' '}
                 <span className='font-normal'>
                   {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
@@ -143,9 +143,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             </p>
           </div>
         </div>
-        <div className='flex flex-col gap-2 m-4 justify-center items-center'>
+        <div className='m-4 flex flex-col items-center justify-center gap-2'>
           <button
-            className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'
+            className='flex w-full items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
             onClick={handleOpenAddBuyer}
           >
             <UserPlus size={18} />
@@ -158,7 +158,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             '1148721174088532040',
           ]) && (
             <button
-              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 w-full justify-center'
+              className='flex w-full items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
               onClick={handleOpenEditModal}
             >
               <Pencil size={18} />

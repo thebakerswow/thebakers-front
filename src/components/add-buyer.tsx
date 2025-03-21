@@ -115,13 +115,13 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
   return (
     <Modal onClose={onClose}>
-      <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden flex flex-col'>
+      <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
         {error ? (
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : isSuccess ? (
           <div className='p-6 text-center'>
-            <div className='text-green-500 text-4xl mb-4'>✓</div>
-            <h2 className='text-2xl font-bold mb-2'>
+            <div className='mb-4 text-4xl text-green-500'>✓</div>
+            <h2 className='mb-2 text-2xl font-bold'>
               Buyer added successfully!
             </h2>
             <p className='text-zinc-400'>
@@ -137,14 +137,14 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               value={nameAndRealm}
               onChange={(e) => setNameAndRealm(e.target.value)}
               placeholder='Buyer Name-Realm'
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
 
             <select
               id='playerClass'
               value={playerClass}
               onChange={(e) => setPlayerClass(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition invalid:text-zinc-400 valid:text-black'
+              className='rounded-md border p-2 transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden>
                 Class
@@ -197,13 +197,13 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               value={buyerPot}
               onChange={handleChange}
               placeholder='Pot'
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
             <select
               id='idBuyerAdvertiser'
               value={idBuyerAdvertiser}
               onChange={(e) => setIdBuyerAdvertiser(e.target.value)}
-              className='p-2 border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition text-zinc-400'
+              className='rounded-md border p-2 text-zinc-400 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             >
               <option value='' disabled hidden>
                 Advertiser
@@ -224,10 +224,10 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               value={buyerNote}
               onChange={(e) => setBuyerNote(e.target.value)}
               placeholder='Note'
-              className='p-2  border rounded-md focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition'
+              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
             />
-            <div className='flex gap-2 items-center'>
-              <label htmlFor='isPaid' className='ml-2 text-lg  text-zinc-700'>
+            <div className='flex items-center gap-2'>
+              <label htmlFor='isPaid' className='ml-2 text-lg text-zinc-700'>
                 Paid Full
               </label>
               <input
@@ -235,18 +235,18 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 id='isPaid'
                 checked={isPaid ?? false}
                 onChange={(e) => setIsPaid(e.target.checked)}
-                className='accent-zinc-500 cursor-pointer w-5 h-5'
+                className='h-5 w-5 cursor-pointer accent-zinc-500'
               />
             </div>
             <button
               type='submit'
-              className={`flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center col-span-2 ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              className={`col-span-2 flex items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500 ${
+                isSubmitting ? 'cursor-not-allowed opacity-50' : ''
               }`}
             >
               {isSubmitting ? (
                 <>
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                  <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
                   Creating...
                 </>
               ) : (

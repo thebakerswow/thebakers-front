@@ -18,7 +18,7 @@ export function BalanceTeamFilter({
         value={selectedTeam || ''}
         onChange={(e) => onSelectTeam(e.target.value)}
         disabled={isLoadingTeams}
-        className='border p-1 rounded text-black'
+        className='rounded border p-1 text-black'
       >
         {teams.map((team) => (
           <option key={team.id_discord} value={team.id_discord}>

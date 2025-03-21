@@ -111,14 +111,14 @@ export function FullRaidsNa() {
   }
 
   return (
-    <div className='bg-zinc-700 text-gray-100 w-full flex flex-col items-center justify-center font-semibold rounded-xl shadow-2xl m-8'>
+    <div className='m-8 flex w-full flex-col items-center justify-center rounded-xl bg-zinc-700 font-semibold text-gray-100 shadow-2xl'>
       <DateFilter onDaySelect={onDaySelect} />
       <div className='container mx-auto mt-2 p-4'>
-        <div className='flex items-center justify-between mb-2'>
+        <div className='mb-2 flex items-center justify-between'>
           {/* Apenas Chefe de Cozinha pode ver */}
           {hasRequiredRole(['1101231955120496650']) && (
             <button
-              className='flex items-center gap-2 bg-red-400 text-gray-100 hover:bg-red-500 rounded-md p-2 justify-center'
+              className='flex items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
               onClick={handleOpenAddRun}
             >
               <UserPlus size={18} />
@@ -126,7 +126,7 @@ export function FullRaidsNa() {
             </button>
           )}
 
-          <h1 className='text-2xl font-bold text-center flex-grow mr-24'>
+          <h1 className='mr-24 flex-grow text-center text-2xl font-bold'>
             NA Raids
           </h1>
         </div>

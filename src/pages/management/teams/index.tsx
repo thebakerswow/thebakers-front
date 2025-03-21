@@ -74,23 +74,20 @@ export function TeamsManagement() {
 
   if (isLoading) {
     return (
-      <div
-        className='bg-zinc-700 text-gray-100 absolute inset-0 flex items-center justify-center 
-        rounded-xl shadow-2xl m-8'
-      >
+      <div className='absolute inset-0 m-8 flex items-center justify-center rounded-xl bg-zinc-700 text-gray-100 shadow-2xl'>
         <LoadingSpinner />
       </div>
     )
   }
 
   return (
-    <div className='bg-zinc-700 text-gray-100 absolute inset-0 flex flex-col rounded-xl shadow-2xl m-8 overflow-y-auto scrollbar-thin'>
+    <div className='absolute inset-0 m-8 flex flex-col overflow-y-auto rounded-xl bg-zinc-700 text-gray-100 shadow-2xl scrollbar-thin'>
       <table className='min-w-full border-collapse'>
         <thead className='table-header-group'>
           <tr className='text-md text-gray-700'>
             {teams.map((team, index) => (
               <th
-                className={`p-2 border ${index !== teams.length - 1 ? '' : ''} ${
+                className={`border p-2 ${index !== teams.length - 1 ? '' : ''} ${
                   teamColors[team.name as TeamOrder] || 'bg-zinc-400'
                 }`}
                 colSpan={2}
@@ -105,13 +102,13 @@ export function TeamsManagement() {
               const isLastTeam = index === teams.length - 1
               return [
                 <th
-                  className={'p-2 border border-r-black'}
+                  className={'border border-r-black p-2'}
                   key={`player-header-${index}`}
                 >
                   Player
                 </th>,
                 <th
-                  className={`p-2 border ${!isLastTeam ? 'border-r-black' : ''}`}
+                  className={`border p-2 ${!isLastTeam ? 'border-r-black' : ''}`}
                   key={`discord-header-${index}`}
                 >
                   Discord
@@ -120,7 +117,7 @@ export function TeamsManagement() {
             })}
           </tr>
         </thead>
-        <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
           {Array.from({ length: maxRows }, (_, rowIndex) => (
             <tr
               className={`text-center ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-zinc-200'}`}
@@ -131,13 +128,13 @@ export function TeamsManagement() {
                 const isLastTeam = teamIndex === teams.length - 1
                 return [
                   <td
-                    className={'p-2 border border-b-black border-r-black'}
+                    className={'border border-b-black border-r-black p-2'}
                     key={`player-${teamIndex}-${rowIndex}`}
                   >
                     {member?.player || '-'}
                   </td>,
                   <td
-                    className={`p-2 border border-b-black ${!isLastTeam ? 'border-r-black' : ''}`}
+                    className={`border border-b-black p-2 ${!isLastTeam ? 'border-r-black' : ''}`}
                     key={`discord-${teamIndex}-${rowIndex}`}
                   >
                     {member?.discord || '-'}

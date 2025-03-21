@@ -78,17 +78,16 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   }
 
   return (
-    <div className='flex gap-10 mt-4 items-center text-black'>
+    <div className='mt-4 flex items-center gap-10 text-black'>
       <div className='flex flex-col'>
-        <label className='text-white mb-1 text-sm'>Month</label>
+        <label className='mb-1 text-sm text-white'>Month</label>
         <div className='relative'>
           <DatePicker
             selected={selectedMonth}
             onChange={handleMonthChange}
             dateFormat='MM/yyyy'
             showMonthYearPicker
-            className='text-zinc-900 pl-4 pr-8 py-1 font-normal rounded-md
-              border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black'
+            className='rounded-md border border-gray-300 py-1 pl-4 pr-8 font-normal text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black'
             placeholderText='Select Month'
             open={isCalendarOpen}
             onClickOutside={() => setIsCalendarOpen(false)}
@@ -99,14 +98,12 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
       </div>
 
       <div className='flex flex-col'>
-        <label className='text-white mb-1 text-sm'>Week</label>
+        <label className='mb-1 text-sm text-white'>Week</label>
         <div className='relative'>
           <select
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(Number(e.target.value))}
-            className='text-zinc-900 pl-4 pr-8 py-1 rounded-md
-              border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black
-              bg-white appearance-none'
+            className='appearance-none rounded-md border border-gray-300 bg-white py-1 pl-4 pr-8 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black'
           >
             {weeksInMonth.map((week, index) => (
               <option key={index} value={index}>

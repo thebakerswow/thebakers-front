@@ -14,15 +14,15 @@ export function LoginErro() {
   }, [navigate])
 
   return (
-    <div className='flex items-center flex-col text-center py-20'>
+    <div className='flex flex-col items-center py-20 text-center'>
       <h1 className='text-4xl font-bold'>Oops, something went wrong!</h1>
       <Link
-        className='mt-4 bg-red-500 hover:bg-red-600 transition-all  p-2 rounded-md text-white'
+        className='mt-4 rounded-md bg-red-500 p-2 text-white transition-all hover:bg-red-600'
         to={'/'}
       >
         Return to login
       </Link>
-      <img src={somethingWrong} className='w-[1000px] mt-4' />
+      <img src={somethingWrong} className='mt-4 w-[1000px]' />
     </div>
   )
 }

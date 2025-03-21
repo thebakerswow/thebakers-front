@@ -214,19 +214,19 @@ export function Freelancers({ runId }: FreelancersProps) {
   }
 
   return (
-    <div className='w-[50%] mx-auto mt-2 p-4'>
+    <div className='mx-auto mt-2 w-[50%] p-4'>
       <div className='flex flex-col items-center'>
-        <div className='relative flex gap-2 mb-2 w-[80%]'>
+        <div className='relative mb-2 flex w-[80%] gap-2'>
           <input
-            className='p-1 rounded-md text-black w-full'
+            className='w-full rounded-md p-1 text-black'
             type='text'
             placeholder='Player'
             value={search}
             onChange={handleInputChange}
           />
           <button
-            className={`bg-red-400 p-1 px-2 rounded-md ${
-              !selectedUser ? 'opacity-50 cursor-not-allowed' : ''
+            className={`rounded-md bg-red-400 p-1 px-2 ${
+              !selectedUser ? 'cursor-not-allowed opacity-50' : ''
             }`}
             onClick={handleAddFreelancer}
             disabled={!selectedUser || isSubmitting}
@@ -235,11 +235,11 @@ export function Freelancers({ runId }: FreelancersProps) {
           </button>
 
           {filteredUsers.length > 0 && (
-            <ul className='absolute top-10 left-0 w-full text-black bg-white border rounded shadow-lg z-10'>
+            <ul className='absolute left-0 top-10 z-10 w-full rounded border bg-white text-black shadow-lg'>
               {filteredUsers.map((user) => (
                 <li
                   key={user.id_discord}
-                  className='p-2 cursor-pointer hover:bg-gray-200'
+                  className='cursor-pointer p-2 hover:bg-gray-200'
                   onClick={() => handleUserSelect(user)}
                 >
                   {user.username}
@@ -253,17 +253,17 @@ export function Freelancers({ runId }: FreelancersProps) {
         <table className='w-[80%] border-collapse'>
           <thead className='table-header-group'>
             <tr className='text-md bg-zinc-400 text-gray-700'>
-              <th className='p-2 border'>Freelancer</th>
-              <th className='p-2 border flex items-center justify-center'>
+              <th className='border p-2'>Freelancer</th>
+              <th className='flex items-center justify-center border p-2'>
                 Attendance
               </th>
-              <th className='p-2 border'>Delete</th>
+              <th className='border p-2'>Delete</th>
             </tr>
           </thead>
-          <tbody className='table-row-group text-sm font-medium text-zinc-900 bg-zinc-200'>
+          <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
             {isLoadingFreelancers ? (
               <tr>
-                <td colSpan={3} className='text-center p-4'>
+                <td colSpan={3} className='p-4 text-center'>
                   <div className='inline-block'>
                     <CircleNotch className='animate-spin text-gray-600' />
                   </div>
@@ -271,7 +271,7 @@ export function Freelancers({ runId }: FreelancersProps) {
               </tr>
             ) : freelancers.length === 0 ? (
               <tr>
-                <td colSpan={3} className='text-center p-4 text-gray-500'>
+                <td colSpan={3} className='p-4 text-center text-gray-500'>
                   No Freelancer
                 </td>
               </tr>
@@ -280,7 +280,7 @@ export function Freelancers({ runId }: FreelancersProps) {
                 <tr key={user.id_discord} className='border border-gray-300'>
                   <td className='p-2 text-center'>{user.username}</td>
                   <td className='p-2 text-center'>
-                    <div className='flex gap-2 px-2 items-center justify-center'>
+                    <div className='flex items-center justify-center gap-2 px-2'>
                       <select
                         value={user.percentage}
                         onChange={(e) =>
@@ -289,7 +289,7 @@ export function Freelancers({ runId }: FreelancersProps) {
                             Number(e.target.value)
                           )
                         }
-                        className={`px-2 py-1 text-xs border rounded transition-colors ${getColorForPercentage(
+                        className={`rounded border px-2 py-1 text-xs transition-colors ${getColorForPercentage(
                           user.percentage
                         )}`}
                       >

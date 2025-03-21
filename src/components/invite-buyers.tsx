@@ -22,7 +22,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
         `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers/invite` ||
           `http://localhost:8000/v1/run/${runId}/buyers/invite`
       )
-       setInviteBuyersData(
+      setInviteBuyersData(
         Array.isArray(response.data.info) ? response.data.info : []
       )
       setError(null)
@@ -78,7 +78,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
               <Check className='text-green-500' size={24} />
             ) : (
               <button
-                className='bg-zinc-400 text-white rounded-md px-3 p-1'
+                className='rounded-md bg-zinc-400 p-1 px-3 text-white'
                 onClick={handleCopy}
               >
                 Copy

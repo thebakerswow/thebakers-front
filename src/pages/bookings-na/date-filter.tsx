@@ -150,7 +150,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   }
 
   return (
-    <div className='flex flex-col text-lg  items-center gap-4'>
+    <div className='flex flex-col items-center gap-4 text-lg'>
       <div className='flex gap-8'>
         <label className='flex flex-col'>
           <p>Select Month:</p>
@@ -160,7 +160,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               onChange={handleMonthChange}
               dateFormat='MM/yyyy'
               showMonthYearPicker
-              className='text-zinc-900 pl-2 font-normal p-1 rounded-md flex-1 w-56'
+              className='w-56 flex-1 rounded-md p-1 pl-2 font-normal text-zinc-900'
               placeholderText='Month'
               open={isCalendarOpen}
               onClickOutside={() => setIsCalendarOpen(false)}
@@ -171,11 +171,11 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
         </label>
         {weeks.length > 0 && (
           <div>
-            <label className='flex flex-col mr-2'>
+            <label className='mr-2 flex flex-col'>
               Select Week:
               <div className='flex gap-4'>
                 <select
-                  className='text-zinc-900 p-1.5 font-normal w-56 text-md rounded-md'
+                  className='text-md w-56 rounded-md p-1.5 font-normal text-zinc-900'
                   onChange={(e) => handleWeekSelect(Number(e.target.value))}
                   value={selectedWeekIndex}
                 >
@@ -188,7 +188,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                 </select>
                 <button
                   onClick={handleFilterReset}
-                  className='bg-red-400 text-gray-100 hover:bg-red-500 shadow-lg rounded-md p-1 text-sm font-normal px-2'
+                  className='rounded-md bg-red-400 p-1 px-2 text-sm font-normal text-gray-100 shadow-lg hover:bg-red-500'
                 >
                   Reset
                 </button>
@@ -208,9 +208,9 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                   filterDay &&
                   format(startOfDay(day), 'yyyy-MM-dd') ===
                     format(startOfDay(filterDay), 'yyyy-MM-dd')
-                    ? 'bg-zinc-500 text-gray-100 font-medium border border-gray-100'
+                    ? 'border border-gray-100 bg-zinc-500 font-medium text-gray-100'
                     : 'bg-zinc-100 text-zinc-900'
-                } gap-2 border-gray-100 m-2 p-2 rounded-md text-sm`}
+                } m-2 gap-2 rounded-md border-gray-100 p-2 text-sm`}
                 key={day.toISOString()}
                 onClick={() => handleDaySelect(day)}
               >

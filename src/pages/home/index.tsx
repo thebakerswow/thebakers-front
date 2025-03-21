@@ -49,13 +49,13 @@ export function HomePage() {
   }
 
   return (
-    <div className='bg-zinc-700 text-gray-100 p-4 h-[400px] w-[800px] text-4xl flex flex-col items-center justify-center font-semibold rounded-xl shadow-2xl mt-20'>
+    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center rounded-xl bg-zinc-700 p-4 text-4xl font-semibold text-gray-100 shadow-2xl'>
       <div>
-        Welcome to TheBakers <span className='text-red-700 font-bold'>Hub</span>
+        Welcome to TheBakers <span className='font-bold text-red-700'>Hub</span>
       </div>
 
       {username && (
-        <div className='text-2xl mt-4'>
+        <div className='mt-4 text-2xl'>
           Olá, <span className='text-red-500'>{username}</span>!
         </div>
       )}

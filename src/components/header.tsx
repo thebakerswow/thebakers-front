@@ -31,20 +31,20 @@ export function Header() {
 
   if (!isAuthenticated) {
     return (
-      <header className='h-[60px] bg-zinc-900 flex items-center justify-center pl-4 font-bold text-3xl text-gray-100 shadow-bottom-strong z-10 relative'>
+      <header className='relative z-10 flex h-[60px] items-center justify-center bg-zinc-900 pl-4 text-3xl font-bold text-gray-100 shadow-bottom-strong'>
         TheBakers <span className='text-red-700'>Hub</span>
       </header>
     )
   }
 
   return (
-    <header className='h-[60px] bg-zinc-900 flex gap-40 justify-evenly items-center pl-4 font-bold text-2xl text-gray-100 shadow-bottom-strong z-10 relative'>
+    <header className='relative z-10 flex h-[60px] items-center justify-evenly gap-40 bg-zinc-900 pl-4 text-2xl font-bold text-gray-100 shadow-bottom-strong'>
       <button className='text-3xl font-bold' onClick={() => navigate('/home')}>
         TheBakers <span className='text-red-700'>Hub</span>
       </button>
 
       <button
-        className='text-gray-300 flex gap-4 text-lg font-semibold'
+        className='flex gap-4 text-lg font-semibold text-gray-300'
         onClick={() => navigate('/balance')}
       >
         <Coins className='text-gray-100' size={30} />
@@ -57,7 +57,7 @@ export function Header() {
           onMouseLeave={() => setIsHoveringManagement(false)}
           className='relative'
         >
-          <button className='text-gray-300 flex gap-4 text-lg font-semibold items-center'>
+          <button className='flex items-center gap-4 text-lg font-semibold text-gray-300'>
             <Briefcase className='text-gray-100' size={30} />
             Management
             {isHoveringManagement ? (
@@ -68,16 +68,16 @@ export function Header() {
           </button>
 
           {isHoveringManagement && (
-            <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
+            <div className='absolute left-0 flex w-full flex-col items-center gap-4 rounded-xl bg-zinc-800 py-4 shadow-lg'>
               <button
-                className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+                className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
                 onClick={() => navigate('/admin')}
               >
                 <Briefcase className='text-gray-100' size={30} />
                 Admin
               </button>
               <button
-                className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+                className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
                 onClick={() => navigate('/management-teams')}
               >
                 <UsersFour className='text-gray-100' size={30} />
@@ -93,7 +93,7 @@ export function Header() {
         onMouseLeave={() => setIsHoveringNA(false)}
         className='relative'
       >
-        <button className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'>
+        <button className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'>
           <CalendarBlank className='text-gray-100' size={30} />
           Bookings (NA)
           {isHoveringNA ? (
@@ -104,9 +104,9 @@ export function Header() {
         </button>
 
         {isHoveringNA && (
-          <div className='absolute left-0 w-full bg-zinc-800 shadow-lg rounded-xl flex flex-col items-center py-4 gap-4'>
+          <div className='absolute left-0 flex w-full flex-col items-center gap-4 rounded-xl bg-zinc-800 py-4 shadow-lg'>
             <button
-              className='text-gray-300 flex gap-4 text-lg font-semibold pl-5 w-full items-center'
+              className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
               onClick={() => navigate('/bookings-na')}
             >
               <CastleTurret className='text-gray-100' size={30} />
@@ -117,7 +117,7 @@ export function Header() {
       </div>
 
       <button
-        className='text-gray-300 flex gap-4 text-lg font-semibold'
+        className='flex gap-4 text-lg font-semibold text-gray-300'
         onClick={handleLogout}
       >
         <SignOut className='text-gray-100' size={30} />
