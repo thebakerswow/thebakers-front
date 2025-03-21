@@ -8,6 +8,17 @@ import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  IconButton,
+} from '@mui/material'
 
 interface RunsDataProps {
   data: RunData[]
@@ -151,130 +162,133 @@ export function RunsDataGrid({
   }
 
   return (
-    <div className='relative max-h-[450px] min-h-[400px] overflow-x-auto rounded-sm text-center text-base text-zinc-700'>
-      <table className='min-w-full table-fixed border-collapse'>
-        <thead className='bg-zinc-400 text-left text-gray-700'>
-          <tr>
-            <th className='w-[100px] border p-2'>Preview</th>
-            <th className='w-[150px] cursor-pointer border p-2'>Date</th>
-            <th
-              className='cursor-pointer border p-2'
-              onClick={handleSortByTime}
-            >
+    <TableContainer
+      component={Paper}
+      className='relative h-[500px] overflow-x-auto rounded-sm'
+    >
+      <Table stickyHeader>
+        <TableHead>
+          <TableRow>
+            <TableCell>Preview</TableCell>
+            <TableCell>Date</TableCell>
+            <TableCell onClick={handleSortByTime} style={{ cursor: 'pointer' }}>
               Time {isTimeSortedAsc ? '▲' : '▼'}
-            </th>
-            <th className='border p-2'>Raid</th>
-            <th className='border p-2'>Run Type</th>
-            <th className='border p-2'>Difficulty</th>
-            <th className='border p-2'>Team</th>
-            <th className='border p-2'>Loot</th>
-            <th className='border p-2'>Buyers</th>
-            <th className='w-[150px] border p-2'>Raid Leader</th>
-            <th className='border p-2'>Note</th>
-            <th className='border p-2' />
-          </tr>
-        </thead>
-
-        <tbody className='cursor-pointer overflow-y-auto bg-zinc-200'>
-          {isLoading && (
-            <tr className='absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white bg-opacity-80'>
-              <td className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
-            </tr>
-          )}
-          {!isLoading && sortedData.length === 0 ? (
-            <tr>
-              <td colSpan={12} className='p-4 text-center text-zinc-500'>
+            </TableCell>
+            <TableCell>Raid</TableCell>
+            <TableCell>Run Type</TableCell>
+            <TableCell>Difficulty</TableCell>
+            <TableCell>Team</TableCell>
+            <TableCell>Loot</TableCell>
+            <TableCell>Buyers</TableCell>
+            <TableCell>Raid Leader</TableCell>
+            <TableCell>Note</TableCell>
+            <TableCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell
+                colSpan={12}
+                align='center'
+                style={{
+                  height: '300px', // Ajusta a altura para centralizar verticalmente
+                  textAlign: 'center',
+                  border: 'none', // Remove as marcações das linhas
+                }}
+              >
+                <CircularProgress />
+              </TableCell>
+            </TableRow>
+          ) : sortedData.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={12}
+                align='center'
+                style={{
+                  height: '300px', // Ajusta a altura para centralizar verticalmente
+                  textAlign: 'center',
+                  border: 'none', // Remove as marcações das linhas
+                }}
+              >
                 No runs today
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ) : (
             sortedData.map((run, index) => (
-              <tr
-                onDoubleClick={() => handleRedirect(run.id)}
+              <TableRow
                 key={index}
-                className={`border border-gray-300 ${
-                  run.team === 'Padeirinho'
-                    ? 'bg-yellow-600'
-                    : run.team === 'Garçom'
-                      ? 'bg-blue-300'
-                      : run.team === 'Confeiteiros'
-                        ? 'bg-purple-300'
-                        : run.team === 'Jackfruit'
-                          ? 'bg-green-300'
-                          : run.team === 'Milharal'
-                            ? 'bg-yellow-400'
-                            : run.team === 'Raio'
-                              ? 'bg-yellow-200'
-                              : run.team === 'APAE'
-                                ? 'bg-red-300'
-                                : ''
-                }`}
+                onDoubleClick={() => handleRedirect(run.id)}
+                style={{
+                  backgroundColor:
+                    run.team === 'Padeirinho'
+                      ? '#F59E0B'
+                      : run.team === 'Garçom'
+                        ? '#93C5FD'
+                        : run.team === 'Confeiteiros'
+                          ? '#C4B5FD'
+                          : run.team === 'Jackfruit'
+                            ? '#86EFAC'
+                            : run.team === 'Milharal'
+                              ? '#FDE68A'
+                              : run.team === 'Raio'
+                                ? '#FEF3C7'
+                                : run.team === 'APAE'
+                                  ? '#FCA5A5'
+                                  : undefined,
+                }}
               >
-                <td className='p-2 text-center align-middle'>
-                  <div className='flex h-full items-center justify-center'>
-                    {run.date ? (
-                      <Eye
-                        className='cursor-pointer'
-                        size={20}
-                        onClick={() => handleOpenPreview(run.id)}
-                      />
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </div>
-                </td>
-                <td className='p-2'>
+                <TableCell align='center'>
                   {run.date ? (
-                    format(parseISO(run.date), 'EEEE LL/dd')
+                    <IconButton onClick={() => handleOpenPreview(run.id)}>
+                      <Eye size={20} />
+                    </IconButton>
                   ) : (
-                    <span>-</span>
+                    '-'
                   )}
-                </td>
-                <td className='p-2'>
+                </TableCell>
+                <TableCell>
+                  {run.date ? format(parseISO(run.date), 'EEEE LL/dd') : '-'}
+                </TableCell>
+                <TableCell>
                   {run.time && run.date ? (
                     <>
-                      {formatTo12HourEST(run.time)} EST{' '}
-                      {/* Exibe o horário original recebido do backend */}
+                      {formatTo12HourEST(run.time)} EST
                       <br />
                       {convertFromEST(run.time)} BRT
                     </>
                   ) : (
-                    <span>-</span>
+                    '-'
                   )}
-                </td>
-                <td className='p-2'>{run.raid || <span>-</span>}</td>
-                <td className='p-2'>{run.runType || <span>-</span>}</td>
-                <td className='p-2'>{run.difficulty || <span>-</span>}</td>
-                <td className='p-2'>{run.team || <span>-</span>}</td>
-                <td className='p-2'>{run.loot || <span>-</span>}</td>
-                <td className='p-2'>{run.buyersCount || <span>-</span>}</td>
-                <td className='p-2'>
-                  {run.raidLeaders && run.raidLeaders.length > 0 ? (
-                    run.raidLeaders
-                      .map((raidLeader) => raidLeader.username)
-                      .join(', ')
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
-                <td className='p-2 text-center align-middle'>
-                  <div className='flex h-full items-center justify-center'>
-                    {run.note !== '' ? run.note : <span>-</span>}
-                  </div>
-                </td>
-
-                <td className='text-center'>
+                </TableCell>
+                <TableCell>{run.raid || '-'}</TableCell>
+                <TableCell>{run.runType || '-'}</TableCell>
+                <TableCell>{run.difficulty || '-'}</TableCell>
+                <TableCell>{run.team || '-'}</TableCell>
+                <TableCell>{run.loot || '-'}</TableCell>
+                <TableCell>{run.buyersCount || '-'}</TableCell>
+                <TableCell>
+                  {run.raidLeaders && run.raidLeaders.length > 0
+                    ? run.raidLeaders
+                        .map((raidLeader) => raidLeader.username)
+                        .join(', ')
+                    : '-'}
+                </TableCell>
+                <TableCell align='center'>
+                  {run.note !== '' ? run.note : '-'}
+                </TableCell>
+                <TableCell align='center'>
                   {hasRequiredRole(['1101231955120496650']) && (
-                    <button onClick={() => handleOpenDeleteRunModal(run)}>
+                    <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
                       <Trash size={20} />
-                    </button>
+                    </IconButton>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
       {isDeleteRunModalOpen && selectedRunToDelete && (
         <DeleteRun
@@ -296,6 +310,6 @@ export function RunsDataGrid({
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
       )}
-    </div>
+    </TableContainer>
   )
 }
