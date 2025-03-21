@@ -1,6 +1,6 @@
 import { UserPlus } from '@phosphor-icons/react'
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Modal } from './modal'
 import { RunData } from '../types/runs-interface'
 import { api } from '../services/axiosConfig'
@@ -20,25 +20,32 @@ interface Advertiser {
 }
 
 export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
-  const [nameAndRealm, setNameAndRealm] = useState('')
-  const [playerClass, setPlayerClass] = useState('')
-  const [buyerPot, setBuyerPot] = useState('')
-  const [isPaid, setIsPaid] = useState<boolean | undefined>(undefined)
-  const [idBuyerAdvertiser, setIdBuyerAdvertiser] = useState('')
-  const [buyerNote, setBuyerNote] = useState('')
+  const [formData, setFormData] = useState({
+    nameAndRealm: '',
+    playerClass: '',
+    buyerPot: '',
+    isPaid: false,
+    idBuyerAdvertiser: '',
+    buyerNote: '',
+  })
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const rawValue = e.target.value.replace(/\D/g, '') // Remove tudo que não for número
-    if (rawValue) {
-      const formattedValue = Number(rawValue).toLocaleString('en-US')
-      setBuyerPot(formattedValue)
-    } else {
-      setBuyerPot('')
-    }
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { id, value, type, checked } = e.target as HTMLInputElement
+    setFormData((prev) => ({
+      ...prev,
+      [id]: type === 'checkbox' ? checked : value,
+    }))
+  }
+
+  const formatBuyerPot = (value: string) => {
+    const rawValue = value.replace(/\D/g, '')
+    return rawValue ? Number(rawValue).toLocaleString('en-US') : ''
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,71 +54,61 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
     const data = {
       id_run: run.id,
-      nameAndRealm,
-      playerClass,
-      buyerPot: Number(buyerPot.replace(/,/g, '')), // Remove a formatação antes de enviar
-      isPaid,
-      idBuyerAdvertiser,
-      buyerNote,
+      ...formData,
+      buyerPot: Number(formData.buyerPot.replace(/,/g, '')),
     }
+
     try {
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
           'http://localhost:8000/v1/buyer',
         data
       )
-
       setIsSuccess(true)
       await onBuyerAddedReload()
-
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      setTimeout(onClose, 3000)
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+      )
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  useEffect(() => {
-    async function fetchAdvertisers() {
-      try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/users/ghost` ||
-            'http://localhost:8000/v1/users/ghost'
-        )
-        setAdvertisers(response.data.info)
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-        } else {
-          setError({
-            message: 'Erro inesperado',
-            response: error,
-          })
-        }
-      }
+  const fetchAdvertisers = useCallback(async () => {
+    try {
+      const response = await api.get(
+        `${import.meta.env.VITE_API_BASE_URL}/users/ghost` ||
+          'http://localhost:8000/v1/users/ghost'
+      )
+      setAdvertisers(response.data.info)
+    } catch (error) {
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+      )
     }
-    fetchAdvertisers()
   }, [])
+
+  useEffect(() => {
+    fetchAdvertisers()
+  }, [fetchAdvertisers])
+
+  // Define a reusable class for input and select elements
+  const inputClass =
+    'rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
 
   return (
     <Modal onClose={onClose}>
@@ -134,85 +131,74 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               type='text'
               id='nameAndRealm'
               required
-              value={nameAndRealm}
-              onChange={(e) => setNameAndRealm(e.target.value)}
+              value={formData.nameAndRealm}
+              onChange={handleInputChange}
               placeholder='Buyer Name-Realm'
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              className={inputClass}
             />
-
             <select
               id='playerClass'
-              value={playerClass}
-              onChange={(e) => setPlayerClass(e.target.value)}
-              className='rounded-md border p-2 transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.playerClass}
+              onChange={handleInputChange}
+              className={`${inputClass} ${
+                formData.playerClass === '' ? 'text-zinc-400' : 'text-black'
+              }`}
             >
               <option value='' disabled hidden>
                 Class
               </option>
-              <option className='text-black' value='Warrior'>
-                Warrior
-              </option>
-              <option className='text-black' value='Paladin'>
-                Paladin
-              </option>
-              <option className='text-black' value='Hunter'>
-                Hunter
-              </option>
-              <option className='text-black' value='Rogue'>
-                Rogue
-              </option>
-              <option className='text-black' value='Priest'>
-                Priest
-              </option>
-              <option className='text-black' value='Shaman'>
-                Shaman
-              </option>
-              <option className='text-black' value='Mage'>
-                Mage
-              </option>
-              <option className='text-black' value='Warlock'>
-                Warlock
-              </option>
-              <option className='text-black' value='Monk'>
-                Monk
-              </option>
-              <option className='text-black' value='Druid'>
-                Druid
-              </option>
-              <option className='text-black' value='Demonhunter'>
-                Demon Hunter
-              </option>
-              <option className='text-black' value='Deathknight'>
-                Death Knight
-              </option>
-              <option className='text-black' value='Evoker'>
-                Evoker
-              </option>
+              {[
+                'Warrior',
+                'Paladin',
+                'Hunter',
+                'Rogue',
+                'Priest',
+                'Shaman',
+                'Mage',
+                'Warlock',
+                'Monk',
+                'Druid',
+                'Demonhunter',
+                'Deathknight',
+                'Evoker',
+              ].map((cls) => (
+                <option key={cls} value={cls} className='text-black'>
+                  {cls}
+                </option>
+              ))}
             </select>
-
             <input
               type='text'
               id='buyerPot'
               required
-              value={buyerPot}
-              onChange={handleChange}
+              value={formData.buyerPot}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  buyerPot: formatBuyerPot(e.target.value),
+                }))
+              }
               placeholder='Pot'
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              className={inputClass}
             />
             <select
               id='idBuyerAdvertiser'
-              value={idBuyerAdvertiser}
-              onChange={(e) => setIdBuyerAdvertiser(e.target.value)}
-              className='rounded-md border p-2 text-zinc-400 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.idBuyerAdvertiser}
+              onChange={handleInputChange}
+              className={`${inputClass} ${
+                formData.idBuyerAdvertiser === ''
+                  ? 'text-zinc-400'
+                  : 'text-black'
+              }`}
             >
               <option value='' disabled hidden>
                 Advertiser
               </option>
               {advertisers.map((advertiser) => (
                 <option
-                  className='text-black'
                   key={advertiser.id}
                   value={advertiser.id_discord}
+                  className='text-black'
                 >
                   {advertiser.username}
                 </option>
@@ -221,10 +207,10 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
             <input
               type='text'
               id='buyerNote'
-              value={buyerNote}
-              onChange={(e) => setBuyerNote(e.target.value)}
+              value={formData.buyerNote}
+              onChange={handleInputChange}
               placeholder='Note'
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              className={inputClass}
             />
             <div className='flex items-center gap-2'>
               <label htmlFor='isPaid' className='ml-2 text-lg text-zinc-700'>
@@ -233,8 +219,8 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
               <input
                 type='checkbox'
                 id='isPaid'
-                checked={isPaid ?? false}
-                onChange={(e) => setIsPaid(e.target.checked)}
+                checked={formData.isPaid}
+                onChange={handleInputChange}
                 className='h-5 w-5 cursor-pointer accent-zinc-500'
               />
             </div>
