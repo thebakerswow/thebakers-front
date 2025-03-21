@@ -16,6 +16,28 @@ interface ApiOption {
   global_name: string
 }
 
+const fetchApiOptions = async (
+  teamId: string,
+  onError: (error: ErrorDetails) => void
+) => {
+  try {
+    const response = await api.get(
+      `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
+    )
+    return response.data.info.members || []
+  } catch (error) {
+    const errorDetails = axios.isAxiosError(error)
+      ? {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+      : { message: 'Erro inesperado', response: error }
+    onError(errorDetails)
+    return []
+  }
+}
+
 const MultiSelectDropdown = ({
   onChange,
   onError,
@@ -24,51 +46,17 @@ const MultiSelectDropdown = ({
   const [open, setOpen] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
-
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  function getSpecificTeamUrl(teamId: string) {
-    return `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
-  }
-
+  // Busca as opções da API ao montar o componente do time Prefeito
   useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        //team Prefeitos
-        const teamId = '1148721174088532040'
-        const response = await api.get(
-          getSpecificTeamUrl(teamId) ||
-            'http://localhost:8000/v1/team/1148721174088532040'
-        )
-        if (response.data.info.members) {
-          setApiOptions(response.data.info.members)
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-          onError(errorDetails) // Notifica o componente pai
-        } else {
-          const genericError = {
-            message: 'Erro inesperado',
-            response: error,
-          }
-          setError(genericError)
-          onError(genericError) // Notifica o componente pai
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOptions()
+    const teamId = '1148721174088532040'
+    fetchApiOptions(teamId, onError)
+      .then(setApiOptions)
+      .finally(() => setLoading(false))
   }, [onError])
 
+  // Fecha o dropdown ao clicar fora dele
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -78,57 +66,52 @@ const MultiSelectDropdown = ({
         setOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    onChange(selected)
-  }, [selected, onChange])
+  // Notifica o componente pai sempre que a seleção mudar
+  useEffect(() => onChange(selected), [selected, onChange])
 
-  const handleSelect = useCallback((value: string) => {
-    setSelected((prev) =>
-      prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-    )
-  }, [])
+  // Alterna a seleção de um item
+  const handleSelect = useCallback(
+    (value: string) =>
+      setSelected((prev) =>
+        prev.includes(value)
+          ? prev.filter((item) => item !== value)
+          : [...prev, value]
+      ),
+    []
+  )
 
-  // Função para obter os nomes de exibição
-  const getDisplayNames = () => {
-    return selected
+  // Obtém os nomes de exibição dos itens selecionados
+  const getDisplayNames = () =>
+    selected
       .map((value) => {
-        // Divide o valor armazenado em user_id e username
         const [id, username] = value.split(';')
-        // Encontra o usuário correspondente
-        const user = apiOptions.find(
-          (u) => u.id === id && u.username === username
+        return (
+          apiOptions.find((u) => u.id === id && u.username === username)
+            ?.global_name || value
         )
-        return user?.global_name || value // Exibe o global_name ou o valor como fallback
       })
       .join(', ')
-  }
 
   return (
     <div ref={dropdownRef} className='relative'>
+      {/* Exibe o dropdown com os itens selecionados */}
       <div
-        className={`cursor-pointer rounded-md border bg-white p-2 font-normal ${
-          selected.length > 0 ? 'text-black' : 'text-zinc-400'
-        }`}
+        className={`cursor-pointer rounded-md border bg-white p-2 font-normal ${selected.length > 0 ? 'text-black' : 'text-zinc-400'}`}
         onClick={() => setOpen(!open)}
       >
         {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
       </div>
       {open && (
         <div className='absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-md bg-white shadow-lg'>
-          {loading && (
+          {loading ? (
             <div className='p-2 text-center text-gray-500'>
               Loading options...
             </div>
-          )}
-          {!loading &&
-            !error &&
+          ) : (
             apiOptions.map((option) => (
               <div
                 key={option.username}
@@ -145,7 +128,8 @@ const MultiSelectDropdown = ({
                   {option.global_name}
                 </span>
               </div>
-            ))}
+            ))
+          )}
         </div>
       )}
     </div>
@@ -157,77 +141,60 @@ export interface AddRunProps {
   onRunAddedReload: () => void
 }
 
+// Defina uma classe utilitária para estilos comuns
+const commonInputStyles =
+  'rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+
 export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-  const [raid, setRaid] = useState('')
-  const [runType, setRunType] = useState('')
-  const [difficulty, setDifficulty] = useState('')
-  const [idTeam, setIdTeam] = useState('')
-  const [maxBuyers, setMaxBuyers] = useState('')
-  const [raidLeader, setRaidLeader] = useState<string[]>([])
-  const [loot, setLoot] = useState('')
-  const [note, setNote] = useState('')
+  const [formData, setFormData] = useState({
+    date: '',
+    time: '',
+    raid: '',
+    runType: '',
+    difficulty: '',
+    idTeam: '',
+    maxBuyers: '',
+    raidLeader: [] as string[],
+    loot: '',
+    note: '',
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const handleDropdownError = useCallback((error: ErrorDetails) => {
-    setError(error)
-  }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    if (/^[0-9]*$/.test(newValue)) {
-      setMaxBuyers(newValue)
-    }
+  // Atualiza os valores do formulário
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [id]:
+        id === 'maxBuyers' && !/^[0-9]*$/.test(value) ? prev.maxBuyers : value,
+    }))
   }
 
+  // Envia os dados do formulário para a API
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-
-    const data = {
-      date,
-      time,
-      raid,
-      runType,
-      difficulty,
-      idTeam,
-      maxBuyers,
-      raidLeader,
-      loot,
-      note,
-    }
-
     try {
-      await api.post(
-        `${import.meta.env.VITE_API_BASE_URL}/run` ||
-          'http://localhost:8000/v1/run',
-        data
-      )
-
+      await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
       await onRunAddedReload()
-
       setIsSuccess(true)
-
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      setTimeout(onClose, 3000)
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Erro inesperado', response: error }
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -237,8 +204,10 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     <Modal onClose={onClose}>
       <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
         {error ? (
+          // Exibe o componente de erro caso ocorra algum problema
           <ErrorComponent error={error} onClose={() => setError(null)} />
         ) : isSuccess ? (
+          // Exibe mensagem de sucesso após a criação da run
           <div className='p-6 text-center'>
             <div className='mb-4 text-4xl text-green-500'>✓</div>
             <h2 className='mb-2 text-2xl font-bold'>
@@ -249,38 +218,40 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </p>
           </div>
         ) : (
+          // Formulário para criar uma nova run
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+            {/* Inputs e selects para os dados da run */}
             <input
               type='date'
               id='date'
               required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.date}
+              onChange={handleChange}
+              className={`${commonInputStyles} text-zinc-400 valid:text-black`}
             />
             <input
               type='time'
               id='time'
               required
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.time}
+              onChange={handleChange}
+              className={`${commonInputStyles} text-zinc-400 valid:text-black`}
             />
             <input
               type='text'
               id='raid'
               required
               placeholder='Raid'
-              value={raid}
-              onChange={(e) => setRaid(e.target.value)}
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.raid}
+              onChange={handleChange}
+              className={commonInputStyles}
             />
             <select
               id='runType'
               required
-              value={runType}
-              onChange={(e) => setRunType(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.runType}
+              onChange={handleChange}
+              className={`${commonInputStyles} font-normal valid:text-black invalid:text-zinc-400`}
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Run Type
@@ -298,9 +269,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <select
               id='difficulty'
               required
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.difficulty}
+              onChange={handleChange}
+              className={`${commonInputStyles} font-normal valid:text-black invalid:text-zinc-400`}
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Difficulty
@@ -316,11 +287,11 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               </option>
             </select>
             <select
-              id='team'
+              id='idTeam'
               required
-              value={idTeam}
-              onChange={(e) => setIdTeam(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.idTeam}
+              onChange={handleChange}
+              className={`${commonInputStyles} font-normal valid:text-black invalid:text-zinc-400`}
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Team
@@ -352,20 +323,22 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               id='maxBuyers'
               required
               placeholder='Max Buyers'
-              value={maxBuyers}
+              value={formData.maxBuyers}
               onChange={handleChange}
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              className={commonInputStyles}
             />
             <MultiSelectDropdown
-              onChange={(selected) => setRaidLeader(selected)}
-              onError={handleDropdownError}
+              onChange={(selected) =>
+                setFormData((prev) => ({ ...prev, raidLeader: selected }))
+              }
+              onError={setError}
             />
             <select
               required
               id='loot'
-              value={loot}
-              onChange={(e) => setLoot(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.loot}
+              onChange={handleChange}
+              className={`${commonInputStyles} font-normal valid:text-black invalid:text-zinc-400`}
             >
               <option value='' disabled hidden className='text-zinc-400'>
                 Loot
@@ -380,9 +353,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <textarea
               placeholder='Note'
               id='note'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className='col-span-2 rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
+              value={formData.note}
+              onChange={handleChange}
+              className={`col-span-2 ${commonInputStyles}`}
             />
             <div className='col-span-2 flex items-center justify-center gap-4'>
               <button
