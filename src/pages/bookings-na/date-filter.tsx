@@ -11,12 +11,14 @@ import {
   startOfWeek,
   startOfDay,
 } from 'date-fns'
+import { Button } from '@mui/material'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
 }
 
 function computeWeeksAndDays(date: Date) {
+  // Calcula as semanas e dias de um mês específico, incluindo a semana atual e o dia selecionado.
   const year = date.getFullYear()
   const month = date.getMonth()
   const firstDayOfMonth = new Date(year, month, 1)
@@ -85,8 +87,6 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   const currentMonth = new Date()
   const initialData = computeWeeksAndDays(currentMonth)
 
-  // filterDay representa o dia usado para filtrar os dados da tabela.
-  // Ele é atualizado somente quando o usuário seleciona um dia.
   const [filterDay, setFilterDay] = useState<Date | null>(
     initialData.selectedDay
   )
@@ -98,22 +98,22 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   )
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
-  // Apenas na montagem inicial configuramos o filtro para o dia atual.
   useEffect(() => {
+    // Configura o dia inicial do filtro ao montar o componente.
     onDaySelect(filterDay)
   }, [])
 
-  // Atualiza os controles (seção de semanas e dias) sem alterar o filtro atual.
   const updateWeeksAndDays = useCallback((date: Date) => {
+    // Atualiza as semanas e dias com base no mês selecionado.
     const data = computeWeeksAndDays(date)
     setWeeks(data.weeks)
     setDays(data.days)
     setSelectedWeekIndex(data.selectedWeekIndex)
-    // NÃO atualizamos filterDay aqui para manter os dados da tabela inalterados.
   }, [])
 
   const handleMonthChange = useCallback(
     (date: Date | null) => {
+      // Atualiza o mês selecionado e recalcula as semanas e dias.
       if (date) {
         setSelectedMonth(date)
         updateWeeksAndDays(date)
@@ -124,21 +124,22 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   )
 
   function handleWeekSelect(weekIndex: number) {
+    // Atualiza os dias exibidos com base na semana selecionada.
     if (weekIndex < 0 || weekIndex >= weeks.length) return
     const { start, end } = weeks[weekIndex]
     const daysInWeek = eachDayOfInterval({ start, end })
     setDays(daysInWeek)
     setSelectedWeekIndex(weekIndex)
-    // NÃO alteramos filterDay aqui; o filtro continua o mesmo.
   }
+
   function handleDaySelect(day: Date) {
+    // Atualiza o dia selecionado e notifica o componente pai.
     setFilterDay(day)
-    // Aqui removemos a chamada à API e apenas enviamos a data para o componente pai
     onDaySelect(day)
   }
 
-  // No reset, tudo volta ao dia atual, atualizando inclusive o filtro.
   function handleFilterReset() {
+    // Reseta o filtro para o dia atual e recalcula os dados.
     const newMonth = new Date()
     setSelectedMonth(newMonth)
     const data = computeWeeksAndDays(newMonth)
@@ -153,7 +154,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     <div className='flex flex-col items-center gap-4 text-lg'>
       <div className='flex gap-8'>
         <label className='flex flex-col'>
-          <p>Select Month:</p>
+          <p className='font-normal'>Select Month:</p>
           <div className='flex items-center gap-4'>
             <DatePicker
               selected={selectedMonth}
@@ -171,7 +172,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
         </label>
         {weeks.length > 0 && (
           <div>
-            <label className='mr-2 flex flex-col'>
+            <label className='mr-2 flex flex-col font-normal'>
               Select Week:
               <div className='flex gap-4'>
                 <select
@@ -186,12 +187,18 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
                   onClick={handleFilterReset}
-                  className='rounded-md bg-red-400 p-1 px-2 text-sm font-normal text-gray-100 shadow-lg hover:bg-red-500'
+                  variant='contained'
+                  style={{
+                    color: 'black',
+                    backgroundColor: 'oklch(0.704 0.191 22.216)',
+                  }} // Lighter red
+                  size='small'
+                  className='shadow-lg'
                 >
                   Reset
-                </button>
+                </Button>
               </div>
             </label>
           </div>
@@ -200,22 +207,38 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
 
       {days.length > 0 && (
         <div>
-          <p className='pl-2'>Select Day:</p>
-          <div>
+          <p className='pl-2 font-normal'>Select Day:</p>
+          <div className='flex gap-2'>
             {days.map((day) => (
-              <button
+              <Button
                 className={`${
                   filterDay &&
                   format(startOfDay(day), 'yyyy-MM-dd') ===
                     format(startOfDay(filterDay), 'yyyy-MM-dd')
-                    ? 'border border-gray-100 bg-zinc-500 font-medium text-gray-100'
-                    : 'bg-zinc-100 text-zinc-900'
-                } m-2 gap-2 rounded-md border-gray-100 p-2 text-sm`}
+                    ? 'border font-medium'
+                    : ''
+                } m-2 gap-2 rounded-md`}
                 key={day.toISOString()}
                 onClick={() => handleDaySelect(day)}
+                variant='outlined'
+                style={{
+                  color: 'black',
+                  backgroundColor:
+                    filterDay &&
+                    format(startOfDay(day), 'yyyy-MM-dd') ===
+                      format(startOfDay(filterDay), 'yyyy-MM-dd')
+                      ? 'pink' // Slightly darker background for selected
+                      : 'white',
+                  borderColor:
+                    filterDay &&
+                    format(startOfDay(day), 'yyyy-MM-dd') ===
+                      format(startOfDay(filterDay), 'yyyy-MM-dd')
+                      ? 'pink' // Darker border for selected
+                      : 'gray',
+                }}
               >
                 {format(day, 'EEEE, dd MMM')}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

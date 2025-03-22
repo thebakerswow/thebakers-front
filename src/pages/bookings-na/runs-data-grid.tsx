@@ -1,4 +1,5 @@
 import { Eye, Trash } from '@phosphor-icons/react'
+import { TableSortLabel } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal } from '../../components/modal'
@@ -35,7 +36,7 @@ export function RunsDataGrid({
   const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [selectedRun, setSelectedRun] = useState<{
     note: string
-    id?: string // Adicionando a propriedade 'id' aqui
+    id?: string
   } | null>(null)
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -49,6 +50,7 @@ export function RunsDataGrid({
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const { userRoles } = useAuth()
 
+  // Verifica se o usuário possui os papéis necessários
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
     return requiredRoles.some((required) =>
       userRoles.some((userRole) => userRole.toString() === required.toString())
@@ -65,16 +67,32 @@ export function RunsDataGrid({
     Padeirinho: 7,
   }
 
+  const teamColors: { [key: string]: string } = {
+    Padeirinho: '#F59E0B',
+    Garçom: '#93C5FD',
+    Confeiteiros: '#C4B5FD',
+    Jackfruit: '#86EFAC',
+    Milharal: '#FDE68A',
+    Raio: '#FEF3C7',
+    APAE: '#FCA5A5',
+  }
+
+  // Retorna a cor associada a um time
+  const getTeamColor = (team: string) => teamColors[team] || undefined
+
+  // Abre o modal de visualização para uma run específica
   const handleOpenPreview = (runId: string) => {
     setSelectedRunId(runId)
     setIsPreviewOpen(true)
   }
 
+  // Fecha o modal de visualização
   const handleClosePreview = () => {
     setIsPreviewOpen(false)
     setSelectedRunId(null)
   }
 
+  // Abre o modal de exclusão de uma run
   const handleOpenDeleteRunModal = (run: {
     id: string
     raid: string
@@ -84,25 +102,29 @@ export function RunsDataGrid({
     setIsDeleteRunModalOpen(true)
   }
 
+  // Fecha o modal de exclusão de uma run
   const handleCloseDeleteRunModal = () => {
     setIsDeleteRunModalOpen(false)
     setSelectedRunToDelete(null)
   }
 
-  function handleCloseNote() {
+  const handleCloseNote = () => {
     setIsNoteOpen(false)
     setSelectedRun(null)
   }
 
+  // Redireciona para a página de detalhes da run
   const handleRedirect = (id: string) => {
-    navigate(`/bookings-na/run/${id}`) // Altere '/sua-url' para o caminho desejado
+    navigate(`/bookings-na/run/${id}`)
   }
 
+  // Converte o horário no formato HH:mm para minutos totais
   const convertTimeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number)
     return hours * 60 + minutes
   }
 
+  // Ordena os dados por horário e prioridade do time
   const sortedData = useMemo(() => {
     const sorted = [...data].sort((a, b) => {
       if (!a.time || !b.time) return 0
@@ -114,7 +136,6 @@ export function RunsDataGrid({
         return isTimeSortedAsc ? timeA - timeB : timeB - timeA
       }
 
-      // Ordenação por prioridade do time se os horários forem iguais
       const priorityA = teamPriority[a.team] || 999
       const priorityB = teamPriority[b.team] || 999
 
@@ -124,34 +145,68 @@ export function RunsDataGrid({
     return sorted
   }, [data, isTimeSortedAsc])
 
+  // Alterna a ordem de classificação por horário
   const handleSortByTime = useCallback(() => {
     setIsTimeSortedAsc((prev) => !prev)
   }, [])
 
-  function convertFromEST(timeStr: string) {
+  // Converte o horário de EST para BRT
+  const convertFromEST = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = hours + 1 // Ajuste para BRT
+    let adjustedHours = hours + 1
 
-    // Ajustar caso a conversão ultrapasse 24h
     if (adjustedHours === 24) {
-      adjustedHours = 0 // Meia-noite
+      adjustedHours = 0
     }
 
-    // Formatar para 12 horas
     const period = adjustedHours >= 12 ? 'PM' : 'AM'
-    const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
+    const formattedHours = adjustedHours % 12 || 12
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
 
-  function formatTo12HourEST(timeStr: string) {
+  // Formata o horário para o formato de 12 horas EST
+  const formatTo12HourEST = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number)
 
     const period = hours >= 12 ? 'PM' : 'AM'
-    const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
+    const formattedHours = hours % 12 || 12
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
+
+  // Renderiza uma célula da tabela com conteúdo padrão
+  const renderTableCell = (
+    content: string | number | JSX.Element | null,
+    align: 'center' | 'left' = 'left'
+  ) => (
+    <TableCell
+      align={align}
+      style={{ fontSize: '1rem' }} // Aumenta o tamanho da fonte das células
+    >
+      {content || '-'}
+    </TableCell>
+  )
+
+  // Renderiza os líderes do raid como uma string separada por vírgulas
+  const renderRaidLeaders = (
+    raidLeaders: { username: string }[] | undefined
+  ) =>
+    raidLeaders && raidLeaders.length > 0
+      ? raidLeaders.map((leader) => leader.username).join(', ')
+      : '-'
+
+  // Renderiza o horário em ambos os formatos EST e BRT
+  const renderTime = (time: string | undefined, date: string | undefined) =>
+    time && date ? (
+      <>
+        {formatTo12HourEST(time)} EST
+        <br />
+        {convertFromEST(time)} BRT
+      </>
+    ) : (
+      '-'
+    )
 
   if (error) {
     return (
@@ -165,50 +220,83 @@ export function RunsDataGrid({
     <TableContainer
       component={Paper}
       className='relative h-[500px] overflow-x-auto rounded-sm'
+      style={{ fontSize: '1rem' }} // Define o tamanho da fonte para o container
     >
       <Table stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell>Preview</TableCell>
-            <TableCell>Date</TableCell>
-            <TableCell onClick={handleSortByTime} style={{ cursor: 'pointer' }}>
-              Time {isTimeSortedAsc ? '▲' : '▼'}
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Preview
             </TableCell>
-            <TableCell>Raid</TableCell>
-            <TableCell>Run Type</TableCell>
-            <TableCell>Difficulty</TableCell>
-            <TableCell>Team</TableCell>
-            <TableCell>Loot</TableCell>
-            <TableCell>Buyers</TableCell>
-            <TableCell>Raid Leader</TableCell>
-            <TableCell>Note</TableCell>
-            <TableCell />
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Date
+            </TableCell>
+            <TableCell
+              sortDirection={isTimeSortedAsc ? 'asc' : 'desc'}
+              style={{ fontSize: '1rem', fontWeight: 'bold' }} // Aumenta o tamanho da fonte do cabeçalho
+            >
+              <TableSortLabel
+                active
+                direction={isTimeSortedAsc ? 'asc' : 'desc'}
+                onClick={handleSortByTime}
+                style={{ cursor: 'pointer' }}
+              >
+                Time
+              </TableSortLabel>
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Raid
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Run Type
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Difficulty
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Team
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Loot
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Buyers
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Raid Leader
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              Note
+            </TableCell>
+            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }} />
           </TableRow>
         </TableHead>
         <TableBody>
           {isLoading ? (
-            <TableRow>
+            <TableRow style={{ height: '400px', border: 'none' }}>
               <TableCell
                 colSpan={12}
                 align='center'
                 style={{
-                  height: '300px', // Ajusta a altura para centralizar verticalmente
-                  textAlign: 'center',
-                  border: 'none', // Remove as marcações das linhas
+                  verticalAlign: 'middle',
+                  display: 'table-cell',
+                  height: '400px',
+                  border: 'none',
                 }}
               >
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : sortedData.length === 0 ? (
-            <TableRow>
+            <TableRow style={{ height: '400px', border: 'none' }}>
               <TableCell
                 colSpan={12}
                 align='center'
                 style={{
-                  height: '300px', // Ajusta a altura para centralizar verticalmente
-                  textAlign: 'center',
-                  border: 'none', // Remove as marcações das linhas
+                  verticalAlign: 'middle',
+                  display: 'table-cell',
+                  height: '400px',
+                  border: 'none',
                 }}
               >
                 No runs today
@@ -220,70 +308,38 @@ export function RunsDataGrid({
                 key={index}
                 onDoubleClick={() => handleRedirect(run.id)}
                 style={{
-                  backgroundColor:
-                    run.team === 'Padeirinho'
-                      ? '#F59E0B'
-                      : run.team === 'Garçom'
-                        ? '#93C5FD'
-                        : run.team === 'Confeiteiros'
-                          ? '#C4B5FD'
-                          : run.team === 'Jackfruit'
-                            ? '#86EFAC'
-                            : run.team === 'Milharal'
-                              ? '#FDE68A'
-                              : run.team === 'Raio'
-                                ? '#FEF3C7'
-                                : run.team === 'APAE'
-                                  ? '#FCA5A5'
-                                  : undefined,
+                  cursor: 'pointer',
+                  backgroundColor: getTeamColor(run.team),
                 }}
               >
-                <TableCell align='center'>
-                  {run.date ? (
+                {renderTableCell(
+                  run.date ? (
                     <IconButton onClick={() => handleOpenPreview(run.id)}>
                       <Eye size={20} />
                     </IconButton>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>
-                  {run.date ? format(parseISO(run.date), 'EEEE LL/dd') : '-'}
-                </TableCell>
-                <TableCell>
-                  {run.time && run.date ? (
-                    <>
-                      {formatTo12HourEST(run.time)} EST
-                      <br />
-                      {convertFromEST(run.time)} BRT
-                    </>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>{run.raid || '-'}</TableCell>
-                <TableCell>{run.runType || '-'}</TableCell>
-                <TableCell>{run.difficulty || '-'}</TableCell>
-                <TableCell>{run.team || '-'}</TableCell>
-                <TableCell>{run.loot || '-'}</TableCell>
-                <TableCell>{run.buyersCount || '-'}</TableCell>
-                <TableCell>
-                  {run.raidLeaders && run.raidLeaders.length > 0
-                    ? run.raidLeaders
-                        .map((raidLeader) => raidLeader.username)
-                        .join(', ')
-                    : '-'}
-                </TableCell>
-                <TableCell align='center'>
-                  {run.note !== '' ? run.note : '-'}
-                </TableCell>
-                <TableCell align='center'>
-                  {hasRequiredRole(['1101231955120496650']) && (
+                  ) : null,
+                  'center'
+                )}
+                {renderTableCell(
+                  run.date ? format(parseISO(run.date), 'EEEE LL/dd') : null
+                )}
+                {renderTableCell(renderTime(run.time, run.date))}
+                {renderTableCell(run.raid)}
+                {renderTableCell(run.runType)}
+                {renderTableCell(run.difficulty)}
+                {renderTableCell(run.team)}
+                {renderTableCell(run.loot)}
+                {renderTableCell(run.buyersCount)}
+                {renderTableCell(renderRaidLeaders(run.raidLeaders))}
+                {renderTableCell(run.note, 'center')}
+                {renderTableCell(
+                  hasRequiredRole(['1101231955120496650']) ? (
                     <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
                       <Trash size={20} />
                     </IconButton>
-                  )}
-                </TableCell>
+                  ) : null,
+                  'center'
+                )}
               </TableRow>
             ))
           )}
