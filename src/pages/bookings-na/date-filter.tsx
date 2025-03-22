@@ -151,7 +151,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   }
 
   return (
-    <div className='flex flex-col items-center gap-4 text-lg'>
+    <div className='mt-10 flex flex-col items-center gap-4 text-lg'>
       <div className='flex items-center gap-12'>
         <div className='flex flex-col'>
           <InputLabel className='font-normal' style={{ color: 'white' }}>
@@ -163,7 +163,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               onChange={handleMonthChange}
               dateFormat='MM/yyyy'
               showMonthYearPicker
-              className='h-10 w-56 rounded-sm p-1 pl-2 font-normal text-zinc-900'
+              className='h-10 w-56 rounded-sm bg-white p-1 pl-2 font-normal text-zinc-900'
               placeholderText='Month'
               open={isCalendarOpen}
               onClickOutside={() => setIsCalendarOpen(false)}

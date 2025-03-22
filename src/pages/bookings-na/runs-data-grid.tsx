@@ -68,17 +68,19 @@ export function RunsDataGrid({
   }
 
   const teamColors: { [key: string]: string } = {
-    Padeirinho: '#F59E0B',
-    Garçom: '#93C5FD',
-    Confeiteiros: '#C4B5FD',
-    Jackfruit: '#86EFAC',
-    Milharal: '#FDE68A',
-    Raio: '#FEF3C7',
-    APAE: '#FCA5A5',
+    Padeirinho: 'linear-gradient(90deg, #FDE68A, #ca8a04)',
+    Garçom: 'linear-gradient(90deg, #86EFAC, #16a34a)',
+    Confeiteiros: 'linear-gradient(90deg, #A78BFA, #f472b6)',
+    Jackfruit: 'linear-gradient(90deg, #4ADE80, #86efac)',
+    Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
+    Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
+    APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
   }
 
-  // Retorna a cor associada a um time
-  const getTeamColor = (team: string) => teamColors[team] || undefined
+  // Retorna o estilo de fundo associado a um time
+  const getTeamColor = (team: string) => ({
+    background: teamColors[team] || 'transparent',
+  })
 
   // Abre o modal de visualização para uma run específica
   const handleOpenPreview = (runId: string) => {
@@ -108,6 +110,7 @@ export function RunsDataGrid({
     setSelectedRunToDelete(null)
   }
 
+  // Fecha o modal de nota
   const handleCloseNote = () => {
     setIsNoteOpen(false)
     setSelectedRun(null)
@@ -219,21 +222,40 @@ export function RunsDataGrid({
   return (
     <TableContainer
       component={Paper}
-      className='relative h-[500px] overflow-x-auto rounded-sm'
-      style={{ fontSize: '1rem' }} // Define o tamanho da fonte para o container
+      className='relative mb-8 rounded-sm'
+      style={{
+        fontSize: '1rem',
+        overflow: 'hidden',
+      }}
     >
       <Table stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
               Preview
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Date
             </TableCell>
             <TableCell
               sortDirection={isTimeSortedAsc ? 'asc' : 'desc'}
-              style={{ fontSize: '1rem', fontWeight: 'bold' }} // Aumenta o tamanho da fonte do cabeçalho
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
             >
               <TableSortLabel
                 active
@@ -244,31 +266,85 @@ export function RunsDataGrid({
                 Time
               </TableSortLabel>
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Raid
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Run Type
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Difficulty
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Team
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Loot
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Buyers
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Raid Leader
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
               Note
             </TableCell>
-            <TableCell style={{ fontSize: '1rem', fontWeight: 'bold' }} />
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            />
           </TableRow>
         </TableHead>
         <TableBody>
@@ -309,7 +385,7 @@ export function RunsDataGrid({
                 onDoubleClick={() => handleRedirect(run.id)}
                 style={{
                   cursor: 'pointer',
-                  backgroundColor: getTeamColor(run.team),
+                  ...getTeamColor(run.team), // Apply gradient background
                 }}
               >
                 {renderTableCell(

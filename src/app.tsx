@@ -19,6 +19,7 @@ import { AccessDenied } from './pages/error-pages/access-denied'
 import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
 import { Register } from './pages/register'
+import backgroundTeste from './assets/background_teste.png'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -42,7 +43,10 @@ export function App() {
         <AuthProvider>
           <div className='flex flex-grow flex-col'>
             <Header />
-            <main className='relative flex flex-grow justify-center overflow-y-auto bg-zinc-300'>
+            <main
+              className='relative flex flex-grow justify-center overflow-y-auto bg-cover bg-center'
+              style={{ backgroundImage: `url(${backgroundTeste})` }}
+            >
               <Routes>
                 {/* Rotas públicas */}
                 <Route path='/' element={<Login />} />

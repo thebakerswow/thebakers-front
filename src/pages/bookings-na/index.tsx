@@ -70,19 +70,7 @@ export function FullRaidsNa() {
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            bgcolor: 'rgb(163, 163, 163)', // zinc-400
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-          }}
-        >
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
           <ErrorComponent error={error} onClose={() => setError(null)} />
         </Box>
       </MuiModal>
@@ -90,30 +78,39 @@ export function FullRaidsNa() {
   }
 
   return (
-    <div className='m-8 flex w-full flex-col items-center justify-center rounded-xl bg-zinc-700 text-gray-100 shadow-2xl'>
+    <div className='flex min-h-screen w-full flex-col items-center justify-center'>
       <DateFilter onDaySelect={setSelectedDate} />
-      <div className='container mx-auto mt-2 p-4'>
+      <div
+        className='container mx-auto mt-2 flex flex-col p-4'
+        style={{
+          minHeight: '500px',
+          height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
+        }}
+      >
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
         {hasRequiredRole(['1101231955120496650']) && (
-          <Button
-            variant='contained'
-            sx={{
-              backgroundColor: 'rgb(248, 113, 113)',
-              '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
-              marginBottom: '8px',
-            }}
-            startIcon={<UserPlus size={18} />}
-            onClick={() => setIsAddRunOpen(true)}
-          >
-            Add Run
-          </Button>
+          <div className='mb-2 self-start'>
+            <Button
+              variant='contained'
+              sx={{
+                backgroundColor: 'rgb(248, 113, 113)',
+                '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+              }}
+              startIcon={<UserPlus size={18} />}
+              onClick={() => setIsAddRunOpen(true)}
+            >
+              Add Run
+            </Button>
+          </div>
         )}
 
-        <RunsDataGrid
-          data={rows}
-          isLoading={isLoading}
-          onDeleteSuccess={() => fetchRuns(true)}
-        />
+        <div className='mb-4 flex flex-1 flex-col'>
+          <RunsDataGrid
+            data={rows}
+            isLoading={isLoading}
+            onDeleteSuccess={() => fetchRuns(true)}
+          />
+        </div>
 
         {isAddRunOpen && (
           <AddRun
