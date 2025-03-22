@@ -1,3 +1,5 @@
+import Button from '@mui/material/Button'
+
 export interface ErrorDetails {
   message: string
   response?: any
@@ -10,38 +12,48 @@ interface ErrorComponentProps {
 }
 
 export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
+  const { response, message } = error
+  const errorData = response?.errors?.[0]
+
   return (
-    <div className='flex flex-col items-center justify-center rounded-xl bg-zinc-400 p-6 text-red-400 shadow-2xl'>
-      <div className='w-full max-w-2xl rounded-lg bg-zinc-800 p-4'>
-        {error.response?.errors?.[0]?.title && (
-          <div className='mb-2 text-center'>
-            <p className='mt-1 text-xl font-bold'>
-              {error.response.errors[0].title}
-            </p>
-          </div>
-        )}
+    <div className='max-w-2xl rounded-lg bg-zinc-800 p-4 text-center'>
+      {errorData?.title && (
+        <div className='mb-2'>
+          <p className='text-xl font-bold text-red-400'>{errorData.title}</p>
+        </div>
+      )}
 
-        {error.response?.errors?.[0]?.detail && (
-          <div className='mb-2'>
-            <p className='font-semibold'>Details:</p>
-            <p className='mt-1'>{error.response.errors[0].detail}</p>
-          </div>
-        )}
+      {errorData?.detail && (
+        <div className='mb-2'>
+          <p className='font-semibold text-red-400'>Details:</p>
+          <p className='text-red-400'>{errorData.detail}</p>
+        </div>
+      )}
 
-        {!error.response?.errors && error.message && (
-          <div className='mb-2'>
-            <p className='font-semibold'>Mensagem:</p>
-            <p className='mt-1'>{error.message}</p>
-          </div>
-        )}
-      </div>
+      {!errorData && message && (
+        <div className='mb-2'>
+          <p className='font-semibold text-red-400'>Mensagem:</p>
+          <p className='text-red-400'>{message}</p>
+        </div>
+      )}
 
-      <button
-        className='mt-6 rounded bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600'
+      <Button
+        variant='contained'
+        color='error'
         onClick={onClose}
+        sx={{
+          marginTop: '1.5rem',
+          paddingX: '1rem',
+          paddingY: '0.5rem',
+          fontWeight: 'bold',
+          ':hover': {
+            backgroundColor: 'rgb(248, 113, 113)',
+            '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+          },
+        }}
       >
         Fechar
-      </button>
+      </Button>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { UserPlus } from '@phosphor-icons/react'
-import { Modal } from './modal'
+import { Modal as MaterialModal, Box } from '@mui/material' // Import Material-UI Modal
 import axios from 'axios'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
@@ -201,8 +201,20 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   }
 
   return (
-    <Modal onClose={onClose}>
-      <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
+    <MaterialModal open={true} onClose={onClose}>
+      <Box
+        className='flex min-h-[28vw] w-full max-w-[40vw] flex-col overflow-y-auto overflow-x-hidden'
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+        }}
+      >
         {error ? (
           // Exibe o componente de erro caso ocorra algum problema
           <ErrorComponent error={error} onClose={() => setError(null)} />
@@ -379,7 +391,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </div>
           </form>
         )}
-      </div>
-    </Modal>
+      </Box>
+    </MaterialModal>
   )
 }

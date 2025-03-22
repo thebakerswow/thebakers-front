@@ -9,7 +9,8 @@ import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
-import { Modal } from '../../components/modal'
+import Button from '@mui/material/Button'
+import { Modal as MuiModal, Box } from '@mui/material'
 
 export function FullRaidsNa() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -19,17 +20,13 @@ export function FullRaidsNa() {
   const [isLoading, setIsLoading] = useState(false)
   const { userRoles } = useAuth()
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
-  }
+  // Verifica se o usuário possui o papel necessário
+  const hasRequiredRole = (requiredRoles: string[]) =>
+    requiredRoles.some((required) => userRoles.includes(required.toString()))
 
-  async function fetchRuns(isUserRequest: boolean) {
-    // Ativa loading apenas se for requisição do usuário e houver data selecionada
-    if (isUserRequest && selectedDate) {
-      setIsLoading(true)
-    }
+  // Busca os dados das corridas na API
+  const fetchRuns = async (isUserRequest: boolean) => {
+    if (isUserRequest && selectedDate) setIsLoading(true)
 
     try {
       if (!selectedDate) {
@@ -37,99 +34,80 @@ export function FullRaidsNa() {
         return
       }
 
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run` ||
-          'http://localhost:8000/v1/run',
-        {
-          params: { date: format(selectedDate, 'yyyy-MM-dd') },
-        }
+      const { data } = await api.get('/run', {
+        params: { date: format(selectedDate, 'yyyy-MM-dd') },
+      })
+
+      setRows(
+        (data.info || []).map((run: any) => ({
+          ...run,
+          buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+        }))
       )
-      const runs = response.data.info
-      if (runs) {
-        const formattedData = Array.isArray(runs)
-          ? runs.map((run: any) => ({
-              ...run,
-              buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
-            }))
-          : []
-        setRows(formattedData)
-      } else {
-        setRows([])
-      }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        console.error('Erro detalhado:', errorDetails)
-        setError(errorDetails)
-      } else {
-        const genericError = {
-          message: 'Erro inesperado',
-          response: error,
-        }
-        console.error('Erro genérico:', error)
-        setError(genericError)
-      }
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Erro inesperado', response: error }
+      console.error('Erro:', errorDetails)
+      setError(errorDetails)
     } finally {
-      if (isUserRequest) {
-        setIsLoading(false) // Desativa loading apenas para requisições do usuário
-      }
+      if (isUserRequest) setIsLoading(false)
     }
   }
 
-  if (error) {
-    return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
-    )
-  }
-
+  // Busca inicial e configuração de polling
   useEffect(() => {
-    fetchRuns(true) // Requisição inicial (usuário)
+    fetchRuns(true)
 
-    const interval = setInterval(() => {
-      fetchRuns(false) // Pooling (não mostra loading)
-    }, 20000)
-
+    const interval = setInterval(() => fetchRuns(false), 20000)
     return () => clearInterval(interval)
   }, [selectedDate])
 
-  function onDaySelect(day: Date | null) {
-    setSelectedDate(day)
-  }
-
-  function handleOpenAddRun() {
-    setIsAddRunOpen(true)
-  }
-
-  function handleCloseAddRun() {
-    setIsAddRunOpen(false)
+  if (error) {
+    return (
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'rgb(163, 163, 163)', // zinc-400
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
+    )
   }
 
   return (
-    <div className='m-8 flex w-full flex-col items-center justify-center rounded-xl bg-zinc-700 font-semibold text-gray-100 shadow-2xl'>
-      <DateFilter onDaySelect={onDaySelect} />
+    <div className='m-8 flex w-full flex-col items-center justify-center rounded-xl bg-zinc-700 text-gray-100 shadow-2xl'>
+      <DateFilter onDaySelect={setSelectedDate} />
       <div className='container mx-auto mt-2 p-4'>
-        <div className='mb-2 flex items-center justify-between'>
-          {/* Apenas Chefe de Cozinha pode ver */}
-          {hasRequiredRole(['1101231955120496650']) && (
-            <button
-              className='flex items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
-              onClick={handleOpenAddRun}
-            >
-              <UserPlus size={18} />
-              Add Run
-            </button>
-          )}
-
-          <h1 className='mr-24 flex-grow text-center text-2xl font-bold'>
-            NA Raids
-          </h1>
-        </div>
+        {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
+        {hasRequiredRole(['1101231955120496650']) && (
+          <Button
+            variant='contained'
+            sx={{
+              backgroundColor: 'rgb(248, 113, 113)',
+              '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+              marginBottom: '8px',
+            }}
+            startIcon={<UserPlus size={18} />}
+            onClick={() => setIsAddRunOpen(true)}
+          >
+            Add Run
+          </Button>
+        )}
 
         <RunsDataGrid
           data={rows}
@@ -139,7 +117,7 @@ export function FullRaidsNa() {
 
         {isAddRunOpen && (
           <AddRun
-            onClose={handleCloseAddRun}
+            onClose={() => setIsAddRunOpen(false)}
             onRunAddedReload={() => fetchRuns(true)}
           />
         )}

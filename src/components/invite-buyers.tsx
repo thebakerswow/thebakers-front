@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Modal } from './modal'
+import { Dialog, DialogContent, DialogTitle, Button } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
 import { api } from '../services/axiosConfig'
@@ -16,81 +16,79 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [copied, setCopied] = useState(false)
 
-  async function fetchInviteBuyersData() {
-    try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers/invite` ||
-          `http://localhost:8000/v1/run/${runId}/buyers/invite`
-      )
-      setInviteBuyersData(
-        Array.isArray(response.data.info) ? response.data.info : []
-      )
-      setError(null)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
+    // Função para buscar os dados de compradores convidados
+    async function fetchInviteBuyersData() {
+      try {
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers/invite`
+        )
+        setInviteBuyersData(
+          Array.isArray(response.data.info) ? response.data.info : []
+        )
+        setError(null) // Limpa erros anteriores, se houver
+      } catch (err) {
+        // Trata erros da requisição
+        setError(
+          axios.isAxiosError(err)
+            ? {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+              }
+            : { message: 'Erro inesperado', response: err }
+        )
+      } finally {
+        setLoading(false) // Finaliza o estado de carregamento
+      }
+    }
     fetchInviteBuyersData()
   }, [runId])
 
+  // Função para copiar os dados para a área de transferência
   function handleCopy() {
-    const textToCopy = inviteBuyersData.join('\n')
     navigator.clipboard
-      .writeText(textToCopy)
-      .then(() => setCopied(true))
-      .catch(() => alert('Erro ao copiar os dados.'))
-
-    setTimeout(() => setCopied(false), 2000)
+      .writeText(inviteBuyersData.join('\n'))
+      .then(() => setCopied(true)) // Indica que os dados foram copiados
+      .catch(() => alert('Erro ao copiar os dados.')) // Exibe alerta em caso de erro
+    setTimeout(() => setCopied(false), 2000) // Reseta o estado de "copiado" após 2 segundos
   }
 
   return (
-    <Modal onClose={onClose}>
-      {loading && <p>Carregando...</p>}
-      {error ? (
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      ) : (
-        inviteBuyersData.length > 0 && (
-          <div className='modal-content flex flex-col items-end gap-2'>
-            <div className='text-start'>
-              {inviteBuyersData?.map((item, index) => (
-                <div key={index}>
-                  <p className='font-normal'>{item}</p>
-                </div>
+    <Dialog open={true} onClose={onClose}>
+      <DialogTitle className='text-center'>Invite Buyers</DialogTitle>
+      <DialogContent className='flex flex-col items-center'>
+        {loading ? (
+          // Exibe mensagem de carregamento
+          <p className='text-center'>Loading...</p>
+        ) : error ? (
+          // Exibe componente de erro, se houver
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : inviteBuyersData.length > 0 ? (
+          // Exibe os dados de compradores convidados
+          <div className='flex flex-col items-center gap-2'>
+            <div className='text-center'>
+              {inviteBuyersData.map((item, index) => (
+                <p key={index} className='font-normal'>
+                  {item}
+                </p>
               ))}
             </div>
             {copied ? (
+              // Ícone de confirmação de cópia
               <Check className='text-green-500' size={24} />
             ) : (
-              <button
-                className='rounded-md bg-zinc-400 p-1 px-3 text-white'
-                onClick={handleCopy}
-              >
+              // Botão para copiar os dados
+              <Button variant='contained' color='primary' onClick={handleCopy}>
                 Copy
-              </button>
+              </Button>
             )}
           </div>
-        )
-      )}
-
-      {!loading && inviteBuyersData.length === 0 && !error && (
-        <p>Nenhum dado encontrado.</p>
-      )}
-    </Modal>
+        ) : (
+          // Exibe mensagem caso nenhum dado seja encontrado
+          <p className='text-center'>Nenhum dado encontrado.</p>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

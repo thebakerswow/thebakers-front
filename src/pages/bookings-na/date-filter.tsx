@@ -11,7 +11,7 @@ import {
   startOfWeek,
   startOfDay,
 } from 'date-fns'
-import { Button } from '@mui/material'
+import { Button, Select, MenuItem, InputLabel } from '@mui/material'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
@@ -152,16 +152,18 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
 
   return (
     <div className='flex flex-col items-center gap-4 text-lg'>
-      <div className='flex gap-8'>
-        <label className='flex flex-col'>
-          <p className='font-normal'>Select Month:</p>
+      <div className='flex items-center gap-12'>
+        <div className='flex flex-col'>
+          <InputLabel className='font-normal' style={{ color: 'white' }}>
+            Select Month:
+          </InputLabel>
           <div className='flex items-center gap-4'>
             <DatePicker
               selected={selectedMonth}
               onChange={handleMonthChange}
               dateFormat='MM/yyyy'
               showMonthYearPicker
-              className='w-56 flex-1 rounded-md p-1 pl-2 font-normal text-zinc-900'
+              className='h-10 w-56 rounded-sm p-1 pl-2 font-normal text-zinc-900'
               placeholderText='Month'
               open={isCalendarOpen}
               onClickOutside={() => setIsCalendarOpen(false)}
@@ -169,45 +171,48 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               onFocus={() => setIsCalendarOpen(true)}
             />
           </div>
-        </label>
+        </div>
         {weeks.length > 0 && (
           <div>
-            <label className='mr-2 flex flex-col font-normal'>
+            <InputLabel className='font-normal' style={{ color: 'white' }}>
               Select Week:
-              <div className='flex gap-4'>
-                <select
-                  className='text-md w-56 rounded-md p-1.5 font-normal text-zinc-900'
-                  onChange={(e) => handleWeekSelect(Number(e.target.value))}
-                  value={selectedWeekIndex}
-                >
-                  {weeks.map((week, index) => (
-                    <option key={index} value={index}>
-                      Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
-                      {format(week.end, 'MM/dd')})
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  onClick={handleFilterReset}
-                  variant='contained'
-                  style={{
-                    color: 'black',
-                    backgroundColor: 'oklch(0.704 0.191 22.216)',
-                  }} // Lighter red
-                  size='small'
-                  className='shadow-lg'
-                >
-                  Reset
-                </Button>
-              </div>
-            </label>
+            </InputLabel>
+            <div className='flex gap-4'>
+              <Select
+                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
+                onChange={(e) => handleWeekSelect(Number(e.target.value))}
+                value={selectedWeekIndex}
+                variant='outlined'
+              >
+                {weeks.map((week, index) => (
+                  <MenuItem key={index} value={index}>
+                    Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
+                    {format(week.end, 'MM/dd')})
+                  </MenuItem>
+                ))}
+              </Select>
+              <Button
+                onClick={handleFilterReset}
+                variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(248, 113, 113)',
+                  '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+                }}
+                size='small'
+                className='shadow-lg'
+              >
+                Reset
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
       {days.length > 0 && (
         <div>
-          <p className='pl-2 font-normal'>Select Day:</p>
+          <InputLabel className='font-normal' style={{ color: 'white' }}>
+            Select Day:
+          </InputLabel>
           <div className='flex gap-2'>
             {days.map((day) => (
               <Button

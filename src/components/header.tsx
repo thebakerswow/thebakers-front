@@ -4,7 +4,6 @@ import {
   CalendarBlank,
   CaretUp,
   CaretDown,
-  CastleTurret,
   SignOut,
   UsersFour,
 } from '@phosphor-icons/react'
@@ -15,7 +14,6 @@ import { useAuth } from '../context/auth-context'
 export function Header() {
   const navigate = useNavigate()
   const { logout, isAuthenticated, userRoles } = useAuth()
-  const [isHoveringNA, setIsHoveringNA] = useState(false)
   const [isHoveringManagement, setIsHoveringManagement] = useState(false)
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -88,32 +86,14 @@ export function Header() {
         </div>
       )}
 
-      <div
-        onMouseEnter={() => setIsHoveringNA(true)}
-        onMouseLeave={() => setIsHoveringNA(false)}
-        className='relative'
-      >
-        <button className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'>
+      <div>
+        <button
+          className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
+          onClick={() => navigate('/bookings-na')}
+        >
           <CalendarBlank className='text-gray-100' size={30} />
-          Bookings (NA)
-          {isHoveringNA ? (
-            <CaretUp className='text-red-400' size={20} />
-          ) : (
-            <CaretDown className='text-red-400' size={20} />
-          )}
+          Full Raids (NA)
         </button>
-
-        {isHoveringNA && (
-          <div className='absolute left-0 flex w-full flex-col items-center gap-4 rounded-xl bg-zinc-800 py-4 shadow-lg'>
-            <button
-              className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
-              onClick={() => navigate('/bookings-na')}
-            >
-              <CastleTurret className='text-gray-100' size={30} />
-              Full Raids
-            </button>
-          </div>
-        )}
       </div>
 
       <button
