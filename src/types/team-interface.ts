@@ -1,12 +1,12 @@
 export const teamOrder = [
-  'Padeirinho',
   'Garçom',
   'Confeiteiros',
-  'Jackfruit',
-  'Milharal',
   'Raio',
   'APAE',
+  'Milharal',
+  'Jackfruit',
   'Advertiser',
+  'Padeirinho',
 ] as const
 
 export type TeamOrder = (typeof teamOrder)[number]

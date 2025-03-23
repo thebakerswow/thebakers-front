@@ -1,15 +1,30 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../../services/axiosConfig'
-import {
-  Team,
-  TeamOrder,
-  teamOrder,
-  teamColors,
-} from '../../../types/team-interface'
+import { Team, teamOrder } from '../../../types/team-interface'
 import { LoadingSpinner } from '../../../components/loading-spinner'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { Modal } from '../../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  Paper,
+} from '@mui/material'
+
+const localTeamColors: Record<string, string> = {
+  Padeirinho: '#D97706',
+  Garçom: '#16A34A',
+  Confeiteiros: '#F472B6',
+  Jackfruit: '#86EFAC',
+  Milharal: '#FEF08A',
+  Raio: '#FACC15',
+  APAE: '#F87171',
+  Advertiser: '#D1D5DB',
+}
 
 export function TeamsManagement() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -31,44 +46,119 @@ export function TeamsManagement() {
             username: member.username,
           })),
         }))
-
         setTeams(orderedTeams)
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-        } else {
-          setError({
-            message: 'Erro inesperado',
-            response: error,
-          })
-        }
+        setError(
+          axios.isAxiosError(error)
+            ? {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Erro inesperado', response: error }
+        )
       } finally {
         setIsLoading(false)
       }
     }
-
     fetchTeams()
   }, [])
 
-  const columns = teams.map((team) =>
-    team.members.map((member) => ({
-      player: member.global_name,
-      discord: member.username,
-    }))
+  const renderTableHeader = () => (
+    <TableHead>
+      <TableRow>
+        {teams.map((team, index) => (
+          <TableCell
+            align='center'
+            colSpan={2}
+            key={`team-${index}`}
+            style={{
+              backgroundColor: localTeamColors[team.name] || '#9CA3AF',
+              color: '#FFFFFF',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              border: '1px solid #E5E7EB',
+            }}
+          >
+            {team.name}
+          </TableCell>
+        ))}
+      </TableRow>
+      <TableRow style={{ backgroundColor: '#ECEBEE', color: '#FFFFFF' }}>
+        {teams.flatMap((_, index) => [
+          <TableCell
+            align='center'
+            key={`player-header-${index}`}
+            style={{
+              fontWeight: 'bold',
+              border: '1px solid #E5E7EB',
+            }}
+          >
+            Player
+          </TableCell>,
+          <TableCell
+            align='center'
+            key={`discord-header-${index}`}
+            style={{
+              fontWeight: 'bold',
+              border: '1px solid #E5E7EB',
+            }}
+          >
+            Discord
+          </TableCell>,
+        ])}
+      </TableRow>
+    </TableHead>
   )
 
-  const maxRows = Math.max(...columns.map((team) => team.length), 0)
+  const renderTableBody = () => {
+    const columns = teams.map((team) =>
+      team.members.map((member) => ({
+        player: member.global_name,
+        discord: member.username,
+      }))
+    )
+    const maxRows = Math.max(...columns.map((team) => team.length), 0)
+
+    return (
+      <TableBody>
+        {Array.from({ length: maxRows }, (_, rowIndex) => (
+          <TableRow
+            key={`row-${rowIndex}`}
+            style={{
+              backgroundColor: rowIndex % 2 === 0 ? '#FFFFFF' : '#E5E7EB',
+            }}
+          >
+            {columns.flatMap((teamMembers, teamIndex) => {
+              const member = teamMembers[rowIndex]
+              return [
+                <TableCell
+                  align='center'
+                  key={`player-${teamIndex}-${rowIndex}`}
+                >
+                  {member?.player || '-'}
+                </TableCell>,
+                <TableCell
+                  align='center'
+                  key={`discord-${teamIndex}-${rowIndex}`}
+                >
+                  {member?.discord || '-'}
+                </TableCell>,
+              ]
+            })}
+          </TableRow>
+        ))}
+      </TableBody>
+    )
+  }
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
@@ -81,70 +171,13 @@ export function TeamsManagement() {
   }
 
   return (
-    <div className='absolute inset-0 m-8 flex flex-col overflow-y-auto rounded-xl bg-zinc-700 text-gray-100 shadow-2xl scrollbar-thin'>
-      <table className='min-w-full border-collapse'>
-        <thead className='table-header-group'>
-          <tr className='text-md text-gray-700'>
-            {teams.map((team, index) => (
-              <th
-                className={`border p-2 ${index !== teams.length - 1 ? '' : ''} ${
-                  teamColors[team.name as TeamOrder] || 'bg-zinc-400'
-                }`}
-                colSpan={2}
-                key={`team-${index}`}
-              >
-                {team.name}
-              </th>
-            ))}
-          </tr>
-          <tr className='text-md bg-zinc-400 text-gray-800'>
-            {teams.flatMap((_, index) => {
-              const isLastTeam = index === teams.length - 1
-              return [
-                <th
-                  className={'border border-r-black p-2'}
-                  key={`player-header-${index}`}
-                >
-                  Player
-                </th>,
-                <th
-                  className={`border p-2 ${!isLastTeam ? 'border-r-black' : ''}`}
-                  key={`discord-header-${index}`}
-                >
-                  Discord
-                </th>,
-              ]
-            })}
-          </tr>
-        </thead>
-        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
-          {Array.from({ length: maxRows }, (_, rowIndex) => (
-            <tr
-              className={`text-center ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-zinc-200'}`}
-              key={`row-${rowIndex}`}
-            >
-              {columns.flatMap((teamMembers, teamIndex) => {
-                const member = teamMembers[rowIndex]
-                const isLastTeam = teamIndex === teams.length - 1
-                return [
-                  <td
-                    className={'border border-b-black border-r-black p-2'}
-                    key={`player-${teamIndex}-${rowIndex}`}
-                  >
-                    {member?.player || '-'}
-                  </td>,
-                  <td
-                    className={`border border-b-black p-2 ${!isLastTeam ? 'border-r-black' : ''}`}
-                    key={`discord-${teamIndex}-${rowIndex}`}
-                  >
-                    {member?.discord || '-'}
-                  </td>,
-                ]
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className='absolute inset-0 m-8 flex flex-col rounded-md bg-zinc-700 text-gray-100 shadow-2xl'>
+      <TableContainer component={Paper}>
+        <Table>
+          {renderTableHeader()}
+          {renderTableBody()}
+        </Table>
+      </TableContainer>
     </div>
   )
 }
