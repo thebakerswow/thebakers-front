@@ -78,7 +78,7 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
               <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
               <p className='mt-4 text-lg'>Loading buyers...</p>
             </div>
-          ) : rows.length > 0 ? (
+          ) : Array.isArray(rows) && rows.length > 0 ? (
             // Exibe a lista de buyers caso existam dados
             <div>
               <Button

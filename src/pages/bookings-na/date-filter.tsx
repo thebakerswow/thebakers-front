@@ -195,8 +195,8 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                 onClick={handleFilterReset}
                 variant='contained'
                 sx={{
-                  backgroundColor: 'rgb(248, 113, 113)',
-                  '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+                  backgroundColor: 'rgb(239, 68, 68)',
+                  '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
                 }}
                 size='small'
                 className='shadow-lg'

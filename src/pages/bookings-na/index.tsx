@@ -93,8 +93,8 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(248, 113, 113)',
-                '&:hover': { backgroundColor: 'rgb(239, 68, 68)' },
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
               }}
               startIcon={<UserPlus size={18} />}
               onClick={() => setIsAddRunOpen(true)}
