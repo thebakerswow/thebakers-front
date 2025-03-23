@@ -14,6 +14,7 @@ import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
 import { Freelancers } from '../../../components/freelancers'
+import { Button } from '@mui/material'
 
 export function RunDetails() {
   const { id } = useParams<{ id: string }>()
@@ -234,7 +235,7 @@ export function RunDetails() {
 
   return (
     <div
-      className={`absolute inset-0 m-8 flex flex-col overflow-y-auto rounded-xl bg-zinc-700 text-gray-100 shadow-2xl scrollbar-thin ${
+      className={`absolute inset-0 flex flex-col overflow-y-auto rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >
@@ -261,13 +262,18 @@ export function RunDetails() {
               </div>
             ) : (
               <div>
-                <button
+                <Button
                   onClick={handleOpenInviteBuyersModal}
-                  className='mb-2 flex items-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
+                  variant='contained'
+                  startIcon={<UserPlus size={18} />}
+                  sx={{
+                    backgroundColor: 'rgb(239, 68, 68)',
+                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                    marginBottom: 1,
+                  }}
                 >
-                  <UserPlus size={18} />
                   Invite Buyers
-                </button>
+                </Button>
                 <BuyersDataGrid
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}

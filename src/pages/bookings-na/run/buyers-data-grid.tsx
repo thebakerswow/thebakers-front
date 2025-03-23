@@ -20,6 +20,18 @@ import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { Modal } from '../../../components/modal'
 import { DeleteBuyer } from '../../../components/delete-buyer'
 import { EditBuyer } from '../../../components/edit-buyer'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Select,
+  MenuItem,
+  IconButton,
+} from '@mui/material'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -27,6 +39,15 @@ interface BuyersGridProps {
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
 }
+
+const statusOptions = [
+  { value: 'waiting', label: 'Waiting' },
+  { value: 'noshow', label: 'No Show' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'backup', label: 'Backup' },
+  { value: 'group', label: 'Group' },
+  { value: 'done', label: 'Done' },
+]
 
 const statusPriorities: Record<string, number> = {
   done: 1,
@@ -64,6 +85,92 @@ export function BuyersDataGrid({
     setOpenModal(true)
   }
 
+  const handleApiCall = async (
+    url: string,
+    payload: object,
+    callback: () => void
+  ) => {
+    try {
+      await api.put(url, payload)
+      callback()
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
+      }
+    }
+  }
+
+  const handleTogglePaid = (buyerId: string) => {
+    const buyer = data.find((b) => b.id === buyerId)
+    if (!buyer) return
+    const payload = { id_buyer: buyerId, is_paid: !buyer.isPaid }
+    handleApiCall(
+      `${import.meta.env.VITE_API_BASE_URL}/buyer/paid` ||
+        'http://localhost:8000/v1/buyer/paid',
+      payload,
+      onBuyerStatusEdit
+    )
+  }
+
+  const handleStatusChange = (buyerId: string, newStatus: string) => {
+    const payload = { id_buyer: buyerId, status: newStatus }
+    handleApiCall(
+      `${import.meta.env.VITE_API_BASE_URL}/buyer/status` ||
+        'http://localhost:8000/v1/buyer/status',
+      payload,
+      onBuyerStatusEdit
+    )
+  }
+
+  const renderStatusSelect = (buyer: BuyerData) => (
+    <Select
+      value={buyer.status || ''}
+      onChange={(e) => handleStatusChange(buyer.id, e.target.value)}
+      displayEmpty
+      sx={{
+        width: '7rem',
+        height: '2rem', // Reduced height
+        fontSize: '14px', // Adjust font size for better alignment
+      }}
+    >
+      <MenuItem value='' disabled>
+        ----------
+      </MenuItem>
+      {statusOptions.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </Select>
+  )
+
+  const renderPaidIcon = (buyer: BuyerData) => (
+    <IconButton onClick={() => handleTogglePaid(buyer.id)}>
+      {buyer.isPaid ? (
+        <CheckFat className='text-green-500' size={22} weight='fill' />
+      ) : (
+        <XCircle className='text-red-600' size={22} weight='fill' />
+      )}
+    </IconButton>
+  )
+
+  const renderClassImage = (className: string) => {
+    const image = getClassImage(className)
+    return image ? (
+      <img src={image} alt={className} className='h-6 w-6' />
+    ) : (
+      <div className='flex h-6 w-6 items-center justify-center rounded bg-gray-300'>
+        ?
+      </div>
+    )
+  }
+
   // Função para ordenar os dados com base na prioridade do status
   const sortedData = Array.isArray(data)
     ? [...data].sort((a, b) => {
@@ -72,68 +179,6 @@ export function BuyersDataGrid({
         return priorityA - priorityB
       })
     : []
-
-  const handleTogglePaid = async (buyerId: string) => {
-    const payload = {
-      id_buyer: buyerId,
-      is_paid: !data.find((buyer) => buyer.id === buyerId)?.isPaid, // Altere para usar data direto
-    }
-
-    try {
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/buyer/paid` ||
-          'http://localhost:8000/v1/buyer/paid',
-        payload
-      )
-
-      await onBuyerStatusEdit()
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
-    }
-  }
-
-  const handleStatusChange = async (buyerId: string, newStatus: string) => {
-    const payload = {
-      id_buyer: buyerId,
-      status: newStatus,
-    }
-
-    try {
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/buyer/status` ||
-          'http://localhost:8000/v1/buyer/status',
-        payload
-      )
-
-      onBuyerStatusEdit()
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
-    }
-  }
 
   if (error) {
     return (
@@ -198,127 +243,202 @@ export function BuyersDataGrid({
   }
 
   return (
-    <div>
-      <table className='min-w-full border-collapse'>
-        <thead className='table-header-group'>
-          <tr className='text-md bg-zinc-400 text-gray-700'>
-            <th className='border p-2'>Slot</th>
-            <th className='w-[100px] border p-2'>Status</th>
-            <th className='border p-2'>Name-Realm</th>
-            <th className='border p-2'>Note</th>
-            <th className='border p-2'>Advertiser</th>
-            <th className='border p-2'>Collector</th>
-            <th className='border p-2'>Paid Full</th>
-            <th className='border p-2'>Total Pot</th>
-            <th className='border p-2'>Run Pot</th>
-            <th className='border p-2'>Class</th>
-            <th className='border p-2' />
-          </tr>
-        </thead>
-        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
+    <TableContainer component={Paper} sx={{ overflow: 'visible' }}>
+      {' '}
+      {/* Removed scroll */}
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE', // Added background color
+              }}
+            >
+              Slot
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Status
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Name-Realm
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Note
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Advertiser
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Collector
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Paid Full
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Total Pot
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Run Pot
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Class
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {sortedData.length === 0 ? (
-            <tr>
-              <td colSpan={12} className='p-4 text-center text-gray-500'>
-                No Buyers
-              </td>
-            </tr>
-          ) : (
-            sortedData?.map((buyer, index) => (
-              <tr
-                key={buyer.id}
-                className={`border border-gray-300 ${getBuyerColor(buyer.status)}`}
+            <TableRow sx={{ height: '32px' }}>
+              {' '}
+              {/* Increased height */}
+              <TableCell
+                colSpan={11}
+                align='center'
+                sx={{ padding: '4px', textAlign: 'center' }} // Adjusted padding
               >
-                <td className='p-2 text-center'>{index + 1}</td>
-                <td className='p-2'>
-                  <form>
-                    <select
-                      id='status'
-                      className='bg-zinc-100 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-                      value={buyer.status || ''}
-                      onChange={(e) =>
-                        handleStatusChange(buyer.id, e.target.value)
-                      }
-                    >
-                      <option value='' disabled hidden>
-                        ----------
-                      </option>
-                      <option value='waiting'>Waiting</option>
-                      <option value='noshow'>No Show</option>
-                      <option value='closed'>Closed</option>
-                      <option value='backup'>Backup</option>
-                      <option value='group'>Group</option>
-                      <option value='done'>Done</option>
-                    </select>
-                  </form>
-                </td>
-                <td className='p-2 text-center'>
+                No Buyers
+              </TableCell>
+            </TableRow>
+          ) : (
+            sortedData.map((buyer, index) => (
+              <TableRow
+                key={buyer.id}
+                className={getBuyerColor(buyer.status)}
+                sx={{ height: '32px' }} // Increased height
+              >
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {index + 1}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {renderStatusSelect(buyer)}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm === '****'
                     ? 'Encrypted'
                     : buyer.nameAndRealm}
-                </td>
-                <td className='p-2 text-center'>{buyer.buyerNote}</td>
-
-                <td className='p-2 text-center'>{buyer.nameOwnerBuyer}</td>
-                <td className='p-2 text-center'>{buyer.nameCollector}</td>
-                <td className='w-20 p-2 text-center'>
-                  <div className='flex items-center justify-center'>
-                    <button onClick={() => handleTogglePaid(buyer.id)}>
-                      {buyer.isPaid ? (
-                        <CheckFat
-                          className='cursor-pointer rounded-xl border bg-white text-green-500'
-                          size={22}
-                          weight='fill'
-                        />
-                      ) : (
-                        <XCircle
-                          className='cursor-pointer rounded-xl border bg-white text-red-600'
-                          size={22}
-                          weight='fill'
-                        />
-                      )}
-                    </button>
-                  </div>
-                </td>
-                <td className='p-2 text-center'>
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {buyer.buyerNote}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {buyer.nameOwnerBuyer}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {buyer.nameCollector}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {renderPaidIcon(buyer)}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
-                </td>
-                <td className='p-2 text-center'>
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {Math.round(Number(buyer.buyerActualPot)).toLocaleString(
                     'en-US'
                   )}
-                </td>
-
-                <td className='flex justify-center gap-2 p-2'>
-                  {buyer.playerClass}
-                  {getClassImage(buyer.playerClass) ? (
-                    <img
-                      src={getClassImage(buyer.playerClass)}
-                      alt={buyer.playerClass}
-                      className='h-6 w-6'
-                    />
-                  ) : (
-                    <div className='flex h-6 w-6 items-center justify-center rounded bg-gray-300'>
-                      ?
-                    </div>
-                  )}
-                </td>
-                <td className='w-16 text-center'>
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  <div className='flex items-center justify-center gap-2'>
+                    {buyer.playerClass}
+                    {renderClassImage(buyer.playerClass)}
+                  </div>
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm !== '****' && (
                     <div className='flex justify-center gap-2'>
-                      <button onClick={() => handleOpenModal(buyer, 'edit')}>
+                      <IconButton
+                        onClick={() => handleOpenModal(buyer, 'edit')}
+                      >
                         <Pencil size={18} />
-                      </button>
-                      <button onClick={() => handleOpenModal(buyer, 'delete')}>
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleOpenModal(buyer, 'delete')}
+                      >
                         <Trash size={18} />
-                      </button>
+                      </IconButton>
                     </div>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       {openModal && editingBuyer && (
         <Modal onClose={() => setOpenModal(false)}>
           {modalType === 'edit' ? (
@@ -344,6 +464,6 @@ export function BuyersDataGrid({
           )}
         </Modal>
       )}
-    </div>
+    </TableContainer>
   )
 }
