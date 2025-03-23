@@ -1,11 +1,18 @@
 import axios from 'axios'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   ErrorDetails,
   ErrorComponent,
 } from '../../../../components/error-display'
 import { Modal } from '../../../../components/modal'
 import { api } from '../../../../services/axiosConfig'
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  SelectChangeEvent,
+  Button,
+} from '@mui/material'
 
 interface BalanceControlTableProps {
   selectedTeam: string
@@ -20,7 +27,6 @@ export function BalanceControlTable({
   setSelectedTeam,
   setSelectedDate,
 }: BalanceControlTableProps) {
-  const [_, setOpenRowIndex] = useState<number | null>(null)
   const [users, setUsers] = useState<any[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [calculatorValues, setCalculatorValues] = useState<{
@@ -28,172 +34,120 @@ export function BalanceControlTable({
   }>({})
   const [isBulkingSubmitting, setIsBulkingSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const menuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!selectedDate) {
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = String(today.getMonth() + 1).padStart(2, '0')
-      const day = String(today.getDate()).padStart(2, '0')
-      const formattedDate = `${year}-${month}-${day}`
-      setSelectedDate(formattedDate)
+      const today = new Date().toISOString().split('T')[0]
+      setSelectedDate(today)
     }
   }, [selectedDate, setSelectedDate])
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenRowIndex(null)
+  const fetchBalanceAdmin = useCallback(
+    async (showLoading = true) => {
+      if (!selectedDate) return
+
+      if (showLoading) setIsLoading(true)
+      try {
+        const { data } = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/admin`,
+          {
+            params: { id_team: selectedTeam, date: selectedDate },
+          }
+        )
+        setUsers(data.info)
+      } catch (error) {
+        setError(
+          axios.isAxiosError(error)
+            ? {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+        )
+      } finally {
+        if (showLoading) setIsLoading(false)
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value)
-  }
-
-  const handleTeamChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTeam(e.target.value)
-  }
-
-  const fetchBalanceAdmin = useCallback(async () => {
-    if (!selectedDate) return
-
-    try {
-      const params = {
-        id_team: selectedTeam,
-        date: selectedDate,
-      }
-
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/admin`,
-        { params }
-      )
-      setUsers(response.data.info)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [selectedTeam, selectedDate])
+    },
+    [selectedTeam, selectedDate]
+  )
 
   useEffect(() => {
-    fetchBalanceAdmin() // Faz a primeira chamada imediata
+    fetchBalanceAdmin(true) // Exibir loading na primeira requisição
 
     const interval = setInterval(() => {
-      fetchBalanceAdmin()
-    }, 5000) // 30 segundos
+      fetchBalanceAdmin(false) // Não exibir loading nas requisições do polling
+    }, 5000)
 
-    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
-  }, [selectedTeam, selectedDate, fetchBalanceAdmin])
+    return () => clearInterval(interval)
+  }, [fetchBalanceAdmin])
 
   const handleCalculatorChange = (userId: string, value: string) => {
-    // Permitir apenas números e um único '-' no início
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+    if (value.trim() === '') {
+      setCalculatorValues((prev) => ({ ...prev, [userId]: '' })) // Limpar o campo se estiver vazio
+      return
+    }
 
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
     const formattedValue =
       rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
-
     setCalculatorValues((prev) => ({
       ...prev,
-      [userId]: formattedValue,
+      [userId]: rawValue === '0' ? '' : formattedValue, // Limpar o campo se o valor for 0
     }))
-  }
-
-  const handleCalculatorKeyDown = async (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    userId: string
-  ) => {
-    if (event.key === 'Enter') {
-      handleConfirmCalculator(userId)
-    }
   }
 
   const handleConfirmCalculator = async (userId: string) => {
     if (!calculatorValues[userId]) return
 
     try {
-      const payload = {
-        value: Number(calculatorValues[userId].replace(/,/g, '')), // Remove vírgulas
+      await api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
+        value: Number(calculatorValues[userId].replace(/,/g, '')),
         id_discord: userId,
-      }
-      await api.post(
-        `${import.meta.env.VITE_API_BASE_URL}/transaction`,
-        payload
-      )
-
-      setCalculatorValues((prev) => ({
-        ...prev,
-        [userId]: '',
-      }))
-      await fetchBalanceAdmin()
+      })
+      setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
+      fetchBalanceAdmin()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+      )
     }
   }
 
-  const pendingTransactions = Object.entries(calculatorValues)
-    .filter(([, value]) => value.trim() !== '')
-    .map(([userId, value]) => ({ userId, value }))
-
   const handleBulkSend = async () => {
+    const pendingTransactions = Object.entries(calculatorValues).filter(
+      ([, value]) => value.trim() !== ''
+    )
     if (pendingTransactions.length === 0) return
 
     setIsBulkingSubmitting(true)
-
     try {
       await Promise.all(
-        pendingTransactions.map(({ userId, value }) =>
+        pendingTransactions.map(([userId, value]) =>
           api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
             value: Number(value.replace(/,/g, '')),
             id_discord: userId,
           })
         )
       )
-
       setCalculatorValues({})
-      await fetchBalanceAdmin()
+      fetchBalanceAdmin()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+      )
     } finally {
       setIsBulkingSubmitting(false)
     }
@@ -208,64 +162,60 @@ export function BalanceControlTable({
   }
 
   return (
-    <div className='h-[90%] w-[45%] overflow-y-auto rounded-md border border-gray-300'>
+    <div className='h-[90%] w-[45%] overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
-        <select
-          className='w-[140px] rounded-md bg-zinc-100 p-1 text-black'
-          value={selectedTeam}
-          onChange={handleTeamChange}
-        >
-          <option value='' disabled hidden className='text-zinc-400'>
-            Team
-          </option>
-          <option className='text-black' value='1119092171157541006'>
-            Padeirinho
-          </option>
-          <option className='text-black' value='1153459315907235971'>
-            Garçom
-          </option>
-          <option className='text-black' value='1224792109241077770'>
-            Confeiteiros
-          </option>
-          <option className='text-black' value='1328892768034226217'>
-            Jackfruit
-          </option>
-          <option className='text-black' value='1328938639949959209'>
-            Milharal
-          </option>
-          <option className='text-black' value='1346914505392783372'>
-            Raio
-          </option>
-          <option className='text-black' value='1337818949831626753'>
-            APAE
-          </option>
-          <option className='text-black' value='1284914400297226313'>
-            Advertiser
-          </option>
-          <option className='text-black' value='1101231955120496650'>
-            Chefe de Cozinha
-          </option>
-          <option className='text-black' value='1107728166031720510'>
-            Freelancer
-          </option>
-        </select>
+        <FormControl className='w-[200px]' size='small'>
+          <Select
+            value={selectedTeam}
+            onChange={(e: SelectChangeEvent<string>) =>
+              setSelectedTeam(e.target.value)
+            }
+            displayEmpty
+            className='bg-zinc-100 text-black'
+            sx={{
+              backgroundColor: 'white',
+              height: '40px',
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                border: 'none',
+              },
+              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              boxShadow: 'none',
+            }}
+          >
+            <MenuItem value='' disabled hidden>
+              <em>Team</em>
+            </MenuItem>
+            <MenuItem value='1119092171157541006'>Padeirinho</MenuItem>
+            <MenuItem value='1153459315907235971'>Garçom</MenuItem>
+            <MenuItem value='1224792109241077770'>Confeiteiros</MenuItem>
+            <MenuItem value='1328892768034226217'>Jackfruit</MenuItem>
+            <MenuItem value='1328938639949959209'>Milharal</MenuItem>
+            <MenuItem value='1346914505392783372'>Raio</MenuItem>
+            <MenuItem value='1337818949831626753'>APAE</MenuItem>
+            <MenuItem value='1284914400297226313'>Advertiser</MenuItem>
+            <MenuItem value='1101231955120496650'>Chefe de Cozinha</MenuItem>
+            <MenuItem value='1107728166031720510'>Freelancer</MenuItem>
+          </Select>
+        </FormControl>
         <input
           type='date'
-          className='w-[150px] rounded-md bg-zinc-100 p-1 px-2 text-black'
+          className='w-[200px] rounded-md bg-zinc-100 p-1 px-2 text-black'
           value={selectedDate}
-          onChange={handleDateChange}
+          onChange={(e) => setSelectedDate(e.target.value)}
         />
-        <button
-          className={`rounded-md bg-red-400 px-4 py-1 text-white ${
-            pendingTransactions.length === 0
-              ? 'cursor-not-allowed opacity-50'
-              : ''
-          }`}
-          disabled={pendingTransactions.length === 0}
+        <Button
+          variant='contained'
+          color='error'
+          size='small'
+          disabled={Object.values(calculatorValues).every(
+            (value) => value.trim() === ''
+          )}
           onClick={handleBulkSend}
+          sx={{ textTransform: 'none', opacity: isBulkingSubmitting ? 0.5 : 1 }}
         >
           {isBulkingSubmitting ? 'Sending...' : 'Send All'}
-        </button>
+        </Button>
       </div>
 
       <table className='w-full border-collapse'>
@@ -275,21 +225,21 @@ export function BalanceControlTable({
             <th className='w-[150px] border p-2'>Gold Cut</th>
             <th className='w-[150px] border p-2'>Gold Collected</th>
             <th className='w-[150px] border p-2'>Balance Total</th>
-            <th className='border p-2'>Calculadora</th>
+            <th className='border p-2'>Calculator</th>
           </tr>
         </thead>
         <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
-          {!selectedDate ? (
-            <tr>
-              <td colSpan={5} className='p-4 text-center'>
-                É necessário preencher os 2 filtros
-              </td>
-            </tr>
-          ) : isLoading ? (
+          {isLoading ? (
             <tr>
               <td colSpan={5} className='h-full p-4 text-center'>
                 <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent'></span>
                 <p>Loading...</p>
+              </td>
+            </tr>
+          ) : users.length === 0 ? (
+            <tr>
+              <td colSpan={5} className='p-4 text-center'>
+                No data available
               </td>
             </tr>
           ) : (
@@ -318,7 +268,8 @@ export function BalanceControlTable({
                       handleCalculatorChange(user.idDiscord, e.target.value)
                     }
                     onKeyDown={(e) =>
-                      handleCalculatorKeyDown(e, user.idDiscord)
+                      e.key === 'Enter' &&
+                      handleConfirmCalculator(user.idDiscord)
                     }
                   />
                 </td>

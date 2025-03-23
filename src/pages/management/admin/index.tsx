@@ -20,7 +20,7 @@ export function AdminPage() {
   }, [])
 
   return (
-    <div className='absolute inset-0 m-8 flex items-center justify-center gap-10 overflow-y-auto rounded-xl bg-zinc-700 text-gray-100 shadow-2xl scrollbar-thin'>
+    <div className='flex min-h-screen w-full items-center justify-around'>
       {/* Primeira Tabela */}
       <BalanceControlTable
         selectedTeam={selectedTeam}
