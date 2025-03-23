@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Select, MenuItem, FormControl } from '@mui/material'
 
 // Define as propriedades do componente BalanceTeamFilter
 interface BalanceTeamFilterProps {
@@ -14,28 +15,59 @@ export function BalanceTeamFilter({
   isLoadingTeams,
   onSelectTeam,
 }: BalanceTeamFilterProps) {
-  // Memoiza as opções para evitar renderizações desnecessárias quando a lista de times não muda
+  // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
     () =>
       teams.map((team) => (
-        <option key={team.id_discord} value={team.id_discord}>
+        <MenuItem key={team.id_discord} value={team.id_discord}>
           {team.team_name}
-        </option>
+        </MenuItem>
       )),
     [teams]
   )
 
+  // Define o time inicial se nenhum time estiver selecionado
+  const initialTeam = selectedTeam || teams[0]?.id_discord || null
+
+  // Garante que o time inicial seja selecionado ao carregar o componente
+  useMemo(() => {
+    if (!selectedTeam && initialTeam) {
+      onSelectTeam(initialTeam)
+    }
+  }, [selectedTeam, initialTeam, onSelectTeam])
+
   return (
-    <div className='relative'>
-      <label className='mr-2'>Filter by Team:</label>
-      <select
-        value={selectedTeam || ''}
+    <FormControl className='relative'>
+      <Select
+        label='team-filter-label'
+        value={initialTeam} // Usa o time inicial
         onChange={(e) => onSelectTeam(e.target.value || null)}
         disabled={isLoadingTeams}
-        className='rounded border p-1 text-black'
+        className='mt-4 text-black'
+        sx={{
+          backgroundColor: 'white',
+          height: '40px', // Define uma altura menor para o Select
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            border: 'none', // Remove a borda ao focar
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            border: 'none', // Remove a borda padrão
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            border: 'none', // Remove a borda ao passar o mouse
+          },
+          boxShadow: 'none', // Remove qualquer sombra
+        }}
+        MenuProps={{
+          PaperProps: {
+            style: {
+              boxShadow: 'none', // Remove sombra do menu dropdown
+            },
+          },
+        }}
       >
         {options}
-      </select>
-    </div>
+      </Select>
+    </FormControl>
   )
 }

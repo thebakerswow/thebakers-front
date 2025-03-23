@@ -1,9 +1,15 @@
 import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Menu,
+  MenuItem,
+} from '@mui/material'
+import {
   Coins,
   Briefcase,
   CalendarBlank,
-  CaretUp,
-  CaretDown,
   SignOut,
   UsersFour,
 } from '@phosphor-icons/react'
@@ -14,7 +20,7 @@ import { useAuth } from '../context/auth-context'
 export function Header() {
   const navigate = useNavigate()
   const { logout, isAuthenticated, userRoles } = useAuth()
-  const [isHoveringManagement, setIsHoveringManagement] = useState(false)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
     return requiredRoles.some((required) =>
@@ -27,82 +33,104 @@ export function Header() {
     navigate('/')
   }
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
   if (!isAuthenticated) {
     return (
-      <header className='relative z-10 flex h-[60px] items-center justify-center bg-zinc-900 pl-4 text-3xl font-bold text-gray-100 shadow-bottom-strong'>
-        TheBakers <span className='text-red-700'>Hub</span>
-      </header>
+      <AppBar
+        position='static'
+        sx={{ background: 'linear-gradient(to right, black, #333)' }}
+      >
+        <Toolbar sx={{ justifyContent: 'center' }}>
+          <Typography
+            variant='h6'
+            component='div'
+            sx={{ fontSize: '1.8rem', textAlign: 'center' }}
+          >
+            TheBakers <span style={{ color: 'red' }}>Hub</span>
+          </Typography>
+        </Toolbar>
+      </AppBar>
     )
   }
 
   return (
-    <header className='relative z-10 flex h-[60px] items-center justify-evenly gap-40 bg-zinc-900 pl-4 text-2xl font-bold text-gray-100 shadow-bottom-strong'>
-      <button className='text-3xl font-bold' onClick={() => navigate('/home')}>
-        TheBakers <span className='text-red-700'>Hub</span>
-      </button>
-
-      <button
-        className='flex gap-4 text-lg font-semibold text-gray-300'
-        onClick={() => navigate('/balance')}
-      >
-        <Coins className='text-gray-100' size={30} />
-        Balance
-      </button>
-
-      {hasRequiredRole(['1101231955120496650']) && (
-        <div
-          onMouseEnter={() => setIsHoveringManagement(true)}
-          onMouseLeave={() => setIsHoveringManagement(false)}
-          className='relative'
+    <AppBar
+      position='static'
+      sx={{ background: 'linear-gradient(to right, black, #333)' }}
+    >
+      <Toolbar sx={{ justifyContent: 'space-around' }}>
+        <Typography
+          variant='h6'
+          component='div'
+          sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
+          onClick={() => navigate('/home')}
         >
-          <button className='flex items-center gap-4 text-lg font-semibold text-gray-300'>
-            <Briefcase className='text-gray-100' size={30} />
-            Management
-            {isHoveringManagement ? (
-              <CaretUp className='text-red-400' size={20} />
-            ) : (
-              <CaretDown className='text-red-400' size={20} />
-            )}
-          </button>
+          TheBakers <span style={{ color: 'red' }}>Hub</span>
+        </Typography>
 
-          {isHoveringManagement && (
-            <div className='absolute left-0 flex w-full flex-col items-center gap-4 rounded-xl bg-zinc-800 py-4 shadow-lg'>
-              <button
-                className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
+        <Button
+          color='inherit'
+          onClick={() => navigate('/balance')}
+          startIcon={<Coins size={20} />}
+        >
+          Balance
+        </Button>
+
+        {hasRequiredRole(['1101231955120496650']) && (
+          <>
+            <Button
+              color='inherit'
+              onClick={handleMenuOpen}
+              startIcon={<Briefcase size={20} />}
+            >
+              Management
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem
                 onClick={() => navigate('/admin')}
+                sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                <Briefcase className='text-gray-100' size={30} />
+                <Briefcase size={20} />
                 Admin
-              </button>
-              <button
-                className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
+              </MenuItem>
+              <MenuItem
                 onClick={() => navigate('/management-teams')}
+                sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                <UsersFour className='text-gray-100' size={30} />
+                <UsersFour size={20} />
                 Teams
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+              </MenuItem>
+            </Menu>
+          </>
+        )}
 
-      <div>
-        <button
-          className='flex w-full items-center gap-4 pl-5 text-lg font-semibold text-gray-300'
+        <Button
+          color='inherit'
           onClick={() => navigate('/bookings-na')}
+          startIcon={<CalendarBlank size={20} />}
         >
-          <CalendarBlank className='text-gray-100' size={30} />
           Full Raids (NA)
-        </button>
-      </div>
+        </Button>
 
-      <button
-        className='flex gap-4 text-lg font-semibold text-gray-300'
-        onClick={handleLogout}
-      >
-        <SignOut className='text-gray-100' size={30} />
-        Logout
-      </button>
-    </header>
+        <Button
+          color='inherit'
+          onClick={handleLogout}
+          startIcon={<SignOut size={20} />}
+        >
+          Logout
+        </Button>
+      </Toolbar>
+    </AppBar>
   )
 }

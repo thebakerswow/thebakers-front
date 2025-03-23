@@ -1,25 +1,30 @@
-// BalanceDataGrid.tsx
-import { useEffect, useRef, useState } from 'react'
-import { WeekRangeFilter } from './week-range-filter'
+import { useEffect, useState } from 'react'
+
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
 import { api } from '../../services/axiosConfig'
 import { LoadingSpinner } from '../../components/loading-spinner'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal } from '../../components/modal'
-import { BalanceTeamFilter } from '../../components/balance-team-filter'
+import { Modal as MuiModal, Box } from '@mui/material'
+import { getTextColorForBackground } from '../../components/color-selector'
 import {
-  getTextColorForBackground,
-  ColorSelector,
-} from '../../components/color-selector'
-import { useAuth } from '../../context/auth-context'
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Select,
+  MenuItem,
+} from '@mui/material'
 
 interface PlayerBalance {
   id_discord: string
   username: string
   value: number
   balance_total: number
-  color: string // nova propriedade
+  color: string
 }
 
 interface BalanceResponse {
@@ -38,51 +43,45 @@ interface ProcessedPlayer {
   }
 }
 
-export function BalanceDataGrid() {
+interface BalanceDataGridProps {
+  selectedTeam: string | null
+  setTeams: React.Dispatch<
+    React.SetStateAction<Array<{ id_discord: string; team_name: string }>>
+  >
+  setIsLoadingTeams: React.Dispatch<React.SetStateAction<boolean>>
+  dateRange: { start: string; end: string } | undefined // Add dateRange prop
+}
+
+export function BalanceDataGrid({
+  selectedTeam,
+  setTeams,
+  setIsLoadingTeams,
+  dateRange, // Destructure dateRange
+}: BalanceDataGridProps) {
+  // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
   const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({})
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-  const [teams, setTeams] = useState<
-    Array<{ id_discord: string; team_name: string }>
-  >([])
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>()
-  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [playerStyles, setPlayerStyles] = useState<{
     [key: string]: { background: string; text: string }
   }>({})
-  const [menuOpenForPlayer, setMenuOpenForPlayer] = useState<string | null>(
-    null
-  )
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const { userRoles } = useAuth()
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
-  }
-
-  // Ao receber os dados, atualiza o estilo padrão de cada jogador com a cor retornada da API
+  // Atualiza os estilos dos jogadores com base nos dados de balanceamento
   useEffect(() => {
-    const newStyles: { [key: string]: { background: string; text: string } } =
-      {}
-
-    Object.values(balanceData).forEach((players) => {
-      players.forEach((player) => {
-        if (player.color) {
-          newStyles[player.id_discord] = {
+    const newStyles = Object.values(balanceData)
+      .flatMap((players) =>
+        players.map((player) => ({
+          [player.id_discord]: {
             background: player.color,
             text: getTextColorForBackground(player.color),
-          }
-        }
-      })
-    })
-
+          },
+        }))
+      )
+      .reduce((acc, style) => ({ ...acc, ...style }), {})
     setPlayerStyles(newStyles)
   }, [balanceData])
 
-  // Função que envia a atualização da cor para a API e atualiza o estado local
+  // Atualiza a cor de fundo de um jogador e envia a alteração para a API
   const handleBackgroundChange = async (
     playerId: string,
     background: string
@@ -92,57 +91,27 @@ export function BalanceDataGrid() {
       ...prev,
       [playerId]: { background, text: textColor },
     }))
-
     try {
       await api.put(`${import.meta.env.VITE_API_BASE_URL}/balance/color`, {
-        id_discord: playerId, // envia o discord id
-        color: background, // envia a nova cor
+        id_discord: playerId,
+        color: background,
       })
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Erro ao atualizar a cor:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        })
-      } else {
-        console.error('Erro inesperado ao atualizar a cor:', error)
-      }
+      console.error('Error updating color:', error)
     }
-
-    setMenuOpenForPlayer(null)
   }
 
-  const toggleDropdown = (playerId: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    setMenuOpenForPlayer((prev) => (prev === playerId ? null : playerId))
-  }
-
-  // Efeito para fechar o dropdown ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpenForPlayer(null)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
+  // Retorna as datas ordenadas dentro do intervalo selecionado
   const getSortedDates = (): string[] => {
     if (!dateRange) return []
-
-    const startDate = parseISO(dateRange.start)
-    const endDate = parseISO(dateRange.end)
-
-    const dates = eachDayOfInterval({ start: startDate, end: endDate })
-    return dates.map((date) => format(date, 'yyyy-MM-dd'))
+    const { start, end } = dateRange
+    return eachDayOfInterval({
+      start: parseISO(start),
+      end: parseISO(end),
+    }).map((date) => format(date, 'yyyy-MM-dd'))
   }
 
+  // Formata o cabeçalho das colunas de datas
   const formatDayHeader = (dateString: string) => {
     try {
       const date = parseISO(dateString)
@@ -152,98 +121,76 @@ export function BalanceDataGrid() {
     }
   }
 
+  // Busca os times disponíveis e define o time selecionado como o primeiro da lista
   useEffect(() => {
     const fetchTeams = async () => {
+      setIsLoadingTeams(true)
       try {
-        setIsLoadingTeams(true)
         const response = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
         )
-
         const uniqueTeams = response.data.info.reduce(
-          (acc: any[], team: any) => {
-            if (!acc.some((t) => t.team_name === team.team_name)) {
-              acc.push(team)
-            }
-            return acc
-          },
+          (acc: any[], team: any) =>
+            acc.some((t) => t.team_name === team.team_name)
+              ? acc
+              : [...acc, team],
           []
         )
-
         setTeams(uniqueTeams)
-
-        // Definir automaticamente o time do usuário como o primeiro da lista
-        if (uniqueTeams.length > 0) {
-          setSelectedTeam(uniqueTeams[0].id_discord)
-        }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-        } else {
-          setError({
-            message: 'Erro inesperado',
-            response: error,
-          })
-        }
+        setError(
+          axios.isAxiosError(error)
+            ? {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+        )
       } finally {
         setIsLoadingTeams(false)
       }
     }
     fetchTeams()
-  }, [])
+  }, [setTeams, setIsLoadingTeams])
 
+  // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
     const fetchBalanceData = async () => {
-      if (!dateRange || !selectedTeam) return // Aguarda o time estar definido
-
+      if (!dateRange || !selectedTeam) return
+      setIsLoadingBalance(true)
       try {
-        setIsLoadingBalance(true)
-
-        const params = {
-          id_team: selectedTeam,
-          date_start: dateRange.start,
-          date_end: dateRange.end,
-        }
         const response = await api.get<BalanceResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/balance`,
-          { params }
+          {
+            params: {
+              id_team: selectedTeam,
+              date_start: dateRange.start,
+              date_end: dateRange.end,
+            },
+          }
         )
-
         setBalanceData(response.data.info || {})
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setError({
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          })
-        } else {
-          setError({ message: 'Erro inesperado', response: error })
-        }
+        setError(
+          axios.isAxiosError(error)
+            ? {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+        )
       } finally {
         setIsLoadingBalance(false)
       }
     }
-
     fetchBalanceData()
   }, [dateRange, selectedTeam])
 
-  if (error) {
-    return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
-    )
-  }
-
+  // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {
     const playersMap = new Map<string, ProcessedPlayer>()
-
     Object.entries(balanceData).forEach(([date, players]) => {
       players.forEach((player) => {
         if (!playersMap.has(player.id_discord)) {
@@ -254,103 +201,130 @@ export function BalanceDataGrid() {
             dailyValues: {},
           })
         }
-        const playerData = playersMap.get(player.id_discord)!
-        playerData.dailyValues[date] = Math.round(player.value)
+        playersMap.get(player.id_discord)!.dailyValues[date] = Math.round(
+          player.value
+        )
       })
     })
-
     return Array.from(playersMap.values())
   }
 
-  return (
-    <div className='min-h-full'>
-      <div className='flex items-end justify-between'>
-        <BalanceTeamFilter
-          selectedTeam={selectedTeam}
-          teams={teams}
-          isLoadingTeams={isLoadingTeams}
-          onSelectTeam={setSelectedTeam}
-        />
-        <WeekRangeFilter onChange={setDateRange} />
-      </div>
+  if (error) {
+    return (
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
+    )
+  }
 
-      {isLoadingBalance && (
-        <div className='flex h-[80%] items-center justify-center'>
+  return (
+    <div className='px-4 py-8'>
+      {isLoadingBalance ? (
+        <div className='flex h-screen items-center justify-center'>
           <LoadingSpinner />
         </div>
-      )}
-
-      {!isLoadingBalance && (
-        <div className='mt-6 flex h-[80%] justify-center'>
-          <table className='min-w-[1000px] border-collapse text-lg'>
-            <thead className='table-header-group'>
-              <tr className='text-md bg-zinc-400 text-gray-700'>
-                <th className='w-[200px] border p-2'>Player</th>
-                <th className='w-[150px] border p-2'>Total Balance</th>
+      ) : (
+        <TableContainer
+          className='relative'
+          component={Paper}
+          style={{
+            fontSize: '1rem',
+            overflow: 'hidden',
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  align='center'
+                  style={{ backgroundColor: '#ECEBEE' }}
+                >
+                  Player
+                </TableCell>
+                <TableCell
+                  align='center'
+                  style={{ backgroundColor: '#ECEBEE' }}
+                >
+                  Total Balance
+                </TableCell>
                 {getSortedDates().map((date) => (
-                  <th key={date} className='w-[200px] border p-2'>
+                  <TableCell
+                    key={date}
+                    align='center'
+                    style={{ backgroundColor: '#ECEBEE' }}
+                  >
                     {formatDayHeader(date)}
-                  </th>
+                  </TableCell>
                 ))}
-              </tr>
-            </thead>
-            <tbody className='table-row-group bg-zinc-200 text-center text-base font-medium text-zinc-900'>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {processBalanceData().length === 0 ? (
-                <tr>
-                  <td
+                <TableRow>
+                  <TableCell
                     colSpan={getSortedDates().length + 2}
-                    className='p-2 text-center'
+                    align='center'
                   >
                     No data yet
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 processBalanceData().map((player) => (
-                  <tr key={player.id} className='border border-gray-300'>
-                    <td
-                      className='relative border p-0'
+                  <TableRow key={player.id}>
+                    <TableCell
+                      align='center'
                       style={{
                         backgroundColor:
                           playerStyles[player.id]?.background || 'transparent',
-                        color: playerStyles[player.id]?.text || 'inherit',
+                        color: 'black', // Alterado para preto
                       }}
                     >
-                      {hasRequiredRole(['1101231955120496650']) && (
-                        <div
-                          className='absolute inset-y-0 left-0 z-20 w-2 cursor-pointer bg-gray-600 transition-all hover:w-2'
-                          onClick={(e) => toggleDropdown(player.id, e)}
-                        />
-                      )}
-                      {menuOpenForPlayer === player.id && (
-                        <div
-                          ref={dropdownRef}
-                          className='absolute left-4 top-0 z-50 mt-6 w-64 rounded border bg-white p-2 shadow-lg'
-                        >
-                          <h4 className='mb-2 font-semibold text-gray-700'>
-                            Class Colors
-                          </h4>
-                          <ColorSelector
-                            onSelectColor={(color) =>
-                              handleBackgroundChange(player.id, color)
-                            }
-                          />
-                        </div>
-                      )}
-                      <span className='relative z-10 block p-2'>
-                        {player.username}
-                      </span>
-                    </td>
-                    <td className='border p-2'>
+                      <Select
+                        value={playerStyles[player.id]?.background || ''}
+                        onChange={(e) =>
+                          handleBackgroundChange(player.id, e.target.value)
+                        }
+                        displayEmpty
+                        style={{
+                          backgroundColor:
+                            playerStyles[player.id]?.background ||
+                            'transparent',
+                          color: 'black', // Alterado para preto
+                          cursor: 'pointer',
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          minWidth: '80px',
+                          height: '30px',
+                        }}
+                        renderValue={() => player.username}
+                      >
+                        <MenuItem value='' disabled>
+                          Select Class
+                        </MenuItem>
+                        <MenuItem value='#C41E3A'>Death Knight</MenuItem>
+                        <MenuItem value='#A330C9'>Demon Hunter</MenuItem>
+                        <MenuItem value='#FF7C0A'>Druid</MenuItem>
+                        <MenuItem value='#33937F'>Evoker</MenuItem>
+                        <MenuItem value='#AAD372'>Hunter</MenuItem>
+                        <MenuItem value='#3FC7EB'>Mage</MenuItem>
+                        <MenuItem value='#00FF98'>Monk</MenuItem>
+                        <MenuItem value='#F48CBA'>Paladin</MenuItem>
+                        <MenuItem value='#FFFFFF'>Priest</MenuItem>
+                        <MenuItem value='#FFF468'>Rogue</MenuItem>
+                        <MenuItem value='#0070DD'>Shaman</MenuItem>
+                        <MenuItem value='#8788EE'>Warlock</MenuItem>
+                        <MenuItem value='#C69B6D'>Warrior</MenuItem>
+                      </Select>
+                    </TableCell>
+                    <TableCell align='center'>
                       {Math.round(Number(player.balance_total)).toLocaleString(
                         'en-US'
                       )}
-                    </td>
-
+                    </TableCell>
                     {getSortedDates().map((date) => (
-                      <td
-                        key={`${player.id}-${date}`}
-                        className='border p-2 text-center'
-                      >
+                      <TableCell key={`${player.id}-${date}`} align='center'>
                         {player.dailyValues[date]
                           ? Number(player.dailyValues[date]).toLocaleString(
                               'en-US',
@@ -360,14 +334,14 @@ export function BalanceDataGrid() {
                               }
                             )
                           : '-'}
-                      </td>
+                      </TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </div>
   )

@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom'
 import { Header } from './components/header'
 import { HomePage } from './pages/home'
-import { Balance } from './pages/balance'
+import { BalancePage } from './pages/balance'
 import { TeamsManagement } from './pages/management/teams'
 import { FullRaidsNa } from './pages/bookings-na'
 import { RunDetails } from './pages/bookings-na/run'
@@ -62,7 +62,7 @@ export function App() {
                 />
                 <Route
                   path='/balance'
-                  element={<PrivateRoute element={<Balance />} />}
+                  element={<PrivateRoute element={<BalancePage />} />}
                 />
                 <Route
                   path='/management-teams'
