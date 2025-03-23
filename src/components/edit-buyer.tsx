@@ -2,7 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { api } from '../services/axiosConfig'
 import { ErrorDetails, ErrorComponent } from './error-display'
-import { Modal } from './modal'
+import { Button, TextField } from '@mui/material'
 
 interface EditBuyerProps {
   buyer: {
@@ -16,25 +16,36 @@ interface EditBuyerProps {
 }
 
 export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
-  const [nameAndRealm, setNameAndRealm] = useState(buyer.nameAndRealm)
-  const [buyerPot, setBuyerPot] = useState(
-    buyer.buyerPot.toLocaleString('en-US')
-  ) // Formatar com vírgulas
-  const [buyerNote, setBuyerNote] = useState(buyer.buyerNote)
+  const [formData, setFormData] = useState({
+    nameAndRealm: buyer.nameAndRealm,
+    buyerPot: buyer.buyerPot.toLocaleString('en-US'), // Formatted with commas
+    buyerNote: buyer.buyerNote,
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
+  const handleChange =
+    (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        field === 'buyerPot'
+          ? e.target.value.replace(/\D/g, '') // Remove non-numeric characters
+          : e.target.value
+      setFormData((prev) => ({
+        ...prev,
+        [field]:
+          field === 'buyerPot' && value
+            ? Number(value).toLocaleString('en-US')
+            : value,
+      }))
+    }
+
   const handleSubmit = async () => {
     setIsSubmitting(true)
-
-    // Remover as vírgulas ao enviar para o backend
-    const buyerPotValue = Number(buyerPot.replace(/,/g, ''))
-
     const payload = {
       id_buyer: buyer.id,
-      nameAndRealm,
-      buyerPot: buyerPotValue,
-      buyerNote,
+      nameAndRealm: formData.nameAndRealm,
+      buyerPot: Number(formData.buyerPot.replace(/,/g, '')), // Remove commas for backend
+      buyerNote: formData.buyerNote,
     }
 
     try {
@@ -43,86 +54,65 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
           'http://localhost:8000/v1/buyer',
         payload
       )
-
       await onEditSuccess()
       onClose()
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorDetails = {
+        setError({
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Unexpected error',
-          response: error,
         })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
       }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleBuyerPotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '') // Remove tudo que não for número
-    if (rawValue) {
-      const formattedValue = Number(rawValue).toLocaleString('en-US')
-      setBuyerPot(formattedValue)
-    } else {
-      setBuyerPot('')
-    }
-  }
-
-  return (
-    <Modal onClose={onClose}>
-      <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
-        {error ? (
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        ) : (
-          <>
-            <h2 className='mb-4 text-lg font-semibold'>Edit Buyer</h2>
-            <label className='mb-2 block'>Name-Realm</label>
-            <input
-              type='text'
-              className='mb-4 w-full rounded border p-2'
-              value={nameAndRealm}
-              onChange={(e) => setNameAndRealm(e.target.value)}
-            />
-            <label className='mb-2 block'>Pot</label>
-            <input
-              type='text'
-              className='mb-4 w-full rounded border p-2'
-              value={buyerPot}
-              onChange={handleBuyerPotChange} // Chama a função para formatar o valor com vírgulas
-            />
-            <label className='mb-2 block'>Note</label>
-            <input
-              type='text'
-              className='mb-4 w-full rounded border p-2'
-              value={buyerNote}
-              onChange={(e) => setBuyerNote(e.target.value)}
-            />
-            <button
-              className={`rounded bg-red-400 px-4 py-2 text-white ${
-                isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-              }`}
-              disabled={isSubmitting}
-              onClick={handleSubmit}
-            >
-              {isSubmitting ? (
-                <div className='flex gap-4'>
-                  <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
-                  Saving...
-                </div>
-              ) : (
-                'Save'
-              )}
-            </button>
-          </>
-        )}
+  return error ? (
+    <ErrorComponent error={error} onClose={() => setError(null)} />
+  ) : (
+    <>
+      <h2 className='mb-4 text-center text-lg font-semibold'>Edit Buyer</h2>
+      <div className='flex flex-col gap-4'>
+        <TextField
+          label='Name-Realm'
+          variant='outlined'
+          fullWidth
+          value={formData.nameAndRealm}
+          onChange={handleChange('nameAndRealm')}
+        />
+        <TextField
+          label='Pot'
+          variant='outlined'
+          fullWidth
+          value={formData.buyerPot}
+          onChange={handleChange('buyerPot')}
+        />
+        <TextField
+          label='Note'
+          variant='outlined'
+          fullWidth
+          value={formData.buyerNote}
+          onChange={handleChange('buyerNote')}
+        />
       </div>
-    </Modal>
+      <Button
+        variant='contained'
+        color='error'
+        fullWidth
+        disabled={isSubmitting}
+        onClick={handleSubmit}
+        sx={{
+          backgroundColor: 'rgb(239, 68, 68)',
+          '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          mt: 2,
+        }}
+      >
+        {isSubmitting ? 'Saving...' : 'Save'}
+      </Button>
+    </>
   )
 }

@@ -244,7 +244,7 @@ export function RunDetails() {
           <LoadingSpinner />
         </div>
       ) : (
-        <div>
+        <div className='mx-2 p-4'>
           {runData ? (
             <RunInfo
               run={runData}
@@ -255,7 +255,7 @@ export function RunDetails() {
             <div>Loading</div>
           )}
 
-          <div className='mx-auto mt-2 w-[95%] p-4'>
+          <div className='p-4'>
             {isLoadingBuyers ? (
               <div className='mt-40 flex flex-col items-center'>
                 <LoadingSpinner />
@@ -284,7 +284,7 @@ export function RunDetails() {
             )}
           </div>
           {runData && (
-            <div className='flex'>
+            <div className='mx-4 mt-8 flex justify-between'>
               <Attendance
                 attendance={attendance}
                 markAllAsFull={markAllAsFull}

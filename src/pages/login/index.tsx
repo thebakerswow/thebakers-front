@@ -5,109 +5,126 @@ import { DiscordLogo } from '@phosphor-icons/react'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal } from '../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
+import { Button, TextField } from '@mui/material'
 
 export function Login() {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [discordId, setDiscordId] = useState('')
   const [password, setPassword] = useState('')
-  const { isAuthenticated, login } = useAuth() // Obtém a função de login do contexto
+  const { isAuthenticated, login } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/home') // Redireciona automaticamente se estiver autenticado
-    }
+    if (isAuthenticated) navigate('/home')
   }, [isAuthenticated, navigate])
+
+  const handleApiError = (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+      setError({
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+    } else {
+      setError({ message: 'Erro inesperado', response: error })
+    }
+  }
 
   const handleLoginDiscord = async () => {
     try {
       const response = await api.post('/login/discord')
-
-      if (response.data.info) {
-        window.location.href = response.data.info
-      }
+      if (response.data.info) window.location.href = response.data.info
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        setError({ message: 'Erro inesperado', response: error })
-      }
+      handleApiError(error)
     }
   }
 
   const handleLoginRegister = async () => {
     try {
-      const payload = {
+      const response = await api.post('/login', {
         id_discord: discordId,
         password,
-      }
-
-      const response = await api.post('/login', payload)
-
+      })
       if (response.data.info) {
-        login(response.data.info) // Atualiza o estado global de autenticação
-        navigate('/home') // Redireciona após login bem-sucedido
+        login(response.data.info)
+        navigate('/home')
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        setError({ message: 'Erro inesperado', response: error })
-      }
+      handleApiError(error)
     }
+  }
+
+  const textFieldStyles = {
+    inputLabel: { style: { color: '#ECEBEE' } },
+    input: { style: { color: '#ECEBEE', backgroundColor: '#2D2F36' } }, // Background ajustado
+    sx: {
+      '& .MuiOutlinedInput-root': {
+        '& fieldset': { borderColor: '#ECEBEE' },
+        '&:hover fieldset': { borderColor: '#ECEBEE' },
+        '&.Mui-focused fieldset': { borderColor: '#ECEBEE' },
+        '& input': { backgroundColor: '#2D2F36' }, // Background ajustado
+      },
+    },
   }
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
   return (
-    <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-700 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <button
-        className='flex items-center gap-2 rounded-md bg-indigo-500 px-8 py-4 text-xl font-semibold transition-all hover:bg-indigo-600'
+    <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
+      <Button
+        variant='contained'
+        color='primary'
+        startIcon={<DiscordLogo size={40} weight='fill' />}
         onClick={handleLoginDiscord}
+        style={{ padding: '10px 20px', fontSize: '1rem', fontWeight: 'bold' }}
       >
-        <DiscordLogo size={40} weight='fill' />
         Sign in with Discord
-      </button>
+      </Button>
       <span className='text-sm font-thin'>or</span>
       <div className='flex flex-col gap-2'>
-        <input
-          className='rounded-md px-2 text-black'
-          placeholder='ID Discord'
+        <TextField
+          variant='outlined'
+          label='ID Discord'
           type='text'
           value={discordId}
           onChange={(e) => setDiscordId(e.target.value)}
+          fullWidth
+          slotProps={textFieldStyles}
+          sx={textFieldStyles.sx}
         />
-        <input
-          className='rounded-md px-2 text-black'
-          placeholder='Password'
+        <TextField
+          variant='outlined'
+          label='Password'
           type='password'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          fullWidth
+          slotProps={textFieldStyles}
+          sx={textFieldStyles.sx}
         />
         <div className='flex items-center justify-between'>
-          <button
+          <Button
+            variant='contained'
             onClick={handleLoginRegister}
-            className='w-28 rounded-md bg-red-400 p-2 text-sm font-normal text-gray-100 shadow-lg hover:bg-red-500'
+            sx={{
+              backgroundColor: 'rgb(239, 68, 68)',
+              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            }}
+            style={{ width: '100px', fontSize: '0.8rem' }}
           >
             Login
-          </button>
+          </Button>
           <Link
-            to={'/register'}
+            to='/register'
             className='cursor-pointer text-sm font-light underline'
           >
             Sign Up

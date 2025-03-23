@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { UserPlus } from '@phosphor-icons/react'
 import {
-  Modal as MaterialModal,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Box,
   TextField,
   Select,
@@ -116,24 +118,28 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   }
 
   return (
-    <MaterialModal open={true} onClose={onClose}>
-      <Box
+    <Dialog open={true} onClose={onClose} fullWidth>
+      <DialogTitle
+        sx={{
+          textAlign: 'center', // Centraliza o título
+          fontWeight: 'bold', // Opcional: adiciona destaque ao título
+        }}
+      >
+        {isSuccess ? 'Success' : 'Add Run'}
+      </DialogTitle>
+      <DialogContent
         sx={{
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          maxWidth: isSuccess ? '35vw' : '40vw', 
+          maxWidth: isSuccess ? '35vw' : '40vw',
           overflowY: 'auto',
           overflowX: 'hidden',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          position: 'relative',
           bgcolor: 'background.paper',
-          boxShadow: 24,
           p: 4,
           borderRadius: 2,
-          minHeight: isSuccess ? '8vw' : '20vw', // Reduz a altura mínima na mensagem de sucesso
+          minHeight: isSuccess ? '8vw' : '20vw',
         }}
       >
         {error ? (
@@ -167,7 +173,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               onChange={handleChange}
               variant='outlined'
               fullWidth
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
               type='time'
@@ -177,7 +183,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               onChange={handleChange}
               variant='outlined'
               fullWidth
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
               type='text'
@@ -188,6 +194,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               onChange={handleChange}
               variant='outlined'
               fullWidth
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='runType-label'>Run Type</InputLabel>
@@ -280,6 +287,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               onChange={handleChange}
               variant='outlined'
               fullWidth
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='raidLeader-label'>Raid Leader</InputLabel>
@@ -361,6 +369,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               variant='outlined'
               fullWidth
               multiline
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <div className='col-span-2 flex items-center justify-center gap-4'>
               <Button
@@ -387,7 +396,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </div>
           </form>
         )}
-      </Box>
-    </MaterialModal>
+      </DialogContent>
+    </Dialog>
   )
 }

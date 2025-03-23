@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal } from '../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
 
 type DiscordTokenPayload = {
   username: string
@@ -23,40 +23,36 @@ export function HomePage() {
     try {
       const decoded = jwtDecode<DiscordTokenPayload>(token)
       setUsername(decoded.username)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+    } catch (err) {
+      const errorDetails = axios.isAxiosError(err)
+        ? {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status,
+          }
+        : { message: 'Erro inesperado', response: err }
+      setError(errorDetails)
     }
   }, [])
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
   return (
-    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center rounded-xl bg-zinc-700 p-4 text-4xl font-semibold text-gray-100 shadow-2xl'>
+    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center rounded-xl bg-zinc-900 p-4 text-4xl font-semibold text-gray-100 shadow-2xl'>
       <div>
         Welcome to TheBakers <span className='font-bold text-red-700'>Hub</span>
       </div>
-
       {username && (
         <div className='mt-4 text-2xl'>
-          Olá, <span className='text-red-500'>{username}</span>!
+          Hello, <span className='text-red-500'>{username}</span>!
         </div>
       )}
     </div>

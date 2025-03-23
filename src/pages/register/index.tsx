@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal } from '../../components/modal'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
+import { TextField, Button, Alert } from '@mui/material'
+import { Modal as MuiModal, Box } from '@mui/material'
 
 export function Register() {
   const navigate = useNavigate()
@@ -43,53 +44,84 @@ export function Register() {
     }
   }
 
+  const textFieldStyles = {
+    inputLabel: { style: { color: '#ECEBEE' } },
+    input: { style: { color: '#ECEBEE', backgroundColor: '#2D2F36' } }, // Background ajustado
+    sx: {
+      '& .MuiOutlinedInput-root': {
+        '& fieldset': { borderColor: '#ECEBEE' },
+        '&:hover fieldset': { borderColor: '#ECEBEE' },
+        '&.Mui-focused fieldset': { borderColor: '#ECEBEE' },
+        '& input': { backgroundColor: '#2D2F36' }, // Background ajustado
+      },
+    },
+  }
+
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
   return (
-    <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-700 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <div className='flex flex-col items-center gap-2'>
-        <input
-          className='rounded-md px-2 text-black'
-          placeholder='ID Discord'
-          type='text'
+    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
+      <div className='flex flex-col items-center gap-4'>
+        <TextField
+          fullWidth
+          variant='outlined'
+          label='ID Discord'
           value={discordId}
           onChange={(e) => setDiscordId(e.target.value)}
+          slotProps={textFieldStyles}
+          sx={textFieldStyles.sx}
         />
-        <input
-          className='rounded-md px-2 text-black'
-          placeholder='Password'
+        <TextField
+          fullWidth
+          variant='outlined'
+          label='Password'
           type='password'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          slotProps={textFieldStyles}
+          sx={textFieldStyles.sx}
         />
         <div className='flex items-center justify-between'>
-          <button
+          <Button
             onClick={handleRegister}
-            className='w-28 rounded-md bg-red-400 p-2 text-sm font-normal text-gray-100 shadow-lg hover:bg-red-500'
+            variant='contained'
+            fullWidth
+            sx={{
+              backgroundColor: 'rgb(239, 68, 68)',
+              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            }}
+            style={{ width: '100px', fontSize: '0.8rem' }}
           >
             Register
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Modal de confirmação */}
       {isConfirmModalOpen && (
-        <Modal onClose={() => setIsConfirmModalOpen(false)}>
-          <div className='p-6 text-center'>
-            <h2 className='text-xl font-semibold text-blue-500'>
-              Confirme o cadastro no Discord
-            </h2>
-            <p className='mt-2 text-sm text-black'>
-              Digite o código enviado no Discord para finalizar o cadastro.
-            </p>
-          </div>
-        </Modal>
+        <MuiModal
+          open={isConfirmModalOpen}
+          onClose={() => setIsConfirmModalOpen(false)}
+        >
+          <Box className='absolute left-1/2 top-1/2 w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-white p-6 shadow-lg'>
+            <Alert
+              severity='info'
+              onClose={() => setIsConfirmModalOpen(false)}
+              style={{ textAlign: 'center', fontSize: '1rem' }}
+            >
+              Confirme o cadastro no Discord. Digite o código enviado no Discord
+              para finalizar o cadastro.
+            </Alert>
+          </Box>
+        </MuiModal>
       )}
     </div>
   )

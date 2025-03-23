@@ -17,7 +17,6 @@ import axios from 'axios'
 import { BuyerData } from '../../../types/buyer-interface'
 import { api } from '../../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { Modal } from '../../../components/modal'
 import { DeleteBuyer } from '../../../components/delete-buyer'
 import { EditBuyer } from '../../../components/edit-buyer'
 import {
@@ -31,7 +30,10 @@ import {
   Select,
   MenuItem,
   IconButton,
+  Dialog,
+  DialogContent,
 } from '@mui/material'
+import { Modal as MuiModal, Box } from '@mui/material'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -151,11 +153,20 @@ export function BuyersDataGrid({
   )
 
   const renderPaidIcon = (buyer: BuyerData) => (
-    <IconButton onClick={() => handleTogglePaid(buyer.id)}>
+    <IconButton
+      onClick={() => handleTogglePaid(buyer.id)}
+      sx={{
+        backgroundColor: 'white', // Fundo branco
+        padding: '2px', // Reduzido o padding
+        '&:hover': {
+          backgroundColor: '#f0f0f0', // Cor de fundo ao passar o mouse
+        },
+      }}
+    >
       {buyer.isPaid ? (
-        <CheckFat className='text-green-500' size={22} weight='fill' />
+        <CheckFat className='text-green-500' size={22} weight='fill' /> // Tamanho reduzido
       ) : (
-        <XCircle className='text-red-600' size={22} weight='fill' />
+        <XCircle className='text-red-600' size={22} weight='fill' /> // Tamanho reduzido
       )}
     </IconButton>
   )
@@ -182,9 +193,11 @@ export function BuyersDataGrid({
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
@@ -224,28 +237,32 @@ export function BuyersDataGrid({
   function getBuyerColor(status: string): string {
     switch (status) {
       case 'waiting':
-        return 'bg-yellow-200'
+        return 'bg-gradient-to-r from-yellow-200 to-yellow-300'
       case 'backup':
-        return 'bg-purple-300'
+        return 'bg-gradient-to-r from-purple-300 to-purple-400'
       case 'group':
-        return 'bg-blue-300'
+        return 'bg-gradient-to-r from-blue-300 to-blue-400'
       case 'done':
-        return 'bg-green-300'
+        return 'bg-gradient-to-r from-green-300 to-green-400'
       case 'noshow':
-        return 'bg-red-500'
+        return 'bg-gradient-to-r from-red-500 to-red-600'
       case 'closed':
-        return 'bg-zinc-400'
+        return 'bg-gradient-to-r from-zinc-400 to-zinc-500'
       case '':
-        return 'bg-white'
+        return 'bg-gradient-to-r from-white to-gray-100'
       default:
-        return 'bg-white'
+        return 'bg-gradient-to-r from-white to-gray-100'
     }
   }
 
   return (
-    <TableContainer component={Paper} sx={{ overflow: 'visible' }}>
-      {' '}
-      {/* Removed scroll */}
+    <TableContainer
+      component={Paper}
+      sx={{
+        overflow: 'hidden', // Ensures content stays within rounded corners
+        borderRadius: '6px', // Matches the style of runs-data-grid
+      }}
+    >
       <Table>
         <TableHead>
           <TableRow>
@@ -364,12 +381,11 @@ export function BuyersDataGrid({
         <TableBody>
           {sortedData.length === 0 ? (
             <TableRow sx={{ height: '32px' }}>
-              {' '}
               {/* Increased height */}
               <TableCell
                 colSpan={11}
                 align='center'
-                sx={{ padding: '4px', textAlign: 'center' }} // Adjusted padding
+                sx={{ padding: '20px', textAlign: 'center' }} // Adjusted padding
               >
                 No Buyers
               </TableCell>
@@ -439,31 +455,42 @@ export function BuyersDataGrid({
           )}
         </TableBody>
       </Table>
-      {openModal && editingBuyer && (
-        <Modal onClose={() => setOpenModal(false)}>
-          {modalType === 'edit' ? (
-            <EditBuyer
-              buyer={{
-                id: editingBuyer.id,
-                nameAndRealm: editingBuyer.nameAndRealm,
-                buyerPot: editingBuyer.buyerPot,
-                buyerNote: editingBuyer.buyerNote,
-              }}
-              onClose={() => setOpenModal(false)}
-              onEditSuccess={onBuyerNameNoteEdit}
-            />
-          ) : (
-            <DeleteBuyer
-              buyer={{
-                id: editingBuyer.id,
-                nameAndRealm: editingBuyer.nameAndRealm,
-              }}
-              onClose={() => setOpenModal(false)}
-              onDeleteSuccess={onDeleteSuccess}
-            />
-          )}
-        </Modal>
-      )}
+      {openModal &&
+        editingBuyer &&
+        (modalType === 'edit' ? (
+          <Dialog
+            open={openModal}
+            onClose={() => setOpenModal(false)}
+            fullWidth
+            maxWidth='sm'
+          >
+            <DialogContent>
+              <EditBuyer
+                buyer={{
+                  id: editingBuyer.id,
+                  nameAndRealm: editingBuyer.nameAndRealm,
+                  buyerPot: editingBuyer.buyerPot,
+                  buyerNote: editingBuyer.buyerNote,
+                }}
+                onClose={() => setOpenModal(false)}
+                onEditSuccess={onBuyerNameNoteEdit}
+              />
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <MuiModal open={openModal} onClose={() => setOpenModal(false)}>
+            <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform shadow-lg'>
+              <DeleteBuyer
+                buyer={{
+                  id: editingBuyer.id,
+                  nameAndRealm: editingBuyer.nameAndRealm,
+                }}
+                onClose={() => setOpenModal(false)}
+                onDeleteSuccess={onDeleteSuccess}
+              />
+            </Box>
+          </MuiModal>
+        ))}
     </TableContainer>
   )
 }

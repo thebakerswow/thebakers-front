@@ -1,10 +1,21 @@
 import { useState } from 'react'
 import { Pencil, UserPlus } from '@phosphor-icons/react'
-import twwLogo from '../../../assets/baker-and-employees.png'
+import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
+import {
+  Button,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+} from '@mui/material'
 
 interface RunInfoProps {
   run: RunData
@@ -66,27 +77,38 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
 
   return (
     <div className='m-4 flex gap-2 rounded-md'>
-      <img className='w-[300px] rounded-md' src={twwLogo} alt='Run Cover' />
-      <div className='rounded-md bg-zinc-300 p-4 text-black'>
+      <img
+        className='h-[200px] w-[400px] rounded-md'
+        src={undermineLogo}
+        alt='Run Cover'
+      />
+      <div className='flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
         <h2 className='text-lg font-semibold'>Gold Collectors</h2>
-        <table className='w-full table-auto'>
-          <tbody>
-            {run.sumPot?.map((item) =>
-              item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
-                <tr key={item.idDiscord}>
-                  <td className='p-2'>{item.username}</td>
-                  <td className='p-2'>
-                    {Math.round(Number(item.sumPot)).toLocaleString('en-US')}
-                  </td>
-                </tr>
-              ) : null
-            )}
-          </tbody>
-        </table>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableBody>
+              {run.sumPot?.map((item) =>
+                item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
+                  <TableRow key={item.idDiscord} style={{ height: '20px' }}>
+                    <TableCell style={{ padding: '10px' }}>
+                      {item.username}
+                    </TableCell>
+                    <TableCell align='right' style={{ padding: '10px' }}>
+                      {Math.round(Number(item.sumPot)).toLocaleString('en-US')}
+                    </TableCell>
+                  </TableRow>
+                ) : null
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
-      <div className='grid flex-1 grid-cols-4 rounded-md bg-gray-300 text-center text-zinc-900'>
-        <div className='col-span-3 flex flex-col'>
-          <h1 className='mb-3 mt-3 text-lg font-semibold'>
+      <Card
+        className='grid flex-1 grid-cols-4 items-center text-left text-zinc-900'
+        style={{ minWidth: '1000px', backgroundColor: '#f3f4f6' }}
+      >
+        <CardContent className='col-span-3 ml-10 flex flex-col'>
+          <h1 className='text-center text-lg font-semibold'>
             {run.raid} {run.difficulty} @{' '}
             {run.time ? (
               <>
@@ -99,31 +121,31 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             )}
           </h1>
 
-          <div className='ml-24 mt-4 grid grid-cols-3 gap-4 text-start'>
-            <p className='font-semibold text-yellow-500'>
+          <div className='mt-8 grid grid-cols-3 gap-4 text-left'>
+            <p className='text-left font-semibold text-yellow-500'>
               <span className='text-base font-bold text-zinc-900'>
                 Loot Type:{' '}
               </span>
               {run.loot}
             </p>
-            <p className='font-semibold text-red-500'>
+            <p className='text-left font-semibold text-red-500'>
               <span className='text-base font-bold text-zinc-900'>
                 Max Buyers:{' '}
               </span>
               {run.maxBuyers}
             </p>
-            <p>
+            <p className='text-left'>
               <span className='text-base font-bold'>
                 Slots Available:{' '}
                 <span className='font-normal'>{run.slotAvailable}</span>
               </span>
             </p>
-            <p>
+            <p className='text-left'>
               <span className='text-base font-bold'>
                 Backups: <span className='font-normal'>{run.backups}</span>
               </span>
             </p>
-            <p>
+            <p className='text-left'>
               <span className='text-base font-bold'>Raid Leader(s): </span>{' '}
               {run.raidLeaders && run.raidLeaders.length > 0 ? (
                 run.raidLeaders
@@ -133,40 +155,50 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 <span>-</span>
               )}
             </p>
-            <p>
+            <p className='text-left'>
               <span className='text-base font-bold'>
-                Gold Collected:{' '}
+                Run Pot:{' '}
                 <span className='font-normal'>
                   {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
                 </span>
               </span>
             </p>
           </div>
-        </div>
-        <div className='m-4 flex flex-col items-center justify-center gap-2'>
-          <button
-            className='flex w-full items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
+        </CardContent>
+        <CardContent className='m-4 flex flex-col items-center justify-center gap-2'>
+          <Button
+            variant='contained'
+            startIcon={<UserPlus size={18} />}
+            fullWidth
             onClick={handleOpenAddBuyer}
+            sx={{
+              backgroundColor: 'rgb(239, 68, 68)',
+              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            }}
           >
-            <UserPlus size={18} />
             Add Buyer
-          </button>
+          </Button>
           {/* Permissoes prefeito, chefe de cozinha, staff */}
           {hasRequiredRole([
             '1101231955120496650',
             '1244711458541928608',
             '1148721174088532040',
           ]) && (
-            <button
-              className='flex w-full items-center justify-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500'
+            <Button
+              variant='contained'
+              startIcon={<Pencil size={18} />}
+              fullWidth
               onClick={handleOpenEditModal}
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              }}
             >
-              <Pencil size={18} />
               Edit Raid
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {isAddBuyerOpen && (
         <AddBuyer

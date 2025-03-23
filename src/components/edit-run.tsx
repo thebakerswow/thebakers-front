@@ -1,157 +1,28 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Pencil } from '@phosphor-icons/react'
-import { Modal } from './modal'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Box,
+  Chip,
+  Alert,
+} from '@mui/material'
 import axios from 'axios'
 import { RunData } from '../types/runs-interface'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
 
-interface MultiSelectDropdownProps {
-  onChange: (selected: string[]) => void
-  initialSelected: string[] // Adicione esta linha
-}
-
 interface ApiOption {
   id: string
   username: string
   global_name: string
-}
-
-const MultiSelectDropdown = ({
-  onChange,
-  initialSelected,
-}: MultiSelectDropdownProps) => {
-  const [selected, setSelected] = useState<string[]>(initialSelected)
-  const [open, setOpen] = useState(false)
-  const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
-
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  function getSpecificTeamUrl(teamId: string) {
-    return `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
-  }
-
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // prefeitos
-        const teamId = '1148721174088532040'
-        const response = await api.get(
-          getSpecificTeamUrl(teamId) ||
-            'http://localhost:8000/v1/team/1148721174088532040'
-        )
-
-        if (response.data.info.members) {
-          setApiOptions(response.data.info.members)
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-        } else {
-          setError({
-            message: 'Erro inesperado',
-            response: error,
-          })
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOptions()
-  }, [])
-
-  useEffect(() => {
-    setSelected(initialSelected)
-  }, [initialSelected])
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  useEffect(() => {
-    onChange(selected)
-  }, [selected, onChange])
-
-  useEffect(() => {
-    if (JSON.stringify(selected) !== JSON.stringify(initialSelected)) {
-      setSelected(initialSelected)
-    }
-  }, [initialSelected])
-
-  const handleSelect = (value: string) => {
-    setSelected((prev) => {
-      const newSelection = prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-      return newSelection
-    })
-  }
-
-  const getDisplayNames = () => {
-    return selected
-      .map((value) => {
-        const parts = value.split(';')
-        return parts.length >= 2 ? parts[1] : value
-      })
-      .join(', ')
-  }
-
-  return (
-    <div ref={dropdownRef} className='relative'>
-      <div
-        className={`cursor-pointer rounded-md border bg-white p-2 font-normal ${
-          selected.length > 0 ? 'text-black' : 'text-zinc-400'
-        }`}
-        onClick={() => setOpen(!open)}
-      >
-        {selected.length > 0 ? getDisplayNames() : 'Raid Leader'}
-      </div>
-      {open && (
-        <div className='absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-md bg-white shadow-lg'>
-          {loading && (
-            <div className='p-2 text-center text-gray-500'>
-              Loading options...
-            </div>
-          )}
-          {!loading &&
-            !error &&
-            apiOptions.map((option) => (
-              <div
-                key={option.id}
-                className='flex cursor-pointer items-center p-2 hover:bg-gray-100'
-                onClick={() => handleSelect(`${option.id};${option.username}`)}
-              >
-                <input
-                  type='checkbox'
-                  checked={selected.includes(`${option.id};${option.username}`)}
-                  readOnly
-                  className='mr-2'
-                />
-                <span className='text-black'>{option.username}</span>
-              </div>
-            ))}
-        </div>
-      )}
-    </div>
-  )
 }
 
 export interface EditRunProps {
@@ -161,32 +32,42 @@ export interface EditRunProps {
 }
 
 export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
-  const [date, setDate] = useState(run.date)
-  const [time, setTime] = useState(run.time)
-  const [raid, setRaid] = useState(run.raid)
-  const [runType, setRunType] = useState(run.runType)
-  const [difficulty, setDifficulty] = useState(run.difficulty)
-  const [idTeam, setIdTeam] = useState(run.idTeam)
-  const [maxBuyers, setMaxBuyers] = useState(run.maxBuyers)
-  const [raidLeader, setRaidLeader] = useState<string[]>(
-    run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || []
-  )
-  const [loot, setLoot] = useState(run.loot)
-  const [note, setNote] = useState(run.note)
+  const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
+  const [formData, setFormData] = useState({
+    date: run.date,
+    time: run.time,
+    raid: run.raid,
+    runType: run.runType,
+    difficulty: run.difficulty,
+    idTeam: run.idTeam,
+    maxBuyers: run.maxBuyers,
+    raidLeader:
+      run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
+    loot: run.loot,
+    note: run.note,
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
-  const initialSelected = useMemo(
-    () => run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
-    [run.raidLeaders] // ⬅️ Só recalcula se raidLeaders mudar
-  )
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    if (/^[0-9]*$/.test(newValue)) {
-      setMaxBuyers(newValue)
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const teamId = '1148721174088532040'
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
+        )
+        if (response.data.info.members)
+          setApiOptions(response.data.info.members)
+      } catch (err) {
+        console.error('Failed to fetch API options:', err)
+      }
     }
+    fetchOptions()
+  }, [])
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -194,47 +75,29 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     setIsSubmitting(true)
 
     const data = {
+      ...formData,
       id: run.id,
-      date,
-      time,
-      raid,
-      runType,
-      difficulty,
-      idTeam,
-      maxBuyers: maxBuyers.toString(),
-      raidLeader: raidLeader.map((value) => {
+      maxBuyers: formData.maxBuyers.toString(),
+      raidLeader: formData.raidLeader.map((value) => {
         const parts = value.split(';')
         return `${parts[0]};${parts[1]}`
       }),
-      loot,
-      note,
     }
 
     try {
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/run` ||
-          'http://localhost:8000/v1/run',
-        data
-      )
-
+      await api.put(`${import.meta.env.VITE_API_BASE_URL}/run`, data)
       await onRunEdit()
-
       setIsSuccess(true)
-
-      setTimeout(() => onClose(), 3000)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
+      setTimeout(() => onClose(), 1000)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
         setError({
-          message: 'Erro inesperado',
-          response: error,
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
         })
+      } else {
+        setError({ message: 'Unexpected error', response: err })
       }
     } finally {
       setIsSubmitting(false)
@@ -242,176 +105,173 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   }
 
   return (
-    <Modal onClose={onClose}>
-      <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
-        {error ? (
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        ) : isSuccess ? (
-          <div className='p-6 text-center'>
-            <div className='mb-4 text-4xl text-green-500'>✓</div>
-            <h2 className='mb-2 text-2xl font-bold'>
-              Run edited successfully!
-            </h2>
-            <p className='text-zinc-400'>
-              The modal will close automatically in 3 seconds...
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
-            <input
-              type='date'
-              id='date'
-              required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            />
-            <input
-              type='time'
-              id='time'
-              required
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className='rounded-md border p-2 text-zinc-400 transition valid:text-black focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            />
-            <input
-              type='text'
-              id='raid'
-              required
-              placeholder='Raid'
-              value={raid}
-              onChange={(e) => setRaid(e.target.value)}
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            />
-            <select
-              required
-              id='runType'
-              value={runType}
-              onChange={(e) => setRunType(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            >
-              <option value='' disabled hidden className='text-zinc-400'>
-                Run Type
-              </option>
-              <option value='Full Raid' className='text-black'>
-                Full Raid
-              </option>
-              <option value='AOTC' className='text-black'>
-                AOTC
-              </option>
-              <option value='Legacy' className='text-black'>
-                Legacy
-              </option>
-            </select>
-            <select
-              id='difficulty'
-              required
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            >
-              <option value='' disabled hidden className='text-zinc-400'>
-                Difficulty
-              </option>
-              <option className='text-black' value='Normal'>
-                Normal
-              </option>
-              <option className='text-black' value='Heroic'>
-                Heroic
-              </option>
-              <option className='text-black' value='Mythic'>
-                Mythic
-              </option>
-            </select>
-            <select
-              required
-              id='team'
-              value={idTeam}
-              onChange={(e) => setIdTeam(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            >
-              <option value='' disabled hidden className='text-zinc-400'>
-                Team
-              </option>
-              <option className='text-black' value='1119092171157541006'>
-                Padeirinho
-              </option>
-              <option className='text-black' value='1153459315907235971'>
-                Garçom
-              </option>
-              <option className='text-black' value='1224792109241077770'>
-                Confeiteiros
-              </option>
-              <option className='text-black' value='1328892768034226217'>
-                Jackfruit
-              </option>
-              <option className='text-black' value='1328938639949959209'>
-                Milharal
-              </option>
-              <option className='text-black' value='1337818949831626753'>
-                APAE
-              </option>
-            </select>
-            <input
-              type='text'
-              id='maxBuyers'
-              required
-              placeholder='Max Buyers'
-              value={maxBuyers}
-              onChange={handleChange}
-              className='rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            />
-            <MultiSelectDropdown
-              initialSelected={initialSelected}
-              onChange={(selected) => setRaidLeader(selected)}
-            />
-            <select
-              required
-              id='loot'
-              value={loot}
-              onChange={(e) => setLoot(e.target.value)}
-              className='rounded-md border p-2 font-normal transition valid:text-black invalid:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            >
-              <option value='' disabled hidden className='text-zinc-400'>
-                Loot
-              </option>
-              <option className='text-black' value='Saved'>
-                Saved
-              </option>
-              <option className='text-black' value='Unsaved'>
-                Unsaved
-              </option>
-            </select>
-            <textarea
-              placeholder='Note'
-              id='note'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className='col-span-2 rounded-md border p-2 transition focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500'
-            />
-            <div className='col-span-2 flex items-center justify-center gap-4'>
-              <button
-                type='submit'
-                disabled={isSubmitting}
-                className={`flex items-center gap-2 rounded-md bg-red-400 p-2 text-gray-100 hover:bg-red-500 ${
-                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-                }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
-                    Editing...
-                  </>
-                ) : (
-                  <>
-                    <Pencil size={20} /> Edit Run
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </Modal>
+    <Dialog open={true} onClose={onClose} fullWidth>
+      {!isSuccess && (
+        <DialogTitle className='text-center'>Edit Run</DialogTitle>
+      )}
+      <DialogContent>
+        <div className='mt-2 flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
+          {error ? (
+            <ErrorComponent error={error} onClose={() => setError(null)} />
+          ) : isSuccess ? (
+            <Alert severity='success' onClose={onClose}>
+              Run edited successfully! The dialog will close automatically in 1
+              second...
+            </Alert>
+          ) : (
+            <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+              <TextField
+                type='date'
+                label='Date'
+                value={formData.date}
+                onChange={(e) => handleChange('date', e.target.value)}
+                fullWidth
+                required
+                margin='dense'
+              />
+              <TextField
+                type='time'
+                margin='dense'
+                label='Time'
+                value={formData.time}
+                onChange={(e) => handleChange('time', e.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label='Raid'
+                value={formData.raid}
+                onChange={(e) => handleChange('raid', e.target.value)}
+                fullWidth
+                required
+              />
+              <FormControl fullWidth required>
+                <InputLabel>Run Type</InputLabel>
+                <Select
+                  value={formData.runType}
+                  onChange={(e) => handleChange('runType', e.target.value)}
+                  label='Run Type'
+                >
+                  <MenuItem value='Full Raid'>Full Raid</MenuItem>
+                  <MenuItem value='AOTC'>AOTC</MenuItem>
+                  <MenuItem value='Legacy'>Legacy</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth required>
+                <InputLabel>Difficulty</InputLabel>
+                <Select
+                  value={formData.difficulty}
+                  onChange={(e) => handleChange('difficulty', e.target.value)}
+                  label='Difficulty'
+                >
+                  <MenuItem value='Normal'>Normal</MenuItem>
+                  <MenuItem value='Heroic'>Heroic</MenuItem>
+                  <MenuItem value='Mythic'>Mythic</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth required>
+                <InputLabel>Team</InputLabel>
+                <Select
+                  value={formData.idTeam}
+                  onChange={(e) => handleChange('idTeam', e.target.value)}
+                  label='Team'
+                >
+                  <MenuItem value='1119092171157541006'>Padeirinho</MenuItem>
+                  <MenuItem value='1153459315907235971'>Garçom</MenuItem>
+                  <MenuItem value='1224792109241077770'>Confeiteiros</MenuItem>
+                  <MenuItem value='1328892768034226217'>Jackfruit</MenuItem>
+                  <MenuItem value='1328938639949959209'>Milharal</MenuItem>
+                  <MenuItem value='1337818949831626753'>APAE</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                label='Max Buyers'
+                value={formData.maxBuyers}
+                onChange={(e) => handleChange('maxBuyers', e.target.value)}
+                fullWidth
+                required
+              />
+              <FormControl fullWidth required>
+                <InputLabel>Raid Leader</InputLabel>
+                <Select
+                  multiple
+                  label='Raid Leader'
+                  value={formData.raidLeader}
+                  onChange={(e) => handleChange('raidLeader', e.target.value)}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(selected as string[]).map((value) => (
+                        <Chip
+                          key={value}
+                          label={
+                            apiOptions.find(
+                              (option) =>
+                                `${option.id};${option.username}` === value
+                            )?.global_name || value
+                          }
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  MenuProps={{
+                    PaperProps: {
+                      style: { maxHeight: 200, overflow: 'auto' },
+                    },
+                  }}
+                >
+                  {apiOptions.map((option) => (
+                    <MenuItem
+                      key={option.username}
+                      value={`${option.id};${option.username}`}
+                    >
+                      {option.global_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth required>
+                <InputLabel>Loot</InputLabel>
+                <Select
+                  value={formData.loot}
+                  onChange={(e) => handleChange('loot', e.target.value)}
+                  label='Loot'
+                >
+                  <MenuItem value='Saved'>Saved</MenuItem>
+                  <MenuItem value='Unsaved'>Unsaved</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                label='Note'
+                value={formData.note}
+                onChange={(e) => handleChange('note', e.target.value)}
+                multiline
+                fullWidth
+              />
+              <div className='col-span-2 flex items-center justify-center gap-4'>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  color='primary'
+                  disabled={isSubmitting}
+                  startIcon={
+                    isSubmitting ? (
+                      <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                    ) : (
+                      <Pencil size={20} />
+                    )
+                  }
+                  sx={{
+                    backgroundColor: 'rgb(239, 68, 68)',
+                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                  }}
+                >
+                  {isSubmitting ? 'Editing...' : 'Edit Run'}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
