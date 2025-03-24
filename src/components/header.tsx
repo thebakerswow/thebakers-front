@@ -96,6 +96,11 @@ export function Header() {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              slotProps={{
+                paper: {
+                  sx: { width: '150px' }, // Adjust the width as needed
+                },
+              }}
             >
               <MenuItem
                 onClick={() => navigate('/admin')}
