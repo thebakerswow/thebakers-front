@@ -82,7 +82,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         src={undermineLogo}
         alt='Run Cover'
       />
-      <div className='flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
+      <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
         <h2 className='text-lg font-semibold'>Gold Collectors</h2>
         <TableContainer component={Paper}>
           <Table>
