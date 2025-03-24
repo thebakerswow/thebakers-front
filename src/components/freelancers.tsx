@@ -262,7 +262,7 @@ export function Freelancers({ runId }: FreelancersProps) {
               '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
             }}
           >
-            {isSubmitting ? 'Adding...' : 'Add'}
+            {isSubmitting ? 'Adding...' : 'ADD'}
           </Button>
         </div>
         <TableContainer
