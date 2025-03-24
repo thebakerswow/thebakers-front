@@ -107,7 +107,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
         className='grid flex-1 grid-cols-4 items-center text-left text-zinc-900'
         style={{ minWidth: '1000px', backgroundColor: '#f3f4f6' }}
       >
-        <CardContent className='col-span-3 ml-10 flex flex-col'>
+        <CardContent className='col-span-3 mb-6 ml-10 flex flex-col'>
           <h1 className='text-center text-lg font-semibold'>
             {run.raid} {run.difficulty} @{' '}
             {run.time ? (
