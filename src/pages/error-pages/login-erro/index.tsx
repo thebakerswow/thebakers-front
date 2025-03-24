@@ -15,7 +15,7 @@ export function LoginErro() {
 
   return (
     <div className='flex flex-col items-center py-20 text-center'>
-      <h1 className='text-4xl font-bold'>Oops, something went wrong!</h1>
+      <h1 className='text-4xl font-bold login/error text-red-500'>Oops, something went wrong!</h1>
       <Link
         className='mt-4 rounded-md bg-red-500 p-2 text-white transition-all hover:bg-red-600'
         to={'/'}
