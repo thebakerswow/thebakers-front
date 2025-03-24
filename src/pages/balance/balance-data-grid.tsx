@@ -239,13 +239,21 @@ export function BalanceDataGrid({
               <TableRow>
                 <TableCell
                   align='center'
-                  style={{ backgroundColor: '#ECEBEE' }}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: '#ECEBEE',
+                  }}
                 >
                   Player
                 </TableCell>
                 <TableCell
                   align='center'
-                  style={{ backgroundColor: '#ECEBEE' }}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: '#ECEBEE',
+                  }}
                 >
                   Total Balance
                 </TableCell>
@@ -253,7 +261,11 @@ export function BalanceDataGrid({
                   <TableCell
                     key={date}
                     align='center'
-                    style={{ backgroundColor: '#ECEBEE' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
                   >
                     {formatDayHeader(date)}
                   </TableCell>
