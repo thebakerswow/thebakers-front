@@ -9,7 +9,7 @@ import { LoadingSpinner } from '../../../components/loading-spinner'
 import { api } from '../../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { RunData } from '../../../types/runs-interface'
-import { Modal } from '../../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
@@ -227,9 +227,11 @@ export function RunDetails() {
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 

@@ -3,7 +3,6 @@ import { api } from '../services/axiosConfig'
 import { CircleNotch } from '@phosphor-icons/react'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
-import { Modal } from '@mui/material'
 import { LoadingSpinner } from './loading-spinner' // Import reusable spinner
 import {
   Table,
@@ -22,7 +21,7 @@ import {
   Button, // Import Button from Material-UI
 } from '@mui/material'
 import { Delete as DeleteIcon } from '@mui/icons-material'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { Modal, Modal as MuiModal, Box } from '@mui/material'
 
 interface User {
   id_discord: string

@@ -2,7 +2,7 @@ import { Eye, Trash } from '@phosphor-icons/react'
 import { TableSortLabel } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
-import { Modal } from '../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
 import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
@@ -33,11 +33,7 @@ export function RunsDataGrid({
   onDeleteSuccess,
 }: RunsDataProps) {
   const navigate = useNavigate()
-  const [isNoteOpen, setIsNoteOpen] = useState(false)
-  const [selectedRun, setSelectedRun] = useState<{
-    note: string
-    id?: string
-  } | null>(null)
+
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
@@ -108,12 +104,6 @@ export function RunsDataGrid({
   const handleCloseDeleteRunModal = () => {
     setIsDeleteRunModalOpen(false)
     setSelectedRunToDelete(null)
-  }
-
-  // Fecha o modal de nota
-  const handleCloseNote = () => {
-    setIsNoteOpen(false)
-    setSelectedRun(null)
   }
 
   // Redireciona para a página de detalhes da run
@@ -213,9 +203,11 @@ export function RunsDataGrid({
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
@@ -428,15 +420,6 @@ export function RunsDataGrid({
           onClose={handleCloseDeleteRunModal}
           onDeleteSuccess={onDeleteSuccess}
         />
-      )}
-
-      {isNoteOpen && selectedRun && (
-        <Modal onClose={handleCloseNote}>
-          <div className='p-4'>
-            <h2 className='text-xl font-bold'>Note</h2>
-            <p className='font-normal'>{selectedRun.note || 'Sem nota'}</p>
-          </div>
-        </Modal>
       )}
 
       {isPreviewOpen && selectedRunId && (

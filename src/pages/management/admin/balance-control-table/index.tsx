@@ -227,16 +227,16 @@ export function BalanceControlTable({
       </div>
 
       <table className='w-full border-collapse'>
-        <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
-          <tr className='text-md'>
-            <th className='w-[150px] border p-2'>Team</th>
+        <thead className='sticky top-0 bg-zinc-200 text-gray-700'>
+          <tr className='text-md text-black'>
+            <th className='h-14 w-[150px] border p-2'>Team</th>
             <th className='w-[150px] border p-2'>Gold Cut</th>
             <th className='w-[150px] border p-2'>Gold Collected</th>
             <th className='w-[150px] border p-2'>Balance Total</th>
             <th className='border p-2'>Calculator</th>
           </tr>
         </thead>
-        <tbody className='bg-zinc-200 text-sm font-medium text-zinc-900'>
+        <tbody className='bg-white text-sm font-medium text-zinc-900'>
           {isLoading ? (
             <tr>
               <td colSpan={5} className='h-full p-4 text-center'>
