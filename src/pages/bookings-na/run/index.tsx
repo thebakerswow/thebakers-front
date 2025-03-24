@@ -286,7 +286,7 @@ export function RunDetails() {
             )}
           </div>
           {runData && (
-            <div className='mx-4 mt-8 flex justify-between'>
+            <div className='mx-4 mt-8 flex justify-center gap-40'>
               <Attendance
                 attendance={attendance}
                 markAllAsFull={markAllAsFull}
