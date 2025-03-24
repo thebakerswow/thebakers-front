@@ -78,7 +78,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   return (
     <div className='m-4 flex gap-2 rounded-md'>
       <img
-        className='h-[200px] w-[400px] rounded-md'
+        className='h-[220px] w-[400px] rounded-md'
         src={undermineLogo}
         alt='Run Cover'
       />
