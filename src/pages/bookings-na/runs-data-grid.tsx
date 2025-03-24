@@ -65,9 +65,9 @@ export function RunsDataGrid({
 
   const teamColors: { [key: string]: string } = {
     Padeirinho: 'linear-gradient(90deg, #FDE68A, #ca8a04)',
-    Garçom: 'linear-gradient(90deg, #86EFAC, #16a34a)',
+    Garçom: 'linear-gradient(90deg, #60A5FA, #2563EB)',
     Confeiteiros: 'linear-gradient(90deg, #A78BFA, #f472b6)',
-    Jackfruit: 'linear-gradient(90deg, #4ADE80, #86efac)',
+    Jackfruit: 'linear-gradient(90deg, #86EFAC, #16a34a)',
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
     Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
     APAE: 'linear-gradient(90deg, #F87171, #ef4444)',

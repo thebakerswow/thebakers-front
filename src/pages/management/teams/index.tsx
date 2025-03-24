@@ -17,9 +17,9 @@ import {
 
 const localTeamColors: Record<string, string> = {
   Padeirinho: '#D97706',
-  Garçom: '#16A34A',
+  Garçom: '#2563EB',
   Confeiteiros: '#F472B6',
-  Jackfruit: '#86EFAC',
+  Jackfruit: '#16A34A',
   Milharal: '#FEF08A',
   Raio: '#FACC15',
   APAE: '#F87171',
