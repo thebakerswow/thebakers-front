@@ -5,10 +5,7 @@ import { WeekRangeFilter } from './week-range-filter'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-  const [teams, setTeams] = useState<
-    Array<{ id_discord: string; team_name: string }>
-  >([])
-  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
+
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>()
 
   return (
@@ -16,18 +13,11 @@ export function BalancePage() {
       <div className='relative mx-4 mt-8 flex flex-wrap items-center justify-between'>
         <BalanceTeamFilter
           selectedTeam={selectedTeam}
-          teams={teams}
-          isLoadingTeams={isLoadingTeams}
-          onSelectTeam={setSelectedTeam}
+          onChange={setSelectedTeam}
         />
         <WeekRangeFilter onChange={setDateRange} />
       </div>
-      <BalanceDataGrid
-        selectedTeam={selectedTeam}
-        setTeams={setTeams}
-        setIsLoadingTeams={setIsLoadingTeams}
-        dateRange={dateRange}
-      />
+      <BalanceDataGrid selectedTeam={selectedTeam} dateRange={dateRange} />
     </div>
   )
 }

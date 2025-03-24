@@ -45,17 +45,11 @@ interface ProcessedPlayer {
 
 interface BalanceDataGridProps {
   selectedTeam: string | null
-  setTeams: React.Dispatch<
-    React.SetStateAction<Array<{ id_discord: string; team_name: string }>>
-  >
-  setIsLoadingTeams: React.Dispatch<React.SetStateAction<boolean>>
   dateRange: { start: string; end: string } | undefined // Add dateRange prop
 }
 
 export function BalanceDataGrid({
   selectedTeam,
-  setTeams,
-  setIsLoadingTeams,
   dateRange, // Destructure dateRange
 }: BalanceDataGridProps) {
   // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
@@ -120,39 +114,6 @@ export function BalanceDataGrid({
       return dateString
     }
   }
-
-  // Busca os times disponíveis e define o time selecionado como o primeiro da lista
-  useEffect(() => {
-    const fetchTeams = async () => {
-      setIsLoadingTeams(true)
-      try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
-        )
-        const uniqueTeams = response.data.info.reduce(
-          (acc: any[], team: any) =>
-            acc.some((t) => t.team_name === team.team_name)
-              ? acc
-              : [...acc, team],
-          []
-        )
-        setTeams(uniqueTeams)
-      } catch (error) {
-        setError(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-        )
-      } finally {
-        setIsLoadingTeams(false)
-      }
-    }
-    fetchTeams()
-  }, [setTeams, setIsLoadingTeams])
 
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {

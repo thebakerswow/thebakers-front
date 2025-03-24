@@ -1,20 +1,58 @@
-import { useMemo } from 'react'
-import { Select, MenuItem, FormControl } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+import { Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material'
+import axios from 'axios'
+import { api } from '../services/axiosConfig'
+import { ErrorComponent, ErrorDetails } from './error-display'
+import { Modal as MuiModal, Box } from '@mui/material'
 
-// Define as propriedades do componente BalanceTeamFilter
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
-  teams: Array<{ id_discord: string; team_name: string }>
-  isLoadingTeams: boolean
-  onSelectTeam: (teamId: string | null) => void
+  onChange: (team: string | null) => void
 }
 
 export function BalanceTeamFilter({
   selectedTeam,
-  teams,
-  isLoadingTeams,
-  onSelectTeam,
+  onChange,
 }: BalanceTeamFilterProps) {
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
+  const [teams, setTeams] = useState<
+    Array<{ id_discord: string; team_name: string }>
+  >([])
+  const [error, setError] = useState<ErrorDetails | null>(null)
+
+  // Busca os times disponíveis e define o time selecionado como o primeiro da lista
+  useEffect(() => {
+    const fetchTeams = async () => {
+      setIsLoadingTeams(true)
+      try {
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
+        )
+        const uniqueTeams = response.data.info.reduce(
+          (acc: any[], team: any) =>
+            acc.some((t) => t.team_name === team.team_name)
+              ? acc
+              : [...acc, team],
+          []
+        )
+        setTeams(uniqueTeams)
+      } catch (error) {
+        setError(
+          axios.isAxiosError(error)
+            ? {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+        )
+      } finally {
+        setIsLoadingTeams(false)
+      }
+    }
+    fetchTeams()
+  }, [setTeams, setIsLoadingTeams])
+
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
     () =>
@@ -32,16 +70,30 @@ export function BalanceTeamFilter({
   // Garante que o time inicial seja selecionado ao carregar o componente
   useMemo(() => {
     if (!selectedTeam && initialTeam) {
-      onSelectTeam(initialTeam)
+      onChange(initialTeam)
     }
-  }, [selectedTeam, initialTeam, onSelectTeam])
+  }, [selectedTeam, initialTeam, onChange])
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    onChange(event.target.value || null)
+  }
+
+  if (error) {
+    return (
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
+    )
+  }
 
   return (
     <FormControl className='relative'>
       <Select
         label='team-filter-label'
-        value={initialTeam} // Usa o time inicial
-        onChange={(e) => onSelectTeam(e.target.value || null)}
+        value={selectedTeam || ''} // Usa o time selecionado
+        onChange={handleSelectChange}
         disabled={isLoadingTeams}
         className='mt-4 text-black'
         sx={{
