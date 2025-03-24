@@ -22,10 +22,14 @@ export function Header() {
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
+  const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
+    if (exactMatch) {
+      return (
+        requiredRoles.every((role) => userRoles.includes(role)) &&
+        userRoles.length === requiredRoles.length
+      )
+    }
+    return requiredRoles.some((role) => userRoles.includes(role))
   }
 
   const handleLogout = () => {
@@ -83,7 +87,7 @@ export function Header() {
           Balance
         </Button>
 
-        {hasRequiredRole(['1101231955120496650']) && (
+        {hasAccess(['1101231955120496650']) && (
           <>
             <Button
               color='inherit'
@@ -120,13 +124,15 @@ export function Header() {
           </>
         )}
 
-        <Button
-          color='inherit'
-          onClick={() => navigate('/bookings-na')}
-          startIcon={<CalendarBlank size={20} />}
-        >
-          Full Raids (NA)
-        </Button>
+        {!hasAccess(['1107728166031720510'], true) && (
+          <Button
+            color='inherit'
+            onClick={() => navigate('/bookings-na')}
+            startIcon={<CalendarBlank size={20} />}
+          >
+            Full Raids (NA)
+          </Button>
+        )}
 
         <Button
           color='inherit'

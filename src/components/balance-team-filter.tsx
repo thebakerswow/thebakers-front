@@ -4,6 +4,7 @@ import axios from 'axios'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
+import { useAuth } from '../context/auth-context'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
@@ -14,44 +15,54 @@ export function BalanceTeamFilter({
   selectedTeam,
   onChange,
 }: BalanceTeamFilterProps) {
+  const { userRoles } = useAuth()
+  const restrictedRole = '1107728166031720510'
+  const isRestrictedUser =
+    userRoles.includes(restrictedRole) && userRoles.length === 1
+
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [teams, setTeams] = useState<
     Array<{ id_discord: string; team_name: string }>
   >([])
   const [error, setError] = useState<ErrorDetails | null>(null)
 
-  // Busca os times disponíveis e define o time selecionado como o primeiro da lista
-  useEffect(() => {
-    const fetchTeams = async () => {
-      setIsLoadingTeams(true)
-      try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
-        )
-        const uniqueTeams = response.data.info.reduce(
-          (acc: any[], team: any) =>
-            acc.some((t) => t.team_name === team.team_name)
-              ? acc
-              : [...acc, team],
-          []
-        )
-        setTeams(uniqueTeams)
-      } catch (error) {
-        setError(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-        )
-      } finally {
-        setIsLoadingTeams(false)
-      }
+  const fetchTeams = async () => {
+    if (isRestrictedUser) return
+
+    setIsLoadingTeams(true)
+    try {
+      const response = await api.get(
+        `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
+      )
+      const uniqueTeams = response.data.info.reduce(
+        (acc: any[], team: any) =>
+          acc.some((t) => t.team_name === team.team_name)
+            ? acc
+            : [...acc, team],
+        []
+      )
+      setTeams(uniqueTeams)
+    } catch (error) {
+      console.error('Error fetching teams:', error)
+      setError(
+        axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+      )
+    } finally {
+      setIsLoadingTeams(false)
     }
-    fetchTeams()
-  }, [setTeams, setIsLoadingTeams])
+  }
+
+  useEffect(() => {
+    if (!isRestrictedUser) {
+      fetchTeams()
+    }
+  }, [isRestrictedUser])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
@@ -77,6 +88,8 @@ export function BalanceTeamFilter({
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     onChange(event.target.value || null)
   }
+
+  if (isRestrictedUser) return null
 
   if (error) {
     return (

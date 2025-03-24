@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
+import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
 
 interface PlayerBalance {
   id_discord: string
@@ -52,6 +53,11 @@ export function BalanceDataGrid({
   selectedTeam,
   dateRange, // Destructure dateRange
 }: BalanceDataGridProps) {
+  const { userRoles } = useAuth()
+  const restrictedRole = '1107728166031720510'
+  const isRestrictedUser =
+    userRoles.includes(restrictedRole) && userRoles.length === 1
+
   // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
   const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({})
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
@@ -118,19 +124,24 @@ export function BalanceDataGrid({
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
     const fetchBalanceData = async () => {
-      if (!dateRange || !selectedTeam) return
+      if (!dateRange || selectedTeam === undefined) return
+
       setIsLoadingBalance(true)
       try {
+        // Se for usuário restrito, força team como string vazia
+        const teamParam = isRestrictedUser ? '' : selectedTeam
+        console.log('team', teamParam)
         const response = await api.get<BalanceResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/balance`,
           {
             params: {
-              id_team: selectedTeam,
+              id_team: teamParam,
               date_start: dateRange.start,
               date_end: dateRange.end,
             },
           }
         )
+
         setBalanceData(response.data.info || {})
       } catch (error) {
         setError(
@@ -147,7 +158,7 @@ export function BalanceDataGrid({
       }
     }
     fetchBalanceData()
-  }, [dateRange, selectedTeam])
+  }, [dateRange, selectedTeam, isRestrictedUser])
 
   // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {
