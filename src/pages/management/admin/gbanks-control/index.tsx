@@ -5,8 +5,24 @@ import {
   ErrorDetails,
   ErrorComponent,
 } from '../../../../components/error-display'
-import { Modal } from '../../../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
 import { api } from '../../../../services/axiosConfig'
+import {
+  TextField,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  IconButton,
+} from '@mui/material'
 
 interface GBank {
   id: string
@@ -26,155 +42,57 @@ export function GBanksTable() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
+  // Alterna o menu de ações para a linha selecionada
+  const toggleActionsDropdown = (index: number) => {
+    setOpenRowIndex((prevIndex) => (prevIndex === index ? null : index))
+  }
+
+  // Formata o valor da calculadora para exibir números corretamente
   const formatCalculatorValue = (value: string) => {
-    // Permite números e um único '-' no início
-    const rawValue = value
-      .replace(/[^0-9-]/g, '')
-      .replace(/(?!^)-/g, '') // Remove hífens que não estão no início
-      .replace(/(?<=^-.*)-/g, '') // Remove hífens extras se já tiver um no início
-
-    // Mantém o hífen se for o único caractere
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
     if (rawValue === '-') return '-'
-
-    // Formata o número removendo zeros à esquerda não significativos
     const numberValue = Number(rawValue.replace(/,/g, ''))
     return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
   }
 
-  // Função para buscar os GBanks
+  // Busca os GBanks da API e formata os dados recebidos
   const fetchGBanks = async () => {
     try {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks`
       )
-      const formattedGBanks = response.data?.info?.length
-        ? response.data.info.map((gbank: any) => ({
-            ...gbank,
-            calculatorValue: gbank.calculatorValue
-              ? formatCalculatorValue(gbank.calculatorValue.toString())
-              : '',
-          }))
-        : []
-
+      const formattedGBanks =
+        response.data?.info?.map((gbank: any) => ({
+          ...gbank,
+          calculatorValue: gbank.calculatorValue
+            ? formatCalculatorValue(gbank.calculatorValue.toString())
+            : '',
+        })) || []
       setGbanks(formattedGBanks)
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('API Error:', error.response?.data) // Depuração
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      handleError(error, 'Erro ao buscar GBanks')
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchGBanks() // Faz a primeira chamada imediata
-
-    const interval = setInterval(() => {
-      fetchGBanks()
-    }, 10000) // 30 segundos
-
-    return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
-  }, [])
-
-  // Handler para adicionar um novo GBank
-  const handleAddGBank = async () => {
-    if (!newGBankName.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      await api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
-        name: newGBankName,
-      })
-      setNewGBankName('')
-      await fetchGBanks()
-    } catch (error) {
-      handleError(error, 'Erro ao adicionar GBank')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Handler para editar o nome (modal de edição)
-  const handleUpdateGBank = async () => {
-    if (!editGBank?.name.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      const payload = {
-        id: editGBank.id,
-        name: editGBank.name,
-      }
-      await api.put(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, payload)
-      setEditGBank(null)
-      await fetchGBanks()
-    } catch (error) {
-      handleError(error, 'Erro ao atualizar GBank')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // NOVO: Handler para atualizar a calculadora do GBank via PUT
-  const handleUpdateGBankCalculator = async (
-    gbank: GBank,
-    newValue: string
+  // Executa uma ação assíncrona e atualiza os GBanks após a conclusão
+  const handleAction = async (
+    action: () => Promise<void>,
+    errorMessage: string
   ) => {
-    if (!newValue.trim()) return
-
     setIsSubmitting(true)
     try {
-      const numericValue = Number(
-        newValue
-          .replace(/,/g, '') // Remove formatação
-          .replace(/^-[0]+/, '-0') // Mantém o negativo se for zero
-      )
-      const payload = {
-        id: gbank.id,
-        balance: numericValue,
-      }
-
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/gbanks/value`,
-        payload
-      )
-
+      await action()
       await fetchGBanks()
     } catch (error) {
-      handleError(error, 'Erro ao atualizar calculadora do GBank')
+      handleError(error, errorMessage)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Handler para excluir um GBank
-  const handleDeleteGBank = async () => {
-    if (!deleteGBank) return
-
-    setIsSubmitting(true)
-    try {
-      await api.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/gbanks/${deleteGBank.id}`
-      )
-      setDeleteGBank(null)
-      await fetchGBanks()
-    } catch (error) {
-      handleError(error, 'Erro ao deletar GBank')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Handler de erro
+  // Trata erros de requisições e exibe mensagens apropriadas
   const handleError = (error: unknown, defaultMessage: string) => {
     if (axios.isAxiosError(error)) {
       setError({
@@ -183,196 +101,287 @@ export function GBanksTable() {
         status: error.response?.status,
       })
     } else {
-      setError({
-        message: defaultMessage,
-        response: error,
-      })
+      setError({ message: defaultMessage, response: error })
     }
   }
 
-  const toggleActionsDropdown = (index: number) => {
-    setOpenRowIndex((prev) => (prev === index ? null : index))
-  }
+  useEffect(() => {
+    // Busca os GBanks ao montar o componente e atualiza periodicamente
+    fetchGBanks()
+    const interval = setInterval(fetchGBanks, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
+    // Fecha o menu de ações ao clicar fora dele
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpenRowIndex(null)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   return (
-    <div className='flex h-[90%] w-[25%] flex-col overflow-y-auto rounded-md border border-gray-300'>
+    <div className='flex h-[90%] w-[30%] flex-col overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
-        <input
-          className='rounded-md px-1 text-black'
-          type='text'
+        <TextField
+          variant='outlined'
+          size='small'
+          className='bg-white'
           value={newGBankName}
           onChange={(e) => setNewGBankName(e.target.value)}
           placeholder='Novo GBank'
         />
-        <button
-          className={`rounded-md bg-red-400 px-4 py-1 transition-colors hover:bg-red-500 ${
-            isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-          }`}
-          onClick={handleAddGBank}
+        <Button
+          variant='contained'
+          color='error'
+          onClick={() =>
+            handleAction(
+              () =>
+                api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
+                  name: newGBankName,
+                }),
+              'Erro ao adicionar GBank'
+            )
+          }
           disabled={isSubmitting}
+          sx={{
+            backgroundColor: 'rgb(239, 68, 68)',
+            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          }}
         >
           {isSubmitting ? 'Adicionando...' : 'Add G-Bank'}
-        </button>
+        </Button>
       </div>
 
-      <table className='w-full border-collapse'>
-        <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
-          <tr className='text-md'>
-            <th className='border p-2' />
-            <th className='w-[150px] border p-2'>GBANKS</th>
-            <th className='w-[150px] border p-2'>SALDO</th>
-            <th className='w-[150px] border p-2'>CALCULADORA</th>
-          </tr>
-        </thead>
-        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
-          {isLoading ? (
-            <tr>
-              <td colSpan={4} className='p-4 text-center'>
-                <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-                <p>Carregando...</p>
-              </td>
-            </tr>
-          ) : (
-            gbanks?.map((gbank, index) => (
-              <tr key={gbank.id} className='border border-gray-300'>
-                <td className='relative p-2'>
-                  <button onClick={() => toggleActionsDropdown(index)}>
-                    <DotsThreeVertical size={20} />
-                  </button>
-                  {openRowIndex === index && (
-                    <div
-                      ref={menuRef}
-                      className='absolute left-8 top-0 z-50 flex flex-col gap-2 rounded border bg-white p-2 px-4 shadow-md'
-                    >
-                      <button
-                        onClick={() => {
-                          setEditGBank(gbank)
+      <TableContainer
+        component={Paper}
+        sx={{
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          minHeight: '300px',
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  backgroundColor: '#ECEBEE',
+                }}
+              />
+              <TableCell
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                GBanks
+              </TableCell>
+              <TableCell
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Balance
+              </TableCell>
+              <TableCell
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Calculator
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} align='center'>
+                  <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
+                  <p>Carregando...</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              gbanks.map((gbank, index) => (
+                <TableRow key={gbank.id}>
+                  <TableCell>
+                    <div className='relative'>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleActionsDropdown(index)
                         }}
-                        className='text-left hover:bg-gray-100'
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteGBank(gbank)}
-                        className='text-left text-red-500 hover:bg-gray-100'
-                      >
-                        Delete
-                      </button>
+                        <DotsThreeVertical size={20} />
+                      </IconButton>
+                      {openRowIndex === index && (
+                        <div
+                          ref={menuRef}
+                          className='absolute left-0 z-50 mt-2 flex flex-col gap-2 rounded border bg-white p-2 shadow-md'
+                        >
+                          <Button
+                            variant='text'
+                            onClick={() => {
+                              setEditGBank(gbank)
+                              setOpenRowIndex(null)
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant='text'
+                            color='error'
+                            onClick={() => {
+                              setDeleteGBank(gbank)
+                              setOpenRowIndex(null)
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </td>
-                <td className='p-2 text-center'>{gbank.name}</td>
-                <td className='p-2 text-center'>
-                  {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
-                </td>
-                <td className='p-2 text-center'>
-                  <input
-                    className='rounded-md bg-zinc-100 p-2'
-                    type='text'
-                    value={gbank.calculatorValue}
-                    onChange={(e) => {
-                      const formatted = formatCalculatorValue(e.target.value)
-                      setGbanks((prev) =>
-                        prev.map((g) =>
-                          g.id === gbank.id
-                            ? { ...g, calculatorValue: formatted }
-                            : g
+                  </TableCell>
+                  <TableCell align='center'>{gbank.name}</TableCell>
+                  <TableCell align='center'>
+                    {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
+                  </TableCell>
+                  <TableCell align='center'>
+                    <input
+                      className='rounded-sm bg-zinc-100 p-2'
+                      type='text'
+                      value={gbank.calculatorValue}
+                      onChange={(e) => {
+                        const formatted = formatCalculatorValue(e.target.value)
+                        setGbanks((prev) =>
+                          prev.map((g) =>
+                            g.id === gbank.id
+                              ? { ...g, calculatorValue: formatted }
+                              : g
+                          )
                         )
-                      )
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleUpdateGBankCalculator(
-                          gbank,
-                          e.currentTarget.value
-                        )
-                      }
-                    }}
-                  />
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAction(
+                            () =>
+                              api.put(
+                                `${import.meta.env.VITE_API_BASE_URL}/gbanks/value`,
+                                {
+                                  id: gbank.id,
+                                  balance: Number(
+                                    e.currentTarget.value.replace(/,/g, '')
+                                  ),
+                                }
+                              ),
+                            'Erro ao atualizar calculadora do GBank'
+                          )
+                        }
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      {/* Modal de Edição */}
       {editGBank && (
-        <Modal onClose={() => setEditGBank(null)}>
-          <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
-            <h2 className='mb-4 text-lg font-semibold'>Editar GBank</h2>
-            <input
-              type='text'
-              className='mb-4 w-full rounded border p-2'
+        <Dialog open={!!editGBank} onClose={() => setEditGBank(null)}>
+          <DialogTitle className='text-center'>Editar GBank</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Name'
               value={editGBank.name}
               onChange={(e) =>
                 setEditGBank({ ...editGBank, name: e.target.value })
               }
             />
-            <div className='flex justify-end gap-2'>
-              <button
-                className={`rounded bg-blue-500 px-4 py-2 text-white ${
-                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-                }`}
-                onClick={handleUpdateGBank}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Salvando...' : 'Salvar'}
-              </button>
-              <button
-                className='rounded bg-gray-300 px-4 py-2'
-                onClick={() => setEditGBank(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </Modal>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center' }}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() =>
+                handleAction(
+                  () =>
+                    api.put(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
+                      id: editGBank.id,
+                      name: editGBank.name,
+                    }),
+                  'Erro ao atualizar GBank'
+                )
+              }
+              disabled={isSubmitting}
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              }}
+            >
+              {isSubmitting ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
 
-      {/* Modal de Exclusão */}
       {deleteGBank && (
-        <Modal onClose={() => setDeleteGBank(null)}>
-          <div className='w-96 rounded-lg bg-white p-4 shadow-lg'>
-            <h2 className='mb-4 text-lg font-semibold'>Confirmar Exclusão</h2>
-            <p>Tem certeza que deseja excluir o GBank "{deleteGBank.name}"?</p>
-            <div className='mt-4 flex justify-end gap-2'>
-              <button
-                className={`rounded bg-red-500 px-4 py-2 text-white ${
-                  isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-                }`}
-                onClick={handleDeleteGBank}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Excluindo...' : 'Excluir'}
-              </button>
-              <button
-                className='rounded bg-gray-300 px-4 py-2'
-                onClick={() => setDeleteGBank(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <Dialog open={!!deleteGBank} onClose={() => setDeleteGBank(null)}>
+          <DialogTitle className='text-center'>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <p>Are you sure you want to delete GBank "{deleteGBank.name}"?</p>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center' }}>
+            <Button
+              variant='contained'
+              color='error'
+              onClick={() =>
+                handleAction(
+                  () =>
+                    api.delete(
+                      `${import.meta.env.VITE_API_BASE_URL}/gbanks/${deleteGBank.id}`
+                    ),
+                  'Erro ao deletar GBank'
+                )
+              }
+              disabled={isSubmitting}
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              }}
+            >
+              {isSubmitting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+            <Button variant='outlined' onClick={() => setDeleteGBank(null)}>
+              Cancelar
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
 
-      {/* Modal de Erro */}
       {error && (
-        <Modal onClose={() => setError(null)}>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Modal>
+        <MuiModal open={!!error} onClose={() => setError(null)}>
+          <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+            <ErrorComponent error={error} onClose={() => setError(null)} />
+          </Box>
+        </MuiModal>
       )}
     </div>
   )

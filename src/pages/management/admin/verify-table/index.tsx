@@ -2,6 +2,17 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { api } from '../../../../services/axiosConfig'
 import { ErrorDetails } from '../../../../components/error-display'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Typography,
+} from '@mui/material'
 
 interface VerifyTableData {
   general_balance_gbank: number
@@ -10,92 +21,133 @@ interface VerifyTableData {
 
 export function VerifyTable() {
   const [sumsData, setSumsData] = useState<VerifyTableData | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isFirstLoad, setIsFirstLoad] = useState(true) // Controla se é a primeira requisição
 
+  /**
+   * Função para buscar os dados de soma do backend.
+   * Exibe o estado de carregamento apenas na primeira requisição.
+   */
   const fetchSumsData = async () => {
+    if (isFirstLoad) setIsLoading(true) // Exibe loading apenas na primeira requisição
     try {
-      const response = await api.get(
+      const { data } = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks/general`
       )
-      // Supondo que a resposta seja um objeto do tipo VerifyTableData
-      setSumsData(response.data.info)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Erro inesperado',
-          response: error,
-        })
-      }
+      setSumsData(data.info) // Atualiza os dados de soma
+      setError(null) // Limpa erros anteriores
+    } catch (err) {
+      // Define o erro com base no tipo de erro (Axios ou genérico)
+      setError(
+        axios.isAxiosError(err)
+          ? {
+              message: err.message,
+              response: err.response?.data,
+              status: err.response?.status,
+            }
+          : { message: 'Erro inesperado', response: err }
+      )
     } finally {
-      setIsLoading(false)
+      setIsLoading(false) // Finaliza o estado de carregamento
+      setIsFirstLoad(false) // Marca que a primeira requisição foi concluída
     }
   }
 
+  /**
+   * Hook de efeito para buscar os dados ao montar o componente.
+   * Configura um intervalo para polling a cada 5 segundos.
+   */
   useEffect(() => {
-    fetchSumsData() // Primeira chamada imediata
-
-    const interval = setInterval(() => {
-      fetchSumsData()
-    }, 5000) // Atualiza a cada 5 segundos
-
+    fetchSumsData() // Busca inicial
+    const interval = setInterval(fetchSumsData, 5000) // Polling a cada 5 segundos
     return () => clearInterval(interval) // Limpa o intervalo ao desmontar o componente
   }, [])
+
+  /**
+   * Função utilitária para formatar números.
+   * Arredonda o valor e o converte para o formato de string local.
+   */
+  const formatNumber = (value: number | undefined) =>
+    Math.round(value ?? 0).toLocaleString('en-US')
 
   return (
     <div className='h-[90%] w-[20%] overflow-y-auto rounded-md'>
       {error ? (
-        <div className='p-4 text-red-500'>{error.message}</div>
+        // Exibe mensagem de erro, se houver
+        <Typography color='error' variant='body1' className='p-4'>
+          {error.message}
+        </Typography>
       ) : (
-        <table className='w-full border-collapse'>
-          <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
-            <tr className='text-md'>
-              <th className='w-[150px] border p-2'>GBANKS SOMA</th>
-              <th className='w-[150px] border p-2'>SOMA BALANCE TOTAL</th>
-            </tr>
-          </thead>
-          <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
-            {isLoading ? (
-              <tr>
-                <td colSpan={2} className='p-4 text-center'>
-                  <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-                  <p>Carregando...</p>
-                </td>
-              </tr>
-            ) : (
-              <>
-                <tr className='border border-gray-300'>
-                  <td className='p-2 text-center'>
-                    {Math.round(
-                      Number(sumsData?.general_balance_gbank ?? 0)
-                    ).toLocaleString('en-US')}
-                  </td>
-                  <td className='p-2 text-center'>
-                    {Math.round(
-                      Number(sumsData?.general_balance ?? 0)
-                    ).toLocaleString('en-US')}
-                  </td>
-                </tr>
-                <tr className='border border-gray-300 bg-zinc-300'>
-                  <td colSpan={2} className='p-2 text-center font-bold'>
-                    Diferença:{' '}
-                    {Math.round(
-                      (sumsData?.general_balance_gbank ?? 0) -
-                        (sumsData?.general_balance ?? 0)
-                    ).toLocaleString('en-US')}
-                  </td>
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: '#ECEBEE',
+                  }}
+                  align='center'
+                >
+                  GBanks Sum
+                </TableCell>
+                <TableCell
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: '#ECEBEE',
+                  }}
+                  align='center'
+                >
+                  Balance Total Sum
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                // Exibe indicador de carregamento na primeira requisição
+                <TableRow>
+                  <TableCell colSpan={2} align='center'>
+                    <CircularProgress />
+                    <Typography>Loading...</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <>
+                  {/* Exibe os dados de soma */}
+                  <TableRow>
+                    <TableCell align='center'>
+                      {formatNumber(sumsData?.general_balance_gbank)}
+                    </TableCell>
+                    <TableCell align='center'>
+                      {formatNumber(sumsData?.general_balance)}
+                    </TableCell>
+                  </TableRow>
+                  {/* Exibe a diferença calculada */}
+                  <TableRow>
+                    <TableCell
+                      colSpan={2}
+                      align='center'
+                      style={{
+                        fontWeight: 'bold',
+                        fontSize: '1rem',
+                        backgroundColor: '#ECEBEE',
+                      }}
+                    >
+                      Difference:{' '}
+                      {formatNumber(
+                        (sumsData?.general_balance_gbank ?? 0) -
+                          (sumsData?.general_balance ?? 0)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </div>
   )

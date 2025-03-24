@@ -4,7 +4,7 @@ import {
   ErrorDetails,
   ErrorComponent,
 } from '../../../../components/error-display'
-import { Modal } from '../../../../components/modal'
+import { Modal as MuiModal, Box } from '@mui/material'
 import { api } from '../../../../services/axiosConfig'
 import {
   Select,
@@ -35,6 +35,7 @@ export function BalanceControlTable({
   const [isBulkingSubmitting, setIsBulkingSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Define a data atual como padrão caso nenhuma data seja selecionada
   useEffect(() => {
     if (!selectedDate) {
       const today = new Date().toISOString().split('T')[0]
@@ -42,6 +43,7 @@ export function BalanceControlTable({
     }
   }, [selectedDate, setSelectedDate])
 
+  // Função para buscar os dados do balance admin
   const fetchBalanceAdmin = useCallback(
     async (showLoading = true) => {
       if (!selectedDate) return
@@ -63,7 +65,7 @@ export function BalanceControlTable({
                 response: error.response?.data,
                 status: error.response?.status,
               }
-            : { message: 'Unexpected error', response: error }
+            : { message: 'Erro inesperado', response: error }
         )
       } finally {
         if (showLoading) setIsLoading(false)
@@ -72,19 +74,21 @@ export function BalanceControlTable({
     [selectedTeam, selectedDate]
   )
 
+  // Executa a busca inicial e configura o polling para atualizar os dados periodicamente
   useEffect(() => {
-    fetchBalanceAdmin(true) // Exibir loading na primeira requisição
+    fetchBalanceAdmin(true)
 
     const interval = setInterval(() => {
-      fetchBalanceAdmin(false) // Não exibir loading nas requisições do polling
+      fetchBalanceAdmin(false)
     }, 5000)
 
     return () => clearInterval(interval)
   }, [fetchBalanceAdmin])
 
+  // Atualiza o valor do input da calculadora, formatando com vírgulas
   const handleCalculatorChange = (userId: string, value: string) => {
     if (value.trim() === '') {
-      setCalculatorValues((prev) => ({ ...prev, [userId]: '' })) // Limpar o campo se estiver vazio
+      setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
       return
     }
 
@@ -93,10 +97,11 @@ export function BalanceControlTable({
       rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
     setCalculatorValues((prev) => ({
       ...prev,
-      [userId]: rawValue === '0' ? '' : formattedValue, // Limpar o campo se o valor for 0
+      [userId]: rawValue === '0' ? '' : formattedValue,
     }))
   }
 
+  // Confirma o valor da calculadora para um usuário específico
   const handleConfirmCalculator = async (userId: string) => {
     if (!calculatorValues[userId]) return
 
@@ -115,11 +120,12 @@ export function BalanceControlTable({
               response: error.response?.data,
               status: error.response?.status,
             }
-          : { message: 'Unexpected error', response: error }
+          : { message: 'Erro inesperado', response: error }
       )
     }
   }
 
+  // Envia os valores pendentes da calculadora em massa
   const handleBulkSend = async () => {
     const pendingTransactions = Object.entries(calculatorValues).filter(
       ([, value]) => value.trim() !== ''
@@ -146,7 +152,7 @@ export function BalanceControlTable({
               response: error.response?.data,
               status: error.response?.status,
             }
-          : { message: 'Unexpected error', response: error }
+          : { message: 'Erro inesperado', response: error }
       )
     } finally {
       setIsBulkingSubmitting(false)
@@ -155,9 +161,11 @@ export function BalanceControlTable({
 
   if (error) {
     return (
-      <Modal onClose={() => setError(null)}>
-        <ErrorComponent error={error} onClose={() => setError(null)} />
-      </Modal>
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
     )
   }
 
@@ -219,7 +227,7 @@ export function BalanceControlTable({
       </div>
 
       <table className='w-full border-collapse'>
-        <thead className='sticky top-0 table-header-group bg-zinc-400 text-gray-700'>
+        <thead className='sticky top-0 bg-zinc-400 text-gray-700'>
           <tr className='text-md'>
             <th className='w-[150px] border p-2'>Team</th>
             <th className='w-[150px] border p-2'>Gold Cut</th>
@@ -228,7 +236,7 @@ export function BalanceControlTable({
             <th className='border p-2'>Calculator</th>
           </tr>
         </thead>
-        <tbody className='table-row-group bg-zinc-200 text-sm font-medium text-zinc-900'>
+        <tbody className='bg-zinc-200 text-sm font-medium text-zinc-900'>
           {isLoading ? (
             <tr>
               <td colSpan={5} className='h-full p-4 text-center'>
@@ -261,7 +269,7 @@ export function BalanceControlTable({
                 </td>
                 <td className='p-2 text-center'>
                   <input
-                    className='rounded-md bg-zinc-100 p-1 px-2'
+                    className='rounded-sm bg-zinc-100 p-2'
                     type='text'
                     value={calculatorValues[user.idDiscord] || ''}
                     onChange={(e) =>
