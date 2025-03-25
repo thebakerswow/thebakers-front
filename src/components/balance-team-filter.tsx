@@ -75,15 +75,12 @@ export function BalanceTeamFilter({
     [teams]
   )
 
-  // Define o time inicial se nenhum time estiver selecionado
-  const initialTeam = selectedTeam || teams[0]?.id_discord || null
-
-  // Garante que o time inicial seja selecionado ao carregar o componente
-  useMemo(() => {
-    if (!selectedTeam && initialTeam) {
-      onChange(initialTeam)
+  // Remove o useMemo e usa useEffect para definir o time inicial
+  useEffect(() => {
+    if (!selectedTeam && teams.length > 0) {
+      onChange(teams[0].id_discord)
     }
-  }, [selectedTeam, initialTeam, onChange])
+  }, [selectedTeam, teams, onChange])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     onChange(event.target.value || null)
