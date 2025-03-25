@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { RunInfo } from './run-info'
 import { BuyersDataGrid } from './buyers-data-grid'
 import axios from 'axios'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { UserPlus } from '@phosphor-icons/react'
 import { InviteBuyers } from '../../../components/invite-buyers'
 import { LoadingSpinner } from '../../../components/loading-spinner'
@@ -17,6 +17,7 @@ import { Freelancers } from '../../../components/freelancers'
 import { Button } from '@mui/material'
 
 export function RunDetails() {
+  const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const [runData, setRunData] = useState<RunData | undefined>(undefined)
   const [isLoadingRun, setIsLoadingRun] = useState(true)
@@ -110,11 +111,29 @@ export function RunDetails() {
     }
   }
 
+  // Função para verificar acesso à run
+  async function checkRunAccess() {
+    try {
+      const response = await api.get(
+        `${import.meta.env.VITE_API_BASE_URL}/access/run/${id}` ||
+          `http://localhost:8000/v1/access/run/${id}`
+      )
+      if (!response.data.info) {
+        navigate('/check-access') // Redireciona para a home se o acesso for negado
+      }
+    } catch (error) {
+      navigate('/') // Redireciona para a home em caso de erro
+    }
+  }
+
   useEffect(() => {
     if (!id) return
 
-    fetchBuyersData()
-    fetchRunData()
+    // Verifica acesso antes de buscar dados
+    checkRunAccess().then(() => {
+      fetchBuyersData()
+      fetchRunData()
+    })
 
     // Função para resetar o temporizador
     const resetActivityTimer = () => {

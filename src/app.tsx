@@ -20,6 +20,7 @@ import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
 import { Register } from './pages/register'
 import backgroundTeste from './assets/background_teste.png'
+import { CheckAccess } from './pages/error-pages/check-access'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -79,6 +80,10 @@ export function App() {
                 <Route
                   path='/admin'
                   element={<PrivateRoute element={<AdminPage />} />}
+                />
+                <Route
+                  path='/check-access'
+                  element={<PrivateRoute element={<CheckAccess />} />}
                 />
 
                 {/* Rota catch-all */}
