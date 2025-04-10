@@ -40,7 +40,7 @@ export function BalanceTeamFilter({
             ? acc
             : [...acc, team],
         []
-      )
+      ).filter((team: { team_name: string }) => team.team_name !== 'DTM') // Exclude teams with name "DTM"
       setTeams(uniqueTeams)
     } catch (error) {
       console.error('Error fetching teams:', error)

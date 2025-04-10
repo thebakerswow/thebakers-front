@@ -3,9 +3,9 @@ export const teamOrder = [
   'Confeiteiros',
   'Raio',
   'APAE',
-  'Milharal',
   'Jackfruit',
   'Advertiser',
+  'Milharal',
   'Padeirinho',
 ] as const
 

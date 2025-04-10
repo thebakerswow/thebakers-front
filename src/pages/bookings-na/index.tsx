@@ -39,10 +39,12 @@ export function FullRaidsNa() {
       })
 
       setRows(
-        (data.info || []).map((run: any) => ({
-          ...run,
-          buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
-        }))
+        (data.info || [])
+          .filter((run: any) => run.team !== 'DTM') // Exclude runs with team 'DTM'
+          .map((run: any) => ({
+            ...run,
+            buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+          }))
       )
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
