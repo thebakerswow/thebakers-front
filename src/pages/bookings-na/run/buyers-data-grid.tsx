@@ -412,6 +412,10 @@ export function BuyersDataGrid({
                   {buyer.buyerNote}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {/* {buyer.nameOwnerBuyer === '****' ||
+                  buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.nameAndRealm} */}
                   {buyer.nameOwnerBuyer}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>

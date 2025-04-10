@@ -97,6 +97,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    console.log(formData)
     try {
       await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
       await onRunAddedReload()
@@ -276,6 +277,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value='1328938639949959209'>Milharal</MenuItem>
                 <MenuItem value='1346914505392783372'>Raio</MenuItem>
                 <MenuItem value='1337818949831626753'>APAE</MenuItem>
+                <MenuItem value='1359355927387701298'>DTM</MenuItem>
               </Select>
             </FormControl>
             <TextField

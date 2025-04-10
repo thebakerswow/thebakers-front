@@ -5,6 +5,7 @@ export const teamOrder = [
   'APAE',
   'Milharal',
   'Jackfruit',
+  'DTM',
   'Advertiser',
   'Padeirinho',
 ] as const
@@ -29,5 +30,6 @@ export const teamColors: Record<TeamOrder, string> = {
   Milharal: 'bg-yellow-200',
   Raio: 'bg-yellow-400',
   APAE: 'bg-red-400',
+  DTM: 'bg-purple-400',
   Advertiser: 'bg-gray-300',
 }

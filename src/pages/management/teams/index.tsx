@@ -23,6 +23,7 @@ const localTeamColors: Record<string, string> = {
   Milharal: '#FEF08A',
   Raio: '#FACC15',
   APAE: '#F87171',
+  DTM: '#A78BFA',
   Advertiser: '#D1D5DB',
 }
 

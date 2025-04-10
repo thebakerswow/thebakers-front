@@ -60,7 +60,8 @@ export function RunsDataGrid({
     Raio: 4,
     APAE: 5,
     Milharal: 6,
-    Padeirinho: 7,
+    DTM: 7,
+    Padeirinho: 8,
   }
 
   const teamColors: { [key: string]: string } = {
@@ -71,6 +72,7 @@ export function RunsDataGrid({
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
     Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
     APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
+    DTM: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
   }
 
   // Retorna o estilo de fundo associado a um time

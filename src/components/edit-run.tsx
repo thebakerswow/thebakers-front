@@ -182,6 +182,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value='1328892768034226217'>Jackfruit</MenuItem>
                   <MenuItem value='1328938639949959209'>Milharal</MenuItem>
                   <MenuItem value='1337818949831626753'>APAE</MenuItem>
+                  <MenuItem value='1359355927387701298'>DTM</MenuItem>
                 </Select>
               </FormControl>
               <TextField

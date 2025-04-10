@@ -37,6 +37,7 @@ export function FullRaidsNa() {
       const { data } = await api.get('/run', {
         params: { date: format(selectedDate, 'yyyy-MM-dd') },
       })
+      console.log(data)
 
       setRows(
         (data.info || []).map((run: any) => ({

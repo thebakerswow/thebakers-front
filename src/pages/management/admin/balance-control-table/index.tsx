@@ -201,6 +201,7 @@ export function BalanceControlTable({
             <MenuItem value='1328938639949959209'>Milharal</MenuItem>
             <MenuItem value='1346914505392783372'>Raio</MenuItem>
             <MenuItem value='1337818949831626753'>APAE</MenuItem>
+            <MenuItem value='1359355927387701298'>DTM</MenuItem>
             <MenuItem value='1284914400297226313'>Advertiser</MenuItem>
             <MenuItem value='1101231955120496650'>Chefe de Cozinha</MenuItem>
             <MenuItem value='1107728166031720510'>Freelancer</MenuItem>
