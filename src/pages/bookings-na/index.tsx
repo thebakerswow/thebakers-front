@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from './date-filter'
 import { format } from 'date-fns'
-import { UserPlus, ClipboardText } from '@phosphor-icons/react'
+import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
 import { useAuth } from '../../context/auth-context'
 import { api } from '../../services/axiosConfig'
@@ -200,6 +200,10 @@ export function FullRaidsNa() {
               sx={{
                 backgroundColor: 'rgb(239, 68, 68)',
                 '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                padding: '10px 20px',
+                boxShadow: 3,
+                display: 'flex',
+                alignItems: 'center',
               }}
               startIcon={<UserPlus size={18} />}
               onClick={() => setIsAddRunOpen(true)}
@@ -209,13 +213,14 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: isCopied ? '#16a34a' : 'rgb(34, 197, 94)',
+                backgroundColor: 'rgb(239, 68, 68)',
                 '&:hover': {
-                  backgroundColor: isCopied ? '#16a34a' : 'rgb(52, 211, 153)',
+                  backgroundColor: 'rgb(248, 113, 113)',
                 },
+                padding: '10px 20px',
+                boxShadow: 3,
                 display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                justify: 'center',
               }}
               startIcon={<ClipboardText size={18} />}
               onClick={copyRunsToClipboard}
@@ -225,9 +230,14 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(59, 130, 246)',
-                '&:hover': { backgroundColor: 'rgb(96, 165, 250)' },
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                padding: '10px 20px',
+                boxShadow: 3,
+                display: 'flex',
+                alignItems: 'center',
               }}
+              startIcon={<UsersFour size={18} />}
               onClick={() => setIsBulkAddOpen(true)}
             >
               Add Multiple Runs
