@@ -1,4 +1,4 @@
-import { Eye, Trash } from '@phosphor-icons/react'
+import { Eye, Trash, Clipboard, Pencil } from '@phosphor-icons/react'
 import { TableSortLabel } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
@@ -7,6 +7,7 @@ import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
+import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
 import {
@@ -44,6 +45,10 @@ export function RunsDataGrid({
   } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
+  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RunData | null>(
+    null
+  )
   const { userRoles } = useAuth()
 
   // Verifica se o usuário possui os papéis necessários
@@ -108,6 +113,18 @@ export function RunsDataGrid({
     setSelectedRunToDelete(null)
   }
 
+  // Abre o modal de edição de uma run
+  const handleOpenEditRunModal = (run: RunData) => {
+    setSelectedRunToEdit(run)
+    setIsEditRunModalOpen(true)
+  }
+
+  // Fecha o modal de edição de uma run
+  const handleCloseEditRunModal = () => {
+    setIsEditRunModalOpen(false)
+    setSelectedRunToEdit(null)
+  }
+
   // Redireciona para a página de detalhes da run
   const handleRedirect = (id: string) => {
     navigate(`/bookings-na/run/${id}`)
@@ -168,6 +185,31 @@ export function RunsDataGrid({
     const formattedHours = hours % 12 || 12
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  // Function to copy an individual run's data to the clipboard
+  const copyRunToClipboard = (run: RunData) => {
+    const formattedRun = {
+      date: run.date,
+      time: run.time,
+      raid: run.raid,
+      runType: run.runType,
+      difficulty: run.difficulty,
+      idTeam: run.idTeam,
+      maxBuyers: run.maxBuyers.toString(),
+      raidLeader:
+        run.raidLeaders?.map(
+          (leader) => `${leader.idDiscord};${leader.username}`
+        ) || [],
+      loot: run.loot,
+      note: run.note || '',
+    }
+
+    navigator.clipboard
+      .writeText(JSON.stringify(formattedRun, null, 2))
+      .catch(() => {
+        alert('Failed to copy run.')
+      })
   }
 
   // Renderiza uma célula da tabela com conteúdo padrão
@@ -404,9 +446,17 @@ export function RunsDataGrid({
                 {renderTableCell(run.note, 'center')}
                 {renderTableCell(
                   hasRequiredRole(['1101231955120496650']) ? (
-                    <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
-                      <Trash size={20} />
-                    </IconButton>
+                    <>
+                      <IconButton onClick={() => handleOpenEditRunModal(run)}>
+                        <Pencil size={20} />
+                      </IconButton>
+                      <IconButton onClick={() => copyRunToClipboard(run)}>
+                        <Clipboard size={20} />
+                      </IconButton>
+                      <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
+                        <Trash size={20} />
+                      </IconButton>
+                    </>
                   ) : null,
                   'center'
                 )}
@@ -426,6 +476,14 @@ export function RunsDataGrid({
 
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
+      )}
+
+      {isEditRunModalOpen && selectedRunToEdit && (
+        <EditRun
+          run={selectedRunToEdit}
+          onClose={handleCloseEditRunModal}
+          onRunEdit={onDeleteSuccess}
+        />
       )}
     </TableContainer>
   )

@@ -35,11 +35,20 @@ export function Attendance({
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(true) // Default to true for unsaved state
 
   const getColorForPercentage = useCallback(
     (percentage: number) =>
       percentage === 0 ? '#ef4444' : percentage === 100 ? '#16a34a' : '#fde047',
     []
+  )
+
+  const handleAttendanceClickWithChange = useCallback(
+    (playerId: string, value: number) => {
+      setHasUnsavedChanges(true) // Mark as having unsaved changes
+      handleAttendanceClick(playerId, value)
+    },
+    [handleAttendanceClick]
   )
 
   const handleAttendanceSave = useCallback(async () => {
@@ -57,6 +66,7 @@ export function Attendance({
       )
       await onAttendanceUpdate()
       setIsSuccess(true)
+      setHasUnsavedChanges(false) // Reset unsaved changes
       setTimeout(() => setIsSuccess(false), 2000)
     } catch (error) {
       setError(
@@ -86,7 +96,9 @@ export function Attendance({
   const renderSelect = (idDiscord: string, percentage: number) => (
     <Select
       value={percentage}
-      onChange={(e) => handleAttendanceClick(idDiscord, Number(e.target.value))}
+      onChange={(e) =>
+        handleAttendanceClickWithChange(idDiscord, Number(e.target.value))
+      }
       style={{
         backgroundColor: getColorForPercentage(percentage),
         color: 'white',
@@ -146,17 +158,24 @@ export function Attendance({
                   </Button>
                   <Button
                     variant='contained'
-                    color='success'
                     onClick={handleAttendanceSave}
-                    disabled={isSubmitting || isSuccess}
+                    disabled={isSubmitting}
                     style={{
                       marginLeft: '8px',
                       width: '80px',
                       height: '30px',
-                      backgroundColor: '#16a34a',
+                      backgroundColor: hasUnsavedChanges
+                        ? '#fde047'
+                        : '#16a34a', // Yellow if unsaved changes
                     }}
                   >
-                    {isSubmitting ? 'Saving...' : isSuccess ? 'Saved!' : 'Save'}
+                    {isSubmitting
+                      ? 'Saving...'
+                      : isSuccess
+                        ? 'Saved!'
+                        : hasUnsavedChanges
+                          ? 'Save*'
+                          : 'Save'}
                   </Button>
                 </TableCell>
               </TableRow>
