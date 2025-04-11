@@ -1,9 +1,9 @@
 export const teamOrder = [
   'Garçom',
   'Confeiteiros',
+  'Jackfruit',
   'Raio',
   'APAE',
-  'Jackfruit',
   'Advertiser',
   'Milharal',
   'Padeirinho',

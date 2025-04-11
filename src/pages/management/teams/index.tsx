@@ -67,57 +67,63 @@ export function TeamsManagement() {
   const renderTableHeader = () => (
     <TableHead>
       <TableRow>
-        {teams.map((team, index) => (
-          <TableCell
-            align='center'
-            colSpan={2}
-            key={`team-${index}`}
-            style={{
-              backgroundColor: localTeamColors[team.name] || '#9CA3AF',
-              color: '#FFFFFF',
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            {team.name}
-          </TableCell>
-        ))}
+        {teams
+          .filter((team) => team.members.length > 0) // Skip teams with no members
+          .map((team, index) => (
+            <TableCell
+              align='center'
+              colSpan={2}
+              key={`team-${index}`}
+              style={{
+                backgroundColor: localTeamColors[team.name] || '#9CA3AF',
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              {team.name}
+            </TableCell>
+          ))}
       </TableRow>
       <TableRow style={{ backgroundColor: '#ECEBEE', color: '#FFFFFF' }}>
-        {teams.flatMap((_, index) => [
-          <TableCell
-            align='center'
-            key={`player-header-${index}`}
-            style={{
-              fontWeight: 'bold',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            Player
-          </TableCell>,
-          <TableCell
-            align='center'
-            key={`discord-header-${index}`}
-            style={{
-              fontWeight: 'bold',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            Discord
-          </TableCell>,
-        ])}
+        {teams
+          .filter((team) => team.members.length > 0) // Skip teams with no members
+          .flatMap((_, index) => [
+            <TableCell
+              align='center'
+              key={`player-header-${index}`}
+              style={{
+                fontWeight: 'bold',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              Player
+            </TableCell>,
+            <TableCell
+              align='center'
+              key={`discord-header-${index}`}
+              style={{
+                fontWeight: 'bold',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              Discord
+            </TableCell>,
+          ])}
       </TableRow>
     </TableHead>
   )
 
   const renderTableBody = () => {
-    const columns = teams.map((team) =>
-      team.members.map((member) => ({
-        player: member.global_name,
-        discord: member.username,
-      }))
-    )
+    const columns = teams
+      .filter((team) => team.members.length > 0) // Skip teams with no members
+      .map((team) =>
+        team.members.map((member) => ({
+          player: member.global_name,
+          discord: member.username,
+        }))
+      )
     const maxRows = Math.max(...columns.map((team) => team.length), 0)
 
     return (
