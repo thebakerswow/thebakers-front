@@ -23,6 +23,7 @@ interface AttendanceProps {
   markAllAsFull: () => void
   handleAttendanceClick: (playerId: string, value: number) => void
   onAttendanceUpdate: () => void
+  runIsLocked: boolean // Added prop
 }
 
 export function Attendance({
@@ -31,6 +32,7 @@ export function Attendance({
   handleAttendanceClick,
   onAttendanceUpdate,
   runId,
+  runIsLocked, // Added prop
 }: AttendanceProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -97,8 +99,10 @@ export function Attendance({
     <Select
       value={percentage}
       onChange={(e) =>
+        !runIsLocked &&
         handleAttendanceClickWithChange(idDiscord, Number(e.target.value))
       }
+      disabled={runIsLocked} // Disable select when runIsLocked is true
       style={{
         backgroundColor: getColorForPercentage(percentage),
         color: 'white',
@@ -147,6 +151,7 @@ export function Attendance({
                     variant='contained'
                     color='success'
                     onClick={markAllAsFull}
+                    disabled={runIsLocked} // Disable button when runIsLocked is true
                     style={{
                       marginLeft: '8px',
                       width: '80px',
@@ -159,7 +164,7 @@ export function Attendance({
                   <Button
                     variant='contained'
                     onClick={handleAttendanceSave}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || runIsLocked} // Disable button when runIsLocked is true
                     style={{
                       marginLeft: '8px',
                       width: '80px',

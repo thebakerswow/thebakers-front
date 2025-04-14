@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { api } from '../../../../services/axiosConfig'
 import { ErrorDetails } from '../../../../components/error-display'
+import { TransactionExtract } from '../../../../components/transaction-extract'
 import {
   Table,
   TableBody,
@@ -12,6 +13,10 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Button,
 } from '@mui/material'
 
 interface VerifyTableData {
@@ -24,6 +29,7 @@ export function VerifyTable() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true) // Controla se é a primeira requisição
+  const [isDialogOpen, setIsDialogOpen] = useState(false) // Estado para controlar o diálogo
 
   /**
    * Função para buscar os dados de soma do backend.
@@ -149,6 +155,31 @@ export function VerifyTable() {
           </Table>
         </TableContainer>
       )}
+      {/* Botão abaixo da tabela */}
+      <div className='mt-4 flex justify-center'>
+        <Button
+          variant='contained'
+          sx={{
+            backgroundColor: 'rgb(239, 68, 68)',
+            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          }}
+          onClick={() => setIsDialogOpen(true)} // Abre o diálogo
+        >
+          Open Extract
+        </Button>
+      </div>
+      {/* Dialog para exibir os logs */}
+      <Dialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        maxWidth='lg' // Set a larger max width
+        fullWidth // Ensure the dialog takes the full width
+      >
+        <DialogTitle>Extract</DialogTitle>
+        <DialogContent style={{ minHeight: '500px' }}>
+          <TransactionExtract />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

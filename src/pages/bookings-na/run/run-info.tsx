@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
-import axios from 'axios'
 import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
@@ -17,6 +16,7 @@ import {
   TableRow,
   Paper,
 } from '@mui/material'
+import { api } from '../../../services/axiosConfig'
 
 interface RunInfoProps {
   run: RunData
@@ -80,7 +80,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   const toggleRunLock = async () => {
     console.log('runlock: ', run.runIsLocked)
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,
         {
           isLocked: !isRunLocked,
@@ -88,6 +88,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
       )
       if (response.status === 200) {
         setIsRunLocked(!isRunLocked)
+        window.location.reload() // Reload the page after toggling the lock
       }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
@@ -190,9 +191,16 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             startIcon={<UserPlus size={18} />}
             fullWidth
             onClick={handleOpenAddBuyer}
+            disabled={isRunLocked} // Disable button if run is locked
             sx={{
-              backgroundColor: 'rgb(239, 68, 68)',
-              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              backgroundColor: isRunLocked
+                ? 'rgb(209, 213, 219)'
+                : 'rgb(239, 68, 68)', // Gray if disabled
+              '&:hover': {
+                backgroundColor: isRunLocked
+                  ? 'rgb(209, 213, 219)'
+                  : 'rgb(248, 113, 113)', // Gray if disabled
+              },
             }}
           >
             Add Buyer
@@ -202,16 +210,23 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             '1101231955120496650',
             '1244711458541928608',
             '1148721174088532040',
-          ]) && (
+          ]) ? (
             <>
               <Button
                 variant='contained'
                 startIcon={<Pencil size={18} />}
                 fullWidth
                 onClick={handleOpenEditModal}
+                disabled={isRunLocked} // Disable button if run is locked
                 sx={{
-                  backgroundColor: 'rgb(239, 68, 68)',
-                  '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                  backgroundColor: isRunLocked
+                    ? 'rgb(209, 213, 219)'
+                    : 'rgb(239, 68, 68)', // Gray if disabled
+                  '&:hover': {
+                    backgroundColor: isRunLocked
+                      ? 'rgb(209, 213, 219)'
+                      : 'rgb(248, 113, 113)', // Gray if disabled
+                  },
                 }}
               >
                 Edit Raid
@@ -224,19 +239,22 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 fullWidth
                 onClick={toggleRunLock}
                 sx={{
-                  backgroundColor: isRunLocked
-                    ? 'rgb(34, 197, 94)'
-                    : 'rgb(239, 68, 68)',
+                  backgroundColor: 'rgb(239, 68, 68)',
                   '&:hover': {
-                    backgroundColor: isRunLocked
-                      ? 'rgb(52, 211, 153)'
-                      : 'rgb(248, 113, 113)',
+                    backgroundColor: 'rgb(248, 113, 113)',
                   },
                 }}
               >
                 {isRunLocked ? 'Unlock Run' : 'Lock Run'}
               </Button>
             </>
+          ) : (
+            isRunLocked && (
+              <p className='text-center font-semibold text-red-500'>
+                This run is currently locked. You do not have permission to
+                unlock it.
+              </p>
+            )
           )}
         </CardContent>
       </Card>

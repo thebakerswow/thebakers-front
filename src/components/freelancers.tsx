@@ -31,9 +31,10 @@ interface User {
 
 interface FreelancersProps {
   runId: string | undefined
+  runIsLocked: boolean // Add runIsLocked prop
 }
 
-export function Freelancers({ runId }: FreelancersProps) {
+export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [freelancers, setFreelancers] = useState<User[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [search, setSearch] = useState('')
@@ -91,7 +92,7 @@ export function Freelancers({ runId }: FreelancersProps) {
   }, [search, users])
 
   const handleAddFreelancer = async () => {
-    if (!selectedUser || !runId) return
+    if (!selectedUser || !runId || runIsLocked) return // Prevent adding if runIsLocked
     setIsSubmitting(true)
     try {
       await api.post('/freelancer', {
@@ -172,6 +173,7 @@ export function Freelancers({ runId }: FreelancersProps) {
     <Select
       value={percentage}
       onChange={(e) => handleAttendanceClick(idDiscord, Number(e.target.value))}
+      disabled={runIsLocked} // Disable attendance selection if runIsLocked
       style={{
         backgroundColor: getColorForPercentage(percentage),
         color: 'white',
@@ -227,6 +229,7 @@ export function Freelancers({ runId }: FreelancersProps) {
             }}
             inputValue={search}
             onInputChange={(_, newInputValue) => setSearch(newInputValue)}
+            disabled={runIsLocked} // Disable search when runIsLocked
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -252,6 +255,7 @@ export function Freelancers({ runId }: FreelancersProps) {
             startIcon={
               isSubmitting ? <CircleNotch className='animate-spin' /> : null
             }
+            disabled={runIsLocked || isSubmitting} // Disable add button if runIsLocked
             sx={{
               textTransform: 'none',
               padding: '6px 16px',
@@ -325,7 +329,10 @@ export function Freelancers({ runId }: FreelancersProps) {
                     <TableCell align='center' sx={{ padding: '4px' }}>
                       <IconButton
                         onClick={() => handleOpenDeleteDialog(user.id_discord)}
-                        disabled={deletingFreelancerId === user.id_discord} // Disable only for the row being deleted
+                        disabled={
+                          runIsLocked ||
+                          deletingFreelancerId === user.id_discord
+                        } // Disable delete button if runIsLocked
                       >
                         {deletingFreelancerId === user.id_discord ? ( // Show loading only for the row being deleted
                           <CircularProgress size={20} />

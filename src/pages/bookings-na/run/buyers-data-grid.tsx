@@ -49,6 +49,7 @@ interface BuyersGridProps {
   onBuyerStatusEdit: () => void
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
+  runIsLocked: boolean // Added runIsLocked prop
 }
 
 const statusOptions = [
@@ -74,6 +75,7 @@ export function BuyersDataGrid({
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
+  runIsLocked, // Destructure runIsLocked
 }: BuyersGridProps) {
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -209,8 +211,11 @@ export function BuyersDataGrid({
   const renderStatusSelect = (buyer: BuyerData) => (
     <Select
       value={buyer.status || ''}
-      onChange={(e) => handleStatusChange(buyer.id, e.target.value)}
+      onChange={(e) =>
+        !runIsLocked && handleStatusChange(buyer.id, e.target.value)
+      }
       displayEmpty
+      disabled={runIsLocked} // Disable select when run is locked
       sx={{
         width: '7rem',
         height: '2rem', // Reduced height
@@ -230,13 +235,15 @@ export function BuyersDataGrid({
 
   const renderPaidIcon = (buyer: BuyerData) => (
     <IconButton
-      onClick={() => handleTogglePaid(buyer.id)}
+      onClick={() => !runIsLocked && handleTogglePaid(buyer.id)}
+      disabled={runIsLocked} // Disable toggle when run is locked
       sx={{
         backgroundColor: 'white', // Fundo branco
         padding: '2px', // Reduzido o padding
         '&:hover': {
-          backgroundColor: '#f0f0f0', // Cor de fundo ao passar o mouse
+          backgroundColor: runIsLocked ? 'white' : '#f0f0f0', // Prevent hover effect when disabled
         },
+        opacity: runIsLocked ? 0.5 : 1, // Make button opaque when disabled
       }}
     >
       {buyer.isPaid ? (
@@ -519,17 +526,23 @@ export function BuyersDataGrid({
                     <div className='flex justify-center gap-1'>
                       <Tooltip title='Edit'>
                         <IconButton
-                          onClick={() => handleOpenModal(buyer, 'edit')}
+                          onClick={() =>
+                            !runIsLocked && handleOpenModal(buyer, 'edit')
+                          }
+                          disabled={runIsLocked}
                         >
                           <Pencil size={18} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title='AFK'>
                         <IconButton
-                          onClick={() => handleSendAFKMessage(buyer.id)}
-                          disabled={cooldownAFK[buyer.id]} // Disable button during cooldown
+                          onClick={() =>
+                            !runIsLocked && handleSendAFKMessage(buyer.id)
+                          }
+                          disabled={runIsLocked || cooldownAFK[buyer.id]} // Disable button during cooldown or if run is locked
                           sx={{
-                            opacity: cooldownAFK[buyer.id] ? 0.5 : 1, // Make button opaque when disabled
+                            opacity:
+                              cooldownAFK[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
                           }}
                         >
                           <Bed size={18} />
@@ -537,10 +550,13 @@ export function BuyersDataGrid({
                       </Tooltip>
                       <Tooltip title='Offline'>
                         <IconButton
-                          onClick={() => handleSendOfflineMessage(buyer.id)}
-                          disabled={cooldown[buyer.id]} // Disable button during cooldown
+                          onClick={() =>
+                            !runIsLocked && handleSendOfflineMessage(buyer.id)
+                          }
+                          disabled={runIsLocked || cooldown[buyer.id]} // Disable button during cooldown or if run is locked
                           sx={{
-                            opacity: cooldown[buyer.id] ? 0.5 : 1, // Make button opaque when disabled
+                            opacity:
+                              cooldown[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
                           }}
                         >
                           <SmileyXEyes size={18} />
@@ -548,7 +564,10 @@ export function BuyersDataGrid({
                       </Tooltip>
                       <Tooltip title='Delete'>
                         <IconButton
-                          onClick={() => handleOpenModal(buyer, 'delete')}
+                          onClick={() =>
+                            !runIsLocked && handleOpenModal(buyer, 'delete')
+                          }
+                          disabled={runIsLocked}
                         >
                           <Trash size={18} />
                         </IconButton>

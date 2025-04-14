@@ -300,6 +300,7 @@ export function RunDetails() {
                   onBuyerStatusEdit={reloadAllData}
                   onBuyerNameNoteEdit={reloadAllData}
                   onDeleteSuccess={reloadAllData}
+                  runIsLocked={runData?.runIsLocked ?? false}
                 />
               </div>
             )}
@@ -311,9 +312,13 @@ export function RunDetails() {
                 markAllAsFull={markAllAsFull}
                 handleAttendanceClick={handleAttendanceClick}
                 onAttendanceUpdate={fetchAttendanceData}
+                runIsLocked={runData?.runIsLocked ?? false}
                 runId={runData.id}
               />
-              <Freelancers runId={runData.id} />
+              <Freelancers
+                runId={runData.id}
+                runIsLocked={runData?.runIsLocked ?? false}
+              />
             </div>
           )}
         </div>
