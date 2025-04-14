@@ -1,5 +1,12 @@
-import { Eye, Trash, Clipboard, Pencil } from '@phosphor-icons/react'
-import { TableSortLabel } from '@mui/material'
+import {
+  Eye,
+  Trash,
+  Clipboard,
+  Pencil,
+  Lock,
+  LockOpen,
+} from '@phosphor-icons/react'
+import { TableSortLabel, Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal as MuiModal, Box } from '@mui/material'
@@ -10,6 +17,7 @@ import { BuyersPreview } from '../../components/buyers-preview'
 import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
+import axios from 'axios'
 import {
   Table,
   TableBody,
@@ -210,6 +218,22 @@ export function RunsDataGrid({
       .catch(() => {
         alert('Failed to copy run.')
       })
+  }
+
+  // Function to toggle the lock status of a run
+  const toggleRunLock = async (runId: string, isLocked: boolean) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/lock`,
+        { isLocked: !isLocked }
+      )
+      if (response.status === 200) {
+        alert(`Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`)
+      }
+    } catch (error) {
+      console.error('Failed to toggle run lock:', error)
+      alert('Failed to toggle run lock.')
+    }
   }
 
   // Renderiza uma célula da tabela com conteúdo padrão
@@ -447,15 +471,34 @@ export function RunsDataGrid({
                 {renderTableCell(
                   hasRequiredRole(['1101231955120496650']) ? (
                     <>
-                      <IconButton onClick={() => handleOpenEditRunModal(run)}>
-                        <Pencil size={20} />
-                      </IconButton>
-                      <IconButton onClick={() => copyRunToClipboard(run)}>
-                        <Clipboard size={20} />
-                      </IconButton>
-                      <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
-                        <Trash size={20} />
-                      </IconButton>
+                      <Tooltip title='Edit'>
+                        <IconButton onClick={() => handleOpenEditRunModal(run)}>
+                          <Pencil size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Copy'>
+                        <IconButton onClick={() => copyRunToClipboard(run)}>
+                          <Clipboard size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete'>
+                        <IconButton
+                          onClick={() => handleOpenDeleteRunModal(run)}
+                        >
+                          <Trash size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={run.runIsLocked ? 'Unlock' : 'Lock'}>
+                        <IconButton
+                          onClick={() => toggleRunLock(run.id, run.runIsLocked)}
+                        >
+                          {run.runIsLocked ? (
+                            <LockOpen size={20} />
+                          ) : (
+                            <Lock size={20} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
                     </>
                   ) : null,
                   'center'

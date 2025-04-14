@@ -97,7 +97,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    console.log(formData)
     try {
       await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
       await onRunAddedReload()

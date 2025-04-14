@@ -89,7 +89,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }
 
     try {
-      console.log('Enviando dados:', data)
       // Envia os dados do comprador para a API
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, UserPlus } from '@phosphor-icons/react'
+import { Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import axios from 'axios'
 import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
@@ -27,7 +27,7 @@ interface RunInfoProps {
 export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isRunLocked, setIsRunLocked] = useState(run.isLocked) // Assume `isLocked` is part of `run`
+  const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -78,6 +78,7 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   }
 
   const toggleRunLock = async () => {
+    console.log('runlock: ', run.runIsLocked)
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,
@@ -217,7 +218,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               </Button>
               <Button
                 variant='contained'
-                startIcon={<Pencil size={18} />}
+                startIcon={
+                  isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
+                }
                 fullWidth
                 onClick={toggleRunLock}
                 sx={{

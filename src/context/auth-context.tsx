@@ -39,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Verifica se o token expirou
         const now = Date.now() / 1000 // Tempo atual em segundos
         if (decoded.exp < now) {
-          console.log('Token expirado, realizando logout.')
           logout()
           return
         }
