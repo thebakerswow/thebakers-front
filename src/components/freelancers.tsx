@@ -236,10 +236,12 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
                 label='Freelancer'
                 variant='outlined'
                 size='small'
-                InputLabelProps={textFieldStyles.inputLabel}
-                InputProps={{
-                  ...params.InputProps,
-                  ...textFieldStyles.input,
+                slotProps={{
+                  input: {
+                    ...params.InputProps,
+                    ...textFieldStyles.input,
+                  },
+                  inputLabel: textFieldStyles.inputLabel, // Updated to use slotProps.inputLabel
                 }}
                 sx={{
                   ...textFieldStyles.sx,

@@ -17,13 +17,10 @@ import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 
-export function TransactionExtract() {
-  const [players, setPlayers] = useState<
-    { idDiscord: string; username: string }[]
-  >([])
+export function GbankExtract() {
+  const [gbanks, setGbanks] = useState<{ id: string; name: string }[]>([])
+  const [selectedGbank, setSelectedGbank] = useState('') // State for selected Gbank
   const [isLoading, setIsLoading] = useState(false)
-  // Removed unused error state
-  const [selectedPlayer, setSelectedPlayer] = useState('')
   const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
@@ -31,46 +28,33 @@ export function TransactionExtract() {
   const [logs, setLogs] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchPlayers = async () => {
-      setIsLoading(true)
+    const fetchGbanks = async () => {
       try {
         const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/discord/players`
+          `${import.meta.env.VITE_API_BASE_URL}/gbanks`
         )
         if (!response.data.info) {
-          throw new Error('No players found')
+          throw new Error('No gbanks found')
         }
-        setPlayers(response.data.info) // Ensure response.data.info is an array of objects
+        setGbanks(response.data.info) // Ensure response.data.info is an array of objects
       } catch (error) {
-        console.error('Error fetching players:', error)
-        console.error(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-        )
-      } finally {
-        setIsLoading(false)
+        console.error('Error fetching gbanks:', error)
       }
     }
-
-    fetchPlayers()
+    fetchGbanks() // Fetch gbanks on component mount
   }, [])
 
   const fetchLogs = async () => {
-    if (!selectedPlayer || !initialDate || !endDate) return
+    if (!initialDate || !endDate || !selectedGbank) return
     setIsLoading(true)
     try {
       const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/transaction/info`,
+        `${import.meta.env.VITE_API_BASE_URL}/gbanks/logs`,
         {
           params: {
             initial_date: initialDate,
             end_date: endDate,
-            impacted: selectedPlayer,
+            impacted: selectedGbank, // Send the name of the selected Gbank
           },
         }
       )
@@ -119,25 +103,20 @@ export function TransactionExtract() {
       <div className='mb-4 mt-2 flex items-end gap-4'>
         <FormControl className='flex-1'>
           <Autocomplete
-            options={players}
-            getOptionLabel={(option) => option.username}
+            options={gbanks} // Populate with gbanks
+            getOptionLabel={(option) => option.name}
             renderInput={(params) => (
-              <TextField {...params} label='Select Player' variant='outlined' />
+              <TextField {...params} label='Select Gbank' variant='outlined' />
             )}
-            value={
-              players.find((player) => player.idDiscord === selectedPlayer) ||
-              null
-            }
-            onChange={(_, newValue) =>
-              setSelectedPlayer(newValue?.idDiscord || '')
-            }
+            value={gbanks.find((gbank) => gbank.name === selectedGbank) || null}
+            onChange={(_, newValue) => setSelectedGbank(newValue?.name || '')} // Update selected Gbank
           />
         </FormControl>
         <FormControl className='flex-1'>
           <TextField
             label='Initial Date'
             type='date'
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{ inputLabel: { shrink: true } }} // Updated to use slotProps.inputLabel
             value={initialDate}
             onChange={(e) => setInitialDate(e.target.value)}
           />
@@ -146,7 +125,7 @@ export function TransactionExtract() {
           <TextField
             label='End Date'
             type='date'
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{ inputLabel: { shrink: true } }} // Updated to use slotProps.inputLabel
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
@@ -154,7 +133,7 @@ export function TransactionExtract() {
         <Button
           variant='contained'
           onClick={fetchLogs}
-          disabled={!selectedPlayer || !initialDate || !endDate || isLoading}
+          disabled={!initialDate || !endDate || !selectedGbank || isLoading}
           sx={{
             backgroundColor: 'rgb(239, 68, 68)',
             '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
@@ -171,7 +150,7 @@ export function TransactionExtract() {
         <Table stickyHeader className='w-full table-auto'>
           <TableHead>
             <TableRow>
-              <TableCell>Player</TableCell>
+              <TableCell>G-Bank</TableCell>
               <TableCell>Value</TableCell>
               <TableCell>Made By</TableCell>
             </TableRow>
