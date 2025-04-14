@@ -463,7 +463,7 @@ export function BuyersDataGrid({
         </TableHead>
         <TableBody>
           {sortedData.length === 0 ? (
-            <TableRow sx={{ height: '32px' }}>
+            <TableRow sx={{ height: '32px', minHeight: '32px' }}>
               {/* Increased height */}
               <TableCell
                 colSpan={11}
@@ -478,42 +478,57 @@ export function BuyersDataGrid({
               <TableRow
                 key={buyer.id}
                 className={getBuyerColor(buyer.status)}
-                sx={{ height: '32px' }} // Increased height
+                sx={{ height: '40px' }} // Set minimum height
               >
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {index + 1}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {renderStatusSelect(buyer)}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : renderStatusSelect(buyer)}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm === '****'
+                  {buyer.nameAndRealm === '****' ||
+                  buyer.fieldIsBlocked === true
                     ? 'Encrypted'
                     : buyer.nameAndRealm}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerNote}
+                  {buyer.buyerNote === '****' || buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.buyerNote}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* {buyer.nameOwnerBuyer === '****' ||
+                  {buyer.nameOwnerBuyer === '****' ||
                   buyer.fieldIsBlocked === true
                     ? 'Encrypted'
-                    : buyer.nameAndRealm} */}
-                  {buyer.nameOwnerBuyer}
+                    : buyer.nameOwnerBuyer}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameCollector}
+                  {buyer.nameCollector === '****' ||
+                  buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.nameCollector}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {renderPaidIcon(buyer)}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : renderPaidIcon(buyer)}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : Math.round(Number(buyer.buyerPot)).toLocaleString(
+                        'en-US'
+                      )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerActualPot)).toLocaleString(
-                    'en-US'
-                  )}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : Math.round(Number(buyer.buyerActualPot)).toLocaleString(
+                        'en-US'
+                      )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   <div className='flex items-center justify-center gap-2'>
@@ -522,7 +537,7 @@ export function BuyersDataGrid({
                   </div>
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm !== '****' && (
+                  {buyer.nameAndRealm !== '****' && !buyer.fieldIsBlocked && (
                     <div className='flex justify-center gap-1'>
                       <Tooltip title='Edit'>
                         <IconButton

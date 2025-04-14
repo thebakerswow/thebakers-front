@@ -92,6 +92,7 @@ export function RunDetails() {
       )
 
       setRows(response.data.info)
+      console.log(response.data.info)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
