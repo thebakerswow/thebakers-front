@@ -2,6 +2,7 @@ export interface BuyerData {
   id: string
   status: string
   idBuyerAdvertiser: string
+  idOwnerBuyer: string
   nameOwnerBuyer: string
   buyerNote: string
   buyerPot: number

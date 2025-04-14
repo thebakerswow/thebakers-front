@@ -252,7 +252,7 @@ export function FullRaidsNa() {
             fullWidth
             maxWidth='md'
           >
-            <DialogTitle>Bulk Add Runs</DialogTitle>
+            <DialogTitle>Add Multiple Runs</DialogTitle>
             <DialogContent>
               <TextareaAutosize
                 minRows={10}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pencil, UserPlus } from '@phosphor-icons/react'
+import axios from 'axios'
 import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
@@ -26,6 +27,7 @@ interface RunInfoProps {
 export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isRunLocked, setIsRunLocked] = useState(run.isLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -73,6 +75,22 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
     const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  const toggleRunLock = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,
+        {
+          isLocked: !isRunLocked,
+        }
+      )
+      if (response.status === 200) {
+        setIsRunLocked(!isRunLocked)
+      }
+    } catch (error) {
+      console.error('Failed to toggle run lock:', error)
+    }
   }
 
   return (
@@ -184,18 +202,38 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             '1244711458541928608',
             '1148721174088532040',
           ]) && (
-            <Button
-              variant='contained'
-              startIcon={<Pencil size={18} />}
-              fullWidth
-              onClick={handleOpenEditModal}
-              sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-              }}
-            >
-              Edit Raid
-            </Button>
+            <>
+              <Button
+                variant='contained'
+                startIcon={<Pencil size={18} />}
+                fullWidth
+                onClick={handleOpenEditModal}
+                sx={{
+                  backgroundColor: 'rgb(239, 68, 68)',
+                  '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                }}
+              >
+                Edit Raid
+              </Button>
+              <Button
+                variant='contained'
+                startIcon={<Pencil size={18} />}
+                fullWidth
+                onClick={toggleRunLock}
+                sx={{
+                  backgroundColor: isRunLocked
+                    ? 'rgb(34, 197, 94)'
+                    : 'rgb(239, 68, 68)',
+                  '&:hover': {
+                    backgroundColor: isRunLocked
+                      ? 'rgb(52, 211, 153)'
+                      : 'rgb(248, 113, 113)',
+                  },
+                }}
+              >
+                {isRunLocked ? 'Unlock Run' : 'Lock Run'}
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>

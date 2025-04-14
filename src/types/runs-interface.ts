@@ -8,6 +8,7 @@ export interface SumPot {
 
 export interface RunData {
   id: string
+  isLocked: boolean
   idTeam: string
   date: string
   time: string

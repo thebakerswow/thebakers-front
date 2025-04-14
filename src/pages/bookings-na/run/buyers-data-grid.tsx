@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
+import { useParams } from 'react-router-dom'
+import {
+  Bed,
+  CheckFat,
+  Pencil,
+  SmileyXEyes,
+  Trash,
+  XCircle,
+} from '@phosphor-icons/react'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -32,6 +40,7 @@ import {
   IconButton,
   Dialog,
   DialogContent,
+  Tooltip,
 } from '@mui/material'
 import { Modal as MuiModal, Box } from '@mui/material'
 
@@ -66,6 +75,7 @@ export function BuyersDataGrid({
   onBuyerNameNoteEdit,
   onDeleteSuccess,
 }: BuyersGridProps) {
+  const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
@@ -75,6 +85,8 @@ export function BuyersDataGrid({
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
+  const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
+  const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
 
   const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
     setEditingBuyer({
@@ -128,6 +140,70 @@ export function BuyersDataGrid({
       payload,
       onBuyerStatusEdit
     )
+  }
+
+  const handleSendAFKMessage = async (buyerId: string) => {
+    if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
+    const buyer = data.find((b) => b.id === buyerId)
+    if (!buyer || !runId) return // Ensure buyer and runId exist
+    const runLink = `${window.location.origin}/runs/${runId}`
+    const recipientId = buyer.idBuyerAdvertiser
+      ? '286654439241154570'
+      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+    const payload = {
+      id_discord_recipient: recipientId,
+      message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+    }
+    try {
+      await api.post('/discord/send_message', payload)
+      alert('Advertiser notified')
+      setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
+      }
+    }
+  }
+
+  const handleSendOfflineMessage = async (buyerId: string) => {
+    if (cooldown[buyerId]) return // Prevent action if cooldown is active
+    const buyer = data.find((b) => b.id === buyerId)
+    if (!buyer || !runId) return // Ensure buyer and runId exist
+    const runLink = `${window.location.origin}/runs/${runId}`
+    const recipientId = buyer.idBuyerAdvertiser
+      ? '286654439241154570'
+      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+    const payload = {
+      id_discord_recipient: recipientId,
+      message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+    }
+    try {
+      await api.post('/discord/send_message', payload)
+      alert('Advertiser notified')
+      setCooldown((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldown((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
+      }
+    }
   }
 
   const renderStatusSelect = (buyer: BuyerData) => (
@@ -440,17 +516,43 @@ export function BuyersDataGrid({
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm !== '****' && (
-                    <div className='flex justify-center gap-2'>
-                      <IconButton
-                        onClick={() => handleOpenModal(buyer, 'edit')}
-                      >
-                        <Pencil size={18} />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleOpenModal(buyer, 'delete')}
-                      >
-                        <Trash size={18} />
-                      </IconButton>
+                    <div className='flex justify-center gap-1'>
+                      <Tooltip title='Edit'>
+                        <IconButton
+                          onClick={() => handleOpenModal(buyer, 'edit')}
+                        >
+                          <Pencil size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='AFK'>
+                        <IconButton
+                          onClick={() => handleSendAFKMessage(buyer.id)}
+                          disabled={cooldownAFK[buyer.id]} // Disable button during cooldown
+                          sx={{
+                            opacity: cooldownAFK[buyer.id] ? 0.5 : 1, // Make button opaque when disabled
+                          }}
+                        >
+                          <Bed size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Offline'>
+                        <IconButton
+                          onClick={() => handleSendOfflineMessage(buyer.id)}
+                          disabled={cooldown[buyer.id]} // Disable button during cooldown
+                          sx={{
+                            opacity: cooldown[buyer.id] ? 0.5 : 1, // Make button opaque when disabled
+                          }}
+                        >
+                          <SmileyXEyes size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete'>
+                        <IconButton
+                          onClick={() => handleOpenModal(buyer, 'delete')}
+                        >
+                          <Trash size={18} />
+                        </IconButton>
+                      </Tooltip>
                     </div>
                   )}
                 </TableCell>
