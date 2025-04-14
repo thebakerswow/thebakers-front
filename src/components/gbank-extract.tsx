@@ -137,6 +137,7 @@ export function GbankExtract() {
           sx={{
             backgroundColor: 'rgb(239, 68, 68)',
             '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            height: '56px', // Match the height of the selects
           }}
         >
           Fetch Extract

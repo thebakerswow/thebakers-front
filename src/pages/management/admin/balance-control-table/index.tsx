@@ -34,6 +34,32 @@ export function BalanceControlTable({
   }>({})
   const [isBulkingSubmitting, setIsBulkingSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [sortConfig, setSortConfig] = useState<{
+    key: string
+    direction: 'asc' | 'desc'
+  } | null>(null)
+
+  const sortedUsers = [...users].sort((a, b) => {
+    if (!sortConfig) return 0
+    const { key, direction } = sortConfig
+    const order = direction === 'asc' ? 1 : -1
+
+    if (key === 'username') {
+      return a.username.localeCompare(b.username) * order
+    } else if (key === 'balance_total') {
+      return (Number(a.balance_total) - Number(b.balance_total)) * order
+    }
+    return 0
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, direction: 'asc' }
+    })
+  }
 
   // Define a data atual como padrão caso nenhuma data seja selecionada
   useEffect(() => {
@@ -230,10 +256,24 @@ export function BalanceControlTable({
       <table className='w-full border-collapse'>
         <thead className='sticky top-0 bg-zinc-200 text-gray-700'>
           <tr className='text-md text-black'>
-            <th className='h-14 w-[150px] border p-2'>Team</th>
+            <th
+              className='h-14 w-[150px] cursor-pointer border p-2'
+              onClick={() => handleSort('username')}
+            >
+              Player{' '}
+              {sortConfig?.key === 'username' &&
+                (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </th>
             <th className='w-[150px] border p-2'>Gold Cut</th>
             <th className='w-[150px] border p-2'>Gold Collected</th>
-            <th className='w-[150px] border p-2'>Balance Total</th>
+            <th
+              className='w-[150px] cursor-pointer border p-2'
+              onClick={() => handleSort('balance_total')}
+            >
+              Balance Total{' '}
+              {sortConfig?.key === 'balance_total' &&
+                (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            </th>
             <th className='border p-2'>Calculator</th>
           </tr>
         </thead>
@@ -245,14 +285,14 @@ export function BalanceControlTable({
                 <p>Loading...</p>
               </td>
             </tr>
-          ) : users.length === 0 ? (
+          ) : sortedUsers.length === 0 ? (
             <tr>
               <td colSpan={5} className='p-4 text-center'>
                 No data available
               </td>
             </tr>
           ) : (
-            users.map((user) => (
+            sortedUsers.map((user) => (
               <tr key={user.idDiscord} className='border border-gray-300'>
                 <td className='p-2 text-center'>{user.username}</td>
                 <td className='p-2 text-center'>
