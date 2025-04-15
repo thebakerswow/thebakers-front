@@ -41,7 +41,7 @@ export function Attendance({
 
   const getColorForPercentage = useCallback(
     (percentage: number) =>
-      percentage === 0 ? '#ef4444' : percentage === 100 ? '#16a34a' : '#fde047',
+      percentage === 0 ? '#ef4444' : percentage === 100 ? '#16a34a' : '#eab308', // Even darker yellow
     []
   )
 
@@ -170,8 +170,8 @@ export function Attendance({
                       width: '80px',
                       height: '30px',
                       backgroundColor: hasUnsavedChanges
-                        ? '#fde047'
-                        : '#16a34a', // Yellow if unsaved changes
+                        ? '#eab308' // Even darker yellow if unsaved changes
+                        : '#16a34a',
                     }}
                   >
                     {isSubmitting

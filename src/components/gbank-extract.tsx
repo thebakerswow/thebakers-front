@@ -62,6 +62,7 @@ export function GbankExtract() {
         name_impacted: string
         value: string
         made_by: string
+        date: string // Added date field
       }
 
       const logsData = Array.isArray(response.data.info)
@@ -69,6 +70,7 @@ export function GbankExtract() {
             player: log.name_impacted || 'N/A',
             action: log.value || 'N/A',
             author: log.made_by || 'N/A',
+            date: log.date || 'N/A', // Map date field
           }))
         : []
       setLogs(logsData) // Ensure logsData is always an array
@@ -154,6 +156,7 @@ export function GbankExtract() {
               <TableCell>G-Bank</TableCell>
               <TableCell>Value</TableCell>
               <TableCell>Made By</TableCell>
+              <TableCell>Date</TableCell> {/* Added Date column */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -163,11 +166,12 @@ export function GbankExtract() {
                   <TableCell>{log.player}</TableCell>
                   <TableCell>{log.action}</TableCell>
                   <TableCell>{log.author}</TableCell>
+                  <TableCell>{log.date}</TableCell> {/* Display Date */}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} align='center'>
+                <TableCell colSpan={4} align='center'> {/* Updated colspan */}
                   No data available
                 </TableCell>
               </TableRow>

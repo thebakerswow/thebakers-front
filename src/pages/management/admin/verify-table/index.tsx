@@ -99,7 +99,7 @@ export function VerifyTable() {
                   }}
                   align='center'
                 >
-                  GBanks Sum
+                  G-Banks Sum
                 </TableCell>
                 <TableCell
                   style={{
