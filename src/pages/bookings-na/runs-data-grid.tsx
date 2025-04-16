@@ -35,6 +35,7 @@ interface RunsDataProps {
   data: RunData[]
   isLoading: boolean
   onDeleteSuccess: () => void
+  onEditSuccess?: () => void
 }
 
 export function RunsDataGrid({
@@ -213,7 +214,11 @@ export function RunsDataGrid({
     navigator.clipboard
       .writeText(JSON.stringify(formattedRun, null, 2))
       .catch(() => {
-        alert('Failed to copy run.')
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to copy run.',
+          text: 'Please try again.',
+        })
       })
   }
 

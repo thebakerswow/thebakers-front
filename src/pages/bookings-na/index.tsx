@@ -19,6 +19,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material'
+import Swal from 'sweetalert2'
 
 export function FullRaidsNa() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -30,6 +31,7 @@ export function FullRaidsNa() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { userRoles } = useAuth()
 
   // Verifica se o usuário possui o papel necessário
@@ -39,7 +41,13 @@ export function FullRaidsNa() {
   // Copia os dados das corridas para a área de transferência
   const copyRunsToClipboard = () => {
     if (rows.length === 0) {
-      alert('No runs available to copy.')
+      Swal.fire({
+        icon: 'warning',
+        title: 'No runs available to copy.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
       return
     }
 
@@ -71,6 +79,7 @@ export function FullRaidsNa() {
 
   // Adiciona múltiplas corridas
   const handleBulkAddRuns = async () => {
+    setIsSubmitting(true)
     try {
       const parsedRuns = JSON.parse(bulkRunsData)
       const runsArray = Array.isArray(parsedRuns) ? parsedRuns : [parsedRuns]
@@ -92,13 +101,28 @@ export function FullRaidsNa() {
         await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, run)
       }
 
-      alert('Runs added successfully!')
+      Swal.fire({
+        icon: 'success',
+        title: 'Runs added successfully!',
+        confirmButtonColor: '#22c55e',
+        timer: 1500,
+        showConfirmButton: false,
+      })
       setBulkRunsData('')
       setIsBulkAddOpen(false)
       fetchRuns(true)
     } catch (error) {
       console.error('Error adding runs:', error)
-      alert('Failed to add runs. Please check the data format.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to add runs.',
+        text: 'Please check the data format.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -109,7 +133,13 @@ export function FullRaidsNa() {
 
   const handleBulkRunsDataChange = (value: string) => {
     if (!selectedDate) {
-      alert('Please select a date from the filter.')
+      Swal.fire({
+        icon: 'warning',
+        title: 'Please select a date from the filter.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
       return
     }
 
@@ -164,6 +194,16 @@ export function FullRaidsNa() {
     }
   }
 
+  const handleEditRunSuccess = () => {
+    Swal.fire({
+      title: 'Success!',
+      text: 'Run edited successfully!',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+    })
+  }
+
   // Busca inicial e configuração de polling
   useEffect(() => {
     fetchRuns(true)
@@ -186,7 +226,7 @@ export function FullRaidsNa() {
     <div className='flex min-h-screen w-full flex-col items-center justify-center'>
       <DateFilter onDaySelect={setSelectedDate} />
       <div
-        className='container mx-auto mt-2 flex flex-col p-4'
+        className='mx-auto mt-6 flex w-[90%] flex-col p-4'
         style={{
           minHeight: '500px',
           height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
@@ -275,8 +315,9 @@ export function FullRaidsNa() {
                   '&:hover': { backgroundColor: 'rgb(52, 211, 153)' },
                 }}
                 onClick={handleBulkAddRuns}
+                disabled={isSubmitting}
               >
-                Submit Runs
+                {isSubmitting ? 'Submitting...' : 'Submit Runs'}
               </Button>
               <Button
                 variant='outlined'
@@ -301,6 +342,7 @@ export function FullRaidsNa() {
             data={rows}
             isLoading={isLoading}
             onDeleteSuccess={() => fetchRuns(true)}
+            onEditSuccess={handleEditRunSuccess}
           />
         </div>
 

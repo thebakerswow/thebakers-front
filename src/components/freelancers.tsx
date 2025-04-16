@@ -233,7 +233,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label='Freelancer'
+                placeholder='Freelancer' // Use placeholder instead of label
                 variant='outlined'
                 size='small'
                 slotProps={{
@@ -241,7 +241,9 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
                     ...params.InputProps,
                     ...textFieldStyles.input,
                   },
-                  inputLabel: textFieldStyles.inputLabel, // Updated to use slotProps.inputLabel
+                  inputLabel: {
+                    shrink: false, // Ensure placeholder does not move
+                  },
                 }}
                 sx={{
                   ...textFieldStyles.sx,

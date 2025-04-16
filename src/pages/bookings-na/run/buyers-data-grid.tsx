@@ -43,6 +43,7 @@ import {
   Tooltip,
 } from '@mui/material'
 import { Modal as MuiModal, Box } from '@mui/material'
+import Swal from 'sweetalert2'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -158,7 +159,13 @@ export function BuyersDataGrid({
     }
     try {
       await api.post('/discord/send_message', payload)
-      alert('Advertiser notified')
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      }) // Updated Swal to match add-run behavior
       setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
       setTimeout(() => {
         setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
@@ -190,7 +197,13 @@ export function BuyersDataGrid({
     }
     try {
       await api.post('/discord/send_message', payload)
-      alert('Advertiser notified')
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      }) // Updated Swal to match add-run behavior
       setCooldown((prev) => ({ ...prev, [buyerId]: true }))
       setTimeout(() => {
         setCooldown((prev) => ({ ...prev, [buyerId]: false }))

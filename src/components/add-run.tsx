@@ -14,8 +14,6 @@ import {
   Chip,
   Button,
   CircularProgress,
-  Alert,
-  AlertTitle,
 } from '@mui/material'
 import axios from 'axios'
 import { api } from '../services/axiosConfig'
@@ -23,6 +21,7 @@ import { ErrorComponent, ErrorDetails } from './error-display'
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
+import Swal from 'sweetalert2'
 
 interface ApiOption {
   id: string
@@ -104,7 +103,14 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
       await onRunAddedReload()
       setIsSuccess(true)
-      setTimeout(onClose, 1000)
+      onClose() // Close the modal before showing Swal
+      Swal.fire({
+        title: 'Success!',
+        text: 'Run created successfully!',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (error) {
       setError(
         axios.isAxiosError(error)
@@ -148,22 +154,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
         {error ? (
           // Exibe o componente de erro caso ocorra algum problema
           <ErrorComponent error={error} onClose={() => setError(null)} />
-        ) : isSuccess ? (
-          // Exibe mensagem de sucesso após a criação da run
-          <Alert
-            severity='success'
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              flexDirection: 'column', // Garante alinhamento vertical
-            }}
-          >
-            <AlertTitle>Success</AlertTitle>
-            Run created successfully! —{' '}
-            <strong>The modal will close automatically in 1 second...</strong>
-          </Alert>
         ) : (
           // Formulário para criar uma nova run
           <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-2 gap-4'>
@@ -171,6 +161,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <TextField
               type='date'
               id='date'
+              label='Date'
               required
               value={formData.date}
               onChange={handleChange}
@@ -191,20 +182,19 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                         : '',
                   }))
                 }
-                ampm={true} // Define o formato 12h com AM/PM
+                ampm={true} // Define                 ampm={true} // Define o formato 12h com AM/PM
                 slotProps={{ textField: { fullWidth: true } }}
               />
             </LocalizationProvider>
             <TextField
               type='text'
+              label='Raid'
               id='raid'
               required
-              placeholder='Raid'
               value={formData.raid}
               onChange={handleChange}
               variant='outlined'
               fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
             />
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='runType-label'>Run Type</InputLabel>
@@ -292,13 +282,12 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <TextField
               type='text'
               id='maxBuyers'
+              label='Max Buyers'
               required
-              placeholder='Max Buyers'
               value={formData.maxBuyers}
               onChange={handleChange}
               variant='outlined'
               fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
             />
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='raidLeader-label'>Raid Leader</InputLabel>

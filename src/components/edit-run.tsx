@@ -12,7 +12,6 @@ import {
   FormControl,
   Box,
   Chip,
-  Alert,
 } from '@mui/material'
 import axios from 'axios'
 import { RunData } from '../types/runs-interface'
@@ -21,6 +20,7 @@ import { ErrorComponent, ErrorDetails } from './error-display'
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
+import Swal from 'sweetalert2'
 
 interface ApiOption {
   id: string
@@ -97,7 +97,14 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       await api.put(`${import.meta.env.VITE_API_BASE_URL}/run`, data)
       await onRunEdit()
       setIsSuccess(true)
-      setTimeout(() => onClose(), 1000)
+      onClose() // Close the modal first
+      Swal.fire({
+        title: 'Success!',
+        text: 'Run edited successfully!',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError({
@@ -122,11 +129,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
           {error ? (
             <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : isSuccess ? (
-            <Alert severity='success' onClose={onClose}>
-              Run edited successfully! The dialog will close automatically in 1
-              second...
-            </Alert>
           ) : (
             <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
               <TextField
@@ -151,7 +153,13 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                     }))
                   }
                   ampm={true}
-                  slotProps={{ textField: { fullWidth: true, required: true } }} // Tornar o campo obrigatório
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      margin: 'dense', // Align with other fields
+                    },
+                  }}
                 />
               </LocalizationProvider>
               <TextField

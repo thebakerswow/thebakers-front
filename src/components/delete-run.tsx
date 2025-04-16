@@ -10,6 +10,7 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material'
+import Swal from 'sweetalert2'
 
 interface DeleteRunProps {
   run: {
@@ -31,8 +32,15 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
 
     try {
       await api.delete(`${import.meta.env.VITE_API_BASE_URL}/run/${run.id}`)
+      onClose() // Close the modal before showing the alert
+      await Swal.fire({
+        title: 'Deleted!',
+        text: 'The run has been successfully deleted.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
       onDeleteSuccess()
-      onClose()
     } catch (err) {
       const errorDetails = axios.isAxiosError(err)
         ? {

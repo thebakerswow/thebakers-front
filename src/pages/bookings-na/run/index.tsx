@@ -257,7 +257,7 @@ export function RunDetails() {
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col overflow-y-auto rounded-xl text-gray-100 shadow-2xl ${
+      className={`flex w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >

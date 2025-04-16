@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import Swal from 'sweetalert2' // Import SweetAlert2
 import { api } from '../services/axiosConfig'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import Button from '@mui/material/Button'
@@ -28,6 +29,13 @@ export function DeleteBuyer({
 
     try {
       await api.delete(`/buyer/${buyer.id}`)
+      Swal.fire({
+        title: 'Success!',
+        text: 'Buyer deleted successfully',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      }) // Show success confirmation
       onDeleteSuccess()
       onClose()
     } catch (err) {
