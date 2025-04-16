@@ -192,7 +192,7 @@ export function TransactionExtract() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} align='center'>
+                <TableCell colSpan={4} align='center'>
                   No data available
                 </TableCell>
               </TableRow>
