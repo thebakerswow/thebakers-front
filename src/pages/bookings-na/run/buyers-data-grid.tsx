@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import {
-  CheckFat,
-  Pencil,
-  Trash,
-  XCircle,
-} from '@phosphor-icons/react'
+import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
 import { RiWifiOffLine, RiZzzFill } from 'react-icons/ri'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
@@ -89,6 +84,10 @@ export function BuyersDataGrid({
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
   const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
   const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
+  const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
+    {}
+  ) // Track button clicks
+  const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
 
   const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
     setEditingBuyer({
@@ -144,80 +143,134 @@ export function BuyersDataGrid({
     )
   }
 
-  const handleSendAFKMessage = async (buyerId: string) => {
-    if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
-    const buyer = data.find((b) => b.id === buyerId)
-    if (!buyer || !runId) return // Ensure buyer and runId exist
-    const runLink = `${window.location.origin}/runs/${runId}`
-    const recipientId = buyer.idBuyerAdvertiser
-      ? '286654439241154570'
-      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
-    const payload = {
-      id_discord_recipient: recipientId,
-      message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
-    }
-    try {
-      await api.post('/discord/send_message', payload)
+  const handleGlobalAction = (action: () => void) => {
+    if (globalCooldown) {
       Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
+        title: 'Action Not Allowed',
+        text: 'Please wait before performing another action.',
+        icon: 'warning',
         timer: 1500,
         showConfirmButton: false,
-      }) // Updated Swal to match add-run behavior
-      setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        })
-      } else {
-        setError({ message: 'Unexpected error', response: error })
-      }
+      })
+      return
     }
+
+    setGlobalCooldown(true)
+    action()
+
+    setTimeout(() => {
+      setGlobalCooldown(false)
+    }, 5000) // 3-second global cooldown
+  }
+
+  const handleSendAFKMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId) return // Ensure buyer and runId exist
+      const runLink = `${window.location.origin}/runs/${runId}`
+      const recipientId = buyer.idBuyerAdvertiser
+        ? '286654439241154570'
+        : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+      const payload = {
+        id_discord_recipient: recipientId,
+        message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+      }
+      try {
+        await api.post('/discord/send_message', payload)
+        Swal.fire({
+          title: 'Success!',
+          text: 'Advertiser notified',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
+        setTimeout(() => {
+          setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
+        }, 15000)
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          setError({
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          })
+        } else {
+          setError({ message: 'Unexpected error', response: error })
+        }
+      }
+    })
   }
 
   const handleSendOfflineMessage = async (buyerId: string) => {
-    if (cooldown[buyerId]) return // Prevent action if cooldown is active
-    const buyer = data.find((b) => b.id === buyerId)
-    if (!buyer || !runId) return // Ensure buyer and runId exist
-    const runLink = `${window.location.origin}/runs/${runId}`
-    const recipientId = buyer.idBuyerAdvertiser
-      ? '286654439241154570'
-      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
-    const payload = {
-      id_discord_recipient: recipientId,
-      message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
-    }
-    try {
-      await api.post('/discord/send_message', payload)
-      Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      }) // Updated Swal to match add-run behavior
-      setCooldown((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldown((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError({
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
         })
-      } else {
-        setError({ message: 'Unexpected error', response: error })
+        return
       }
-    }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldown[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId) return // Ensure buyer and runId exist
+      const runLink = `${window.location.origin}/runs/${runId}`
+      const recipientId = buyer.idBuyerAdvertiser
+        ? '286654439241154570'
+        : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+      const payload = {
+        id_discord_recipient: recipientId,
+        message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+      }
+      try {
+        await api.post('/discord/send_message', payload)
+        Swal.fire({
+          title: 'Success!',
+          text: 'Advertiser notified',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        setCooldown((prev) => ({ ...prev, [buyerId]: true }))
+        setTimeout(() => {
+          setCooldown((prev) => ({ ...prev, [buyerId]: false }))
+        }, 15000)
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          setError({
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          })
+        } else {
+          setError({ message: 'Unexpected error', response: error })
+        }
+      }
+    })
   }
 
   const renderStatusSelect = (buyer: BuyerData) => (
@@ -566,10 +619,18 @@ export function BuyersDataGrid({
                           onClick={() =>
                             !runIsLocked && handleSendAFKMessage(buyer.id)
                           }
-                          disabled={runIsLocked || cooldownAFK[buyer.id]} // Disable button during cooldown or if run is locked
+                          disabled={
+                            runIsLocked ||
+                            cooldownAFK[buyer.id] ||
+                            globalCooldown
+                          } // Disable button during global cooldown or if run is locked
                           sx={{
                             opacity:
-                              cooldownAFK[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
+                              cooldownAFK[buyer.id] ||
+                              runIsLocked ||
+                              globalCooldown
+                                ? 0.5
+                                : 1, // Make button opaque when disabled
                           }}
                         >
                           <RiZzzFill size={18} />
@@ -580,10 +641,16 @@ export function BuyersDataGrid({
                           onClick={() =>
                             !runIsLocked && handleSendOfflineMessage(buyer.id)
                           }
-                          disabled={runIsLocked || cooldown[buyer.id]} // Disable button during cooldown or if run is locked
+                          disabled={
+                            runIsLocked || cooldown[buyer.id] || globalCooldown
+                          } // Disable button during global cooldown or if run is locked
                           sx={{
                             opacity:
-                              cooldown[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
+                              cooldown[buyer.id] ||
+                              runIsLocked ||
+                              globalCooldown
+                                ? 0.5
+                                : 1, // Make button opaque when disabled
                           }}
                         >
                           <RiWifiOffLine size={18} />
