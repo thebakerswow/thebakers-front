@@ -49,7 +49,7 @@ interface BuyersGridProps {
   onBuyerStatusEdit: () => void
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
-  runIsLocked: boolean // Added runIsLocked prop
+  runIsLocked?: boolean // Added runIsLocked prop
 }
 
 const statusOptions = [
