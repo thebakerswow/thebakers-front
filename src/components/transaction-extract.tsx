@@ -78,6 +78,7 @@ export function TransactionExtract() {
         name_impacted: string
         value: string
         made_by: string
+        date: string
       }
 
       const logsData = Array.isArray(response.data.info)
@@ -85,6 +86,7 @@ export function TransactionExtract() {
             player: log.name_impacted || 'N/A',
             action: log.value || 'N/A',
             author: log.made_by || 'N/A',
+            date: log.date || 'N/A',
           }))
         : []
       setLogs(logsData) // Ensure logsData is always an array
@@ -175,6 +177,7 @@ export function TransactionExtract() {
               <TableCell>Player</TableCell>
               <TableCell>Value</TableCell>
               <TableCell>Made By</TableCell>
+              <TableCell>Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -184,6 +187,7 @@ export function TransactionExtract() {
                   <TableCell>{log.player}</TableCell>
                   <TableCell>{log.action}</TableCell>
                   <TableCell>{log.author}</TableCell>
+                  <TableCell>{log.date}</TableCell>
                 </TableRow>
               ))
             ) : (
