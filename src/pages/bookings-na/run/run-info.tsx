@@ -78,7 +78,6 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   }
 
   const toggleRunLock = async () => {
-    console.log('runlock: ', run.runIsLocked)
     try {
       const response = await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,

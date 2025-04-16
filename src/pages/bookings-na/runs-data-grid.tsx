@@ -17,7 +17,6 @@ import { BuyersPreview } from '../../components/buyers-preview'
 import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
-import axios from 'axios'
 import {
   Table,
   TableBody,
@@ -29,6 +28,8 @@ import {
   CircularProgress,
   IconButton,
 } from '@mui/material'
+import { api } from '../../services/axiosConfig'
+import Swal from 'sweetalert2'
 
 interface RunsDataProps {
   data: RunData[]
@@ -173,11 +174,7 @@ export function RunsDataGrid({
   // Converte o horário de EST para BRT
   const convertFromEST = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = hours + 1
-
-    if (adjustedHours === 24) {
-      adjustedHours = 0
-    }
+    let adjustedHours = (hours + 1) % 24 // Ajusta para o fuso horário BRT (UTC-3)
 
     const period = adjustedHours >= 12 ? 'PM' : 'AM'
     const formattedHours = adjustedHours % 12 || 12
@@ -223,16 +220,25 @@ export function RunsDataGrid({
   // Function to toggle the lock status of a run
   const toggleRunLock = async (runId: string, isLocked: boolean) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/lock`,
         { isLocked: !isLocked }
       )
       if (response.status === 200) {
-        alert(`Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`)
+        Swal.fire({
+          icon: 'success',
+          title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
+          timer: 1500,
+          showConfirmButton: false,
+        })
       }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
-      alert('Failed to toggle run lock.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to toggle run lock.',
+        text: 'Please try again later.',
+      })
     }
   }
 

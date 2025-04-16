@@ -18,6 +18,9 @@ import axios from 'axios'
 import { RunData } from '../types/runs-interface'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
+import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
 
 interface ApiOption {
   id: string
@@ -35,7 +38,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [formData, setFormData] = useState({
     date: run.date,
-    time: run.time,
+    time: '', // Inicializar o campo time como vazio
     raid: run.raid,
     runType: run.runType,
     difficulty: run.difficulty,
@@ -72,6 +75,12 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    if (!formData.time) {
+      setError({ message: 'Time is required', response: null }) // Exibir erro se o campo estiver vazio
+      return
+    }
+
     setIsSubmitting(true)
 
     const data = {
@@ -110,7 +119,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         <DialogTitle className='text-center'>Edit Run</DialogTitle>
       )}
       <DialogContent>
-        <div className='mt-2 flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
+        <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
           {error ? (
             <ErrorComponent error={error} onClose={() => setError(null)} />
           ) : isSuccess ? (
@@ -129,15 +138,22 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                 required
                 margin='dense'
               />
-              <TextField
-                type='time'
-                margin='dense'
-                label='Time'
-                value={formData.time}
-                onChange={(e) => handleChange('time', e.target.value)}
-                fullWidth
-                required
-              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <TimePicker
+                  value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      time:
+                        value && dayjs(value).isValid()
+                          ? dayjs(value).format('HH:mm')
+                          : '',
+                    }))
+                  }
+                  ampm={true}
+                  slotProps={{ textField: { fullWidth: true, required: true } }} // Tornar o campo obrigatório
+                />
+              </LocalizationProvider>
               <TextField
                 label='Raid'
                 value={formData.raid}

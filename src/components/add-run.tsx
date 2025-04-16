@@ -20,6 +20,9 @@ import {
 import axios from 'axios'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
+import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
 
 interface ApiOption {
   id: string
@@ -163,7 +166,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
           </Alert>
         ) : (
           // Formulário para criar uma nova run
-          <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+          <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-2 gap-4'>
             {/* Inputs e selects para os dados da run */}
             <TextField
               type='date'
@@ -175,16 +178,23 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               fullWidth
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <TextField
-              type='time'
-              id='time'
-              required
-              value={formData.time}
-              onChange={handleChange}
-              variant='outlined'
-              fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <TimePicker
+                label='Time'
+                value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    time:
+                      value && dayjs(value).isValid()
+                        ? dayjs(value).format('HH:mm') // Format as HH:mm
+                        : '',
+                  }))
+                }
+                ampm={true} // Define o formato 12h com AM/PM
+                slotProps={{ textField: { fullWidth: true } }}
+              />
+            </LocalizationProvider>
             <TextField
               type='text'
               id='raid'
