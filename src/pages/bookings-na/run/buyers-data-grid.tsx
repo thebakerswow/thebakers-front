@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
-  Bed,
   CheckFat,
   Pencil,
-  SmileyXEyes,
   Trash,
   XCircle,
 } from '@phosphor-icons/react'
+import { RiWifiOffLine, RiZzzFill } from 'react-icons/ri'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -573,7 +572,7 @@ export function BuyersDataGrid({
                               cooldownAFK[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
                           }}
                         >
-                          <Bed size={18} />
+                          <RiZzzFill size={18} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title='Offline'>
@@ -587,7 +586,7 @@ export function BuyersDataGrid({
                               cooldown[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
                           }}
                         >
-                          <SmileyXEyes size={18} />
+                          <RiWifiOffLine size={18} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title='Delete'>
