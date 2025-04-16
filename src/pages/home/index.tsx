@@ -18,7 +18,7 @@ export function HomePage() {
 
   useEffect(() => {
     const token = localStorage.getItem('jwt')
-    console.log(token)
+    // console.log(token)
     if (!token) return
 
     try {
