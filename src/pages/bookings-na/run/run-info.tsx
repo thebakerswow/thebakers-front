@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, UserPlus } from '@phosphor-icons/react'
+import { Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
@@ -16,6 +16,7 @@ import {
   TableRow,
   Paper,
 } from '@mui/material'
+import { api } from '../../../services/axiosConfig'
 
 interface RunInfoProps {
   run: RunData
@@ -26,6 +27,7 @@ interface RunInfoProps {
 export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -73,6 +75,23 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
     const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  const toggleRunLock = async () => {
+    try {
+      const response = await api.put(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,
+        {
+          isLocked: !isRunLocked,
+        }
+      )
+      if (response.status === 200) {
+        setIsRunLocked(!isRunLocked)
+        window.location.reload() // Reload the page after toggling the lock
+      }
+    } catch (error) {
+      console.error('Failed to toggle run lock:', error)
+    }
   }
 
   return (
@@ -171,9 +190,16 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             startIcon={<UserPlus size={18} />}
             fullWidth
             onClick={handleOpenAddBuyer}
+            disabled={isRunLocked} // Disable button if run is locked
             sx={{
-              backgroundColor: 'rgb(239, 68, 68)',
-              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              backgroundColor: isRunLocked
+                ? 'rgb(209, 213, 219)'
+                : 'rgb(239, 68, 68)', // Gray if disabled
+              '&:hover': {
+                backgroundColor: isRunLocked
+                  ? 'rgb(209, 213, 219)'
+                  : 'rgb(248, 113, 113)', // Gray if disabled
+              },
             }}
           >
             Add Buyer
@@ -183,19 +209,51 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
             '1101231955120496650',
             '1244711458541928608',
             '1148721174088532040',
-          ]) && (
-            <Button
-              variant='contained'
-              startIcon={<Pencil size={18} />}
-              fullWidth
-              onClick={handleOpenEditModal}
-              sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-              }}
-            >
-              Edit Raid
-            </Button>
+          ]) ? (
+            <>
+              <Button
+                variant='contained'
+                startIcon={<Pencil size={18} />}
+                fullWidth
+                onClick={handleOpenEditModal}
+                disabled={isRunLocked} // Disable button if run is locked
+                sx={{
+                  backgroundColor: isRunLocked
+                    ? 'rgb(209, 213, 219)'
+                    : 'rgb(239, 68, 68)', // Gray if disabled
+                  '&:hover': {
+                    backgroundColor: isRunLocked
+                      ? 'rgb(209, 213, 219)'
+                      : 'rgb(248, 113, 113)', // Gray if disabled
+                  },
+                }}
+              >
+                Edit Raid
+              </Button>
+              <Button
+                variant='contained'
+                startIcon={
+                  isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
+                }
+                fullWidth
+                onClick={toggleRunLock}
+                sx={{
+                  backgroundColor: 'rgb(239, 68, 68)',
+                  '&:hover': {
+                    backgroundColor: 'rgb(248, 113, 113)',
+                  },
+                }}
+              >
+                {isRunLocked ? 'Unlock Run' : 'Lock Run'}
+              </Button>
+            </>
+          ) : (
+            isRunLocked && (
+              <p className='text-center font-semibold text-red-500'>
+                This run is currently locked. You do not have permission to
+                unlock it.
+              </p>
+            )
           )}
         </CardContent>
       </Card>

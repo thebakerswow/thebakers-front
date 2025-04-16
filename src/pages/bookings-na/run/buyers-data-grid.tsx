@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
+import { useParams } from 'react-router-dom'
+import {
+  Bed,
+  CheckFat,
+  Pencil,
+  SmileyXEyes,
+  Trash,
+  XCircle,
+} from '@phosphor-icons/react'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -32,14 +40,17 @@ import {
   IconButton,
   Dialog,
   DialogContent,
+  Tooltip,
 } from '@mui/material'
 import { Modal as MuiModal, Box } from '@mui/material'
+import Swal from 'sweetalert2'
 
 interface BuyersGridProps {
   data: BuyerData[]
   onBuyerStatusEdit: () => void
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
+  runIsLocked: boolean // Added runIsLocked prop
 }
 
 const statusOptions = [
@@ -65,7 +76,9 @@ export function BuyersDataGrid({
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
+  runIsLocked, // Destructure runIsLocked
 }: BuyersGridProps) {
+  const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
@@ -75,6 +88,8 @@ export function BuyersDataGrid({
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
+  const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
+  const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
 
   const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
     setEditingBuyer({
@@ -130,11 +145,90 @@ export function BuyersDataGrid({
     )
   }
 
+  const handleSendAFKMessage = async (buyerId: string) => {
+    if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
+    const buyer = data.find((b) => b.id === buyerId)
+    if (!buyer || !runId) return // Ensure buyer and runId exist
+    const runLink = `${window.location.origin}/runs/${runId}`
+    const recipientId = buyer.idBuyerAdvertiser
+      ? '286654439241154570'
+      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+    const payload = {
+      id_discord_recipient: recipientId,
+      message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+    }
+    try {
+      await api.post('/discord/send_message', payload)
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      }) // Updated Swal to match add-run behavior
+      setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
+      }
+    }
+  }
+
+  const handleSendOfflineMessage = async (buyerId: string) => {
+    if (cooldown[buyerId]) return // Prevent action if cooldown is active
+    const buyer = data.find((b) => b.id === buyerId)
+    if (!buyer || !runId) return // Ensure buyer and runId exist
+    const runLink = `${window.location.origin}/runs/${runId}`
+    const recipientId = buyer.idBuyerAdvertiser
+      ? '286654439241154570'
+      : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
+    const payload = {
+      id_discord_recipient: recipientId,
+      message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+    }
+    try {
+      await api.post('/discord/send_message', payload)
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      }) // Updated Swal to match add-run behavior
+      setCooldown((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldown((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        setError({ message: 'Unexpected error', response: error })
+      }
+    }
+  }
+
   const renderStatusSelect = (buyer: BuyerData) => (
     <Select
       value={buyer.status || ''}
-      onChange={(e) => handleStatusChange(buyer.id, e.target.value)}
+      onChange={(e) =>
+        !runIsLocked && handleStatusChange(buyer.id, e.target.value)
+      }
       displayEmpty
+      disabled={runIsLocked} // Disable select when run is locked
       sx={{
         width: '7rem',
         height: '2rem', // Reduced height
@@ -154,13 +248,15 @@ export function BuyersDataGrid({
 
   const renderPaidIcon = (buyer: BuyerData) => (
     <IconButton
-      onClick={() => handleTogglePaid(buyer.id)}
+      onClick={() => !runIsLocked && handleTogglePaid(buyer.id)}
+      disabled={runIsLocked} // Disable toggle when run is locked
       sx={{
         backgroundColor: 'white', // Fundo branco
         padding: '2px', // Reduzido o padding
         '&:hover': {
-          backgroundColor: '#f0f0f0', // Cor de fundo ao passar o mouse
+          backgroundColor: runIsLocked ? 'white' : '#f0f0f0', // Prevent hover effect when disabled
         },
+        opacity: runIsLocked ? 0.5 : 1, // Make button opaque when disabled
       }}
     >
       {buyer.isPaid ? (
@@ -380,7 +476,7 @@ export function BuyersDataGrid({
         </TableHead>
         <TableBody>
           {sortedData.length === 0 ? (
-            <TableRow sx={{ height: '32px' }}>
+            <TableRow sx={{ height: '32px', minHeight: '32px' }}>
               {/* Increased height */}
               <TableCell
                 colSpan={11}
@@ -395,38 +491,57 @@ export function BuyersDataGrid({
               <TableRow
                 key={buyer.id}
                 className={getBuyerColor(buyer.status)}
-                sx={{ height: '32px' }} // Increased height
+                sx={{ height: '40px' }} // Set minimum height
               >
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {index + 1}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {renderStatusSelect(buyer)}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : renderStatusSelect(buyer)}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm === '****'
+                  {buyer.nameAndRealm === '****' ||
+                  buyer.fieldIsBlocked === true
                     ? 'Encrypted'
                     : buyer.nameAndRealm}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerNote}
+                  {buyer.buyerNote === '****' || buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.buyerNote}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameOwnerBuyer}
+                  {buyer.nameOwnerBuyer === '****' ||
+                  buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.nameOwnerBuyer}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameCollector}
+                  {buyer.nameCollector === '****' ||
+                  buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : buyer.nameCollector}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {renderPaidIcon(buyer)}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : renderPaidIcon(buyer)}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : Math.round(Number(buyer.buyerPot)).toLocaleString(
+                        'en-US'
+                      )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerActualPot)).toLocaleString(
-                    'en-US'
-                  )}
+                  {buyer.fieldIsBlocked === true
+                    ? 'Encrypted'
+                    : Math.round(Number(buyer.buyerActualPot)).toLocaleString(
+                        'en-US'
+                      )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   <div className='flex items-center justify-center gap-2'>
@@ -435,18 +550,56 @@ export function BuyersDataGrid({
                   </div>
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm !== '****' && (
-                    <div className='flex justify-center gap-2'>
-                      <IconButton
-                        onClick={() => handleOpenModal(buyer, 'edit')}
-                      >
-                        <Pencil size={18} />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleOpenModal(buyer, 'delete')}
-                      >
-                        <Trash size={18} />
-                      </IconButton>
+                  {buyer.nameAndRealm !== '****' && !buyer.fieldIsBlocked && (
+                    <div className='flex justify-center gap-1'>
+                      <Tooltip title='Edit'>
+                        <IconButton
+                          onClick={() =>
+                            !runIsLocked && handleOpenModal(buyer, 'edit')
+                          }
+                          disabled={runIsLocked}
+                        >
+                          <Pencil size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='AFK'>
+                        <IconButton
+                          onClick={() =>
+                            !runIsLocked && handleSendAFKMessage(buyer.id)
+                          }
+                          disabled={runIsLocked || cooldownAFK[buyer.id]} // Disable button during cooldown or if run is locked
+                          sx={{
+                            opacity:
+                              cooldownAFK[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
+                          }}
+                        >
+                          <Bed size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Offline'>
+                        <IconButton
+                          onClick={() =>
+                            !runIsLocked && handleSendOfflineMessage(buyer.id)
+                          }
+                          disabled={runIsLocked || cooldown[buyer.id]} // Disable button during cooldown or if run is locked
+                          sx={{
+                            opacity:
+                              cooldown[buyer.id] || runIsLocked ? 0.5 : 1, // Make button opaque when disabled
+                          }}
+                        >
+                          <SmileyXEyes size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete'>
+                        <IconButton
+                          onClick={() =>
+                            !runIsLocked && handleOpenModal(buyer, 'delete')
+                          }
+                          disabled={runIsLocked}
+                        >
+                          <Trash size={18} />
+                        </IconButton>
+                      </Tooltip>
                     </div>
                   )}
                 </TableCell>

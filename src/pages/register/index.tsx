@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
-import { TextField, Button, Alert } from '@mui/material'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { TextField, Button, Modal as MuiModal, Box } from '@mui/material'
+import Swal from 'sweetalert2'
 
 export function Register() {
   const navigate = useNavigate()
@@ -30,6 +30,14 @@ export function Register() {
       await api.post('/login/register', {
         id_discord: discordId,
         password,
+      })
+      Swal.fire({
+        icon: 'info',
+        title: 'Confirme o cadastro no Discord',
+        text: 'Digite o código enviado no Discord para finalizar o cadastro.',
+        confirmButtonText: 'OK',
+      }).then(() => {
+        setIsConfirmModalOpen(false)
       })
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -106,23 +114,7 @@ export function Register() {
       </div>
 
       {/* Modal de confirmação */}
-      {isConfirmModalOpen && (
-        <MuiModal
-          open={isConfirmModalOpen}
-          onClose={() => setIsConfirmModalOpen(false)}
-        >
-          <Box className='absolute left-1/2 top-1/2 w-[500px] -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-white p-6 shadow-lg'>
-            <Alert
-              severity='info'
-              onClose={() => setIsConfirmModalOpen(false)}
-              style={{ textAlign: 'center', fontSize: '1rem' }}
-            >
-              Confirme o cadastro no Discord. Digite o código enviado no Discord
-              para finalizar o cadastro.
-            </Alert>
-          </Box>
-        </MuiModal>
-      )}
+      {isConfirmModalOpen && null}
     </div>
   )
 }

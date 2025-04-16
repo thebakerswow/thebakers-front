@@ -92,6 +92,7 @@ export function RunDetails() {
       )
 
       setRows(response.data.info)
+      console.log('buyers: ', response.data.info)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -256,7 +257,7 @@ export function RunDetails() {
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col overflow-y-auto rounded-xl text-gray-100 shadow-2xl ${
+      className={`flex w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >
@@ -300,6 +301,7 @@ export function RunDetails() {
                   onBuyerStatusEdit={reloadAllData}
                   onBuyerNameNoteEdit={reloadAllData}
                   onDeleteSuccess={reloadAllData}
+                  runIsLocked={runData?.runIsLocked ?? false}
                 />
               </div>
             )}
@@ -311,9 +313,13 @@ export function RunDetails() {
                 markAllAsFull={markAllAsFull}
                 handleAttendanceClick={handleAttendanceClick}
                 onAttendanceUpdate={fetchAttendanceData}
+                runIsLocked={runData?.runIsLocked ?? false}
                 runId={runData.id}
               />
-              <Freelancers runId={runData.id} />
+              <Freelancers
+                runId={runData.id}
+                runIsLocked={runData?.runIsLocked ?? false}
+              />
             </div>
           )}
         </div>

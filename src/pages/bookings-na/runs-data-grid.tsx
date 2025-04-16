@@ -1,5 +1,12 @@
-import { Eye, Trash } from '@phosphor-icons/react'
-import { TableSortLabel } from '@mui/material'
+import {
+  Eye,
+  Trash,
+  Clipboard,
+  Pencil,
+  Lock,
+  LockOpen,
+} from '@phosphor-icons/react'
+import { TableSortLabel, Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
 import { Modal as MuiModal, Box } from '@mui/material'
@@ -7,6 +14,7 @@ import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
+import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
 import {
@@ -20,11 +28,14 @@ import {
   CircularProgress,
   IconButton,
 } from '@mui/material'
+import { api } from '../../services/axiosConfig'
+import Swal from 'sweetalert2'
 
 interface RunsDataProps {
   data: RunData[]
   isLoading: boolean
   onDeleteSuccess: () => void
+  onEditSuccess?: () => void
 }
 
 export function RunsDataGrid({
@@ -44,6 +55,10 @@ export function RunsDataGrid({
   } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
+  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RunData | null>(
+    null
+  )
   const { userRoles } = useAuth()
 
   // Verifica se o usuário possui os papéis necessários
@@ -60,7 +75,8 @@ export function RunsDataGrid({
     Raio: 4,
     APAE: 5,
     Milharal: 6,
-    Padeirinho: 7,
+    DTM: 7,
+    Padeirinho: 8,
   }
 
   const teamColors: { [key: string]: string } = {
@@ -71,6 +87,7 @@ export function RunsDataGrid({
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
     Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
     APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
+    DTM: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -104,6 +121,18 @@ export function RunsDataGrid({
   const handleCloseDeleteRunModal = () => {
     setIsDeleteRunModalOpen(false)
     setSelectedRunToDelete(null)
+  }
+
+  // Abre o modal de edição de uma run
+  const handleOpenEditRunModal = (run: RunData) => {
+    setSelectedRunToEdit(run)
+    setIsEditRunModalOpen(true)
+  }
+
+  // Fecha o modal de edição de uma run
+  const handleCloseEditRunModal = () => {
+    setIsEditRunModalOpen(false)
+    setSelectedRunToEdit(null)
   }
 
   // Redireciona para a página de detalhes da run
@@ -146,11 +175,7 @@ export function RunsDataGrid({
   // Converte o horário de EST para BRT
   const convertFromEST = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = hours + 1
-
-    if (adjustedHours === 24) {
-      adjustedHours = 0
-    }
+    let adjustedHours = (hours + 1) % 24 // Ajusta para o fuso horário BRT (UTC-3)
 
     const period = adjustedHours >= 12 ? 'PM' : 'AM'
     const formattedHours = adjustedHours % 12 || 12
@@ -166,6 +191,60 @@ export function RunsDataGrid({
     const formattedHours = hours % 12 || 12
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  // Function to copy an individual run's data to the clipboard
+  const copyRunToClipboard = (run: RunData) => {
+    const formattedRun = {
+      date: run.date,
+      time: run.time,
+      raid: run.raid,
+      runType: run.runType,
+      difficulty: run.difficulty,
+      idTeam: run.idTeam,
+      maxBuyers: run.maxBuyers.toString(),
+      raidLeader:
+        run.raidLeaders?.map(
+          (leader) => `${leader.idDiscord};${leader.username}`
+        ) || [],
+      loot: run.loot,
+      note: run.note || '',
+    }
+
+    navigator.clipboard
+      .writeText(JSON.stringify(formattedRun, null, 2))
+      .catch(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to copy run.',
+          text: 'Please try again.',
+        })
+      })
+  }
+
+  // Function to toggle the lock status of a run
+  const toggleRunLock = async (runId: string, isLocked: boolean) => {
+    try {
+      const response = await api.put(
+        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/lock`,
+        { isLocked: !isLocked }
+      )
+      if (response.status === 200) {
+        Swal.fire({
+          icon: 'success',
+          title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
+          timer: 1500,
+          showConfirmButton: false,
+        })
+      }
+    } catch (error) {
+      console.error('Failed to toggle run lock:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to toggle run lock.',
+        text: 'Please try again later.',
+      })
+    }
   }
 
   // Renderiza uma célula da tabela com conteúdo padrão
@@ -402,9 +481,36 @@ export function RunsDataGrid({
                 {renderTableCell(run.note, 'center')}
                 {renderTableCell(
                   hasRequiredRole(['1101231955120496650']) ? (
-                    <IconButton onClick={() => handleOpenDeleteRunModal(run)}>
-                      <Trash size={20} />
-                    </IconButton>
+                    <>
+                      <Tooltip title='Edit'>
+                        <IconButton onClick={() => handleOpenEditRunModal(run)}>
+                          <Pencil size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Copy'>
+                        <IconButton onClick={() => copyRunToClipboard(run)}>
+                          <Clipboard size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete'>
+                        <IconButton
+                          onClick={() => handleOpenDeleteRunModal(run)}
+                        >
+                          <Trash size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={run.runIsLocked ? 'Unlock' : 'Lock'}>
+                        <IconButton
+                          onClick={() => toggleRunLock(run.id, run.runIsLocked)}
+                        >
+                          {run.runIsLocked ? (
+                            <LockOpen size={20} />
+                          ) : (
+                            <Lock size={20} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </>
                   ) : null,
                   'center'
                 )}
@@ -424,6 +530,14 @@ export function RunsDataGrid({
 
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
+      )}
+
+      {isEditRunModalOpen && selectedRunToEdit && (
+        <EditRun
+          run={selectedRunToEdit}
+          onClose={handleCloseEditRunModal}
+          onRunEdit={onDeleteSuccess}
+        />
       )}
     </TableContainer>
   )

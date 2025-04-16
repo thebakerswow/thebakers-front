@@ -132,7 +132,7 @@ export function GBanksTable() {
           className='bg-white'
           value={newGBankName}
           onChange={(e) => setNewGBankName(e.target.value)}
-          placeholder='Novo GBank'
+          placeholder='Novo G-Bank'
         />
         <Button
           variant='contained'
@@ -143,7 +143,7 @@ export function GBanksTable() {
                 api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
                   name: newGBankName,
                 }),
-              'Erro ao adicionar GBank'
+              'Erro ao adicionar G-Bank'
             )
           }
           disabled={isSubmitting}
@@ -182,7 +182,7 @@ export function GBanksTable() {
                 }}
                 align='center'
               >
-                GBanks
+                G-Banks
               </TableCell>
               <TableCell
                 style={{
@@ -288,7 +288,7 @@ export function GBanksTable() {
                                   ),
                                 }
                               ),
-                            'Erro ao atualizar calculadora do GBank'
+                            'Erro ao atualizar calculadora do G-Bank'
                           )
                         }
                       }}
@@ -303,7 +303,7 @@ export function GBanksTable() {
 
       {editGBank && (
         <Dialog open={!!editGBank} onClose={() => setEditGBank(null)}>
-          <DialogTitle className='text-center'>Editar GBank</DialogTitle>
+          <DialogTitle className='text-center'>Editar G-Bank</DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
@@ -327,7 +327,7 @@ export function GBanksTable() {
                       id: editGBank.id,
                       name: editGBank.name,
                     }),
-                  'Erro ao atualizar GBank'
+                  'Erro ao atualizar G-Bank'
                 )
               }
               disabled={isSubmitting}
@@ -346,7 +346,7 @@ export function GBanksTable() {
         <Dialog open={!!deleteGBank} onClose={() => setDeleteGBank(null)}>
           <DialogTitle className='text-center'>Confirm Deletion</DialogTitle>
           <DialogContent>
-            <p>Are you sure you want to delete GBank "{deleteGBank.name}"?</p>
+            <p>Are you sure you want to delete G-Bank "{deleteGBank.name}"?</p>
           </DialogContent>
           <DialogActions sx={{ justifyContent: 'center' }}>
             <Button
@@ -358,7 +358,7 @@ export function GBanksTable() {
                     api.delete(
                       `${import.meta.env.VITE_API_BASE_URL}/gbanks/${deleteGBank.id}`
                     ),
-                  'Erro ao deletar GBank'
+                  'Erro ao deletar G-Bank'
                 )
               }
               disabled={isSubmitting}

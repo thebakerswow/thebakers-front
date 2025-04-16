@@ -2,6 +2,8 @@ export interface BuyerData {
   id: string
   status: string
   idBuyerAdvertiser: string
+  fieldIsBlocked: boolean
+  idOwnerBuyer: string
   nameOwnerBuyer: string
   buyerNote: string
   buyerPot: number

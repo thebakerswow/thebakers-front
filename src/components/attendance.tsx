@@ -23,6 +23,7 @@ interface AttendanceProps {
   markAllAsFull: () => void
   handleAttendanceClick: (playerId: string, value: number) => void
   onAttendanceUpdate: () => void
+  runIsLocked: boolean // Added prop
 }
 
 export function Attendance({
@@ -31,15 +32,25 @@ export function Attendance({
   handleAttendanceClick,
   onAttendanceUpdate,
   runId,
+  runIsLocked, // Added prop
 }: AttendanceProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(true) // Default to true for unsaved state
 
   const getColorForPercentage = useCallback(
     (percentage: number) =>
-      percentage === 0 ? '#ef4444' : percentage === 100 ? '#16a34a' : '#fde047',
+      percentage === 0 ? '#ef4444' : percentage === 100 ? '#16a34a' : '#eab308', // Even darker yellow
     []
+  )
+
+  const handleAttendanceClickWithChange = useCallback(
+    (playerId: string, value: number) => {
+      setHasUnsavedChanges(true) // Mark as having unsaved changes
+      handleAttendanceClick(playerId, value)
+    },
+    [handleAttendanceClick]
   )
 
   const handleAttendanceSave = useCallback(async () => {
@@ -57,6 +68,7 @@ export function Attendance({
       )
       await onAttendanceUpdate()
       setIsSuccess(true)
+      setHasUnsavedChanges(false) // Reset unsaved changes
       setTimeout(() => setIsSuccess(false), 2000)
     } catch (error) {
       setError(
@@ -86,7 +98,11 @@ export function Attendance({
   const renderSelect = (idDiscord: string, percentage: number) => (
     <Select
       value={percentage}
-      onChange={(e) => handleAttendanceClick(idDiscord, Number(e.target.value))}
+      onChange={(e) =>
+        !runIsLocked &&
+        handleAttendanceClickWithChange(idDiscord, Number(e.target.value))
+      }
+      disabled={runIsLocked} // Disable select when runIsLocked is true
       style={{
         backgroundColor: getColorForPercentage(percentage),
         color: 'white',
@@ -135,6 +151,7 @@ export function Attendance({
                     variant='contained'
                     color='success'
                     onClick={markAllAsFull}
+                    disabled={runIsLocked} // Disable button when runIsLocked is true
                     style={{
                       marginLeft: '8px',
                       width: '80px',
@@ -146,17 +163,24 @@ export function Attendance({
                   </Button>
                   <Button
                     variant='contained'
-                    color='success'
                     onClick={handleAttendanceSave}
-                    disabled={isSubmitting || isSuccess}
+                    disabled={isSubmitting || runIsLocked} // Disable button when runIsLocked is true
                     style={{
                       marginLeft: '8px',
                       width: '80px',
                       height: '30px',
-                      backgroundColor: '#16a34a',
+                      backgroundColor: hasUnsavedChanges
+                        ? '#eab308' // Even darker yellow if unsaved changes
+                        : '#16a34a',
                     }}
                   >
-                    {isSubmitting ? 'Saving...' : isSuccess ? 'Saved!' : 'Save'}
+                    {isSubmitting
+                      ? 'Saving...'
+                      : isSuccess
+                        ? 'Saved!'
+                        : hasUnsavedChanges
+                          ? 'Save*'
+                          : 'Save'}
                   </Button>
                 </TableCell>
               </TableRow>

@@ -12,12 +12,15 @@ import {
   FormControl,
   Box,
   Chip,
-  Alert,
 } from '@mui/material'
 import axios from 'axios'
 import { RunData } from '../types/runs-interface'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
+import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
+import Swal from 'sweetalert2'
 
 interface ApiOption {
   id: string
@@ -35,7 +38,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [formData, setFormData] = useState({
     date: run.date,
-    time: run.time,
+    time: '', // Inicializar o campo time como vazio
     raid: run.raid,
     runType: run.runType,
     difficulty: run.difficulty,
@@ -72,6 +75,12 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    if (!formData.time) {
+      setError({ message: 'Time is required', response: null }) // Exibir erro se o campo estiver vazio
+      return
+    }
+
     setIsSubmitting(true)
 
     const data = {
@@ -88,7 +97,14 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       await api.put(`${import.meta.env.VITE_API_BASE_URL}/run`, data)
       await onRunEdit()
       setIsSuccess(true)
-      setTimeout(() => onClose(), 1000)
+      onClose() // Close the modal first
+      Swal.fire({
+        title: 'Success!',
+        text: 'Run edited successfully!',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError({
@@ -110,14 +126,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         <DialogTitle className='text-center'>Edit Run</DialogTitle>
       )}
       <DialogContent>
-        <div className='mt-2 flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
+        <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
           {error ? (
             <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : isSuccess ? (
-            <Alert severity='success' onClose={onClose}>
-              Run edited successfully! The dialog will close automatically in 1
-              second...
-            </Alert>
           ) : (
             <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
               <TextField
@@ -129,15 +140,28 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                 required
                 margin='dense'
               />
-              <TextField
-                type='time'
-                margin='dense'
-                label='Time'
-                value={formData.time}
-                onChange={(e) => handleChange('time', e.target.value)}
-                fullWidth
-                required
-              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <TimePicker
+                  value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      time:
+                        value && dayjs(value).isValid()
+                          ? dayjs(value).format('HH:mm')
+                          : '',
+                    }))
+                  }
+                  ampm={true}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      margin: 'dense', // Align with other fields
+                    },
+                  }}
+                />
+              </LocalizationProvider>
               <TextField
                 label='Raid'
                 value={formData.raid}
@@ -182,6 +206,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value='1328892768034226217'>Jackfruit</MenuItem>
                   <MenuItem value='1328938639949959209'>Milharal</MenuItem>
                   <MenuItem value='1337818949831626753'>APAE</MenuItem>
+                  <MenuItem value='1359355927387701298'>DTM</MenuItem>
                 </Select>
               </FormControl>
               <TextField

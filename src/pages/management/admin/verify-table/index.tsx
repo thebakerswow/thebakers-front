@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { api } from '../../../../services/axiosConfig'
 import { ErrorDetails } from '../../../../components/error-display'
+import { TransactionExtract } from '../../../../components/transaction-extract'
+import { GbankExtract } from '../../../../components/gbank-extract'
 import {
   Table,
   TableBody,
@@ -12,6 +14,10 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Button,
 } from '@mui/material'
 
 interface VerifyTableData {
@@ -24,6 +30,8 @@ export function VerifyTable() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true) // Controla se é a primeira requisição
+  const [isDialogOpen, setIsDialogOpen] = useState(false) // Estado para controlar o diálogo do Player Extract
+  const [isGbankDialogOpen, setIsGbankDialogOpen] = useState(false) // Estado para o diálogo do G-Bank Extract
 
   /**
    * Função para buscar os dados de soma do backend.
@@ -91,7 +99,7 @@ export function VerifyTable() {
                   }}
                   align='center'
                 >
-                  GBanks Sum
+                  G-Banks Sum
                 </TableCell>
                 <TableCell
                   style={{
@@ -149,6 +157,53 @@ export function VerifyTable() {
           </Table>
         </TableContainer>
       )}
+      {/* Botões abaixo da tabela */}
+      <div className='mt-4 flex justify-center gap-4'>
+        <Button
+          variant='contained'
+          sx={{
+            backgroundColor: 'rgb(239, 68, 68)',
+            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          }}
+          onClick={() => setIsDialogOpen(true)} // Abre o diálogo do Player Extract
+        >
+          Player Extract
+        </Button>
+        <Button
+          variant='contained'
+          sx={{
+            backgroundColor: 'rgb(239, 68, 68)',
+            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          }}
+          onClick={() => setIsGbankDialogOpen(true)} // Abre o diálogo do G-Bank Extract
+        >
+          G-Bank Extract
+        </Button>
+      </div>
+      {/* Dialog para exibir os logs do Player Extract */}
+      <Dialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        maxWidth='lg' // Set a larger max width
+        fullWidth // Ensure the dialog takes the full width
+      >
+        <DialogTitle>Player Extract</DialogTitle>
+        <DialogContent style={{ minHeight: '500px' }}>
+          <TransactionExtract />
+        </DialogContent>
+      </Dialog>
+      {/* Dialog para exibir os logs do G-Bank Extract */}
+      <Dialog
+        open={isGbankDialogOpen}
+        onClose={() => setIsGbankDialogOpen(false)}
+        maxWidth='lg' // Set a larger max width
+        fullWidth // Ensure the dialog takes the full width
+      >
+        <DialogTitle>G-Bank Extract</DialogTitle>
+        <DialogContent style={{ minHeight: '500px' }}>
+          <GbankExtract />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

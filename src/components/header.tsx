@@ -107,14 +107,20 @@ export function Header() {
               }}
             >
               <MenuItem
-                onClick={() => navigate('/admin')}
+                onClick={() => {
+                  navigate('/admin')
+                  handleMenuClose()
+                }}
                 sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <Briefcase size={20} />
                 Admin
               </MenuItem>
               <MenuItem
-                onClick={() => navigate('/management-teams')}
+                onClick={() => {
+                  navigate('/management-teams')
+                  handleMenuClose()
+                }}
                 sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <UsersFour size={20} />

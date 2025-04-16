@@ -13,11 +13,11 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
-  Alert,
 } from '@mui/material'
 import { RunData } from '../types/runs-interface'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
+import Swal from 'sweetalert2'
 
 interface AddBuyerProps {
   run: RunData
@@ -89,16 +89,22 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     }
 
     try {
-      console.log('Enviando dados:', data)
       // Envia os dados do comprador para a API
       await api.post(
         `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
           'http://localhost:8000/v1/buyer',
         data
       )
-      setIsSuccess(true)
       await onBuyerAddedReload()
-      setTimeout(onClose, 1000) // Fecha o modal após 1 segundo
+      setIsSuccess(true)
+      onClose()
+      Swal.fire({
+        title: 'Success!',
+        text: 'Buyer added successfully!',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (error) {
       // Captura e armazena erros
       setError(
@@ -151,11 +157,6 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
         <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
           {error ? (
             <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : isSuccess ? (
-            <Alert severity='success'>
-              Buyer added successfully! The dialog will close automatically in 1
-              second.
-            </Alert>
           ) : (
             <form
               onSubmit={handleSubmit}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
+import Swal from 'sweetalert2'
 
 interface InviteBuyersProps {
   onClose: () => void
@@ -50,7 +51,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
     navigator.clipboard
       .writeText(inviteBuyersData.join('\n'))
       .then(() => setCopied(true)) // Indica que os dados foram copiados
-      .catch(() => alert('Erro ao copiar os dados.')) // Exibe alerta em caso de erro
+      .catch(() => Swal.fire('Erro', 'Erro ao copiar os dados.', 'error')) // Exibe alerta em caso de erro
     setTimeout(() => setCopied(false), 2000) // Reseta o estado de "copiado" após 2 segundos
   }
 
