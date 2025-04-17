@@ -215,6 +215,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
                     Milharal
                   </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>
+                    Raio
+                  </MenuItem>
                   <MenuItem value={import.meta.env.VITE_TEAM_APAE}>
                     APAE
                   </MenuItem>
