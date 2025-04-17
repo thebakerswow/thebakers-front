@@ -54,7 +54,7 @@ export function BalanceDataGrid({
   dateRange, // Destructure dateRange
 }: BalanceDataGridProps) {
   const { userRoles } = useAuth()
-  const restrictedRole = '1107728166031720510'
+  const restrictedRole = import.meta.env.VITE_TEAM_FREELANCER
   const isRestrictedUser =
     userRoles.includes(restrictedRole) && userRoles.length === 1
 

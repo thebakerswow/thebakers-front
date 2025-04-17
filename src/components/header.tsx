@@ -87,7 +87,7 @@ export function Header() {
           Balance
         </Button>
 
-        {hasAccess(['1101231955120496650']) && (
+        {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <>
             <Button
               color='inherit'
@@ -130,7 +130,7 @@ export function Header() {
           </>
         )}
 
-        {!hasAccess(['1107728166031720510'], true) && (
+        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
           <Button
             color='inherit'
             onClick={() => navigate('/bookings-na')}

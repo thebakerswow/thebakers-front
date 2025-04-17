@@ -233,7 +233,7 @@ export function FullRaidsNa() {
         }}
       >
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
-        {hasRequiredRole(['1101231955120496650']) && (
+        {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
           <div className='mb-2 flex gap-2 self-start'>
             <Button
               variant='contained'

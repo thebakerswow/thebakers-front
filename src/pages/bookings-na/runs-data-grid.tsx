@@ -480,7 +480,7 @@ export function RunsDataGrid({
                 {renderTableCell(renderRaidLeaders(run.raidLeaders))}
                 {renderTableCell(run.note, 'center')}
                 {renderTableCell(
-                  hasRequiredRole(['1101231955120496650']) ? (
+                  hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
                     <>
                       <Tooltip title='Edit'>
                         <IconButton onClick={() => handleOpenEditRunModal(run)}>

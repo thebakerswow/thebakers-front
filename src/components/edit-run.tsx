@@ -56,7 +56,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const teamId = '1148721174088532040'
+        const teamId = import.meta.env.VITE_TEAM_PREFEITO
         const response = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
         )
@@ -200,13 +200,25 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   onChange={(e) => handleChange('idTeam', e.target.value)}
                   label='Team'
                 >
-                  <MenuItem value='1119092171157541006'>Padeirinho</MenuItem>
-                  <MenuItem value='1153459315907235971'>Garçom</MenuItem>
-                  <MenuItem value='1224792109241077770'>Confeiteiros</MenuItem>
-                  <MenuItem value='1328892768034226217'>Jackfruit</MenuItem>
-                  <MenuItem value='1328938639949959209'>Milharal</MenuItem>
-                  <MenuItem value='1337818949831626753'>APAE</MenuItem>
-                  <MenuItem value='1359355927387701298'>DTM</MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+                    Padeirinho
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
+                    Garçom
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
+                    Confeiteiros
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
+                    Jackfruit
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+                    Milharal
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_APAE}>
+                    APAE
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
                 </Select>
               </FormControl>
               <TextField

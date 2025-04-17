@@ -185,7 +185,7 @@ export function BuyersDataGrid({
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/runs/${runId}`
       const recipientId = buyer.idBuyerAdvertiser
-        ? '286654439241154570'
+        ? import.meta.env.VITE_ID_CALMAKARAI
         : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
       const payload = {
         id_discord_recipient: recipientId,
@@ -240,7 +240,7 @@ export function BuyersDataGrid({
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/runs/${runId}`
       const recipientId = buyer.idBuyerAdvertiser
-        ? '286654439241154570'
+        ? import.meta.env.VITE_ID_CALMAKARAI
         : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
       const payload = {
         id_discord_recipient: recipientId,

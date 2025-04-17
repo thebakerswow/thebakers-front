@@ -206,9 +206,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
           </Button>
           {/* Permissoes prefeito, chefe de cozinha, staff */}
           {hasRequiredRole([
-            '1101231955120496650',
-            '1244711458541928608',
-            '1148721174088532040',
+            import.meta.env.VITE_TEAM_PREFEITO,
+            import.meta.env.VITE_TEAM_CHEFE,
+            import.meta.env.VITE_TEAM_STAFF,
           ]) ? (
             <>
               <Button

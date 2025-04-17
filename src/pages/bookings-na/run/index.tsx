@@ -31,7 +31,7 @@ export function RunDetails() {
   const [isActive, setIsActive] = useState(true)
   const { userRoles } = useAuth()
 
-  const restrictedRole = '1284914400297226313'
+  const restrictedRole = import.meta.env.VITE_TEAM_ADVERTISER
 
   const isRestrictedUser =
     userRoles.includes(restrictedRole) && userRoles.length === 1
