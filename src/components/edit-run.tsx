@@ -38,7 +38,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [formData, setFormData] = useState({
     date: run.date,
-    time: '', // Inicializar o campo time como vazio
+    time: run.time, // Preencher o campo time com o valor vindo do run
     raid: run.raid,
     runType: run.runType,
     difficulty: run.difficulty,
@@ -148,11 +148,11 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                       ...prev,
                       time:
                         value && dayjs(value).isValid()
-                          ? dayjs(value).format('HH:mm')
+                          ? dayjs(value).format('HH:mm') // Ensure correct 24-hour format
                           : '',
                     }))
                   }
-                  ampm={true}
+                  ampm={true} // Display in 12-hour format
                   slotProps={{
                     textField: {
                       fullWidth: true,
