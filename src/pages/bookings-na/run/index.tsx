@@ -39,7 +39,6 @@ export function RunDetails() {
     allowedRoles.includes(role)
   )
 
-  console.log(runData)
 
   if (canViewInviteButton) {
     console.log('teste')
