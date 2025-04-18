@@ -31,10 +31,19 @@ export function RunDetails() {
   const [isActive, setIsActive] = useState(true)
   const { userRoles } = useAuth()
 
-  const restrictedRole = import.meta.env.VITE_TEAM_ADVERTISER
+  const allowedRoles = [
+    import.meta.env.VITE_TEAM_CHEFE,
+    import.meta.env.VITE_TEAM_PREFEITO,
+  ]
+  const canViewInviteButton = userRoles.some((role) =>
+    allowedRoles.includes(role)
+  )
 
-  const isRestrictedUser =
-    userRoles.includes(restrictedRole) && userRoles.length === 1
+  console.log(runData)
+
+  if (canViewInviteButton) {
+    console.log('teste')
+  }
 
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
@@ -283,18 +292,20 @@ export function RunDetails() {
               </div>
             ) : (
               <div>
-                <Button
-                  onClick={handleOpenInviteBuyersModal}
-                  variant='contained'
-                  startIcon={<UserPlus size={18} />}
-                  sx={{
-                    backgroundColor: 'rgb(239, 68, 68)',
-                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-                    marginBottom: 1,
-                  }}
-                >
-                  Invite Buyers
-                </Button>
+                {canViewInviteButton && (
+                  <Button
+                    onClick={handleOpenInviteBuyersModal}
+                    variant='contained'
+                    startIcon={<UserPlus size={18} />}
+                    sx={{
+                      backgroundColor: 'rgb(239, 68, 68)',
+                      '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                      marginBottom: 1,
+                    }}
+                  >
+                    Invite Buyers
+                  </Button>
+                )}
                 <BuyersDataGrid
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}
@@ -323,7 +334,8 @@ export function RunDetails() {
           )}
         </div>
       )}
-      {isInviteBuyersOpen && runData && !isRestrictedUser && (
+
+      {runData && canViewInviteButton && isInviteBuyersOpen && (
         <InviteBuyers
           onClose={handleCloseInviteBuyersModal}
           runId={runData.id}
