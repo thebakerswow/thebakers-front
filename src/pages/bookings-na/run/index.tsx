@@ -40,10 +40,6 @@ export function RunDetails() {
   )
 
 
-  if (canViewInviteButton) {
-    console.log('teste')
-  }
-
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
     await fetchRunData() // Atualiza dados da run
