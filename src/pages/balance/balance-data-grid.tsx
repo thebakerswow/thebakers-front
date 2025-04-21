@@ -30,7 +30,10 @@ interface PlayerBalance {
 
 interface BalanceResponse {
   info: {
-    [date: string]: Array<PlayerBalance>
+    PlayerBalance: {
+      [date: string]: Array<PlayerBalance>
+    }
+    BalanceTotal: Array<{ id_discord: string; balance_total: number }>
   }
   errors: string[]
 }
@@ -59,7 +62,10 @@ export function BalanceDataGrid({
     userRoles.includes(restrictedRole) && userRoles.length === 1
 
   // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
-  const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({})
+  const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({
+    PlayerBalance: {},
+    BalanceTotal: [],
+  })
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [playerStyles, setPlayerStyles] = useState<{
@@ -68,7 +74,7 @@ export function BalanceDataGrid({
 
   // Atualiza os estilos dos jogadores com base nos dados de balanceamento
   useEffect(() => {
-    const newStyles = Object.values(balanceData)
+    const newStyles = Object.values(balanceData.PlayerBalance || {})
       .flatMap((players) =>
         players.map((player) => ({
           [player.id_discord]: {
@@ -141,7 +147,9 @@ export function BalanceDataGrid({
           }
         )
 
-        setBalanceData(response.data.info || {})
+        setBalanceData(
+          response.data.info || { PlayerBalance: {}, BalanceTotal: [] }
+        )
       } catch (error) {
         setError(
           axios.isAxiosError(error)
@@ -162,21 +170,43 @@ export function BalanceDataGrid({
   // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {
     const playersMap = new Map<string, ProcessedPlayer>()
-    Object.entries(balanceData).forEach(([date, players]) => {
-      players.forEach((player) => {
-        if (!playersMap.has(player.id_discord)) {
-          playersMap.set(player.id_discord, {
-            id: player.id_discord,
-            username: player.username || 'N/A',
-            balance_total: player.balance_total,
-            dailyValues: {},
-          })
-        }
-        playersMap.get(player.id_discord)!.dailyValues[date] = Math.round(
-          player.value
-        )
-      })
+
+    // Extract balance totals from BalanceTotal
+    const balanceTotals = balanceData.BalanceTotal || []
+
+    // Populate playersMap using PlayerBalance for daily values
+    Object.entries(balanceData.PlayerBalance || {}).forEach(
+      ([date, players]) => {
+        players.forEach((player) => {
+          if (!playersMap.has(player.id_discord)) {
+            playersMap.set(player.id_discord, {
+              id: player.id_discord,
+              username: player.username || 'N/A',
+              balance_total: 0, // Default to 0, will be updated using BalanceTotal
+              dailyValues: {},
+            })
+          }
+          playersMap.get(player.id_discord)!.dailyValues[date] = Math.round(
+            player.value
+          )
+        })
+      }
+    )
+
+    // Update balance_total in playersMap using BalanceTotal
+    balanceTotals.forEach((total) => {
+      if (!playersMap.has(total.id_discord)) {
+        playersMap.set(total.id_discord, {
+          id: total.id_discord,
+          username: 'N/A', // Default username if not available in PlayerBalance
+          balance_total: total.balance_total,
+          dailyValues: {}, // No daily values if not in PlayerBalance
+        })
+      } else {
+        playersMap.get(total.id_discord)!.balance_total = total.balance_total
+      }
     })
+
     return Array.from(playersMap.values())
   }
 
@@ -244,7 +274,7 @@ export function BalanceDataGrid({
               </TableRow>
             </TableHead>
             <TableBody>
-              {processBalanceData().length === 0 ? (
+              {balanceData.BalanceTotal.length === 0 ? ( // Check if BalanceTotal is empty
                 <TableRow>
                   <TableCell
                     colSpan={getSortedDates().length + 2}
@@ -261,7 +291,7 @@ export function BalanceDataGrid({
                       style={{
                         backgroundColor:
                           playerStyles[player.id]?.background || 'transparent',
-                        color: 'black', // Alterado para preto
+                        color: 'black',
                       }}
                     >
                       <Select
@@ -274,7 +304,7 @@ export function BalanceDataGrid({
                           backgroundColor:
                             playerStyles[player.id]?.background ||
                             'transparent',
-                          color: 'black', // Alterado para preto
+                          color: 'black',
                           cursor: 'pointer',
                           fontSize: '0.75rem',
                           padding: '2px 8px',

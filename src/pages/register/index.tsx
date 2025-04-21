@@ -76,45 +76,47 @@ export function Register() {
   }
 
   return (
-    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <div className='flex flex-col items-center gap-4'>
-        <TextField
-          fullWidth
-          variant='outlined'
-          label='ID Discord'
-          value={discordId}
-          onChange={(e) => setDiscordId(e.target.value)}
-          slotProps={textFieldStyles}
-          sx={textFieldStyles.sx}
-        />
-        <TextField
-          fullWidth
-          variant='outlined'
-          label='Password'
-          type='password'
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          slotProps={textFieldStyles}
-          sx={textFieldStyles.sx}
-        />
-        <div className='flex items-center justify-between'>
-          <Button
-            onClick={handleRegister}
-            variant='contained'
+    <div className='min-h-screen'>
+      <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
+        <div className='flex flex-col items-center gap-4'>
+          <TextField
             fullWidth
-            sx={{
-              backgroundColor: 'rgb(239, 68, 68)',
-              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-            }}
-            style={{ width: '100px', fontSize: '0.8rem' }}
-          >
-            Register
-          </Button>
+            variant='outlined'
+            label='ID Discord'
+            value={discordId}
+            onChange={(e) => setDiscordId(e.target.value)}
+            slotProps={textFieldStyles}
+            sx={textFieldStyles.sx}
+          />
+          <TextField
+            fullWidth
+            variant='outlined'
+            label='Password'
+            type='password'
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            slotProps={textFieldStyles}
+            sx={textFieldStyles.sx}
+          />
+          <div className='flex items-center justify-between'>
+            <Button
+              onClick={handleRegister}
+              variant='contained'
+              fullWidth
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              }}
+              style={{ width: '100px', fontSize: '0.8rem' }}
+            >
+              Register
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Modal de confirmação */}
-      {isConfirmModalOpen && null}
+        {/* Modal de confirmação */}
+        {isConfirmModalOpen && null}
+      </div>
     </div>
   )
 }

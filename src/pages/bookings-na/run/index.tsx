@@ -39,7 +39,6 @@ export function RunDetails() {
     allowedRoles.includes(role)
   )
 
-
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
     await fetchRunData() // Atualiza dados da run
@@ -260,7 +259,7 @@ export function RunDetails() {
 
   return (
     <div
-      className={`flex w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
+      className={`flex min-h-screen w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >

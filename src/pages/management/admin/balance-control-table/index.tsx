@@ -39,18 +39,20 @@ export function BalanceControlTable({
     direction: 'asc' | 'desc'
   } | null>(null)
 
-  const sortedUsers = [...users].sort((a, b) => {
-    if (!sortConfig) return 0
-    const { key, direction } = sortConfig
-    const order = direction === 'asc' ? 1 : -1
+  const sortedUsers = Array.isArray(users)
+    ? [...users].sort((a, b) => {
+        if (!sortConfig) return 0
+        const { key, direction } = sortConfig
+        const order = direction === 'asc' ? 1 : -1
 
-    if (key === 'username') {
-      return a.username.localeCompare(b.username) * order
-    } else if (key === 'balance_total') {
-      return (Number(a.balance_total) - Number(b.balance_total)) * order
-    }
-    return 0
-  })
+        if (key === 'username') {
+          return a.username.localeCompare(b.username) * order
+        } else if (key === 'balance_total') {
+          return (Number(a.balance_total) - Number(b.balance_total)) * order
+        }
+        return 0
+      })
+    : []
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -72,7 +74,7 @@ export function BalanceControlTable({
   // Função para buscar os dados do balance admin
   const fetchBalanceAdmin = useCallback(
     async (showLoading = true) => {
-      if (!selectedDate) return
+      if (!selectedDate || !selectedTeam) return // Ensure selectedTeam is not empty
 
       if (showLoading) setIsLoading(true)
       try {
