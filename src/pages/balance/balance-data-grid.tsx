@@ -22,18 +22,20 @@ import { useAuth } from '../../context/auth-context' // ajuste o path conforme n
 
 interface PlayerBalance {
   id_discord: string
-  username: string
   value: number
-  balance_total: number
-  color: string
 }
 
 interface BalanceResponse {
   info: {
-    PlayerBalance: {
+    player_balance: {
       [date: string]: Array<PlayerBalance>
     }
-    BalanceTotal: Array<{ id_discord: string; balance_total: number }>
+    balance_total: Array<{
+      id_discord: string
+      username: string
+      balance_total: number
+      color_balance: string
+    }>
   }
   errors: string[]
 }
@@ -53,18 +55,21 @@ interface BalanceDataGridProps {
 }
 
 export function BalanceDataGrid({
-  selectedTeam,
+  selectedTeam: initialSelectedTeam,
   dateRange, // Destructure dateRange
 }: BalanceDataGridProps) {
-  const { userRoles } = useAuth()
+  const { userRoles = [] } = useAuth() // Garante que userRoles seja um array
   const restrictedRole = import.meta.env.VITE_TEAM_FREELANCER
   const isRestrictedUser =
     userRoles.includes(restrictedRole) && userRoles.length === 1
 
+  // Força selectedTeam como string vazia se o usuário for restrito
+  const selectedTeam = isRestrictedUser ? '' : initialSelectedTeam
+
   // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
   const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({
-    PlayerBalance: {},
-    BalanceTotal: [],
+    player_balance: {},
+    balance_total: [],
   })
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -74,16 +79,16 @@ export function BalanceDataGrid({
 
   // Atualiza os estilos dos jogadores com base nos dados de balanceamento
   useEffect(() => {
-    const newStyles = Object.values(balanceData.PlayerBalance || {})
-      .flatMap((players) =>
-        players.map((player) => ({
-          [player.id_discord]: {
-            background: player.color,
-            text: getTextColorForBackground(player.color),
-          },
-        }))
-      )
-      .reduce((acc, style) => ({ ...acc, ...style }), {})
+    const newStyles = (balanceData.balance_total || []).reduce(
+      (acc, player) => ({
+        ...acc,
+        [player.id_discord]: {
+          background: player.color_balance, // Use color_balance from balance_total
+          text: getTextColorForBackground(player.color_balance),
+        },
+      }),
+      {}
+    )
     setPlayerStyles(newStyles)
   }, [balanceData])
 
@@ -134,13 +139,11 @@ export function BalanceDataGrid({
 
       setIsLoadingBalance(true)
       try {
-        // Se for usuário restrito, força team como string vazia
-        const teamParam = isRestrictedUser ? '' : selectedTeam
         const response = await api.get<BalanceResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/balance`,
           {
             params: {
-              id_team: teamParam,
+              id_team: selectedTeam,
               date_start: dateRange.start,
               date_end: dateRange.end,
             },
@@ -148,7 +151,7 @@ export function BalanceDataGrid({
         )
 
         setBalanceData(
-          response.data.info || { PlayerBalance: {}, BalanceTotal: [] }
+          response.data.info || { player_balance: {}, balance_total: [] }
         )
       } catch (error) {
         setError(
@@ -171,18 +174,18 @@ export function BalanceDataGrid({
   const processBalanceData = () => {
     const playersMap = new Map<string, ProcessedPlayer>()
 
-    // Extract balance totals from BalanceTotal
-    const balanceTotals = balanceData.BalanceTotal || []
+    // Extract balance totals from balance_total
+    const balanceTotals = balanceData.balance_total || []
 
-    // Populate playersMap using PlayerBalance for daily values
-    Object.entries(balanceData.PlayerBalance || {}).forEach(
+    // Populate playersMap using player_balance for daily values
+    Object.entries(balanceData.player_balance || {}).forEach(
       ([date, players]) => {
         players.forEach((player) => {
           if (!playersMap.has(player.id_discord)) {
             playersMap.set(player.id_discord, {
               id: player.id_discord,
-              username: player.username || 'N/A',
-              balance_total: 0, // Default to 0, will be updated using BalanceTotal
+              username: '', // Will be updated using balance_total
+              balance_total: 0, // Default to 0, will be updated using balance_total
               dailyValues: {},
             })
           }
@@ -193,17 +196,19 @@ export function BalanceDataGrid({
       }
     )
 
-    // Update balance_total in playersMap using BalanceTotal
+    // Update balance_total and username in playersMap using balance_total
     balanceTotals.forEach((total) => {
       if (!playersMap.has(total.id_discord)) {
         playersMap.set(total.id_discord, {
           id: total.id_discord,
-          username: 'N/A', // Default username if not available in PlayerBalance
+          username: total.username, // Use username from balance_total
           balance_total: total.balance_total,
-          dailyValues: {}, // No daily values if not in PlayerBalance
+          dailyValues: {}, // No daily values if not in player_balance
         })
       } else {
-        playersMap.get(total.id_discord)!.balance_total = total.balance_total
+        const player = playersMap.get(total.id_discord)!
+        player.balance_total = total.balance_total
+        player.username = total.username // Update username from balance_total
       }
     })
 
@@ -274,7 +279,7 @@ export function BalanceDataGrid({
               </TableRow>
             </TableHead>
             <TableBody>
-              {balanceData.BalanceTotal.length === 0 ? ( // Check if BalanceTotal is empty
+              {balanceData.balance_total.length === 0 ? ( // Check if balance_total is empty
                 <TableRow>
                   <TableCell
                     colSpan={getSortedDates().length + 2}

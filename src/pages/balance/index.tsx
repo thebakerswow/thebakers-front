@@ -5,7 +5,6 @@ import { WeekRangeFilter } from './week-range-filter'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>()
 
   return (
