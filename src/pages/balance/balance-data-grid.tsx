@@ -219,7 +219,9 @@ export function BalanceDataGrid({
       }
     })
 
-    return Array.from(playersMap.values())
+    return Array.from(playersMap.values()).sort((a, b) =>
+      a.username.localeCompare(b.username)
+    )
   }
 
   if (error) {
@@ -286,7 +288,7 @@ export function BalanceDataGrid({
               </TableRow>
             </TableHead>
             <TableBody>
-              {balanceData.balance_total.length === 0 ? ( // Check if balance_total is empty
+              {(balanceData.balance_total?.length || 0) === 0 ? ( // Check if balance_total is null or empty
                 <TableRow>
                   <TableCell
                     colSpan={getSortedDates().length + 2}
