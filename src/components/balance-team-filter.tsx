@@ -16,9 +16,13 @@ export function BalanceTeamFilter({
   onChange,
 }: BalanceTeamFilterProps) {
   const { userRoles } = useAuth()
-  const restrictedRole = import.meta.env.VITE_TEAM_FREELANCER
+  const restrictedRoles = [
+    import.meta.env.VITE_TEAM_FREELANCER,
+    import.meta.env.VITE_TEAM_ADVERTISER,
+  ]
   const isRestrictedUser =
-    userRoles.includes(restrictedRole) && userRoles.length === 1
+    userRoles.every((role) => restrictedRoles.includes(role)) &&
+    userRoles.length <= restrictedRoles.length
 
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [teams, setTeams] = useState<

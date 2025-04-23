@@ -59,9 +59,16 @@ export function BalanceDataGrid({
   dateRange, // Destructure dateRange
 }: BalanceDataGridProps) {
   const { userRoles = [] } = useAuth() // Garante que userRoles seja um array
-  const restrictedRole = import.meta.env.VITE_TEAM_FREELANCER
+  const restrictedFreelancerRole = import.meta.env.VITE_TEAM_FREELANCER
+  const restrictedAdvertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
+
   const isRestrictedUser =
-    userRoles.includes(restrictedRole) && userRoles.length === 1
+    (userRoles.includes(restrictedFreelancerRole) ||
+      userRoles.includes(restrictedAdvertiserRole)) &&
+    userRoles.length <= 2 &&
+    userRoles.every((role) =>
+      [restrictedFreelancerRole, restrictedAdvertiserRole].includes(role)
+    )
 
   // Força selectedTeam como string vazia se o usuário for restrito
   const selectedTeam = isRestrictedUser ? '' : initialSelectedTeam
