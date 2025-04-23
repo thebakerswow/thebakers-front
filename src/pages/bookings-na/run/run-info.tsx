@@ -22,9 +22,15 @@ interface RunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
   onRunEdit: () => void
+  attendanceAccessDenied: boolean
 }
 
-export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
+export function RunInfo({
+  run,
+  onBuyerAddedReload,
+  onRunEdit,
+  attendanceAccessDenied,
+}: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
@@ -110,10 +116,14 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
                 item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
                   <TableRow key={item.idDiscord} style={{ height: '20px' }}>
                     <TableCell style={{ padding: '10px' }}>
-                      {item.username}
+                      {attendanceAccessDenied ? 'Encrypted' : item.username}
                     </TableCell>
                     <TableCell align='right' style={{ padding: '10px' }}>
-                      {Math.round(Number(item.sumPot)).toLocaleString('en-US')}
+                      {attendanceAccessDenied
+                        ? 'Encrypted'
+                        : Math.round(Number(item.sumPot)).toLocaleString(
+                            'en-US'
+                          )}
                     </TableCell>
                   </TableRow>
                 ) : null
@@ -165,8 +175,10 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               </span>
             </p>
             <p className='text-left'>
-              <span className='text-base font-bold'>Raid Leader(s): </span>{' '}
-              {run.raidLeaders && run.raidLeaders.length > 0 ? (
+              <span className='text-base font-bold'>Raid Leader(s): </span>
+              {attendanceAccessDenied ? (
+                <span>Encrypted</span>
+              ) : run.raidLeaders && run.raidLeaders.length > 0 ? (
                 run.raidLeaders
                   .map((raidLeader) => raidLeader.username)
                   .join(', ')
@@ -178,7 +190,9 @@ export function RunInfo({ run, onBuyerAddedReload, onRunEdit }: RunInfoProps) {
               <span className='text-base font-bold'>
                 Run Pot:{' '}
                 <span className='font-normal'>
-                  {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
+                  {attendanceAccessDenied
+                    ? 'Encrypted'
+                    : Math.round(Number(run.actualPot)).toLocaleString('en-US')}
                 </span>
               </span>
             </p>

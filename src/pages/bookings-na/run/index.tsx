@@ -280,6 +280,7 @@ export function RunDetails() {
               run={runData}
               onBuyerAddedReload={reloadAllData}
               onRunEdit={fetchRunData}
+              attendanceAccessDenied={!hasAttendanceAccess}
             />
           ) : (
             <div>Loading</div>
