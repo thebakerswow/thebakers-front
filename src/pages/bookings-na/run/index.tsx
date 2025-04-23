@@ -29,6 +29,7 @@ export function RunDetails() {
   }>({ info: [] })
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isActive, setIsActive] = useState(true)
+  const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
   const { userRoles } = useAuth()
 
   const allowedRoles = [
@@ -201,14 +202,19 @@ export function RunDetails() {
       const data = response.data.info
 
       setAttendance({ info: data })
+      setHasAttendanceAccess(true)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+        if (error.response?.status === 403) {
+          setHasAttendanceAccess(false)
+        } else {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          setError(errorDetails)
         }
-        setError(errorDetails)
       } else {
         setError({
           message: 'Erro inesperado',
@@ -310,7 +316,7 @@ export function RunDetails() {
               </div>
             )}
           </div>
-          {runData && (
+          {runData && hasAttendanceAccess && (
             <div className='mx-4 mt-8 flex justify-center gap-40'>
               <Attendance
                 attendance={attendance}
