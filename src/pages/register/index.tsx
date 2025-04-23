@@ -82,7 +82,7 @@ export function Register() {
           <TextField
             fullWidth
             variant='outlined'
-            label='ID Discord'
+            placeholder='Discord ID'
             value={discordId}
             onChange={(e) => setDiscordId(e.target.value)}
             slotProps={textFieldStyles}
@@ -91,7 +91,7 @@ export function Register() {
           <TextField
             fullWidth
             variant='outlined'
-            label='Password'
+            placeholder='Password'
             type='password'
             value={password}
             onChange={(e) => setPassword(e.target.value)}

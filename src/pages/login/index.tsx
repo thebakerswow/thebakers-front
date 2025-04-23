@@ -93,7 +93,7 @@ export function Login() {
       <div className='flex flex-col gap-2'>
         <TextField
           variant='outlined'
-          label='ID Discord'
+          placeholder='Discord ID'
           type='text'
           value={discordId}
           onChange={(e) => setDiscordId(e.target.value)}
@@ -103,7 +103,7 @@ export function Login() {
         />
         <TextField
           variant='outlined'
-          label='Password'
+          placeholder='Password'
           type='password'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
