@@ -389,11 +389,15 @@ export function BalanceControlTable({
                   className='p-2 text-center'
                   style={{
                     backgroundColor: getTeamColor(selectedTeam),
-                    color:
-                      selectedTeam === 'all' ||
-                      selectedTeam === import.meta.env.VITE_TEAM_MILHARAL
-                        ? 'black'
-                        : 'white',
+                    color: [
+                      'all',
+                      import.meta.env.VITE_TEAM_MILHARAL,
+                      import.meta.env.VITE_TEAM_RAIO,
+                      import.meta.env.VITE_TEAM_ADVERTISER,
+                      import.meta.env.VITE_TEAM_FREELANCER,
+                    ].includes(selectedTeam)
+                      ? 'black'
+                      : 'white',
                   }}
                 >
                   {user.username}
