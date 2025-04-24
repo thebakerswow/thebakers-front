@@ -188,9 +188,11 @@ export function RunInfo({
               <span className='text-base font-bold'>
                 Run Pot:{' '}
                 <span className='font-normal'>
-                  {attendanceAccessDenied
-                    ? 'Encrypted'
-                    : Math.round(Number(run.actualPot)).toLocaleString('en-US')}
+                  {attendanceAccessDenied ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    Math.round(Number(run.actualPot)).toLocaleString('en-US')
+                  )}
                 </span>
               </span>
             </p>

@@ -549,47 +549,62 @@ export function BuyersDataGrid({
                   {index + 1}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : renderStatusSelect(buyer)}
+                  {buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    renderStatusSelect(buyer)
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm === '****' ||
-                  buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : buyer.nameAndRealm}
+                  buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    buyer.nameAndRealm
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerNote === '****' || buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : buyer.buyerNote}
+                  {buyer.buyerNote === '****' ||
+                  buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    buyer.buyerNote
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameOwnerBuyer === '****' ||
-                  buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : buyer.nameOwnerBuyer}
+                  buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    buyer.nameOwnerBuyer
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameCollector === '****' ||
-                  buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : buyer.nameCollector}
+                  buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    buyer.nameCollector
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : renderPaidIcon(buyer)}
+                  {buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    renderPaidIcon(buyer)
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : Math.round(Number(buyer.buyerActualPot)).toLocaleString(
-                        'en-US'
-                      )}
+                  {buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    Math.round(Number(buyer.buyerActualPot)).toLocaleString(
+                      'en-US'
+                    )
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   <div className='flex items-center justify-center gap-2'>
