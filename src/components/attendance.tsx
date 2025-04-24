@@ -141,7 +141,21 @@ export function Attendance({
                 <TableCell
                   style={{ textAlign: 'center', backgroundColor: '#ECEBEE' }}
                 >
-                  Player
+                  Players
+                  <span
+                    style={{
+                      marginLeft: '8px',
+                      fontWeight: 'bold',
+                      color: '#4b5563',
+                    }}
+                  >
+                    (
+                    {
+                      attendance.info.filter(({ percentage }) => percentage > 0)
+                        .length
+                    }
+                    )
+                  </span>
                 </TableCell>
                 <TableCell
                   style={{ textAlign: 'center', backgroundColor: '#ECEBEE' }}
@@ -160,6 +174,24 @@ export function Attendance({
                     }}
                   >
                     100%
+                  </Button>
+                  <Button
+                    variant='contained'
+                    color='error'
+                    onClick={() =>
+                      attendance.info.forEach(({ idDiscord }) =>
+                        handleAttendanceClickWithChange(idDiscord, 0)
+                      )
+                    }
+                    disabled={runIsLocked} // Disable button when runIsLocked is true
+                    style={{
+                      marginLeft: '8px',
+                      width: '80px',
+                      height: '30px',
+                      backgroundColor: '#ef4444',
+                    }}
+                  >
+                    0%
                   </Button>
                   <Button
                     variant='contained'
