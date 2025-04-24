@@ -70,6 +70,16 @@ export function TeamsManagement() {
   const renderTableHeader = () => (
     <TableHead>
       <TableRow>
+        <TableCell
+          align='center'
+          style={{
+            fontWeight: 'bold',
+            border: '1px solid #E5E7EB',
+            backgroundColor: '#ECEBEE',
+          }}
+        >
+          #
+        </TableCell>
         {teams
           .filter((team) => team.members.length > 0) // Skip teams with no members
           .map((team, index) => (
@@ -90,6 +100,15 @@ export function TeamsManagement() {
           ))}
       </TableRow>
       <TableRow style={{ backgroundColor: '#ECEBEE', color: '#FFFFFF' }}>
+        <TableCell
+          align='center'
+          style={{
+            fontWeight: 'bold',
+            border: '1px solid #E5E7EB',
+          }}
+        >
+          #
+        </TableCell>
         {teams
           .filter((team) => team.members.length > 0) // Skip teams with no members
           .flatMap((_, index) => [
@@ -138,6 +157,15 @@ export function TeamsManagement() {
               backgroundColor: rowIndex % 2 === 0 ? '#FFFFFF' : '#E5E7EB',
             }}
           >
+            <TableCell
+              align='center'
+              style={{
+                fontWeight: 'bold',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              {rowIndex + 1}
+            </TableCell>
             {columns.flatMap((teamMembers, teamIndex) => {
               const member = teamMembers[rowIndex]
               return [
