@@ -582,11 +582,7 @@ export function BuyersDataGrid({
                     : renderPaidIcon(buyer)}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true
-                    ? 'Encrypted'
-                    : Math.round(Number(buyer.buyerPot)).toLocaleString(
-                        'en-US'
-                      )}
+                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.fieldIsBlocked === true

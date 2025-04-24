@@ -110,26 +110,26 @@ export function RunInfo({
       <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
         <h2 className='text-lg font-semibold'>Gold Collectors</h2>
         <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              {run.sumPot?.map((item) =>
-                item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
-                  <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                    <TableCell style={{ padding: '10px' }}>
-                      {attendanceAccessDenied ? 'Encrypted' : item.username}
-                    </TableCell>
-                    <TableCell align='right' style={{ padding: '10px' }}>
-                      {attendanceAccessDenied
-                        ? 'Encrypted'
-                        : Math.round(Number(item.sumPot)).toLocaleString(
-                            'en-US'
-                          )}
-                    </TableCell>
-                  </TableRow>
-                ) : null
-              )}
-            </TableBody>
-          </Table>
+          {!attendanceAccessDenied && (
+            <Table>
+              <TableBody>
+                {run.sumPot?.map((item) =>
+                  item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
+                    <TableRow key={item.idDiscord} style={{ height: '20px' }}>
+                      <TableCell style={{ padding: '10px' }}>
+                        {item.username}
+                      </TableCell>
+                      <TableCell align='right' style={{ padding: '10px' }}>
+                        {Math.round(Number(item.sumPot)).toLocaleString(
+                          'en-US'
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ) : null
+                )}
+              </TableBody>
+            </Table>
+          )}
         </TableContainer>
       </div>
       <Card
@@ -176,9 +176,7 @@ export function RunInfo({
             </p>
             <p className='text-left'>
               <span className='text-base font-bold'>Raid Leader(s): </span>
-              {attendanceAccessDenied ? (
-                <span>Encrypted</span>
-              ) : run.raidLeaders && run.raidLeaders.length > 0 ? (
+              {run.raidLeaders && run.raidLeaders.length > 0 ? (
                 run.raidLeaders
                   .map((raidLeader) => raidLeader.username)
                   .join(', ')
