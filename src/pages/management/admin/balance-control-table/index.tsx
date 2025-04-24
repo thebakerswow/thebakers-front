@@ -63,6 +63,35 @@ export function BalanceControlTable({
     })
   }
 
+  const getTeamColor = (team: string) => {
+    switch (team) {
+      case import.meta.env.VITE_TEAM_PADEIRINHO:
+        return '#D97706' // Padeirinho
+      case import.meta.env.VITE_TEAM_GARCOM:
+        return '#2563EB' // Garçom
+      case import.meta.env.VITE_TEAM_CONFEITEIROS:
+        return '#F472B6' // Confeiteiros
+      case import.meta.env.VITE_TEAM_JACKFRUIT:
+        return '#16A34A' // Jackfruit
+      case import.meta.env.VITE_TEAM_MILHARAL:
+        return '#FEF08A' // Milharal
+      case import.meta.env.VITE_TEAM_RAIO:
+        return '#FACC15' // Raio
+      case import.meta.env.VITE_TEAM_APAE:
+        return '#F87171' // APAE
+      case import.meta.env.VITE_TEAM_DTM:
+        return '#A78BFA' // DTM
+      case import.meta.env.VITE_TEAM_ADVERTISER:
+        return '#D1D5DB' // Advertiser
+      case import.meta.env.VITE_TEAM_CHEFE:
+        return '#EF4444' // Chefe de Cozinha
+      case import.meta.env.VITE_TEAM_FREELANCER:
+        return '#86EFAC' // Freelancer
+      default:
+        return '#FFFFFF' // Default white
+    }
+  }
+
   // Define a data atual como padrão caso nenhuma data seja selecionada
   useEffect(() => {
     if (!selectedDate) {
@@ -356,7 +385,18 @@ export function BalanceControlTable({
           ) : (
             sortedUsers.map((user) => (
               <tr key={user.idDiscord} className='border border-gray-300'>
-                <td className='p-2 text-center'>{user.username}</td>
+                <td
+                  className='p-2 text-center'
+                  style={{
+                    backgroundColor: getTeamColor(selectedTeam),
+                    color:
+                      selectedTeam === import.meta.env.VITE_TEAM_MILHARAL
+                        ? 'black'
+                        : 'white',
+                  }}
+                >
+                  {user.username}
+                </td>
                 <td className='p-2 text-center'>
                   {Math.round(Number(user.gold)).toLocaleString('en-US')}
                 </td>
