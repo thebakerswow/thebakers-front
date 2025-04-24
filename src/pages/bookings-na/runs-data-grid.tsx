@@ -315,7 +315,7 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               Date
@@ -325,7 +325,7 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               <TableSortLabel
@@ -341,7 +341,7 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               Raid
@@ -350,43 +350,7 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
-              }}
-            >
-              Run Type
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
-              }}
-            >
-              Difficulty
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
-              }}
-            >
-              Team
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
-              }}
-            >
-              Loot
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               Buyers
@@ -395,7 +359,16 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Team
+            </TableCell>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
               }}
             >
               Raid Leader
@@ -404,7 +377,34 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Run Type
+            </TableCell>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Difficulty
+            </TableCell>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Loot
+            </TableCell>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
               }}
             >
               Note
@@ -413,7 +413,7 @@ export function RunsDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             />
           </TableRow>
@@ -456,7 +456,7 @@ export function RunsDataGrid({
                 onDoubleClick={() => handleRedirect(run.id)}
                 style={{
                   cursor: 'pointer',
-                  ...getTeamColor(run.team), // Apply gradient background
+                  ...getTeamColor(run.team),
                 }}
               >
                 {renderTableCell(
@@ -472,12 +472,12 @@ export function RunsDataGrid({
                 )}
                 {renderTableCell(renderTime(run.time, run.date))}
                 {renderTableCell(run.raid)}
+                {renderTableCell(run.buyersCount)}
+                {renderTableCell(run.team)}
+                {renderTableCell(renderRaidLeaders(run.raidLeaders))}
                 {renderTableCell(run.runType)}
                 {renderTableCell(run.difficulty)}
-                {renderTableCell(run.team)}
                 {renderTableCell(run.loot)}
-                {renderTableCell(run.buyersCount)}
-                {renderTableCell(renderRaidLeaders(run.raidLeaders))}
                 {renderTableCell(run.note, 'center')}
                 {renderTableCell(
                   hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
