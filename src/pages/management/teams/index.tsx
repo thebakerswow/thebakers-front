@@ -40,7 +40,9 @@ export function TeamsManagement() {
           `${import.meta.env.VITE_API_BASE_URL}/teams` ||
             'http://localhost:8000/v1/teams'
         )
-        const orderedTeams = teamOrder.map((teamName) => ({
+        console.log(response.data.info)
+        const uniqueTeamOrder = Array.from(new Set(teamOrder)) // Remove duplicates
+        const orderedTeams = uniqueTeamOrder.map((teamName) => ({
           name: teamName,
           members: (response.data.info[teamName] || []).map((member: any) => ({
             global_name: member.global_name,

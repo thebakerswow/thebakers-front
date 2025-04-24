@@ -74,14 +74,17 @@ export function BalanceControlTable({
   // Função para buscar os dados do balance admin
   const fetchBalanceAdmin = useCallback(
     async (showLoading = true) => {
-      if (!selectedDate || !selectedTeam) return // Ensure selectedTeam is not empty
+      if (!selectedDate || !selectedTeam) return // Ensure selectedDate and selectedTeam are not empty
 
       if (showLoading) setIsLoading(true)
       try {
         const { data } = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/admin`,
           {
-            params: { id_team: selectedTeam, date: selectedDate },
+            params: {
+              id_team: selectedTeam === 'all' ? undefined : selectedTeam,
+              date: selectedDate,
+            }, // Handle "all" option
           }
         )
         setUsers(data.info)
@@ -102,16 +105,12 @@ export function BalanceControlTable({
     [selectedTeam, selectedDate]
   )
 
-  // Executa a busca inicial e configura o polling para atualizar os dados periodicamente
+  // Fetch data only when selectedTeam or selectedDate changes
   useEffect(() => {
-    fetchBalanceAdmin(true)
-
-    const interval = setInterval(() => {
-      fetchBalanceAdmin(false)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [fetchBalanceAdmin])
+    if (selectedTeam && selectedDate) {
+      fetchBalanceAdmin(true)
+    }
+  }, [fetchBalanceAdmin, selectedTeam, selectedDate])
 
   // Atualiza o valor do input da calculadora, formatando com vírgulas
   const handleCalculatorChange = (userId: string, value: string) => {
@@ -222,29 +221,76 @@ export function BalanceControlTable({
             <MenuItem value='' disabled hidden>
               <em>Team</em>
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+            <MenuItem
+              value='all'
+              style={{ backgroundColor: '#E5E7EB', color: 'black' }}
+            >
+              All Teams
+            </MenuItem>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_PADEIRINHO}
+              style={{ backgroundColor: '#D97706', color: 'white' }}
+            >
               Padeirinho
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>Garçom</MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_GARCOM}
+              style={{ backgroundColor: '#2563EB', color: 'white' }}
+            >
+              Garçom
+            </MenuItem>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_CONFEITEIROS}
+              style={{ backgroundColor: '#F472B6', color: 'white' }}
+            >
               Confeiteiros
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_JACKFRUIT}
+              style={{ backgroundColor: '#16A34A', color: 'white' }}
+            >
               Jackfruit
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_MILHARAL}
+              style={{ backgroundColor: '#FEF08A', color: 'black' }}
+            >
               Milharal
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>Raio</MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_ADVERTISER}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_RAIO}
+              style={{ backgroundColor: '#FACC15', color: 'black' }}
+            >
+              Raio
+            </MenuItem>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_APAE}
+              style={{ backgroundColor: '#F87171', color: 'white' }}
+            >
+              APAE
+            </MenuItem>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_DTM}
+              style={{ backgroundColor: '#A78BFA', color: 'white' }}
+            >
+              DTM
+            </MenuItem>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_ADVERTISER}
+              style={{ backgroundColor: '#D1D5DB', color: 'black' }}
+            >
               Advertiser
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_CHEFE}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_CHEFE}
+              style={{ backgroundColor: '#EF4444', color: 'white' }} // Error color
+            >
               Chefe de Cozinha
             </MenuItem>
-            <MenuItem value={import.meta.env.VITE_TEAM_FREELANCER}>
+            <MenuItem
+              value={import.meta.env.VITE_TEAM_FREELANCER}
+              style={{ backgroundColor: '#86EFAC', color: 'black' }} // Lighter green
+            >
               Freelancer
             </MenuItem>
           </Select>
