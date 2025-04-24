@@ -390,6 +390,7 @@ export function BalanceControlTable({
                   style={{
                     backgroundColor: getTeamColor(selectedTeam),
                     color:
+                      selectedTeam === 'all' ||
                       selectedTeam === import.meta.env.VITE_TEAM_MILHARAL
                         ? 'black'
                         : 'white',
