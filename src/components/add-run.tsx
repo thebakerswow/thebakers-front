@@ -141,14 +141,12 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          maxWidth: isSuccess ? '35vw' : '40vw',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
           bgcolor: 'background.paper',
           p: 4,
           borderRadius: 2,
-          minHeight: isSuccess ? '8vw' : '20vw',
         }}
       >
         {error ? (
@@ -381,7 +379,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               multiline
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <div className='col-span-2 flex items-center justify-center gap-4'>
+            <div className='col-span-2 flex items-center justify-center'>
               <Button
                 type='submit'
                 variant='contained'

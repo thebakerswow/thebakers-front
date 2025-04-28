@@ -31,6 +31,7 @@ export function RunDetails() {
   const [isActive, setIsActive] = useState(true)
   const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
   const { userRoles } = useAuth()
+  const [showDetails, setShowDetails] = useState(false)
 
   const allowedRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
@@ -39,6 +40,10 @@ export function RunDetails() {
   const canViewInviteButton = userRoles.some((role) =>
     allowedRoles.includes(role)
   )
+
+  const toggleDetailsVisibility = () => {
+    setShowDetails((prev) => !prev)
+  }
 
   // Função para recarregar TODOS os dados (run e buyers)
   const reloadAllData = async () => {
@@ -307,6 +312,18 @@ export function RunDetails() {
                     Invite Buyers
                   </Button>
                 )}
+                <Button
+                  onClick={toggleDetailsVisibility}
+                  variant='contained'
+                  sx={{
+                    backgroundColor: 'rgb(239, 68, 68)',
+                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                    marginBottom: 1,
+                    marginLeft: 2,
+                  }}
+                >
+                  {showDetails ? 'Hide Attendance' : 'Show Attendance'}
+                </Button>
                 <BuyersDataGrid
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}
@@ -317,7 +334,7 @@ export function RunDetails() {
               </div>
             )}
           </div>
-          {runData && hasAttendanceAccess && (
+          {runData && hasAttendanceAccess && showDetails && (
             <div className='mx-4 mt-8 flex justify-center gap-40'>
               <Attendance
                 attendance={attendance}
