@@ -140,7 +140,7 @@ export function GBanksTable() {
   }, [])
 
   return (
-    <div className='flex h-[90%] min-w-[30%] flex-col overflow-y-auto rounded-md'>
+    <div className='flex h-[90%] w-[30%] flex-col overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
         <Button
           variant='contained'

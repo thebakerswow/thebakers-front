@@ -45,7 +45,7 @@ export default function LatestTransactions() {
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
-          .slice(0, 10)
+          .slice(0, 20)
         setTransactions(sortedTransactions)
         setError(null)
       } catch (err) {

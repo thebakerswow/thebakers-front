@@ -226,7 +226,7 @@ export function BalanceControlTable({
   }
 
   return (
-    <div className='h-[90%] min-w-[45%] overflow-y-auto rounded-md'>
+    <div className='h-[90%] w-[45%] overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
         <FormControl className='w-[200px]' size='small'>
           <Select
@@ -357,6 +357,7 @@ export function BalanceControlTable({
             </th>
             <th className='w-[150px] border p-2'>Gold Cut</th>
             <th className='w-[150px] border p-2'>Gold Collected</th>
+            <th className='w-[150px] border p-2'>Daily Balance</th>
             <th
               className='w-[150px] cursor-pointer border p-2'
               onClick={() => handleSort('balance_total')}
@@ -365,20 +366,21 @@ export function BalanceControlTable({
               {sortConfig?.key === 'balance_total' &&
                 (sortConfig.direction === 'asc' ? '↑' : '↓')}
             </th>
+
             <th className='border p-2'>Calculator</th>
           </tr>
         </thead>
         <tbody className='bg-white text-sm font-medium text-zinc-900'>
           {isLoading ? (
             <tr>
-              <td colSpan={5} className='h-full p-4 text-center'>
+              <td colSpan={6} className='h-full p-4 text-center'>
                 <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent'></span>
                 <p>Loading...</p>
               </td>
             </tr>
           ) : sortedUsers.length === 0 ? (
             <tr>
-              <td colSpan={5} className='p-4 text-center'>
+              <td colSpan={6} className='p-4 text-center'>
                 No data available
               </td>
             </tr>
@@ -411,10 +413,14 @@ export function BalanceControlTable({
                   )}
                 </td>
                 <td className='p-2 text-center'>
+                  {Math.round(Number(user.sum_day)).toLocaleString('en-US')}
+                </td>
+                <td className='p-2 text-center'>
                   {Math.round(Number(user.balance_total)).toLocaleString(
                     'en-US'
                   )}
                 </td>
+
                 <td className='p-2 text-center'>
                   <input
                     className='rounded-sm bg-zinc-100 p-2'
