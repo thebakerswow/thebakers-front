@@ -410,12 +410,26 @@ export function BalanceControlTable({
               Freelancer Payout
             </Button>
           )}
+          {selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER && (
+            <Button
+              variant='contained'
+              color='primary'
+              size='small'
+              onClick={handleOpenFreelancerDialog}
+              sx={{ textTransform: 'uppercase' }}
+            >
+              Advertiser Payout
+            </Button>
+          )}
         </div>
 
         <table className='w-full border-collapse'>
           <thead className='sticky top-0 z-10 bg-zinc-200 text-gray-700'>
             <tr className='text-md text-black'>
-              {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER && (
+              {[
+                import.meta.env.VITE_TEAM_ADVERTISER,
+                import.meta.env.VITE_TEAM_FREELANCER,
+              ].includes(selectedTeam) && (
                 <th className='h-14 w-[50px] border p-2'>Nick</th>
               )}
               <th
@@ -458,7 +472,10 @@ export function BalanceControlTable({
             ) : (
               sortedUsers.map((user) => (
                 <tr key={user.idDiscord} className='border border-gray-300'>
-                  {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER && (
+                  {[
+                    import.meta.env.VITE_TEAM_ADVERTISER,
+                    import.meta.env.VITE_TEAM_FREELANCER,
+                  ].includes(selectedTeam) && (
                     <td className='p-2 text-center'>
                       <Button
                         variant='contained'
@@ -485,14 +502,15 @@ export function BalanceControlTable({
                     }}
                   >
                     {user.username}
-                    {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER && (
+                    {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ||
+                    selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER ? (
                       <>
                         <br />
                         <span className='text-sm text-gray-600'>
                           ({user.nick})
                         </span>
                       </>
-                    )}
+                    ) : null}
                   </td>
                   <td className='p-2 text-center'>
                     {Math.round(Number(user.gold)).toLocaleString('en-US')}
@@ -557,7 +575,11 @@ export function BalanceControlTable({
         open={isFreelancerDialogOpen}
         onClose={handleCloseFreelancerDialog}
       >
-        <DialogTitle className='text-center'>Freelancer Payout</DialogTitle>
+        <DialogTitle className='text-center'>
+          {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER
+            ? 'Freelancer Payout'
+            : 'Advertiser Payout'}
+        </DialogTitle>
         <DialogContent className='flex flex-col items-center gap-4'>
           {sortedUsers.filter((user) => Number(user.balance_total) > 0).length >
           0 ? (
@@ -575,14 +597,14 @@ export function BalanceControlTable({
                 variant='contained'
                 color='primary'
                 onClick={() => {
-                  const freelancerData = sortedUsers
+                  const payoutData = sortedUsers
                     .filter((user) => Number(user.balance_total) > 0)
                     .map(
                       (user) =>
                         `${user.nick}, ${Math.round(Number(user.balance_total))}.0`
                     )
                     .join('\n')
-                  navigator.clipboard.writeText(freelancerData)
+                  navigator.clipboard.writeText(payoutData)
                 }}
               >
                 Copy
