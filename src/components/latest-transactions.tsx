@@ -40,7 +40,6 @@ export default function LatestTransactions() {
           ...response.data.info.transactions,
           ...response.data.info.transactions_gbanks,
         ]
-        console.log(combinedTransactions)
         const sortedTransactions = combinedTransactions
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
