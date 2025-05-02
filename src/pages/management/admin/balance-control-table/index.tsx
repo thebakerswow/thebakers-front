@@ -393,7 +393,7 @@ export function BalanceControlTable({
             )}
             onClick={handleBulkSend}
             sx={{
-              textTransform: 'none',
+              textTransform: 'uppercase',
               opacity: isBulkingSubmitting ? 0.5 : 1,
             }}
           >
@@ -405,7 +405,7 @@ export function BalanceControlTable({
               color='primary'
               size='small'
               onClick={handleOpenFreelancerDialog}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'uppercase' }}
             >
               Freelancer Payout
             </Button>
