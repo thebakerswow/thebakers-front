@@ -29,13 +29,29 @@ interface GBank {
   name: string
   balance: number
   calculatorValue: string
+  color?: string
 }
+
+const colorOptions = [
+  { value: '#D97706', label: 'Padeirinho' },
+  { value: '#2563EB', label: 'Garçom' },
+  { value: '#F472B6', label: 'Confeiteiros' },
+  { value: '#16A34A', label: 'Jackfruit' },
+  { value: '#FEF08A', label: 'Milharal' },
+  { value: '#FACC15', label: 'Raio' },
+  { value: '#F87171', label: 'APAE' },
+  { value: '#A78BFA', label: 'DTM' },
+  { value: '#EF4444', label: 'Chefe de Cozinha' },
+  { value: '#FFFFFF', label: 'Default (White)' },
+]
 
 export function GBanksTable() {
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [newGBankName, setNewGBankName] = useState('')
+  const [newGBankColor, setNewGBankColor] = useState('')
   const [editGBank, setEditGBank] = useState<GBank | null>(null)
   const [deleteGBank, setDeleteGBank] = useState<GBank | null>(null)
+  const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,6 +77,7 @@ export function GBanksTable() {
       const response = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks`
       )
+      console.log(response.data.info)
       const formattedGBanks =
         response.data?.info?.map((gbank: any) => ({
           ...gbank,
@@ -126,35 +143,89 @@ export function GBanksTable() {
   return (
     <div className='flex h-[90%] w-[30%] flex-col overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
-        <TextField
-          variant='outlined'
-          size='small'
-          className='bg-white'
-          value={newGBankName}
-          onChange={(e) => setNewGBankName(e.target.value)}
-          placeholder='Novo G-Bank'
-        />
         <Button
           variant='contained'
           color='error'
-          onClick={() =>
-            handleAction(
-              () =>
-                api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
-                  name: newGBankName,
-                }),
-              'Erro ao adicionar G-Bank'
-            )
-          }
-          disabled={isSubmitting}
+          onClick={() => setAddGBankModalOpen(true)}
           sx={{
             backgroundColor: 'rgb(239, 68, 68)',
             '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
           }}
         >
-          {isSubmitting ? 'Adicionando...' : 'Add G-Bank'}
+          Add G-Bank
         </Button>
       </div>
+
+      {/* Add G-Bank Modal */}
+      {addGBankModalOpen && (
+        <Dialog
+          open={addGBankModalOpen}
+          onClose={() => setAddGBankModalOpen(false)}
+        >
+          <DialogTitle className='text-center'>Add New G-Bank</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Name'
+              value={newGBankName}
+              onChange={(e) => setNewGBankName(e.target.value)}
+            />
+            <TextField
+              select
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Color'
+              value={newGBankColor || '#FFFFFF'}
+              onChange={(e) => setNewGBankColor(e.target.value)}
+              SelectProps={{
+                native: true,
+              }}
+            >
+              {colorOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center' }}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() =>
+                handleAction(
+                  () =>
+                    api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
+                      name: newGBankName,
+                      color: newGBankColor || '#FFFFFF',
+                    }),
+                  'Erro ao adicionar G-Bank'
+                ).then(() => {
+                  setNewGBankName('')
+                  setNewGBankColor('')
+                  setAddGBankModalOpen(false)
+                })
+              }
+              disabled={isSubmitting}
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              }}
+            >
+              {isSubmitting ? 'Adicionando...' : 'Salvar'}
+            </Button>
+            <Button
+              variant='outlined'
+              onClick={() => setAddGBankModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       <TableContainer
         component={Paper}
@@ -255,7 +326,12 @@ export function GBanksTable() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell align='center'>{gbank.name}</TableCell>
+                  <TableCell
+                    align='center'
+                    style={{ backgroundColor: gbank.color || 'transparent' }}
+                  >
+                    {gbank.name}
+                  </TableCell>
                   <TableCell align='center'>
                     {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
                   </TableCell>
@@ -315,6 +391,26 @@ export function GBanksTable() {
                 setEditGBank({ ...editGBank, name: e.target.value })
               }
             />
+            <TextField
+              select
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Color'
+              value={editGBank.color || '#FFFFFF'}
+              onChange={(e) =>
+                setEditGBank({ ...editGBank, color: e.target.value })
+              }
+              SelectProps={{
+                native: true,
+              }}
+            >
+              {colorOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </TextField>
           </DialogContent>
           <DialogActions sx={{ justifyContent: 'center' }}>
             <Button
@@ -326,9 +422,10 @@ export function GBanksTable() {
                     api.put(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
                       id: editGBank.id,
                       name: editGBank.name,
+                      color: editGBank.color || '#FFFFFF',
                     }),
                   'Erro ao atualizar G-Bank'
-                )
+                ).then(() => setEditGBank(null))
               }
               disabled={isSubmitting}
               sx={{
@@ -359,7 +456,7 @@ export function GBanksTable() {
                       `${import.meta.env.VITE_API_BASE_URL}/gbanks/${deleteGBank.id}`
                     ),
                   'Erro ao deletar G-Bank'
-                )
+                ).then(() => setDeleteGBank(null))
               }
               disabled={isSubmitting}
               sx={{
