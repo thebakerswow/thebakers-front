@@ -87,7 +87,7 @@ export function RunsDataGrid({
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
     Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
     APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
-    DTM: 'linear-gradient(90deg, #A78BFA, #7C3AED)',
+    DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)', // Changed to gray gradient
   }
 
   // Retorna o estilo de fundo associado a um time

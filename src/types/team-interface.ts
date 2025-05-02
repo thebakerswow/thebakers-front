@@ -32,6 +32,6 @@ export const teamColors: Record<TeamOrder, string> = {
   Milharal: 'bg-yellow-200',
   Raio: 'bg-yellow-400',
   APAE: 'bg-red-400',
-  DTM: 'bg-purple-400',
+  DTM: 'bg-gray-500',
   Advertiser: 'bg-gray-300',
 }
