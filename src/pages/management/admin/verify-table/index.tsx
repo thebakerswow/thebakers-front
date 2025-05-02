@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress,
   Typography,
   Dialog,
   DialogContent,
@@ -27,7 +26,6 @@ interface VerifyTableData {
 
 export function VerifyTable() {
   const [sumsData, setSumsData] = useState<VerifyTableData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true) // Controla se é a primeira requisição
   const [isDialogOpen, setIsDialogOpen] = useState(false) // Estado para controlar o diálogo do Player Extract
@@ -38,7 +36,6 @@ export function VerifyTable() {
    * Exibe o estado de carregamento apenas na primeira requisição.
    */
   const fetchSumsData = async () => {
-    if (isFirstLoad) setIsLoading(true) // Exibe loading apenas na primeira requisição
     try {
       const { data } = await api.get(
         `${import.meta.env.VITE_API_BASE_URL}/gbanks/general`
@@ -46,7 +43,6 @@ export function VerifyTable() {
       setSumsData(data.info) // Atualiza os dados de soma
       setError(null) // Limpa erros anteriores
     } catch (err) {
-      // Define o erro com base no tipo de erro (Axios ou genérico)
       setError(
         axios.isAxiosError(err)
           ? {
@@ -57,8 +53,9 @@ export function VerifyTable() {
           : { message: 'Erro inesperado', response: err }
       )
     } finally {
-      setIsLoading(false) // Finaliza o estado de carregamento
-      setIsFirstLoad(false) // Marca que a primeira requisição foi concluída
+      if (isFirstLoad) {
+        setIsFirstLoad(false) // Marca que a primeira requisição foi concluída
+      }
     }
   }
 
@@ -80,7 +77,7 @@ export function VerifyTable() {
     Math.round(value ?? 0).toLocaleString('en-US')
 
   return (
-    <div className='h-[90%] w-[20%] overflow-y-auto rounded-md'>
+    <div className='overflow-y-auto rounded-md'>
       {error ? (
         // Exibe mensagem de erro, se houver
         <Typography color='error' variant='body1' className='p-4'>
@@ -114,45 +111,35 @@ export function VerifyTable() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {isLoading ? (
-                // Exibe indicador de carregamento na primeira requisição
+              <>
+                {/* Exibe os dados de soma */}
                 <TableRow>
-                  <TableCell colSpan={2} align='center'>
-                    <CircularProgress />
-                    <Typography>Loading...</Typography>
+                  <TableCell align='center'>
+                    {formatNumber(sumsData?.general_balance_gbank)}
+                  </TableCell>
+                  <TableCell align='center'>
+                    {formatNumber(sumsData?.general_balance)}
                   </TableCell>
                 </TableRow>
-              ) : (
-                <>
-                  {/* Exibe os dados de soma */}
-                  <TableRow>
-                    <TableCell align='center'>
-                      {formatNumber(sumsData?.general_balance_gbank)}
-                    </TableCell>
-                    <TableCell align='center'>
-                      {formatNumber(sumsData?.general_balance)}
-                    </TableCell>
-                  </TableRow>
-                  {/* Exibe a diferença calculada */}
-                  <TableRow>
-                    <TableCell
-                      colSpan={2}
-                      align='center'
-                      style={{
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
-                        backgroundColor: '#ECEBEE',
-                      }}
-                    >
-                      Difference:{' '}
-                      {formatNumber(
-                        (sumsData?.general_balance_gbank ?? 0) -
-                          (sumsData?.general_balance ?? 0)
-                      )}
-                    </TableCell>
-                  </TableRow>
-                </>
-              )}
+                {/* Exibe a diferença calculada */}
+                <TableRow>
+                  <TableCell
+                    colSpan={2}
+                    align='center'
+                    style={{
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    Difference:{' '}
+                    {formatNumber(
+                      (sumsData?.general_balance_gbank ?? 0) -
+                        (sumsData?.general_balance ?? 0)
+                    )}
+                  </TableCell>
+                </TableRow>
+              </>
             </TableBody>
           </Table>
         </TableContainer>

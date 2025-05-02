@@ -4,6 +4,7 @@ import { api } from '../../../services/axiosConfig'
 import { BalanceControlTable } from './balance-control-table'
 import { GBanksTable } from './gbanks-control'
 import { VerifyTable } from './verify-table'
+import LatestTransactions from '../../../components/latest-transactions'
 
 export function AdminPage() {
   const [selectedDate, setSelectedDate] = useState('')
@@ -37,7 +38,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className='flex min-h-screen w-full items-center justify-around'>
+    <div className='flex w-full items-center justify-around'>
       {/* Primeira Tabela */}
       <BalanceControlTable
         selectedTeam={selectedTeam}
@@ -49,7 +50,10 @@ export function AdminPage() {
       <GBanksTable />
 
       {/* Terceira Tabela */}
-      <VerifyTable />
+      <div className='h-[90%] min-w-[20%]'>
+        <VerifyTable />
+        <LatestTransactions />
+      </div>
     </div>
   )
 }

@@ -1,0 +1,133 @@
+import { useEffect, useState } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Typography,
+} from '@mui/material'
+import { api } from '../services/axiosConfig'
+
+interface Transaction {
+  name_impacted: string
+  value: number
+  date: string
+}
+
+export default function LatestTransactions() {
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  }
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await api.get('/transaction/latest')
+        const combinedTransactions = [
+          ...response.data.info.transactions,
+          ...response.data.info.transactions_gbanks,
+        ]
+        console.log(combinedTransactions)
+        const sortedTransactions = combinedTransactions
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          .slice(0, 10)
+        setTransactions(sortedTransactions)
+        setError(null)
+      } catch (err) {
+        setError('Failed to fetch latest transactions.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTransactions() // Initial fetch
+    const interval = setInterval(fetchTransactions, 1000) // Polling every 1 second
+    return () => clearInterval(interval) // Cleanup on unmount
+  }, [])
+
+  return (
+    <div className='flex max-h-[70%] flex-col'>
+      <TableContainer component={Paper} className='mt-12'>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Impacted
+              </TableCell>
+              <TableCell
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Value
+              </TableCell>
+              <TableCell
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Time
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} align='center'>
+                  <CircularProgress />
+                  <Typography>Loading...</Typography>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={3} align='center'>
+                  <Typography color='error'>{error}</Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              transactions?.map((transaction, index) => (
+                <TableRow key={index}>
+                  <TableCell align='center'>
+                    {transaction.name_impacted}
+                  </TableCell>
+                  <TableCell align='center'>{transaction.value}</TableCell>
+                  <TableCell align='center'>
+                    {formatTime(transaction.date)}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
+  )
+}

@@ -226,7 +226,7 @@ export function BalanceControlTable({
   }
 
   return (
-    <div className='h-[90%] w-[45%] overflow-y-auto rounded-md'>
+    <div className='h-[90%] min-w-[45%] overflow-y-auto rounded-md'>
       <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
         <FormControl className='w-[200px]' size='small'>
           <Select
