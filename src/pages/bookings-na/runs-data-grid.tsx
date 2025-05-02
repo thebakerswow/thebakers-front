@@ -262,11 +262,17 @@ export function RunsDataGrid({
 
   // Renderiza os líderes do raid como uma string separada por vírgulas
   const renderRaidLeaders = (
-    raidLeaders: { username: string }[] | undefined
-  ) =>
-    raidLeaders && raidLeaders.length > 0
+    raidLeaders: { username: string }[] | undefined,
+    team: string
+  ) => {
+    if (team === 'DTM' && !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])) {
+      return '-'
+    }
+
+    return raidLeaders && raidLeaders.length > 0
       ? raidLeaders.map((leader) => leader.username).join(', ')
       : '-'
+  }
 
   // Renderiza o horário em ambos os formatos EST e BRT
   const renderTime = (time: string | undefined, date: string | undefined) =>
@@ -474,7 +480,7 @@ export function RunsDataGrid({
                 {renderTableCell(run.raid)}
                 {renderTableCell(run.buyersCount)}
                 {renderTableCell(run.team)}
-                {renderTableCell(renderRaidLeaders(run.raidLeaders))}
+                {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
                 {renderTableCell(run.runType)}
                 {renderTableCell(run.difficulty)}
                 {renderTableCell(run.loot)}
