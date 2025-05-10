@@ -93,7 +93,7 @@ export function BalanceControlTable({
       case import.meta.env.VITE_TEAM_KFFC:
         return '#059669' // DTM
       case import.meta.env.VITE_TEAM_SAPOCULEANO:
-        return '#BE185D' // DTM
+        return '#7DD3FC' // DTM
       case import.meta.env.VITE_TEAM_ADVERTISER:
         return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
