@@ -177,7 +177,7 @@ export function RunInfo({
             <p className='text-left'>
               <span className='text-base font-bold'>Raid Leader(s): </span>
               {(run.team === 'DTM' ||
-                run.team === 'Kffc' ||
+                run.team === 'KFFC' ||
                 run.team === 'Sapoculeano') &&
               !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
                 <span>-</span> // Hide Raid Leader(s) if team is DTM, Kffc, or Sapoculeano and user is not VITE_TEAM_CHEFE
