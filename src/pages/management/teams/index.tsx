@@ -24,6 +24,8 @@ const localTeamColors: Record<string, string> = {
   Raio: '#FACC15',
   APAE: '#F87171',
   DTM: '#9CA3AF',
+  KFFC: '#059669',
+  Sapoculeano: '#BE185D',
   Advertiser: '#D1D5DB',
 }
 

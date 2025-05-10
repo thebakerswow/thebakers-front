@@ -41,6 +41,8 @@ const colorOptions = [
   { value: '#FACC15', label: 'Raio' },
   { value: '#F87171', label: 'APAE' },
   { value: '#A78BFA', label: 'DTM' },
+  { value: '#059669', label: 'Kffc' },
+  { value: '#BE185D', label: 'Sapoculeano' },
   { value: '#EF4444', label: 'Chefe de Cozinha' },
   { value: '#FFFFFF', label: 'Default (White)' },
 ]

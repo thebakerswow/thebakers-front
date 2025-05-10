@@ -90,6 +90,10 @@ export function BalanceControlTable({
         return '#F87171' // APAE
       case import.meta.env.VITE_TEAM_DTM:
         return '#A78BFA' // DTM
+      case import.meta.env.VITE_TEAM_KFFC:
+        return '#059669' // DTM
+      case import.meta.env.VITE_TEAM_SAPOCULEANO:
+        return '#BE185D' // DTM
       case import.meta.env.VITE_TEAM_ADVERTISER:
         return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
@@ -357,6 +361,18 @@ export function BalanceControlTable({
                 style={{ backgroundColor: '#A78BFA', color: 'white' }}
               >
                 DTM
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_KFFC}
+                style={{ backgroundColor: '#059669', color: 'white' }}
+              >
+                KFFC
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_SAPOCULEANO}
+                style={{ backgroundColor: '#BE185D', color: 'white' }}
+              >
+                Sapoculeano
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_ADVERTISER}

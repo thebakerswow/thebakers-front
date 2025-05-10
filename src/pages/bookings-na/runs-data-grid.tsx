@@ -76,7 +76,9 @@ export function RunsDataGrid({
     APAE: 5,
     Milharal: 6,
     DTM: 7,
-    Padeirinho: 8,
+    Kffc: 8,
+    Sapoculeano: 9,
+    Padeirinho: 10,
   }
 
   const teamColors: { [key: string]: string } = {
@@ -87,7 +89,9 @@ export function RunsDataGrid({
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
     Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
     APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
-    DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)', // Changed to gray gradient
+    DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)',
+    KFFC: 'linear-gradient(90deg, #34D399, #059669)',
+    Sapoculeano: 'linear-gradient(90deg, #F472B6, #BE185D)',
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -265,7 +269,10 @@ export function RunsDataGrid({
     raidLeaders: { username: string }[] | undefined,
     team: string
   ) => {
-    if (team === 'DTM' && !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])) {
+    if (
+      (team === 'DTM' || team === 'KFFC' || team === 'Sapoculeano') &&
+      !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
+    ) {
       return '-'
     }
 

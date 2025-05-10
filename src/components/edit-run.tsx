@@ -222,6 +222,8 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                     APAE
                   </MenuItem>
                   <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
+                  <MenuItem value={import.meta.env.KFFC}>Kffc</MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>Sapoculeano</MenuItem>
                 </Select>
               </FormControl>
               <TextField
