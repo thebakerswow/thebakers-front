@@ -40,9 +40,8 @@ export function RunDetails() {
   const canViewInviteButton = userRoles.some((role) =>
     allowedRoles.includes(role)
   )
-  const canViewAttendanceButton = !userRoles.includes(
-    import.meta.env.VITE_TEAM_ADVERTISER
-  )
+  const canViewAttendanceButton =
+    userRoles.length !== 1 || !userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
 
   const toggleDetailsVisibility = () => {
     setShowDetails((prev) => !prev)
@@ -326,7 +325,7 @@ export function RunDetails() {
                   }}
                   style={{
                     display: canViewAttendanceButton ? 'inline-flex' : 'none',
-                  }} // Hide button for advertisers
+                  }} // Hide button if user has only the advertiser role
                 >
                   {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                 </Button>
