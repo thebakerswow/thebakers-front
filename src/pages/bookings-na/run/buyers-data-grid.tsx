@@ -183,7 +183,7 @@ export function BuyersDataGrid({
       if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
-      const runLink = `${window.location.origin}/runs/${runId}`
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
       const recipientId = buyer.idBuyerAdvertiser
         ? import.meta.env.VITE_ID_CALMAKARAI
         : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
