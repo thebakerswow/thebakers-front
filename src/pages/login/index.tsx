@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
-import { DiscordLogo } from '@phosphor-icons/react'
+// import { DiscordLogo } from '@phosphor-icons/react'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
@@ -31,14 +31,14 @@ export function Login() {
     }
   }
 
-  const handleLoginDiscord = async () => {
-    try {
-      const response = await api.post('/login/discord')
-      if (response.data.info) window.location.href = response.data.info
-    } catch (error) {
-      handleApiError(error)
-    }
-  }
+  // const handleLoginDiscord = async () => {
+  //   try {
+  //     const response = await api.post('/login/discord')
+  //     if (response.data.info) window.location.href = response.data.info
+  //   } catch (error) {
+  //     handleApiError(error)
+  //   }
+  // }
 
   const handleLoginRegister = async () => {
     try {
