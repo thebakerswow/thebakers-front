@@ -80,7 +80,7 @@ export function Login() {
 
   return (
     <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <Button
+      {/* <Button
         variant='contained'
         color='primary'
         startIcon={<DiscordLogo size={40} weight='fill' />}
@@ -89,7 +89,7 @@ export function Login() {
       >
         Sign in with Discord
       </Button>
-      <span className='text-sm font-thin'>or</span>
+      <span className='text-sm font-thin'>or</span> */}
       <div className='flex flex-col gap-2'>
         <TextField
           variant='outlined'
