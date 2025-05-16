@@ -24,12 +24,27 @@ export default function LatestTransactions() {
   const [error, setError] = useState<string | null>(null)
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    })
+    // Espera data no formato 'dd/MM/yyyy HH:mm:ss'
+    const match = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(
+      dateString
+    )
+    if (match) {
+      const [, , , , hour, minute] = match
+      return `${hour}:${minute}`
+    }
+    // fallback para outros formatos
+    let normalized = dateString
+    if (normalized && !normalized.includes('T')) {
+      normalized = normalized.replace(' ', 'T')
+    }
+    normalized = normalized.replace(/\.\d+Z$/, 'Z')
+    const date = new Date(normalized)
+    if (isNaN(date.getTime())) {
+      return '-'
+    }
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    return `${hour}:${minute}`
   }
 
   useEffect(() => {
