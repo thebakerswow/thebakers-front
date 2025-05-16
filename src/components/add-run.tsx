@@ -286,7 +286,10 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>Kffc</MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>Sapoculeano</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
+                  Sapoculeano
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>Greensky</MenuItem>
               </Select>
             </FormControl>
             <TextField

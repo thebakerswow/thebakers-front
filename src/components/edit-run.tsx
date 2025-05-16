@@ -228,6 +228,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
                     Sapoculeano
                   </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>Greensky</MenuItem>
                 </Select>
               </FormControl>
               <TextField

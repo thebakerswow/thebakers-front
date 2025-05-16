@@ -42,7 +42,8 @@ const colorOptions = [
   { value: '#F87171', label: 'APAE' },
   { value: '#A78BFA', label: 'DTM' },
   { value: '#059669', label: 'Kffc' },
-  { value: '#BE185D', label: 'Sapoculeano' },
+  { value: '#1E3A8A', label: 'Sapoculeano' },
+  { value: '#F472B6', label: 'Greensky' },
   { value: '#EF4444', label: 'Chefe de Cozinha' },
   { value: '#FFFFFF', label: 'Default (White)' },
 ]

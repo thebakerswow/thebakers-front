@@ -26,6 +26,7 @@ const localTeamColors: Record<string, string> = {
   DTM: '#9CA3AF',
   KFFC: '#059669',
   Sapoculeano: '#7DD3FC',
+  Greensky: '#F472B6',
   Advertiser: '#D1D5DB',
 }
 

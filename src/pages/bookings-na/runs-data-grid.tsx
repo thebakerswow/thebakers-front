@@ -78,7 +78,8 @@ export function RunsDataGrid({
     DTM: 7,
     Kffc: 8,
     Sapoculeano: 9,
-    Padeirinho: 10,
+    Greensky: 10,
+    Padeirinho: 11,
   }
 
   const teamColors: { [key: string]: string } = {
@@ -92,6 +93,7 @@ export function RunsDataGrid({
     DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)',
     KFFC: 'linear-gradient(90deg, #065F46, #34D399)', // Atualizado
     Sapoculeano: 'linear-gradient(90deg, #1E3A8A,#7DD3FC )', // Atualizado
+    Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)', // Rosa para amarelo
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -270,7 +272,10 @@ export function RunsDataGrid({
     team: string
   ) => {
     if (
-      (team === 'DTM' || team === 'KFFC' || team === 'Sapoculeano') &&
+      (team === 'DTM' ||
+        team === 'KFFC' ||
+        team === 'Sapoculeano' ||
+        team === 'Greensky') &&
       !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
     ) {
       return '-'

@@ -94,6 +94,8 @@ export function BalanceControlTable({
         return '#059669' // DTM
       case import.meta.env.VITE_TEAM_SAPOCULEANO:
         return '#7DD3FC' // DTM
+      case import.meta.env.VITE_TEAM_GREENSKY:
+        return '#F472B6' // DTM
       case import.meta.env.VITE_TEAM_ADVERTISER:
         return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
@@ -370,9 +372,15 @@ export function BalanceControlTable({
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_SAPOCULEANO}
-                style={{ backgroundColor: '#BE185D', color: 'white' }}
+                style={{ backgroundColor: '#1E3A8A', color: 'white' }}
               >
                 Sapoculeano
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GREENSKY}
+                style={{ backgroundColor: '#BE185D', color: 'white' }}
+              >
+                Greensky
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_ADVERTISER}
