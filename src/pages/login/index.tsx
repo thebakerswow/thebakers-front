@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
-import { DiscordLogo } from '@phosphor-icons/react'
+// import { DiscordLogo } from '@phosphor-icons/react'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
@@ -31,14 +31,14 @@ export function Login() {
     }
   }
 
-  const handleLoginDiscord = async () => {
-    try {
-      const response = await api.post('/login/discord')
-      if (response.data.info) window.location.href = response.data.info
-    } catch (error) {
-      handleApiError(error)
-    }
-  }
+  // const handleLoginDiscord = async () => {
+  //   try {
+  //     const response = await api.post('/login/discord')
+  //     if (response.data.info) window.location.href = response.data.info
+  //   } catch (error) {
+  //     handleApiError(error)
+  //   }
+  // }
 
   const handleLoginRegister = async () => {
     try {
@@ -80,7 +80,7 @@ export function Login() {
 
   return (
     <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <Button
+      {/* <Button
         variant='contained'
         color='primary'
         startIcon={<DiscordLogo size={40} weight='fill' />}
@@ -89,7 +89,7 @@ export function Login() {
       >
         Sign in with Discord
       </Button>
-      <span className='text-sm font-thin'>or</span>
+      <span className='text-sm font-thin'>or</span> */}
       <div className='flex flex-col gap-2'>
         <TextField
           variant='outlined'
