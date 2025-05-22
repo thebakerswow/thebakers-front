@@ -35,9 +35,8 @@ export function BalanceTeamFilter({
 
     setIsLoadingTeams(true)
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/teams/balance`
-      )
+      const response = await api.get('/teams/balance')
+
       const uniqueTeams = response.data.info.reduce(
         (acc: any[], team: any) =>
           acc.some((t) => t.team_name === team.team_name)
