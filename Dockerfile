@@ -49,6 +49,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+RUN printenv | grep VITE_
 RUN npm run build
 
 # Etapa de produção com Nginx

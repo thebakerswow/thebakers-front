@@ -43,4 +43,3 @@ jobs:
             --build-arg VITE_TEAM_KFFC=${{ secrets.VITE_TEAM_KFFC }} \
             --build-arg VITE_TEAM_SAPOCULEANO=${{ secrets.VITE_TEAM_SAPOCULEANO }} \
             --build-arg VITE_TEAM_GREENSKY=${{ secrets.VITE_TEAM_GREENSKY }} \
-            --remote-only
