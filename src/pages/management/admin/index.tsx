@@ -15,10 +15,7 @@ export function AdminPage() {
   // Function to check admin access
   async function checkAdminAccess() {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/access/admin` ||
-          'http://localhost:8000/v1/access/admin'
-      )
+      const response = await api.get('/access/admin')
       if (!response.data.info) {
         navigate('/') // Redirect to home if access is denied
       } else {

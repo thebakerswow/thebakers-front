@@ -37,9 +37,7 @@ export function VerifyTable() {
    */
   const fetchSumsData = async () => {
     try {
-      const { data } = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/gbanks/general`
-      )
+      const { data } = await api.get('/gbanks/general')
       setSumsData(data.info) // Atualiza os dados de soma
       setError(null) // Limpa erros anteriores
     } catch (err) {

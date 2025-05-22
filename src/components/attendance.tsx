@@ -61,11 +61,7 @@ export function Attendance({
     }))
 
     try {
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/attendance` ||
-          `http://localhost:8000/v1/run/${runId}/attendance`,
-        payload
-      )
+      await api.put(`/run/${runId}/attendance`, payload)
       await onAttendanceUpdate()
       setIsSuccess(true)
       setHasUnsavedChanges(false) // Reset unsaved changes

@@ -34,9 +34,7 @@ const fetchApiOptions = async (
   onError: (error: ErrorDetails) => void
 ) => {
   try {
-    const response = await api.get(
-      `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
-    )
+    const response = await api.get(`/team/${teamId}`)
     return response.data.info.members || []
   } catch (error) {
     const errorDetails = axios.isAxiosError(error)
@@ -100,7 +98,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, formData)
+      await api.post('/run', formData)
       await onRunAddedReload()
       setIsSuccess(true)
       onClose() // Close the modal before showing Swal
@@ -289,7 +287,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
                   Sapoculeano
                 </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>Greensky</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
+                  Greensky
+                </MenuItem>
               </Select>
             </FormControl>
             <TextField

@@ -125,22 +125,12 @@ export function BuyersDataGrid({
     const buyer = data.find((b) => b.id === buyerId)
     if (!buyer) return
     const payload = { id_buyer: buyerId, is_paid: !buyer.isPaid }
-    handleApiCall(
-      `${import.meta.env.VITE_API_BASE_URL}/buyer/paid` ||
-        'http://localhost:8000/v1/buyer/paid',
-      payload,
-      onBuyerStatusEdit
-    )
+    handleApiCall('/buyer/paid', payload, onBuyerStatusEdit)
   }
 
   const handleStatusChange = (buyerId: string, newStatus: string) => {
     const payload = { id_buyer: buyerId, status: newStatus }
-    handleApiCall(
-      `${import.meta.env.VITE_API_BASE_URL}/buyer/status` ||
-        'http://localhost:8000/v1/buyer/status',
-      payload,
-      onBuyerStatusEdit
-    )
+    handleApiCall('/buyer/status', payload, onBuyerStatusEdit)
   }
 
   const handleGlobalAction = (action: () => void) => {

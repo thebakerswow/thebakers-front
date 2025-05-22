@@ -57,9 +57,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     const fetchOptions = async () => {
       try {
         const teamId = import.meta.env.VITE_TEAM_PREFEITO
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/team/${teamId}`
-        )
+        const response = await api.get(`/team/${teamId}`)
         if (response.data.info.members)
           setApiOptions(response.data.info.members)
       } catch (err) {
@@ -94,7 +92,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     }
 
     try {
-      await api.put(`${import.meta.env.VITE_API_BASE_URL}/run`, data)
+      await api.put('/run', data)
       await onRunEdit()
       setIsSuccess(true)
       onClose() // Close the modal first
@@ -228,7 +226,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
                     Sapoculeano
                   </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>Greensky</MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
+                    Greensky
+                  </MenuItem>
                 </Select>
               </FormControl>
               <TextField

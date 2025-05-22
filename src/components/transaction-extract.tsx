@@ -34,9 +34,7 @@ export function TransactionExtract() {
     const fetchPlayers = async () => {
       setIsLoading(true)
       try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/discord/players`
-        )
+        const response = await api.get('/discord/players')
         if (!response.data.info) {
           throw new Error('No players found')
         }
@@ -64,16 +62,13 @@ export function TransactionExtract() {
     if (!selectedPlayer || !initialDate || !endDate) return
     setIsLoading(true)
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/transaction/info`,
-        {
-          params: {
-            initial_date: initialDate,
-            end_date: endDate,
-            impacted: selectedPlayer,
-          },
-        }
-      )
+      const response = await api.get('/transaction/info', {
+        params: {
+          initial_date: initialDate,
+          end_date: endDate,
+          impacted: selectedPlayer,
+        },
+      })
       type LogInfo = {
         name_impacted: string
         value: string

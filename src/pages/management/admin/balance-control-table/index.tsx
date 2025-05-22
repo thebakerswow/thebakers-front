@@ -122,15 +122,12 @@ export function BalanceControlTable({
 
       if (showLoading) setIsLoading(true)
       try {
-        const { data } = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/admin`,
-          {
-            params: {
-              id_team: selectedTeam === 'all' ? undefined : selectedTeam,
-              date: selectedDate,
-            }, // Handle "all" option
-          }
-        )
+        const { data } = await api.get('/admin', {
+          params: {
+            id_team: selectedTeam === 'all' ? undefined : selectedTeam,
+            date: selectedDate,
+          }, // Handle "all" option
+        })
         setUsers(data.info)
         console.log(data.info)
       } catch (error) {
@@ -178,7 +175,7 @@ export function BalanceControlTable({
     if (!calculatorValues[userId]) return
 
     try {
-      await api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
+      await api.post('/transaction', {
         value: Number(calculatorValues[userId].replace(/,/g, '')),
         id_discord: userId,
       })
@@ -208,7 +205,7 @@ export function BalanceControlTable({
     try {
       await Promise.all(
         pendingTransactions.map(([userId, value]) =>
-          api.post(`${import.meta.env.VITE_API_BASE_URL}/transaction`, {
+          api.post('/transaction', {
             value: Number(value.replace(/,/g, '')),
             id_discord: userId,
           })
@@ -246,7 +243,7 @@ export function BalanceControlTable({
     if (!selectedUserId || !newNick.trim()) return
 
     try {
-      await api.put(`${import.meta.env.VITE_API_BASE_URL}/nick`, {
+      await api.put('/nick', {
         id_discord: selectedUserId,
         nick: newNick.trim(),
       })

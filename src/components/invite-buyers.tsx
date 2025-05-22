@@ -21,9 +21,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
     // Função para buscar os dados de compradores convidados
     async function fetchInviteBuyersData() {
       try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers/invite`
-        )
+        const response = await api.get(`/run/${runId}/buyers/invite`)
         setInviteBuyersData(
           Array.isArray(response.data.info) ? response.data.info : []
         )

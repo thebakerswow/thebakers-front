@@ -49,11 +49,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     }
 
     try {
-      await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/buyer` ||
-          'http://localhost:8000/v1/buyer',
-        payload
-      )
+      await api.put('/buyer', payload)
       await onEditSuccess()
       onClose()
     } catch (error) {

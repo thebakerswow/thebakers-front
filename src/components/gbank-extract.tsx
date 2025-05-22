@@ -30,9 +30,7 @@ export function GbankExtract() {
   useEffect(() => {
     const fetchGbanks = async () => {
       try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/gbanks`
-        )
+        const response = await api.get('/gbanks')
         if (!response.data.info) {
           throw new Error('No gbanks found')
         }
@@ -48,16 +46,13 @@ export function GbankExtract() {
     if (!initialDate || !endDate || !selectedGbank) return
     setIsLoading(true)
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/gbanks/logs`,
-        {
-          params: {
-            initial_date: initialDate,
-            end_date: endDate,
-            impacted: selectedGbank, // Send the name of the selected Gbank
-          },
-        }
-      )
+      const response = await api.get('/gbanks/logs', {
+        params: {
+          initial_date: initialDate,
+          end_date: endDate,
+          impacted: selectedGbank, // Send the name of the selected Gbank
+        },
+      })
       type LogInfo = {
         name_impacted: string
         value: string
@@ -171,7 +166,9 @@ export function GbankExtract() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align='center'> {/* Updated colspan */}
+                <TableCell colSpan={4} align='center'>
+                  {' '}
+                  {/* Updated colspan */}
                   No data available
                 </TableCell>
               </TableRow>

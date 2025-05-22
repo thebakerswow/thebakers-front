@@ -43,8 +43,8 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
     setIsLoading(true)
     try {
       const [runResponse, buyersResponse] = await Promise.all([
-        api.get(`${import.meta.env.VITE_API_BASE_URL}/run/${runId}`),
-        api.get(`${import.meta.env.VITE_API_BASE_URL}/run/${runId}/buyers`),
+        api.get(`/run/${runId}`),
+        api.get(`/run/${runId}/buyers`),
       ])
       const runInfo = runResponse.data.info
       setRunData({

@@ -98,7 +98,7 @@ export function FullRaidsNa() {
       }))
 
       for (const run of formattedRuns) {
-        await api.post(`${import.meta.env.VITE_API_BASE_URL}/run`, run)
+        await api.post('/run', run)
       }
 
       Swal.fire({
@@ -173,11 +173,10 @@ export function FullRaidsNa() {
       })
 
       setRows(
-        (data.info || [])
-          .map((run: any) => ({
-            ...run,
-            buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
-          }))
+        (data.info || []).map((run: any) => ({
+          ...run,
+          buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+        }))
       )
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)

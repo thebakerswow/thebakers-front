@@ -110,7 +110,7 @@ export function BalanceDataGrid({
       [playerId]: { background, text: textColor },
     }))
     try {
-      await api.put(`${import.meta.env.VITE_API_BASE_URL}/balance/color`, {
+      await api.put('/balance/color', {
         id_discord: playerId,
         color: background,
       })
@@ -146,16 +146,13 @@ export function BalanceDataGrid({
 
       setIsLoadingBalance(true)
       try {
-        const response = await api.get<BalanceResponse>(
-          `${import.meta.env.VITE_API_BASE_URL}/balance`,
-          {
-            params: {
-              id_team: selectedTeam,
-              date_start: dateRange.start,
-              date_end: dateRange.end,
-            },
-          }
-        )
+        const response = await api.get<BalanceResponse>('/balance', {
+          params: {
+            id_team: selectedTeam,
+            date_start: dateRange.start,
+            date_end: dateRange.end,
+          },
+        })
 
         setBalanceData(
           response.data.info || { player_balance: {}, balance_total: [] }

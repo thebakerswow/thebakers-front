@@ -41,7 +41,8 @@ export function RunDetails() {
     allowedRoles.includes(role)
   )
   const canViewAttendanceButton =
-    userRoles.length !== 1 || !userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
+    userRoles.length !== 1 ||
+    !userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
 
   const toggleDetailsVisibility = () => {
     setShowDetails((prev) => !prev)
@@ -64,10 +65,7 @@ export function RunDetails() {
   // Função para buscar os dados da run
   async function fetchRunData() {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${id}` ||
-          `http://localhost:8000/v1/run/${id}`
-      )
+      const response = await api.get(`/run/${id}`)
       const data = response.data.info
       setRunData({
         ...data,
@@ -97,10 +95,7 @@ export function RunDetails() {
   async function fetchBuyersData() {
     try {
       setIsLoadingBuyers(false)
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${id}/buyers` ||
-          `http://localhost:8000/v1/run/${id}/buyers`
-      )
+      const response = await api.get(`/run/${id}/buyers`)
 
       setRows(response.data.info)
     } catch (error) {
@@ -125,10 +120,7 @@ export function RunDetails() {
   // Função para verificar acesso à run
   async function checkRunAccess() {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/access/run/${id}` ||
-          `http://localhost:8000/v1/access/run/${id}`
-      )
+      const response = await api.get(`/access/run/${id}`)
       if (!response.data.info) {
         navigate('/check-access') // Redireciona para a home se o acesso for negado
       }
@@ -202,10 +194,7 @@ export function RunDetails() {
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${id}/attendance` ||
-          `http://localhost:8000/v1/run/${id}/attendance`
-      )
+      const response = await api.get(`/run/${id}/attendance`)
       const data = response.data.info
 
       setAttendance({ info: data })

@@ -120,10 +120,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   // Função para buscar a lista de anunciantes
   const fetchAdvertisers = useCallback(async () => {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/users/ghost` ||
-          'http://localhost:8000/v1/users/ghost'
-      )
+      const response = await api.get('/users/ghost')
       setAdvertisers(response.data.info)
     } catch (error) {
       setError(

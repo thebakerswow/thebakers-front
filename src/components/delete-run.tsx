@@ -31,7 +31,7 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
     setError(null)
 
     try {
-      await api.delete(`${import.meta.env.VITE_API_BASE_URL}/run/${run.id}`)
+      await api.delete(`/run/${run.id}`)
       onClose() // Close the modal before showing the alert
       await Swal.fire({
         title: 'Deleted!',

@@ -231,10 +231,9 @@ export function RunsDataGrid({
   // Function to toggle the lock status of a run
   const toggleRunLock = async (runId: string, isLocked: boolean) => {
     try {
-      const response = await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${runId}/lock`,
-        { isLocked: !isLocked }
-      )
+      const response = await api.put(`/run/${runId}/lock`, {
+        isLocked: !isLocked,
+      })
       if (response.status === 200) {
         Swal.fire({
           icon: 'success',

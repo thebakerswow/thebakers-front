@@ -77,9 +77,7 @@ export function GBanksTable() {
   // Busca os GBanks da API e formata os dados recebidos
   const fetchGBanks = async () => {
     try {
-      const response = await api.get(
-        `${import.meta.env.VITE_API_BASE_URL}/gbanks`
-      )
+      const response = await api.get('/gbanks')
       const formattedGBanks =
         response.data?.info?.map((gbank: any) => ({
           ...gbank,
@@ -200,7 +198,7 @@ export function GBanksTable() {
               onClick={() =>
                 handleAction(
                   () =>
-                    api.post(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
+                    api.post('/gbanks', {
                       name: newGBankName,
                       color: newGBankColor || '#FFFFFF',
                     }),
@@ -357,15 +355,12 @@ export function GBanksTable() {
                           e.preventDefault()
                           handleAction(
                             () =>
-                              api.put(
-                                `${import.meta.env.VITE_API_BASE_URL}/gbanks/value`,
-                                {
-                                  id: gbank.id,
-                                  balance: Number(
-                                    e.currentTarget.value.replace(/,/g, '')
-                                  ),
-                                }
-                              ),
+                              api.put('/gbanks/value', {
+                                id: gbank.id,
+                                balance: Number(
+                                  e.currentTarget.value.replace(/,/g, '')
+                                ),
+                              }),
                             'Erro ao atualizar calculadora do G-Bank'
                           )
                         }
@@ -421,7 +416,7 @@ export function GBanksTable() {
               onClick={() =>
                 handleAction(
                   () =>
-                    api.put(`${import.meta.env.VITE_API_BASE_URL}/gbanks`, {
+                    api.put('/gbanks', {
                       id: editGBank.id,
                       name: editGBank.name,
                       color: editGBank.color || '#FFFFFF',
@@ -453,10 +448,7 @@ export function GBanksTable() {
               color='error'
               onClick={() =>
                 handleAction(
-                  () =>
-                    api.delete(
-                      `${import.meta.env.VITE_API_BASE_URL}/gbanks/${deleteGBank.id}`
-                    ),
+                  () => api.delete(`/gbanks/${deleteGBank.id}`),
                   'Erro ao deletar G-Bank'
                 ).then(() => setDeleteGBank(null))
               }

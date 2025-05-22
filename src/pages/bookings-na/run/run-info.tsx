@@ -85,12 +85,9 @@ export function RunInfo({
 
   const toggleRunLock = async () => {
     try {
-      const response = await api.put(
-        `${import.meta.env.VITE_API_BASE_URL}/run/${run.id}/lock`,
-        {
-          isLocked: !isRunLocked,
-        }
-      )
+      const response = await api.put(`/run/${run.id}/lock`, {
+        isLocked: !isRunLocked,
+      })
       if (response.status === 200) {
         setIsRunLocked(!isRunLocked)
         window.location.reload() // Reload the page after toggling the lock

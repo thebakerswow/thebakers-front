@@ -39,10 +39,7 @@ export function TeamsManagement() {
     const fetchTeams = async () => {
       try {
         setIsLoading(true)
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/teams` ||
-            'http://localhost:8000/v1/teams'
-        )
+        const response = await api.get('/teams')
         console.log(response.data.info)
         const uniqueTeamOrder = Array.from(new Set(teamOrder)) // Remove duplicates
         const orderedTeams = uniqueTeamOrder.map((teamName) => ({
