@@ -6,7 +6,7 @@ export const api = axios.create({
   baseURL: 'https://thebakers-backend.fly.dev/v1',
   headers: {
     'Content-Type': 'application/json',
-    APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
+    APP_TOKEN: 'kcJwz9dzgC2Gb0axp',
   },
 })
 
