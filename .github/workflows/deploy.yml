@@ -17,7 +17,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Login na Fly.io
-        run: flyctl auth token
+        run: fly tokens create
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
