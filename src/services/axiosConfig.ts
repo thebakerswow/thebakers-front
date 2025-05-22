@@ -2,7 +2,8 @@ import axios from 'axios'
 
 // Instância para chamadas autenticadas (requisições que precisam de token)
 export const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/v1`,
+  //baseURL: `${import.meta.env.VITE_API_BASE_URL}/v1`
+  baseURL: 'https://thebakers-backend.fly.dev/v1',
   headers: {
     'Content-Type': 'application/json',
     APP_TOKEN: import.meta.env.VITE_APP_TOKEN,
