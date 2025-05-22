@@ -33,7 +33,6 @@ export function Login() {
 
   const handleLoginDiscord = async () => {
     try {
-      console.log('base url: ', import.meta.env.VITE_API_BASE_URL)
       const response = await api.post('/login/discord')
       if (response.data.info) window.location.href = response.data.info
     } catch (error) {
