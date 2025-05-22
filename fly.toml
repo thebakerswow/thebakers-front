@@ -21,25 +21,3 @@ primary_region = 'gru'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
-
-[build.args]
-  VITE_API_BASE_URL = "your-value-here"
-  VITE_APP_TOKEN = "your-token"
-  VITE_TEAM_PADEIRINHO = "value"
-  VITE_TEAM_GARCOM = "value"
-  VITE_TEAM_CONFEITEIROS = "value"
-  VITE_TEAM_JACKFRUIT = "value"
-  VITE_TEAM_MILHARAL = "value"
-  VITE_TEAM_RAIO = "value"
-  VITE_TEAM_APAE = "value"
-  VITE_TEAM_DTM = "value"
-  VITE_TEAM_PREFEITO = "value"
-  VITE_TEAM_FREELANCER = "value"
-  VITE_TEAM_CHEFE = "value"
-  VITE_ID_CALMAKARAI = "value"
-  VITE_TEAM_ADVERTISER = "value"
-  VITE_TEAM_STAFF = "value"
-  VITE_TEAM_KFFC = "value"
-  VITE_TEAM_SAPOCULEANO = "value"
-  VITE_TEAM_GREENSKY = "value"
-
