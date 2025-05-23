@@ -69,6 +69,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     raidLeader: [] as string[],
     loot: '',
     note: '',
+    mythicOption: '', // novo campo para opção extra de Mythic
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -227,6 +228,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                   setFormData((prev) => ({
                     ...prev,
                     difficulty: e.target.value,
+                    mythicOption: '', // limpa a opção extra se mudar a dificuldade
                   }))
                 }
                 label='Difficulty'
@@ -244,6 +246,22 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value='Mythic'>Mythic</MenuItem>
               </Select>
             </FormControl>
+            {/* Novo campo: aparece apenas se difficulty for Mythic
+            {formData.difficulty === 'Mythic' && (
+              <FormControl fullWidth variant='outlined' required>
+                <InputLabel id='mythicOption-label'>Mythic Cut</InputLabel>
+                <Select
+                  id='mythicOption'
+                  value={formData.mythicOption}
+                  onChange={handleChange}
+                  label='Mythic Option'
+                >
+                  <MenuItem value='4/8'>4/8</MenuItem>
+                  <MenuItem value='6/8'>6/8</MenuItem>
+                  <MenuItem value='6/8 to 8/8'>6/8 to 8/8</MenuItem>
+                </Select>
+              </FormControl>
+            )} */}
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='idTeam-label'>Team</InputLabel>
               <Select

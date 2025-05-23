@@ -174,37 +174,49 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientId = buyer.idBuyerAdvertiser
-        ? import.meta.env.VITE_ID_CALMAKARAI
-        : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
-      const payload = {
-        id_discord_recipient: recipientId,
-        message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+      // 1144320612966338751: funcionário do baby johny
+      // 1129084739597377767: funcionário do baby johny
+      // 466344718507442177: baby johny
+      let recipientIds: string[] = []
+      if (buyer.idBuyerAdvertiser === '466344718507442177') {
+        // baby johny
+        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
+      } else if (buyer.idBuyerAdvertiser) {
+        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
+      } else {
+        recipientIds = [buyer.idOwnerBuyer]
       }
-      try {
-        await api.post('/discord/send_message', payload)
-        Swal.fire({
-          title: 'Success!',
-          text: 'Advertiser notified',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
-        setTimeout(() => {
-          setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
-        }, 15000)
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setError({
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          })
-        } else {
-          setError({ message: 'Unexpected error', response: error })
+      // Envia mensagem para todos os destinatários
+      for (const recipientId of recipientIds) {
+        const payload = {
+          id_discord_recipient: recipientId,
+          message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+        }
+        try {
+          await api.post('/discord/send_message', payload)
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
         }
       }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
     })
   }
 
@@ -229,37 +241,49 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientId = buyer.idBuyerAdvertiser
-        ? import.meta.env.VITE_ID_CALMAKARAI
-        : buyer.idOwnerBuyer // Send to fixed ID if idBuyerAdvertiser is filled
-      const payload = {
-        id_discord_recipient: recipientId,
-        message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+      // 1144320612966338751: funcionário do baby johny
+      // 1129084739597377767: funcionário do baby johny
+      // 466344718507442177: baby johny
+      let recipientIds: string[] = []
+      if (buyer.idBuyerAdvertiser === '466344718507442177') {
+        // baby johny
+        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
+      } else if (buyer.idBuyerAdvertiser) {
+        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
+      } else {
+        recipientIds = [buyer.idOwnerBuyer]
       }
-      try {
-        await api.post('/discord/send_message', payload)
-        Swal.fire({
-          title: 'Success!',
-          text: 'Advertiser notified',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        setCooldown((prev) => ({ ...prev, [buyerId]: true }))
-        setTimeout(() => {
-          setCooldown((prev) => ({ ...prev, [buyerId]: false }))
-        }, 15000)
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setError({
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          })
-        } else {
-          setError({ message: 'Unexpected error', response: error })
+      // Envia mensagem para todos os destinatários
+      for (const recipientId of recipientIds) {
+        const payload = {
+          id_discord_recipient: recipientId,
+          message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
+        }
+        try {
+          await api.post('/discord/send_message', payload)
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
         }
       }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldown((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldown((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
     })
   }
 
