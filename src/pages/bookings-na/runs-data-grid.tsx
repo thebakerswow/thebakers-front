@@ -256,12 +256,9 @@ export function RunsDataGrid({
   }
 
   // Renderiza uma célula da tabela com conteúdo padrão
-  const renderTableCell = (
-    content: string | number | JSX.Element | null,
-    align: 'center' | 'left' = 'left'
-  ) => (
+  const renderTableCell = (content: string | number | JSX.Element | null) => (
     <TableCell
-      align={align}
+      align='center'
       style={{ fontSize: '1rem' }} // Aumenta o tamanho da fonte das células
     >
       {content || '-'}
@@ -327,6 +324,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Preview
@@ -336,6 +334,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Date
@@ -346,6 +345,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               <TableSortLabel
@@ -362,6 +362,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Raid
@@ -371,6 +372,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Buyers
@@ -380,6 +382,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Team
@@ -389,6 +392,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Raid Leader
@@ -398,6 +402,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Run Type
@@ -407,6 +412,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Difficulty
@@ -416,6 +422,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Mythic Cut
@@ -425,6 +432,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Loot
@@ -434,6 +442,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             >
               Note
@@ -443,6 +452,7 @@ export function RunsDataGrid({
                 fontSize: '1rem',
                 fontWeight: 'bold',
                 backgroundColor: '#ECEBEE',
+                textAlign: 'center',
               }}
             />
           </TableRow>
@@ -493,8 +503,7 @@ export function RunsDataGrid({
                     <IconButton onClick={() => handleOpenPreview(run.id)}>
                       <Eye size={20} />
                     </IconButton>
-                  ) : null,
-                  'center'
+                  ) : null
                 )}
                 {renderTableCell(
                   run.date ? format(parseISO(run.date), 'EEEE LL/dd') : null
@@ -512,7 +521,7 @@ export function RunsDataGrid({
                     : '-'
                 )}
                 {renderTableCell(run.loot)}
-                {renderTableCell(run.note, 'center')}
+                {renderTableCell(run.note)}
                 {renderTableCell(
                   hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
                     <>
@@ -545,8 +554,7 @@ export function RunsDataGrid({
                         </IconButton>
                       </Tooltip>
                     </>
-                  ) : null,
-                  'center'
+                  ) : null
                 )}
               </TableRow>
             ))
