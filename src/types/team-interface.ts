@@ -1,18 +1,19 @@
 export const teamOrder = [
   'Garçom',
+  'Padeirinho',
   'Confeiteiros',
   'Jackfruit',
-  'Raio',
   'APAE',
-  'Milharal',
   'Jackfruit',
-  'KFFC',
   'Sapoculeano',
+  'KFFC',
   'DTM',
   'Greensky',
+  'Guild Azralon BR#1',
+  'Guild Azralon BR#2',
   'Advertiser',
   'Milharal',
-  'Padeirinho',
+  'Raio',
 ] as const
 
 export type TeamOrder = (typeof teamOrder)[number]
@@ -37,6 +38,8 @@ export const teamColors: Record<TeamOrder, string> = {
   APAE: 'bg-red-400',
   KFFC: 'bg-green-700',
   Sapoculeano: 'bg-blue-600',
+  'Guild Azralon BR#1': 'bg-blue-600',
+  'Guild Azralon BR#2': 'bg-blue-600',
   DTM: 'bg-gray-500',
   Greensky: 'bg-pray-500',
   Advertiser: 'bg-gray-300',

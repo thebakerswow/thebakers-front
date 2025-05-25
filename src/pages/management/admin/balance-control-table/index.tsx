@@ -96,6 +96,10 @@ export function BalanceControlTable({
         return '#7DD3FC' // DTM
       case import.meta.env.VITE_TEAM_GREENSKY:
         return '#F472B6' // DTM
+      case import.meta.env.VITE_TEAM_GUILD_AZRALON_1:
+        return '#059669' // DTM
+      case import.meta.env.VITE_TEAM_GUILD_AZRALON_2:
+        return '#2563EB' // DTM
       case import.meta.env.VITE_TEAM_ADVERTISER:
         return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
@@ -379,6 +383,19 @@ export function BalanceControlTable({
               >
                 Greensky
               </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}
+                style={{ backgroundColor: '#059669', color: 'white' }}
+              >
+                Guild Azralon BR#1
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}
+                style={{ backgroundColor: '#1E3A8A', color: 'white' }}
+              >
+                Guild Azralon BR#2
+              </MenuItem>
+
               <MenuItem
                 value={import.meta.env.VITE_TEAM_ADVERTISER}
                 style={{ backgroundColor: '#D1D5DB', color: 'black' }}

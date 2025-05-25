@@ -88,6 +88,9 @@ export function BuyersDataGrid({
     {}
   ) // Track button clicks
   const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
+  const [cooldownPaid, setCooldownPaid] = useState<{ [key: string]: boolean }>(
+    {}
+  ) // Cooldown for Paid Full button
 
   const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
     setEditingBuyer({
@@ -122,10 +125,15 @@ export function BuyersDataGrid({
   }
 
   const handleTogglePaid = (buyerId: string) => {
+    if (cooldownPaid[buyerId]) return // Prevent spam
     const buyer = data.find((b) => b.id === buyerId)
     if (!buyer) return
     const payload = { id_buyer: buyerId, is_paid: !buyer.isPaid }
+    setCooldownPaid((prev) => ({ ...prev, [buyerId]: true }))
     handleApiCall('/buyer/paid', payload, onBuyerStatusEdit)
+    setTimeout(() => {
+      setCooldownPaid((prev) => ({ ...prev, [buyerId]: false }))
+    }, 3000) // 3 seconds cooldown
   }
 
   const handleStatusChange = (buyerId: string, newStatus: string) => {
@@ -314,21 +322,30 @@ export function BuyersDataGrid({
 
   const renderPaidIcon = (buyer: BuyerData) => (
     <IconButton
-      onClick={() => !runIsLocked && handleTogglePaid(buyer.id)}
-      disabled={runIsLocked} // Disable toggle when run is locked
+      onClick={() =>
+        !runIsLocked &&
+        !globalCooldown &&
+        !cooldownPaid[buyer.id] &&
+        handleTogglePaid(buyer.id)
+      }
+      disabled={runIsLocked || globalCooldown || cooldownPaid[buyer.id]} // Disable toggle when run is locked, global cooldown, or individual cooldown
       sx={{
-        backgroundColor: 'white', // Fundo branco
-        padding: '2px', // Reduzido o padding
+        backgroundColor: 'white',
+        padding: '2px',
         '&:hover': {
-          backgroundColor: runIsLocked ? 'white' : '#f0f0f0', // Prevent hover effect when disabled
+          backgroundColor:
+            runIsLocked || globalCooldown || cooldownPaid[buyer.id]
+              ? 'white'
+              : '#f0f0f0',
         },
-        opacity: runIsLocked ? 0.5 : 1, // Make button opaque when disabled
+        opacity:
+          runIsLocked || globalCooldown || cooldownPaid[buyer.id] ? 0.5 : 1,
       }}
     >
       {buyer.isPaid ? (
-        <CheckFat className='text-green-500' size={22} weight='fill' /> // Tamanho reduzido
+        <CheckFat className='text-green-500' size={22} weight='fill' />
       ) : (
-        <XCircle className='text-red-600' size={22} weight='fill' /> // Tamanho reduzido
+        <XCircle className='text-red-600' size={22} weight='fill' />
       )}
     </IconButton>
   )

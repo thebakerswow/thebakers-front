@@ -94,6 +94,8 @@ export function RunsDataGrid({
     KFFC: 'linear-gradient(90deg, #065F46, #34D399)', // Atualizado
     Sapoculeano: 'linear-gradient(90deg, #1E3A8A,#7DD3FC )', // Atualizado
     Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)', // Rosa para amarelo
+    'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)', // Nova cor adicionada
+    'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
   }
 
   // Retorna o estilo de fundo associado a um time

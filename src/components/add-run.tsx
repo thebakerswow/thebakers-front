@@ -326,6 +326,12 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
                   Greensky
                 </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
+                  Guild Azralon BR#1
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
+                  Guild Azralon BR#2
+                </MenuItem>
               </Select>
             </FormControl>
             <TextField

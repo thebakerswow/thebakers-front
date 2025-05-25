@@ -135,7 +135,8 @@ export function RunInfo({
       >
         <CardContent className='col-span-3 mb-6 ml-10 flex flex-col'>
           <h1 className='text-center text-lg font-semibold'>
-            {run.raid} {run.difficulty} @{' '}
+            {run.raid} {run.difficulty}{' '}
+            {run.quantityBoss?.String ?? run.quantityBoss} @{' '}
             {run.time ? (
               <>
                 {formatTo12HourEST(run.time)} EST{' '}

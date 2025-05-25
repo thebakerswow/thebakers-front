@@ -48,7 +48,12 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
     loot: run.loot,
     note: run.note,
-    quantityBoss: { String: '', Valid: false },
+    quantityBoss: run.quantityBoss
+      ? {
+          String: run.quantityBoss.String || '',
+          Valid: !!run.quantityBoss.Valid,
+        }
+      : { String: '', Valid: false },
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -251,6 +256,12 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   </MenuItem>
                   <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
                     Greensky
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
+                    Guild Azralon BR#1
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
+                    Guild Azralon BR#2
                   </MenuItem>
                 </Select>
               </FormControl>
