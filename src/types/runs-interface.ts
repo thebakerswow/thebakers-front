@@ -26,4 +26,5 @@ export interface RunData {
   sumPot: SumPot[]
   players: Players[]
   buyersCount: string
+  quantityBoss: { String: string; Valid: boolean } // ajustado para aceitar objeto do backend
 }

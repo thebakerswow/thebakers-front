@@ -48,6 +48,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       run.raidLeaders?.map((rl) => `${rl.idDiscord};${rl.username}`) || [],
     loot: run.loot,
     note: run.note,
+    quantityBoss: { String: '', Valid: false },
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -191,6 +192,28 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   <MenuItem value='Mythic'>Mythic</MenuItem>
                 </Select>
               </FormControl>
+              {formData.difficulty === 'Mythic' && (
+                <FormControl fullWidth variant='outlined' required>
+                  <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
+                  <Select
+                    id='quantityBoss'
+                    name='quantityBoss'
+                    value={formData.quantityBoss.String}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        quantityBoss: { String: e.target.value, Valid: true },
+                      }))
+                    }
+                    label='Mythic Option'
+                  >
+                    <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
+                    <MenuItem value='7/8, 8/8 & Last Boss'>
+                      7/8, 8/8 & Last Boss
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              )}
               <FormControl fullWidth required>
                 <InputLabel>Team</InputLabel>
                 <Select

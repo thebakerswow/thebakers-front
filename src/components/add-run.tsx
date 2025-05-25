@@ -69,7 +69,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     raidLeader: [] as string[],
     loot: '',
     note: '',
-    mythicOption: '', // novo campo para opção extra de Mythic
+    quantityBoss: { String: '', Valid: false }, // precisa ser objeto para o backend Go
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -86,12 +86,26 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
       | SelectChangeEvent
   ) => {
-    const { id, value } = e.target as { id: string; value: string }
-    setFormData((prev) => ({
-      ...prev,
-      [id]:
-        id === 'maxBuyers' && !/^[0-9]*$/.test(value) ? prev.maxBuyers : value,
-    }))
+    const target = e.target as { id?: string; name?: string; value: string }
+    const key = target.id || target.name
+    if (!key) return
+    if (key === 'quantityBoss') {
+      setFormData((prev) => ({
+        ...prev,
+        quantityBoss: {
+          String: target.value,
+          Valid: !!target.value,
+        },
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [key]:
+          key === 'maxBuyers' && !/^[0-9]*$/.test(target.value)
+            ? prev.maxBuyers
+            : target.value,
+      }))
+    }
   }
 
   // Envia os dados do formulário para a API
@@ -99,7 +113,10 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await api.post('/run', formData)
+      await api.post('/run', {
+        ...formData,
+        quantityBoss: formData.quantityBoss, // envia como objeto para o backend Go
+      })
       await onRunAddedReload()
       setIsSuccess(true)
       onClose() // Close the modal before showing Swal
@@ -228,7 +245,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                   setFormData((prev) => ({
                     ...prev,
                     difficulty: e.target.value,
-                    mythicOption: '', // limpa a opção extra se mudar a dificuldade
+                    quantityBoss: { String: '', Valid: false }, // limpa a opção extra se mudar a dificuldade
                   }))
                 }
                 label='Difficulty'
@@ -246,22 +263,23 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 <MenuItem value='Mythic'>Mythic</MenuItem>
               </Select>
             </FormControl>
-            {/* Novo campo: aparece apenas se difficulty for Mythic
             {formData.difficulty === 'Mythic' && (
               <FormControl fullWidth variant='outlined' required>
-                <InputLabel id='mythicOption-label'>Mythic Cut</InputLabel>
+                <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
                 <Select
-                  id='mythicOption'
-                  value={formData.mythicOption}
+                  id='quantityBoss'
+                  name='quantityBoss'
+                  value={formData.quantityBoss.String}
                   onChange={handleChange}
                   label='Mythic Option'
                 >
-                  <MenuItem value='4/8'>4/8</MenuItem>
-                  <MenuItem value='6/8'>6/8</MenuItem>
-                  <MenuItem value='6/8 to 8/8'>6/8 to 8/8</MenuItem>
+                  <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
+                  <MenuItem value='7/8, 8/8 & Last Boss'>
+                    7/8, 8/8 & Last Boss
+                  </MenuItem>
                 </Select>
               </FormControl>
-            )} */}
+            )}
             <FormControl fullWidth variant='outlined' required>
               <InputLabel id='idTeam-label'>Team</InputLabel>
               <Select

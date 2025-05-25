@@ -215,6 +215,7 @@ export function RunsDataGrid({
         ) || [],
       loot: run.loot,
       note: run.note || '',
+      quantityBoss: run.quantityBoss, // adicionado para copiar também
     }
 
     navigator.clipboard
@@ -415,6 +416,15 @@ export function RunsDataGrid({
                 backgroundColor: '#ECEBEE',
               }}
             >
+              Mythic Cut
+            </TableCell>
+            <TableCell
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
               Loot
             </TableCell>
             <TableCell
@@ -494,6 +504,11 @@ export function RunsDataGrid({
                 {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
                 {renderTableCell(run.runType)}
                 {renderTableCell(run.difficulty)}
+                {renderTableCell(
+                  run.quantityBoss && typeof run.quantityBoss === 'object'
+                    ? run.quantityBoss.String || '-'
+                    : '-'
+                )}
                 {renderTableCell(run.loot)}
                 {renderTableCell(run.note, 'center')}
                 {renderTableCell(

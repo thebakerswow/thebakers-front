@@ -64,6 +64,7 @@ export function FullRaidsNa() {
           (leader) => `${leader.idDiscord};${leader.username}`
         ) || [],
       loot: run.loot,
+      quantityBoss: run.quantityBoss,
       note: run.note || '',
     }))
 
@@ -94,6 +95,7 @@ export function FullRaidsNa() {
         maxBuyers: run.maxBuyers.toString(), // Converte para string
         raidLeader: run.raidLeader,
         loot: run.loot,
+        quantityBoss: run.quantityBoss,
         note: run.note || '',
       }))
 
