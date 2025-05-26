@@ -51,14 +51,23 @@ export function Header() {
         position='static'
         sx={{ background: 'linear-gradient(to right, black, #333)' }}
       >
-        <Toolbar sx={{ justifyContent: 'center' }}>
+        <Toolbar>
           <Typography
             variant='h6'
             component='div'
-            sx={{ fontSize: '1.8rem', textAlign: 'center' }}
+            sx={{
+              fontSize: '1.8rem',
+              textAlign: 'center',
+              flexGrow: 1,
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/')}
           >
             TheBakers <span style={{ color: 'red' }}>Hub</span>
           </Typography>
+          <Button color='inherit' onClick={() => navigate('/login')}>
+            Login
+          </Button>
         </Toolbar>
       </AppBar>
     )
