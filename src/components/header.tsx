@@ -14,8 +14,41 @@ import {
   UsersFour,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/auth-context'
+
+// Componente para mostrar o horário EST em tempo real
+function EstClock() {
+  const [time, setTime] = useState<string>('')
+
+  // Atualiza o horário a cada segundo
+  useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      // Converte para o fuso horário EST (America/New_York)
+      const estTime = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'America/New_York',
+      })
+      setTime(estTime)
+    }
+    update()
+    const interval = setInterval(update, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <Typography
+      variant='body2'
+      sx={{ fontWeight: 500, fontSize: '1.1rem', minWidth: '180px' }}
+    >
+      EST Timezone: {time}
+    </Typography>
+  )
+}
 
 export function Header() {
   const navigate = useNavigate()
@@ -52,6 +85,8 @@ export function Header() {
         sx={{ background: 'linear-gradient(to right, black, #333)' }}
       >
         <Toolbar>
+          {/* EST Clock na esquerda */}
+          <EstClock />
           <Typography
             variant='h6'
             component='div'
@@ -65,9 +100,6 @@ export function Header() {
           >
             TheBakers <span style={{ color: 'red' }}>Hub</span>
           </Typography>
-          <Button color='inherit' onClick={() => navigate('/login')}>
-            Login
-          </Button>
         </Toolbar>
       </AppBar>
     )
@@ -79,6 +111,8 @@ export function Header() {
       sx={{ background: 'linear-gradient(to right, black, #333)' }}
     >
       <Toolbar sx={{ justifyContent: 'space-around' }}>
+        {/* EST Clock na esquerda */}
+        <EstClock />
         <Typography
           variant='h6'
           component='div'
