@@ -2,20 +2,11 @@ import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import {
-  Modal as MuiModal,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from '@mui/material'
+import { Modal as MuiModal, Box } from '@mui/material'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { api } from '../../services/axiosConfig'
 import { useNavigate } from 'react-router-dom'
+import services from '../../assets/schedule.png'
 
 type DiscordTokenPayload = {
   username: string
@@ -30,6 +21,7 @@ export function HomePage() {
   const [userRoles, setUserRoles] = useState<string[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [weekRuns, setWeekRuns] = useState<Record<number, any[]>>({})
+
   // Pegue as roles do .env
   const TEAM_ADVERTISER = import.meta.env.VITE_TEAM_ADVERTISER
   const TEAM_CHEFE = import.meta.env.VITE_TEAM_CHEFE
@@ -109,122 +101,115 @@ export function HomePage() {
 
   // Renderize outra homepage se o usuário possuir a role do .env
   if (hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) {
+    // Planos para exibir nos cards
+    const plans = [
+      {
+        name: 'Basic Plan',
+        description: 'Manage your schedules efficiently.',
+        price: '$19.99/month',
+      },
+      {
+        name: 'Premium Plan',
+        description: 'Advanced features for growing businesses.',
+        price: '$39.99/month',
+      },
+      {
+        name: 'Enterprise Plan',
+        description: 'Comprehensive solutions for enterprises.',
+        price: '$99.99/month',
+      },
+      {
+        name: 'Pro Plan',
+        description: 'Tailored for professionals seeking efficiency.',
+        price: '$49.99/month',
+      },
+      {
+        name: 'Startup Plan',
+        description: 'Ideal for new businesses to kickstart.',
+        price: '$29.99/month',
+      },
+      {
+        name: 'Custom Plan',
+        description: 'Customizable solutions for unique needs.',
+        price: 'Contact Us',
+      },
+      {
+        name: 'Family Plan',
+        description: 'Great for families managing multiple schedules.',
+        price: '$59.99/month',
+      },
+      {
+        name: 'Ultimate Plan',
+        description: 'The all-in-one solution for ultimate control.',
+        price: '$129.99/month',
+      },
+    ]
     return (
-      <div className='relative max-h-screen overflow-x-hidden'>
-        {/* Seção principal com imagem de fundo */}
-        <div
-          className='flex h-screen'
-          style={{
-            backgroundImage: "url('/src/assets/gally.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            width: '100vw',
-            overflowX: 'hidden',
-          }}
+      <div
+        className='min-h-max w-full bg-cover bg-fixed bg-center bg-no-repeat'
+        style={{ backgroundImage: "url('/src/assets/gally.png')" }}
+      >
+        {/* Sessão Hero: Mensagem + Cards + Seta */}
+        <section
+          id='hero'
+          className='flex min-h-screen w-full flex-col items-center justify-center px-4'
         >
-          {/* Esquerda: Tabela */}
-          <div className='flex flex-1 items-center justify-center p-8'>
-            <TableContainer
-              component={Paper}
-              style={{ maxWidth: 400, width: '100%' }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      align='center'
-                      style={{
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
-                        background: '#ECEBEE',
-                      }}
-                      className='bg-gray-200 text-base font-bold'
-                    >
-                      Service
-                    </TableCell>
-                    <TableCell
-                      align='center'
-                      style={{
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
-                        background: '#ECEBEE',
-                      }}
-                      className='bg-gray-200 text-base font-bold'
-                    >
-                      Price
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell align='center' className='text-center'>
-                      Heroic Full Raid
-                    </TableCell>
-                    <TableCell align='center' className='text-center'>
-                      999999999
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell align='center' className='text-center'>
-                      Normal Full Raid
-                    </TableCell>
-                    <TableCell align='center' className='text-center'>
-                      999999999
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell align='center' className='text-center'>
-                      Mythic 6/8
-                    </TableCell>
-                    <TableCell align='center' className='text-center'>
-                      999999999
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell align='center' className='text-center'>
-                      Mythic 7/8, 8/8
-                    </TableCell>
-                    <TableCell align='center' className='text-center'>
-                      999999999
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell align='center' className='text-center'>
-                      Mythic Last Boss
-                    </TableCell>
-                    <TableCell align='center' className='text-center'>
-                      999999999
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-          {/* Direita: Texto introdutório */}
-          <div className='flex flex-1 items-center justify-center p-8'>
-            <div className='flex min-h-[400px] max-w-[600px] flex-col justify-center rounded-xl bg-zinc-900 p-8 text-center text-4xl font-semibold text-gray-100 shadow-md'>
-              <div>
+          <div className='relative mx-auto mt-8 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
+            <div className='absolute inset-0 z-0 rounded-2xl bg-black/60 backdrop-blur-md' />
+            <div className='relative z-10 rounded-2xl px-8 py-6'>
+              <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
                 Welcome to TheBakers{' '}
                 <span className='font-bold text-red-700'>Hub</span>
-              </div>
-              {username && (
-                <div className='mt-4 text-2xl'>
-                  Hello, <span className='text-red-500'>{username}</span>!
+                {username ? `, ${username}!` : ", [User's Name]!"}
+              </h1>
+              <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
+                At The Bakers, we strive to bring you the best experience in
+                managing your schedules and pricing. Explore our offerings and
+                see how we can help you achieve more.
+              </p>
+            </div>
+          </div>
+          <div className='mx-auto mt-8 w-full max-w-6xl'>
+            <div className='flex w-full flex-col items-center'>
+              <img
+                src={services}
+                alt='Services'
+                className='w-80 drop-shadow-lg'
+                draggable={false}
+              />
+              <h2 className='relative mb-10 text-center text-3xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl'>
+                <span className='absolute left-1/2 top-full block h-1 w-24 -translate-x-1/2 rounded bg-gradient-to-r from-red-600 via-red-400 to-yellow-400 opacity-80'></span>
+              </h2>
+            </div>
+            <div className='mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4'>
+              {plans.map((plan, _) => (
+                <div
+                  key={plan.name}
+                  className='flex min-h-[180px] flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105'
+                >
+                  <div>
+                    <div className='mb-2 text-lg font-bold text-white'>
+                      {plan.name}
+                    </div>
+                    <div className='mb-4 text-sm text-gray-300'>
+                      {plan.description}
+                    </div>
+                  </div>
+                  <div
+                    className={
+                      plan.price === 'Contact Us'
+                        ? 'mt-auto text-base font-bold text-red-500'
+                        : 'mt-auto text-lg font-bold text-red-500'
+                    }
+                  >
+                    {plan.price}
+                  </div>
                 </div>
-              )}
-              <div className='mt-4 text-lg font-normal text-gray-200'>
-                The Bakers is a solid boosting team of premade friends who
-                formed this guild after leaving our first one together. We've
-                been boosting as a team since the end of Shadowlands. All of our
-                services are 100% Terms of Service friendly.
-              </div>
+              ))}
             </div>
           </div>
           {/* Seta para baixo */}
-          <div
-            className='flex w-full justify-center'
-            style={{ position: 'absolute', bottom: 48, left: 0, zIndex: 10 }}
-          >
+          <div className='mt-8 flex w-full justify-center'>
             <button
               onClick={() => {
                 const section = document.getElementById('semana-tabelas')
@@ -251,135 +236,126 @@ export function HomePage() {
               </svg>
             </button>
           </div>
-        </div>
-        {/* Conteúdo extra: 7 tabelas para os dias da semana */}
-        <div className='flex min-h-screen w-full flex-col items-center justify-center gap-14'>
-          <h2 className='text-6xl font-bold tracking-wide text-white'>
-            SCHEDULE
-          </h2>
-          <div
-            id='semana-tabelas'
-            className='flex w-full justify-center gap-8 px-8'
-          >
-            {[
-              'Domingo',
-              'Segunda',
-              'Terça',
-              'Quarta',
-              'Quinta',
-              'Sexta',
-              'Sábado',
-            ].map((dia, idx) => {
-              // Nova ordem de prioridade dos times
-              const teamOrder = [
-                'Garçom',
-                'Padeirinho',
-                'Confeiteiros',
-                'Jackfruit',
-                'APAE',
-                'Jackfruit',
-                'Sapoculeano',
-                'KFFC',
-                'DTM',
-                'Greensky',
-                'Guild Azralon BR#1',
-                'Guild Azralon BR#2',
-                'Advertiser',
-                'Milharal',
-                'Raio',
-              ]
-              // Ordena as runs do dia pelo horário e prioridade do time
-              const runsSorted = (weekRuns[idx] || []).slice().sort((a, b) => {
-                if (!a?.time || !b?.time) return 0
-                const [ha, ma] = a.time.split(':').map(Number)
-                const [hb, mb] = b.time.split(':').map(Number)
-                if (ha !== hb) return ha - hb
-                if (ma !== mb) return ma - mb
-                // Se o horário for igual, ordena pela ordem dos times
-                const pa = teamOrder.indexOf(a.team)
-                const pb = teamOrder.indexOf(b.team)
-                if (pa === -1 && pb === -1) return 0
-                if (pa === -1) return 1
-                if (pb === -1) return -1
-                return pa - pb
-              })
-              const runsToShow = runsSorted.length
-                ? runsSorted
-                : [null, null, null, null, null]
-              return (
-                <TableContainer
-                  key={dia}
-                  component={Paper}
-                  className='max-w-xs flex-1'
-                  style={{ minWidth: 160, minHeight: 400, maxHeight: 600 }}
-                >
-                  <Table size='small' style={{ minHeight: 400 }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          align='center'
-                          style={{
-                            fontWeight: 'bold',
-                            background: '#ECEBEE',
-                            fontSize: '1.1rem',
-                            position: 'sticky',
-                            top: 0,
-                            zIndex: 1,
-                          }}
-                        >
-                          {(() => {
-                            // Tradução dos dias para inglês
-                            const daysEn = [
-                              'Sunday',
-                              'Monday',
-                              'Tuesday',
-                              'Wednesday',
-                              'Thursday',
-                              'Friday',
-                              'Saturday',
-                            ]
-                            return daysEn[idx]
-                          })()}
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {runsToShow.map((run, i) =>
-                        run ? (
-                          <TableRow
-                            key={run.id}
-                            style={{
-                              background: teamColors[run.team] || undefined,
-                            }}
-                            onDoubleClick={() =>
-                              navigate(`/bookings-na/run/${run.id}`)
-                            }
-                            className='cursor-pointer'
-                          >
-                            <TableCell align='center'>
-                              <div>
-                                <div>
-                                  <b>{run.time}</b>
-                                </div>
-                                <div>{run.raid}</div>
-                                <div>{run.difficulty}</div>
-                                <div>{run.loot}</div>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          <TableRow key={i}>
-                            <TableCell align='center'>&nbsp;</TableCell>
-                          </TableRow>
-                        )
+        </section>
+        {/* Segunda sessão: Tabelas dos dias da semana */}
+        <section
+          id='semana-tabelas'
+          className='flex min-h-screen w-full flex-col items-center justify-center gap-14 py-20'
+        >
+          <div className='relative w-full rounded-2xl bg-black/40 p-10 backdrop-blur-md'>
+            <h2 className='mb-8 text-center text-6xl font-bold tracking-wide text-white'>
+              SCHEDULE
+            </h2>
+            <div className='flex w-full flex-wrap justify-center gap-8 px-8'>
+              {[
+                'Domingo',
+                'Segunda',
+                'Terça',
+                'Quarta',
+                'Quinta',
+                'Sexta',
+                'Sábado',
+              ].map((dia, idx) => {
+                // Nova ordem de prioridade dos times
+                const teamOrder = [
+                  'Garçom',
+                  'Padeirinho',
+                  'Confeiteiros',
+                  'Jackfruit',
+                  'APAE',
+                  'Jackfruit',
+                  'Sapoculeano',
+                  'KFFC',
+                  'DTM',
+                  'Greensky',
+                  'Guild Azralon BR#1',
+                  'Guild Azralon BR#2',
+                  'Advertiser',
+                  'Milharal',
+                  'Raio',
+                ]
+                // Ordena as runs do dia pelo horário e prioridade do time
+                const runsSorted = (weekRuns[idx] || [])
+                  .slice()
+                  .sort((a, b) => {
+                    if (!a?.time || !b?.time) return 0
+                    const [ha, ma] = a.time.split(':').map(Number)
+                    const [hb, mb] = b.time.split(':').map(Number)
+                    if (ha !== hb) return ha - hb
+                    if (ma !== mb) return ma - mb
+                    // Se o horário for igual, ordena pela ordem dos times
+                    const pa = teamOrder.indexOf(a.team)
+                    const pb = teamOrder.indexOf(b.team)
+                    if (pa === -1 && pb === -1) return 0
+                    if (pa === -1) return 1
+                    if (pb === -1) return -1
+                    return pa - pb
+                  })
+                const runsToShow = runsSorted.length ? runsSorted : []
+                // Tradução dos dias para inglês
+                const daysEn = [
+                  'Sunday',
+                  'Monday',
+                  'Tuesday',
+                  'Wednesday',
+                  'Thursday',
+                  'Friday',
+                  'Saturday',
+                ]
+                return (
+                  <div
+                    key={dia}
+                    className='mb-6 flex max-h-[800px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                    style={{ minHeight: 800 }}
+                  >
+                    <div className='mb-4 text-2xl font-semibold text-white'>
+                      {daysEn[idx]}
+                    </div>
+                    <div
+                      className='flex flex-col gap-4 overflow-y-auto pr-1'
+                      style={{ maxHeight: 800 }}
+                    >
+                      {runsToShow.length === 0 && (
+                        <div className='text-center text-gray-400'>
+                          No runs scheduled
+                        </div>
                       )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )
-            })}
+                      {runsToShow.map((run) => (
+                        <div
+                          key={run.id}
+                          className='flex cursor-pointer flex-col rounded-xl bg-zinc-800 p-4 shadow transition hover:bg-zinc-700'
+                          style={{
+                            background: teamColors[run.team] || undefined,
+                          }}
+                          onDoubleClick={() =>
+                            navigate(`/bookings-na/run/${run.id}`)
+                          }
+                        >
+                          <div className='mb-1 text-lg font-bold text-white'>
+                            {formatTime12h(run.time)} - {run.raid}
+                          </div>
+                          <div className='mb-1 text-sm text-gray-300'>
+                            {run.difficulty} {run.loot ? `- ${run.loot}` : ''}
+                          </div>
+                          {typeof run.maxBuyers === 'number' &&
+                            typeof run.slotAvailable === 'number' && (
+                              <div className='text-xs text-gray-400'>
+                                Buyers:{' '}
+                                <span className='font-semibold text-white'>
+                                  {run.maxBuyers - run.slotAvailable}/
+                                  {run.maxBuyers}
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     )
   }
@@ -412,4 +388,14 @@ const teamColors: { [key: string]: string } = {
   Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)',
   'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)',
   'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
+}
+
+// Função utilitária para converter "HH:mm" para 12h com AM/PM
+function formatTime12h(time: string) {
+  if (!time) return ''
+  const [h, m] = time.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return time
+  const hour = ((h + 11) % 12) + 1
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
 }
