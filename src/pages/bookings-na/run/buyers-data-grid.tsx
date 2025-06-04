@@ -79,6 +79,7 @@ export function BuyersDataGrid({
     id: string
     nameAndRealm: string
     buyerPot: number
+    buyerDolarPot: number
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
@@ -97,6 +98,7 @@ export function BuyersDataGrid({
       id: buyer.id,
       nameAndRealm: buyer.nameAndRealm,
       buyerPot: buyer.buyerPot,
+      buyerDolarPot: buyer.buyerDolarPot,
       buyerNote: buyer.buyerNote,
     })
     setModalType(type)
@@ -523,7 +525,17 @@ export function BuyersDataGrid({
                 backgroundColor: '#ECEBEE',
               }}
             >
-              Total Pot
+              Dolar Pot
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Gold Pot
             </TableCell>
             <TableCell
               sx={{ textAlign: 'center' }}
@@ -626,7 +638,21 @@ export function BuyersDataGrid({
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
+                  {buyer.fieldIsBlocked === true ? (
+                    <i>Encrypted</i>
+                  ) : buyer.buyerDolarPot > 0 ? (
+                    Math.round(Number(buyer.buyerDolarPot)).toLocaleString(
+                      'en-US'
+                    )
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {/* Gold Pot (antes era Total Pot) */}
+                  {buyer.buyerPot > 0
+                    ? Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')
+                    : '-'}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.fieldIsBlocked === true ? (
@@ -731,6 +757,7 @@ export function BuyersDataGrid({
                   id: editingBuyer.id,
                   nameAndRealm: editingBuyer.nameAndRealm,
                   buyerPot: editingBuyer.buyerPot,
+                  buyerDolarPot: editingBuyer.buyerDolarPot,
                   buyerNote: editingBuyer.buyerNote,
                 }}
                 onClose={() => setOpenModal(false)}

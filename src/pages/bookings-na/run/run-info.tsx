@@ -188,17 +188,33 @@ export function RunInfo({
                 <span>-</span>
               )}
             </p>
+            {/* Gold Pot e Dolar Pot em linhas separadas, Gold Pot em negrito, sem "Run Pot" */}
             <p className='text-left'>
-              <span className='text-base font-bold'>
-                Run Pot:{' '}
+              {attendanceAccessDenied ? (
                 <span className='font-normal'>
-                  {attendanceAccessDenied ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    Math.round(Number(run.actualPot)).toLocaleString('en-US')
-                  )}
+                  <i>Encrypted</i>
                 </span>
-              </span>
+              ) : (
+                <>
+                  <span className='font-bold'>
+                    Gold Pot:{' '}
+                    <span className='font-normal'>
+                      {Math.round(Number(run.actualPot)).toLocaleString(
+                        'en-US'
+                      )}
+                    </span>
+                  </span>
+                  <br />
+                  <span className='font-bold'>
+                    Dolar Pot:{' '}
+                    <span className='font-normal'>
+                      {Math.round(Number(run.actualPotDolar)).toLocaleString(
+                        'en-US'
+                      )}
+                    </span>
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </CardContent>

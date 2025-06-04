@@ -38,6 +38,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     nameAndRealm: '',
     playerClass: '',
     buyerPot: '',
+    buyerDolarPot: '',
     isPaid: false,
     idBuyerAdvertiser: '',
     buyerNote: '',
@@ -46,6 +47,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   // Função para lidar com mudanças nos inputs do formulário
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +78,22 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setFormError(null)
+
+    // Validação: apenas um dos campos deve estar preenchido
+    const buyerPotFilled =
+      !!formData.buyerPot && Number(formData.buyerPot.replace(/,/g, '')) > 0
+    const buyerDolarPotFilled =
+      !!formData.buyerDolarPot &&
+      Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
+    if (
+      (buyerPotFilled && buyerDolarPotFilled) ||
+      (!buyerPotFilled && !buyerDolarPotFilled)
+    ) {
+      setFormError('Preencha apenas um dos campos: Pot OU Pot (USD).')
+      setIsSubmitting(false)
+      return
+    }
 
     // Garantir que todos os campos obrigatórios estão preenchidos
     const data = {
@@ -83,6 +101,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       nameAndRealm: formData.nameAndRealm || '',
       playerClass: formData.playerClass || '',
       buyerPot: Number(formData.buyerPot.replace(/,/g, '')) || 0,
+      buyerDolarPot: Number(formData.buyerDolarPot.replace(/,/g, '')) || 0,
       isPaid: formData.isPaid,
       idBuyerAdvertiser: formData.idBuyerAdvertiser || '',
       buyerNote: formData.buyerNote || '',
@@ -215,7 +234,34 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 }
                 variant='outlined'
                 fullWidth
+                disabled={
+                  !!formData.buyerDolarPot &&
+                  Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
+                }
               />
+              <TextField
+                id='buyerDolarPot'
+                label='Pot (USD)'
+                required
+                value={formData.buyerDolarPot}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    buyerDolarPot: formatBuyerPot(e.target.value),
+                  }))
+                }
+                variant='outlined'
+                fullWidth
+                disabled={
+                  !!formData.buyerPot &&
+                  Number(formData.buyerPot.replace(/,/g, '')) > 0
+                }
+              />
+              {formError && (
+                <div className='col-span-2 text-center font-semibold text-red-600'>
+                  {formError}
+                </div>
+              )}
               <FormControl fullWidth variant='outlined'>
                 <InputLabel id='idBuyerAdvertiser-label'>Advertiser</InputLabel>
                 <Select

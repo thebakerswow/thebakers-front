@@ -96,6 +96,7 @@ export function RunDetails() {
     try {
       setIsLoadingBuyers(false)
       const response = await api.get(`/run/${id}/buyers`)
+      console.log(response.data.info)
 
       setRows(response.data.info)
     } catch (error) {

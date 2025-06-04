@@ -18,6 +18,7 @@ export interface RunData {
   team: string
   backups: number
   actualPot: number
+  actualPotDolar: number
   slotAvailable: number
   maxBuyers: string
   raidLeaders: RaidLeader[]
