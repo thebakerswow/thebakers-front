@@ -6,7 +6,8 @@ import { Modal as MuiModal, Box } from '@mui/material'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { api } from '../../services/axiosConfig'
 import { useNavigate } from 'react-router-dom'
-import services from '../../assets/schedule.png'
+import services from '../../assets/services.png'
+import schedule from '../../assets/schedule.png'
 
 type DiscordTokenPayload = {
   username: string
@@ -240,12 +241,16 @@ export function HomePage() {
         {/* Segunda sessão: Tabelas dos dias da semana */}
         <section
           id='semana-tabelas'
-          className='flex min-h-screen w-full flex-col items-center justify-center gap-14 py-20'
+          className='flex min-h-screen w-full flex-col items-center'
         >
-          <div className='relative w-full rounded-2xl bg-black/40 p-10 backdrop-blur-md'>
-            <h2 className='mb-8 text-center text-6xl font-bold tracking-wide text-white'>
-              SCHEDULE
-            </h2>
+          <div className='flex w-full flex-col items-center'>
+            <img
+              src={schedule}
+              alt='Schedule'
+              className='w-80 drop-shadow-lg'
+            />
+          </div>
+          <div className='relative w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
             <div className='flex w-full flex-wrap justify-center gap-8 px-8'>
               {[
                 'Domingo',
@@ -305,18 +310,17 @@ export function HomePage() {
                 return (
                   <div
                     key={dia}
-                    className='mb-6 flex max-h-[800px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
-                    style={{ minHeight: 800 }}
+                    className='flex max-h-[800px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                   >
                     <div className='mb-4 text-2xl font-semibold text-white'>
                       {daysEn[idx]}
                     </div>
                     <div
-                      className='flex flex-col gap-4 overflow-y-auto pr-1'
-                      style={{ maxHeight: 800 }}
+                      className='custom-scrollbar relative flex flex-col gap-4 pr-1'
+                      style={{ minHeight: 600, overflowY: 'auto' }}
                     >
                       {runsToShow.length === 0 && (
-                        <div className='text-center text-gray-400'>
+                        <div className='flex h-full flex-1 items-center justify-center text-center text-gray-400'>
                           No runs scheduled
                         </div>
                       )}
@@ -375,19 +379,19 @@ export function HomePage() {
 }
 
 const teamColors: { [key: string]: string } = {
-  Padeirinho: 'linear-gradient(90deg, #FDE68A, #ca8a04)',
-  Garçom: 'linear-gradient(90deg, #60A5FA, #2563EB)',
-  Confeiteiros: 'linear-gradient(90deg, #A78BFA, #f472b6)',
-  Jackfruit: 'linear-gradient(90deg, #86EFAC, #16a34a)',
-  Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
-  Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
-  APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
-  DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)',
-  KFFC: 'linear-gradient(90deg, #065F46, #34D399)',
-  Sapoculeano: 'linear-gradient(90deg, #1E3A8A,#7DD3FC )',
-  Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)',
-  'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)',
-  'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
+  Padeirinho: '#ca8a04',
+  Garçom: '#2563EB',
+  Confeiteiros: '#f472b6',
+  Jackfruit: '#16a34a',
+  Milharal: '#fef08a',
+  Raio: '#facc15',
+  APAE: '#ef4444',
+  DTM: '#9CA3AF',
+  KFFC: '#34D399',
+  Sapoculeano: '#7DD3FC',
+  Greensky: '#fde68a',
+  'Guild Azralon BR#1': '#16a34a',
+  'Guild Azralon BR#2': '#16a34a',
 }
 
 // Função utilitária para converter "HH:mm" para 12h com AM/PM
