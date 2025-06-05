@@ -100,7 +100,7 @@ export function RunInfo({
   return (
     <div className='m-4 flex gap-2 rounded-md'>
       <img
-        className='h-[220px] w-[400px] rounded-md'
+        className='min-h-[220px] max-w-[400px] rounded-md'
         src={undermineLogo}
         alt='Run Cover'
       />
@@ -110,8 +110,9 @@ export function RunInfo({
           {!attendanceAccessDenied && (
             <Table>
               <TableBody>
-                {run.sumPot?.map((item) =>
-                  item.sumPot !== 0 ? ( // Verifica se sumPot não é igual a zero
+                {run.sumPot
+                  ?.filter((item) => item.type === 'gold' && item.sumPot !== 0)
+                  .map((item) => (
                     <TableRow key={item.idDiscord} style={{ height: '20px' }}>
                       <TableCell style={{ padding: '10px' }}>
                         {item.username}
@@ -122,13 +123,45 @@ export function RunInfo({
                         )}
                       </TableCell>
                     </TableRow>
-                  ) : null
-                )}
+                  ))}
               </TableBody>
             </Table>
           )}
         </TableContainer>
       </div>
+      {/* Exibe Dolar Collectors apenas se houver pelo menos um item do tipo dolar */}
+      {run.sumPot?.some(
+        (item) => item.type === 'dolar' && item.sumPot !== 0
+      ) && (
+        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
+          <h2 className='text-lg font-semibold'>Dolar Collectors</h2>
+          <TableContainer component={Paper}>
+            {!attendanceAccessDenied && (
+              <Table>
+                <TableBody>
+                  {run.sumPot
+                    ?.filter(
+                      (item) => item.type === 'dolar' && item.sumPot !== 0
+                    )
+                    .map((item) => (
+                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
+                        <TableCell style={{ padding: '10px' }}>
+                          {item.username}
+                        </TableCell>
+                        <TableCell align='right' style={{ padding: '10px' }}>
+                          {Math.round(Number(item.sumPot)).toLocaleString(
+                            'en-US'
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </TableContainer>
+        </div>
+      )}
+
       <Card
         className='grid flex-1 grid-cols-4 items-center text-left text-zinc-900'
         style={{ minWidth: '1000px', backgroundColor: '#f3f4f6' }}
