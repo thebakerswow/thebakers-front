@@ -47,6 +47,7 @@ export function BalanceControlTable({
   const [newNick, setNewNick] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isFreelancerDialogOpen, setIsFreelancerDialogOpen] = useState(false)
+  const [isDolar, setIsDolar] = useState(false)
 
   const sortedUsers = Array.isArray(users)
     ? [...users].sort((a, b) => {
@@ -121,7 +122,7 @@ export function BalanceControlTable({
 
   // Função para buscar os dados do balance admin
   const fetchBalanceAdmin = useCallback(
-    async (showLoading = true) => {
+    async (showLoading = true, isDolarFlag = isDolar) => {
       if (!selectedDate || !selectedTeam) return // Ensure selectedDate and selectedTeam are not empty
 
       if (showLoading) setIsLoading(true)
@@ -130,6 +131,7 @@ export function BalanceControlTable({
           params: {
             id_team: selectedTeam === 'all' ? undefined : selectedTeam,
             date: selectedDate,
+            is_dolar: isDolarFlag,
           }, // Handle "all" option
         })
         setUsers(data.info)
@@ -148,15 +150,15 @@ export function BalanceControlTable({
         if (showLoading) setIsLoading(false)
       }
     },
-    [selectedTeam, selectedDate]
+    [selectedTeam, selectedDate, isDolar]
   )
 
-  // Fetch data only when selectedTeam or selectedDate changes
+  // Fetch data only when selectedTeam, selectedDate ou isDolar mudam
   useEffect(() => {
     if (selectedTeam && selectedDate) {
-      fetchBalanceAdmin(true)
+      fetchBalanceAdmin(true, isDolar)
     }
-  }, [fetchBalanceAdmin, selectedTeam, selectedDate])
+  }, [fetchBalanceAdmin, selectedTeam, selectedDate, isDolar])
 
   // Atualiza o valor do input da calculadora, formatando com vírgulas
   const handleCalculatorChange = (userId: string, value: string) => {
@@ -182,6 +184,7 @@ export function BalanceControlTable({
       await api.post('/transaction', {
         value: Number(calculatorValues[userId].replace(/,/g, '')),
         id_discord: userId,
+        is_dolar: isDolar,
       })
       setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
       fetchBalanceAdmin()
@@ -212,6 +215,7 @@ export function BalanceControlTable({
           api.post('/transaction', {
             value: Number(value.replace(/,/g, '')),
             id_discord: userId,
+            is_dolar: isDolar,
           })
         )
       )
@@ -422,6 +426,22 @@ export function BalanceControlTable({
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
           />
+          <Button
+            variant='contained'
+            sx={{
+              height: '40px',
+              minWidth: '80px',
+
+              backgroundColor: isDolar ? '#ef4444' : '#FFD700', // vermelho para dólar, dourado para gold
+              color: isDolar ? '#fff' : '#000',
+              '&:hover': {
+                backgroundColor: isDolar ? '#dc2626' : '#FFC300',
+              },
+            }}
+            onClick={() => setIsDolar((prev) => !prev)}
+          >
+            {isDolar ? 'U$' : 'Gold'}
+          </Button>
           <Button
             variant='contained'
             color='error'
