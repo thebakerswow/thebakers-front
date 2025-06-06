@@ -24,6 +24,8 @@ interface BalanceControlTableProps {
   selectedDate: string
   setSelectedTeam: (team: string) => void
   setSelectedDate: (date: string) => void
+  isDolar: boolean
+  setIsDolar: (value: boolean) => void
 }
 
 export function BalanceControlTable({
@@ -31,6 +33,8 @@ export function BalanceControlTable({
   selectedDate,
   setSelectedTeam,
   setSelectedDate,
+  isDolar,
+  setIsDolar,
 }: BalanceControlTableProps) {
   const [users, setUsers] = useState<any[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -47,7 +51,6 @@ export function BalanceControlTable({
   const [newNick, setNewNick] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isFreelancerDialogOpen, setIsFreelancerDialogOpen] = useState(false)
-  const [isDolar, setIsDolar] = useState(false)
 
   const sortedUsers = Array.isArray(users)
     ? [...users].sort((a, b) => {
@@ -431,14 +434,13 @@ export function BalanceControlTable({
             sx={{
               height: '40px',
               minWidth: '80px',
-
-              backgroundColor: isDolar ? '#ef4444' : '#FFD700', // vermelho para dólar, dourado para gold
+              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
               color: isDolar ? '#fff' : '#000',
               '&:hover': {
                 backgroundColor: isDolar ? '#dc2626' : '#FFC300',
               },
             }}
-            onClick={() => setIsDolar((prev) => !prev)}
+            onClick={() => setIsDolar(!isDolar)}
           >
             {isDolar ? 'U$' : 'Gold'}
           </Button>
