@@ -562,8 +562,9 @@ export function BalanceControlTable({
                     }}
                   >
                     {user.username}
-                    {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ||
-                    selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER ? (
+                    {(selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ||
+                      selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER) &&
+                    user.nick ? (
                       <>
                         <br />
                         <span className='text-sm text-gray-600'>
