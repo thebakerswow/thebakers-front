@@ -79,6 +79,7 @@ export function BuyersDataGrid({
     id: string
     nameAndRealm: string
     buyerPot: number
+    buyerDolarPot: number
     buyerNote: string
   } | null>(null)
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
@@ -97,6 +98,7 @@ export function BuyersDataGrid({
       id: buyer.id,
       nameAndRealm: buyer.nameAndRealm,
       buyerPot: buyer.buyerPot,
+      buyerDolarPot: buyer.buyerDolarPot,
       buyerNote: buyer.buyerNote,
     })
     setModalType(type)
@@ -523,7 +525,17 @@ export function BuyersDataGrid({
                 backgroundColor: '#ECEBEE',
               }}
             >
-              Total Pot
+              Dolar Pot
+            </TableCell>
+            <TableCell
+              sx={{ textAlign: 'center' }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              Gold Pot
             </TableCell>
             <TableCell
               sx={{ textAlign: 'center' }}
@@ -587,49 +599,73 @@ export function BuyersDataGrid({
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm === '****' ||
-                  buyer.fieldIsBlocked === true ? (
+                  {buyer.nameAndRealm === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameAndRealm
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerNote === '****' ||
-                  buyer.fieldIsBlocked === true ? (
+                  {buyer.buyerNote === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.buyerNote
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameOwnerBuyer === '****' ||
-                  buyer.fieldIsBlocked === true ? (
+                  {buyer.nameOwnerBuyer === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameOwnerBuyer
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameCollector === '****' ||
-                  buyer.fieldIsBlocked === true ? (
+                  {buyer.nameCollector == null ||
+                  buyer.nameCollector === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameCollector
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true ? (
+                  {/* Paid Full */}
+                  {buyer.isEncrypted === true ? (
                     <i>Encrypted</i>
                   ) : (
-                    renderPaidIcon(buyer)
+                    renderPaidIcon({
+                      ...buyer,
+                      isPaid: buyer.isPaid == null ? false : buyer.isPaid,
+                    })
                   )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')}
+                  {/* Dolar Pot */}
+                  {buyer.buyerDolarPot == null ? (
+                    buyer.buyerPot == null ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      '-'
+                    )
+                  ) : buyer.buyerDolarPot > 0 ? (
+                    Math.round(Number(buyer.buyerDolarPot)).toLocaleString(
+                      'en-US'
+                    )
+                  ) : (
+                    '-'
+                  )}
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true ? (
+                  {/* Gold Pot (antes era Total Pot) */}
+                  {buyer.buyerPot == null ? (
+                    <i>Encrypted</i>
+                  ) : buyer.buyerPot > 0 ? (
+                    Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
+                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  {buyer.buyerActualPot == null ? (
                     <i>Encrypted</i>
                   ) : (
                     Math.round(Number(buyer.buyerActualPot)).toLocaleString(
@@ -639,12 +675,18 @@ export function BuyersDataGrid({
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   <div className='flex items-center justify-center gap-2'>
-                    {buyer.playerClass}
-                    {renderClassImage(buyer.playerClass)}
+                    {buyer.playerClass === 'Encrypted' ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      <>
+                        {buyer.playerClass}
+                        {renderClassImage(buyer.playerClass)}
+                      </>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm !== '****' && !buyer.fieldIsBlocked && (
+                  {buyer.nameAndRealm === 'Encrypted' ? null : (
                     <div className='flex justify-center gap-1'>
                       <Tooltip title='Edit'>
                         <IconButton
@@ -665,14 +707,14 @@ export function BuyersDataGrid({
                             runIsLocked ||
                             cooldownAFK[buyer.id] ||
                             globalCooldown
-                          } // Disable button during global cooldown or if run is locked
+                          }
                           sx={{
                             opacity:
                               cooldownAFK[buyer.id] ||
                               runIsLocked ||
                               globalCooldown
                                 ? 0.5
-                                : 1, // Make button opaque when disabled
+                                : 1,
                           }}
                         >
                           <RiZzzFill size={18} />
@@ -685,14 +727,14 @@ export function BuyersDataGrid({
                           }
                           disabled={
                             runIsLocked || cooldown[buyer.id] || globalCooldown
-                          } // Disable button during global cooldown or if run is locked
+                          }
                           sx={{
                             opacity:
                               cooldown[buyer.id] ||
                               runIsLocked ||
                               globalCooldown
                                 ? 0.5
-                                : 1, // Make button opaque when disabled
+                                : 1,
                           }}
                         >
                           <RiWifiOffLine size={18} />
@@ -731,6 +773,7 @@ export function BuyersDataGrid({
                   id: editingBuyer.id,
                   nameAndRealm: editingBuyer.nameAndRealm,
                   buyerPot: editingBuyer.buyerPot,
+                  buyerDolarPot: editingBuyer.buyerDolarPot,
                   buyerNote: editingBuyer.buyerNote,
                 }}
                 onClose={() => setOpenModal(false)}

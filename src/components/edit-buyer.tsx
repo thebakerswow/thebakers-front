@@ -9,6 +9,7 @@ interface EditBuyerProps {
     id: string
     nameAndRealm: string
     buyerPot: number
+    buyerDolarPot: number
     buyerNote: string
   }
   onClose: () => void
@@ -18,7 +19,14 @@ interface EditBuyerProps {
 export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   const [formData, setFormData] = useState({
     nameAndRealm: buyer.nameAndRealm,
-    buyerPot: buyer.buyerPot.toLocaleString('en-US'), // Formatted with commas
+    buyerPot:
+      typeof buyer.buyerPot === 'number'
+        ? buyer.buyerPot.toLocaleString('en-US')
+        : '',
+    buyerDolarPot:
+      typeof buyer.buyerDolarPot === 'number'
+        ? buyer.buyerDolarPot.toLocaleString('en-US')
+        : '',
     buyerNote: buyer.buyerNote,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -45,6 +53,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
       id_buyer: buyer.id,
       nameAndRealm: formData.nameAndRealm,
       buyerPot: Number(formData.buyerPot.replace(/,/g, '')), // Remove commas for backend
+      buyerDolarPot: Number(formData.buyerDolarPot.replace(/,/g, '')),
       buyerNote: formData.buyerNote,
     }
 
@@ -86,6 +95,13 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
           fullWidth
           value={formData.buyerPot}
           onChange={handleChange('buyerPot')}
+        />
+        <TextField
+          label='Dolar Pot'
+          variant='outlined'
+          fullWidth
+          value={formData.buyerDolarPot}
+          onChange={handleChange('buyerDolarPot')}
         />
         <TextField
           label='Note'

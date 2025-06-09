@@ -24,6 +24,8 @@ interface BalanceControlTableProps {
   selectedDate: string
   setSelectedTeam: (team: string) => void
   setSelectedDate: (date: string) => void
+  isDolar: boolean
+  setIsDolar: (value: boolean) => void
 }
 
 export function BalanceControlTable({
@@ -31,6 +33,8 @@ export function BalanceControlTable({
   selectedDate,
   setSelectedTeam,
   setSelectedDate,
+  isDolar,
+  setIsDolar,
 }: BalanceControlTableProps) {
   const [users, setUsers] = useState<any[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -121,7 +125,7 @@ export function BalanceControlTable({
 
   // Função para buscar os dados do balance admin
   const fetchBalanceAdmin = useCallback(
-    async (showLoading = true) => {
+    async (showLoading = true, isDolarFlag = isDolar) => {
       if (!selectedDate || !selectedTeam) return // Ensure selectedDate and selectedTeam are not empty
 
       if (showLoading) setIsLoading(true)
@@ -130,6 +134,7 @@ export function BalanceControlTable({
           params: {
             id_team: selectedTeam === 'all' ? undefined : selectedTeam,
             date: selectedDate,
+            is_dolar: isDolarFlag,
           }, // Handle "all" option
         })
         setUsers(data.info)
@@ -148,15 +153,15 @@ export function BalanceControlTable({
         if (showLoading) setIsLoading(false)
       }
     },
-    [selectedTeam, selectedDate]
+    [selectedTeam, selectedDate, isDolar]
   )
 
-  // Fetch data only when selectedTeam or selectedDate changes
+  // Fetch data only when selectedTeam, selectedDate ou isDolar mudam
   useEffect(() => {
     if (selectedTeam && selectedDate) {
-      fetchBalanceAdmin(true)
+      fetchBalanceAdmin(true, isDolar)
     }
-  }, [fetchBalanceAdmin, selectedTeam, selectedDate])
+  }, [fetchBalanceAdmin, selectedTeam, selectedDate, isDolar])
 
   // Atualiza o valor do input da calculadora, formatando com vírgulas
   const handleCalculatorChange = (userId: string, value: string) => {
@@ -182,6 +187,7 @@ export function BalanceControlTable({
       await api.post('/transaction', {
         value: Number(calculatorValues[userId].replace(/,/g, '')),
         id_discord: userId,
+        is_dolar: isDolar,
       })
       setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
       fetchBalanceAdmin()
@@ -212,6 +218,7 @@ export function BalanceControlTable({
           api.post('/transaction', {
             value: Number(value.replace(/,/g, '')),
             id_discord: userId,
+            is_dolar: isDolar,
           })
         )
       )
@@ -424,6 +431,21 @@ export function BalanceControlTable({
           />
           <Button
             variant='contained'
+            sx={{
+              height: '40px',
+              minWidth: '80px',
+              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
+              color: isDolar ? '#fff' : '#000',
+              '&:hover': {
+                backgroundColor: isDolar ? '#dc2626' : '#FFC300',
+              },
+            }}
+            onClick={() => setIsDolar(!isDolar)}
+          >
+            {isDolar ? 'U$' : 'Gold'}
+          </Button>
+          <Button
+            variant='contained'
             color='error'
             size='small'
             disabled={Object.values(calculatorValues).every(
@@ -540,8 +562,9 @@ export function BalanceControlTable({
                     }}
                   >
                     {user.username}
-                    {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ||
-                    selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER ? (
+                    {(selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ||
+                      selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER) &&
+                    user.nick ? (
                       <>
                         <br />
                         <span className='text-sm text-gray-600'>

@@ -4,6 +4,7 @@ export interface SumPot {
   idDiscord: string
   username: string
   sumPot: number
+  type: 'gold' | 'dolar'
 }
 
 export interface RunData {
@@ -18,6 +19,7 @@ export interface RunData {
   team: string
   backups: number
   actualPot: number
+  actualPotDolar: number
   slotAvailable: number
   maxBuyers: string
   raidLeaders: RaidLeader[]

@@ -10,6 +10,7 @@ export function AdminPage() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
+  const [isDolar, setIsDolar] = useState(false)
   const navigate = useNavigate()
 
   // Function to check admin access
@@ -42,6 +43,8 @@ export function AdminPage() {
         selectedDate={selectedDate}
         setSelectedTeam={setSelectedTeam}
         setSelectedDate={setSelectedDate}
+        isDolar={isDolar}
+        setIsDolar={setIsDolar}
       />
       {/* Segunda Tabela */}
       <GBanksTable />
@@ -49,7 +52,7 @@ export function AdminPage() {
       {/* Terceira Tabela */}
       <div className='h-[90%] min-w-[20%]'>
         <VerifyTable />
-        <LatestTransactions />
+        <LatestTransactions isDolar={isDolar} />
       </div>
     </div>
   )

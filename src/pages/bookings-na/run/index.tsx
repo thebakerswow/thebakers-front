@@ -96,6 +96,7 @@ export function RunDetails() {
     try {
       setIsLoadingBuyers(false)
       const response = await api.get(`/run/${id}/buyers`)
+      console.log(response.data.info)
 
       setRows(response.data.info)
     } catch (error) {
@@ -332,8 +333,11 @@ export function RunDetails() {
                       boxShadow: 'none',
                     }}
                     style={{
-                      display: canViewAttendanceButton ? 'inline-flex' : 'none',
-                    }}
+                      display:
+                      canViewAttendanceButton && hasAttendanceAccess
+                        ? 'inline-flex'
+                        : 'none',
+                    }} or no attendance access
                   >
                     {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                   </Button>

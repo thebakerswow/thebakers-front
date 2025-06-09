@@ -12,6 +12,8 @@ import {
   TableRow,
   Paper,
   Button,
+  Select,
+  MenuItem,
 } from '@mui/material'
 import { api } from '../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from './error-display'
@@ -29,6 +31,7 @@ export function TransactionExtract() {
   const [endDate, setEndDate] = useState(today)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [logs, setLogs] = useState<any[]>([])
+  const [isDolar, setIsDolar] = useState(false)
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -67,6 +70,7 @@ export function TransactionExtract() {
           initial_date: initialDate,
           end_date: endDate,
           impacted: selectedPlayer,
+          is_dolar: isDolar, // <-- Passa o booleano
         },
       })
       type LogInfo = {
@@ -147,6 +151,16 @@ export function TransactionExtract() {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
+        </FormControl>
+        <FormControl className='flex-1'>
+          <Select
+            value={isDolar ? 'dolar' : 'gold'}
+            onChange={(e) => setIsDolar(e.target.value === 'dolar')}
+            displayEmpty
+          >
+            <MenuItem value='gold'>Gold</MenuItem>
+            <MenuItem value='dolar'>Dolar</MenuItem>
+          </Select>
         </FormControl>
         <Button
           variant='contained'

@@ -52,11 +52,13 @@ interface ProcessedPlayer {
 interface BalanceDataGridProps {
   selectedTeam: string | null
   dateRange: { start: string; end: string } | undefined // Add dateRange prop
+  is_dolar: boolean // Add is_dolar prop
 }
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
   dateRange, // Destructure dateRange
+  is_dolar, // Destructure is_dolar
 }: BalanceDataGridProps) {
   const { userRoles = [] } = useAuth() // Garante que userRoles seja um array
   const restrictedFreelancerRole = import.meta.env.VITE_TEAM_FREELANCER
@@ -151,6 +153,7 @@ export function BalanceDataGrid({
             id_team: selectedTeam,
             date_start: dateRange.start,
             date_end: dateRange.end,
+            is_dolar, // Pass is_dolar to API
           },
         })
 
@@ -172,7 +175,7 @@ export function BalanceDataGrid({
       }
     }
     fetchBalanceData()
-  }, [dateRange, selectedTeam, isRestrictedUser])
+  }, [dateRange, selectedTeam, isRestrictedUser, is_dolar])
 
   // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {

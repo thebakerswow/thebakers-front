@@ -16,9 +16,10 @@ interface Transaction {
   name_impacted: string
   value: number
   date: string
+  type?: string
 }
 
-export default function LatestTransactions() {
+export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +56,11 @@ export default function LatestTransactions() {
           ...response.data.info.transactions,
           ...response.data.info.transactions_gbanks,
         ]
-        const sortedTransactions = combinedTransactions
+        // Filtra pelo tipo de acordo com isDolar
+        const filteredTransactions = combinedTransactions.filter((t) =>
+          isDolar ? t.type === 'dolar' : t.type !== 'dolar'
+        )
+        const sortedTransactions = filteredTransactions
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
@@ -72,7 +77,7 @@ export default function LatestTransactions() {
     fetchTransactions() // Initial fetch
     const interval = setInterval(fetchTransactions, 1000) // Polling every 1 second
     return () => clearInterval(interval) // Cleanup on unmount
-  }, [])
+  }, [isDolar])
 
   return (
     <div className='flex max-h-[70%] flex-col'>
@@ -132,7 +137,10 @@ export default function LatestTransactions() {
                   <TableCell align='center'>
                     {transaction.name_impacted}
                   </TableCell>
-                  <TableCell align='center'>{transaction.value}</TableCell>
+                  <TableCell align='center'>
+                    {isDolar ? '$' : ''}
+                    {transaction.value}
+                  </TableCell>
                   <TableCell align='center'>
                     {formatTime(transaction.date)}
                   </TableCell>
