@@ -169,6 +169,16 @@ export function Header() {
                 <UsersFour size={20} />
                 Teams
               </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigate('/services')
+                  handleMenuClose()
+                }}
+                sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <CalendarBlank size={20} />
+                Services
+              </MenuItem>
             </Menu>
           </>
         )}
