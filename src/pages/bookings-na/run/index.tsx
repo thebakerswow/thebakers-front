@@ -249,6 +249,10 @@ export function RunDetails() {
     }
   }, [id])
 
+  // Contadores de status dos buyers
+  const waitingCount = rows.filter((buyer) => buyer.status === 'waiting').length
+  const groupCount = rows.filter((buyer) => buyer.status === 'group').length
+
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
@@ -289,35 +293,51 @@ export function RunDetails() {
               </div>
             ) : (
               <div>
-                {canViewInviteButton && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  {canViewInviteButton && (
+                    <Button
+                      onClick={handleOpenInviteBuyersModal}
+                      variant='contained'
+                      startIcon={<UserPlus size={18} />}
+                      sx={{
+                        backgroundColor: 'rgb(239, 68, 68)',
+                        '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                        minWidth: 140,
+                        fontWeight: 500,
+                        boxShadow: 'none',
+                      }}
+                    >
+                      Invite Buyers
+                    </Button>
+                  )}
                   <Button
-                    onClick={handleOpenInviteBuyersModal}
+                    onClick={toggleDetailsVisibility}
                     variant='contained'
-                    startIcon={<UserPlus size={18} />}
                     sx={{
                       backgroundColor: 'rgb(239, 68, 68)',
                       '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-                      marginBottom: 1,
+                      minWidth: 160,
+                      fontWeight: 500,
+                      boxShadow: 'none',
+                    }}
+                    style={{
+                      display: canViewAttendanceButton ? 'inline-flex' : 'none',
                     }}
                   >
-                    Invite Buyers
+                    {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                   </Button>
-                )}
-                <Button
-                  onClick={toggleDetailsVisibility}
-                  variant='contained'
-                  sx={{
-                    backgroundColor: 'rgb(239, 68, 68)',
-                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-                    marginBottom: 1,
-                    marginLeft: 2,
-                  }}
-                  style={{
-                    display: canViewAttendanceButton ? 'inline-flex' : 'none',
-                  }} // Hide button if user has only the advertiser role
-                >
-                  {showDetails ? 'Hide Attendance' : 'Show Attendance'}
-                </Button>
+                  {/* Informativo de status */}
+                  <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
+                    Waiting: {waitingCount} | Group: {groupCount}
+                  </span>
+                </div>
                 <BuyersDataGrid
                   data={rows}
                   onBuyerStatusEdit={reloadAllData}
