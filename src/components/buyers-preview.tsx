@@ -77,6 +77,36 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
     <Dialog open={true} onClose={onClose} fullWidth maxWidth='lg'>
       <DialogContent>
         <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden'>
+          {/* Botão Add Buyer sempre visível */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <Button
+              onClick={() => setIsAddBuyerOpen(true)}
+              variant='contained'
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                minWidth: 140,
+                fontWeight: 500,
+                boxShadow: 'none',
+              }}
+            >
+              Add Buyer
+            </Button>
+            {/* Informativo de status só aparece se houver buyers */}
+            {Array.isArray(rows) && rows.length > 0 && (
+              <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
+                Waiting: {rows.filter((b) => b.status === 'waiting').length} |
+                Group: {rows.filter((b) => b.status === 'group').length}
+              </span>
+            )}
+          </div>
           {error ? (
             // Exibe componente de erro caso ocorra algum problema
             <ErrorComponent error={error} onClose={() => setError(null)} />
@@ -88,41 +118,12 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
             </div>
           ) : Array.isArray(rows) && rows.length > 0 ? (
             // Exibe a lista de buyers caso existam dados
-            <div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  marginBottom: 12,
-                }}
-              >
-                <Button
-                  onClick={() => setIsAddBuyerOpen(true)}
-                  variant='contained'
-                  sx={{
-                    backgroundColor: 'rgb(239, 68, 68)',
-                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-                    minWidth: 140,
-                    fontWeight: 500,
-                    boxShadow: 'none',
-                  }}
-                >
-                  Add Buyer
-                </Button>
-                {/* Informativo de status */}
-                <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
-                  Waiting: {rows.filter((b) => b.status === 'waiting').length} |
-                  Group: {rows.filter((b) => b.status === 'group').length}
-                </span>
-              </div>
-              <BuyersDataGrid
-                data={rows}
-                onBuyerStatusEdit={fetchData}
-                onBuyerNameNoteEdit={fetchData}
-                onDeleteSuccess={fetchData}
-              />
-            </div>
+            <BuyersDataGrid
+              data={rows}
+              onBuyerStatusEdit={fetchData}
+              onBuyerNameNoteEdit={fetchData}
+              onDeleteSuccess={fetchData}
+            />
           ) : (
             // Exibe mensagem caso não existam buyers
             <div className='flex h-full flex-col items-center justify-center'>
