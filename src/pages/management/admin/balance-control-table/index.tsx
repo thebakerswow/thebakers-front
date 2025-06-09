@@ -138,7 +138,6 @@ export function BalanceControlTable({
           }, // Handle "all" option
         })
         setUsers(data.info)
-        console.log(data.info)
       } catch (error) {
         setError(
           axios.isAxiosError(error)

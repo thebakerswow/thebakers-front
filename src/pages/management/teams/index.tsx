@@ -40,7 +40,6 @@ export function TeamsManagement() {
       try {
         setIsLoading(true)
         const response = await api.get('/teams')
-        console.log(response.data.info)
         const uniqueTeamOrder = Array.from(new Set(teamOrder)) // Remove duplicates
         const orderedTeams = uniqueTeamOrder.map((teamName) => ({
           name: teamName,

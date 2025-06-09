@@ -301,10 +301,12 @@ export function BuyersDataGrid({
     <Select
       value={buyer.status || ''}
       onChange={(e) =>
-        !runIsLocked && handleStatusChange(buyer.id, e.target.value)
+        !runIsLocked &&
+        buyer.nameAndRealm !== 'Encrypted' &&
+        handleStatusChange(buyer.id, e.target.value)
       }
       displayEmpty
-      disabled={runIsLocked} // Disable select when run is locked
+      disabled={runIsLocked || buyer.nameAndRealm === 'Encrypted'} // Disable select when run is locked or Encrypted
       sx={{
         width: '7rem',
         height: '2rem', // Reduced height
