@@ -250,8 +250,12 @@ export function RunDetails() {
   }, [id])
 
   // Contadores de status dos buyers
-  const waitingCount = rows.filter((buyer) => buyer.status === 'waiting').length
-  const groupCount = rows.filter((buyer) => buyer.status === 'group').length
+  const waitingCount = Array.isArray(rows)
+    ? rows.filter((buyer) => buyer.status === 'waiting').length
+    : 0
+  const groupCount = Array.isArray(rows)
+    ? rows.filter((buyer) => buyer.status === 'group').length
+    : 0
 
   if (error) {
     return (
