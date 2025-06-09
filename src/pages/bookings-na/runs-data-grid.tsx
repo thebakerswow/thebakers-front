@@ -553,6 +553,9 @@ export function RunsDataGrid({
                           )}
                         </IconButton>
                       </Tooltip>
+                      <div className='mt-1 text-center text-xs text-gray-700'>
+                        {run.runIsLocked ? '(locked)' : '(unlocked)'}
+                      </div>
                     </>
                   ) : null
                 )}
