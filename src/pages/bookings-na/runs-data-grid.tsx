@@ -8,7 +8,7 @@ import {
 } from '@phosphor-icons/react'
 import { TableSortLabel, Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import { Modal as MuiModal, Box } from '@mui/material'
 import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
@@ -60,6 +60,11 @@ export function RunsDataGrid({
     null
   )
   const { userRoles } = useAuth()
+  const [runs, setRuns] = useState<RunData[]>(data)
+
+  useEffect(() => {
+    setRuns(data)
+  }, [data])
 
   // Verifica se o usuário possui os papéis necessários
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -156,7 +161,7 @@ export function RunsDataGrid({
 
   // Ordena os dados por horário e prioridade do time
   const sortedData = useMemo(() => {
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...runs].sort((a, b) => {
       if (!a.time || !b.time) return 0
 
       const timeA = convertTimeToMinutes(a.time)
@@ -173,7 +178,7 @@ export function RunsDataGrid({
     })
 
     return sorted
-  }, [data, isTimeSortedAsc])
+  }, [runs, isTimeSortedAsc])
 
   // Alterna a ordem de classificação por horário
   const handleSortByTime = useCallback(() => {
@@ -238,6 +243,11 @@ export function RunsDataGrid({
         isLocked: !isLocked,
       })
       if (response.status === 200) {
+        setRuns((prevRuns) =>
+          prevRuns.map((run) =>
+            run.id === runId ? { ...run, runIsLocked: !isLocked } : run
+          )
+        )
         Swal.fire({
           icon: 'success',
           title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
