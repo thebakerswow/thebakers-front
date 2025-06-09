@@ -314,8 +314,11 @@ export function RunDetails() {
                     marginLeft: 2,
                   }}
                   style={{
-                    display: canViewAttendanceButton ? 'inline-flex' : 'none',
-                  }} // Hide button if user has only the advertiser role
+                    display:
+                      canViewAttendanceButton && hasAttendanceAccess
+                        ? 'inline-flex'
+                        : 'none',
+                  }} // Hide button if user has only the advertiser role or no attendance access
                 >
                   {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                 </Button>

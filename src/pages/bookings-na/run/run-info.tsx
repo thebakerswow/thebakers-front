@@ -104,31 +104,37 @@ export function RunInfo({
         src={undermineLogo}
         alt='Run Cover'
       />
-      <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
-        <h2 className='text-lg font-semibold'>Gold Collectors</h2>
-        <TableContainer component={Paper}>
-          {!attendanceAccessDenied && (
-            <Table>
-              <TableBody>
-                {run.sumPot
-                  ?.filter((item) => item.type === 'gold' && item.sumPot !== 0)
-                  .map((item) => (
-                    <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                      <TableCell style={{ padding: '10px' }}>
-                        {item.username}
-                      </TableCell>
-                      <TableCell align='right' style={{ padding: '10px' }}>
-                        {Math.round(Number(item.sumPot)).toLocaleString(
-                          'en-US'
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          )}
-        </TableContainer>
-      </div>
+      {run.sumPot?.some(
+        (item) => item.type === 'gold' && item.sumPot !== 0
+      ) && (
+        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
+          <h2 className='text-lg font-semibold'>Gold Collectors</h2>
+          <TableContainer component={Paper}>
+            {!attendanceAccessDenied && (
+              <Table>
+                <TableBody>
+                  {run.sumPot
+                    ?.filter(
+                      (item) => item.type === 'gold' && item.sumPot !== 0
+                    )
+                    .map((item) => (
+                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
+                        <TableCell style={{ padding: '10px' }}>
+                          {item.username}
+                        </TableCell>
+                        <TableCell align='right' style={{ padding: '10px' }}>
+                          {Math.round(Number(item.sumPot)).toLocaleString(
+                            'en-US'
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </TableContainer>
+        </div>
+      )}
       {/* Exibe Dolar Collectors apenas se houver pelo menos um item do tipo dolar */}
       {run.sumPot?.some(
         (item) => item.type === 'dolar' && item.sumPot !== 0
@@ -205,48 +211,34 @@ export function RunInfo({
                 Backups: <span className='font-normal'>{run.backups}</span>
               </span>
             </p>
-            <p className='text-left'>
-              <span className='text-base font-bold'>Raid Leader(s): </span>
-              {(run.team === 'DTM' ||
-                run.team === 'KFFC' ||
-                run.team === 'Sapoculeano' ||
-                run.team === 'Greensky') &&
-              !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
-                <span>-</span> // Hide Raid Leader(s) if team is DTM, Kffc, or Sapoculeano and user is not VITE_TEAM_CHEFE
-              ) : run.raidLeaders && run.raidLeaders.length > 0 ? (
-                run.raidLeaders
+            {run.raidLeaders && run.raidLeaders.length > 0 && (
+              <p className='text-left'>
+                <span className='text-base font-bold'>Raid Leader(s): </span>
+                {run.raidLeaders
                   .map((raidLeader) => raidLeader.username)
-                  .join(', ')
-              ) : (
-                <span>-</span>
-              )}
-            </p>
+                  .join(', ')}
+              </p>
+            )}
             {/* Gold Pot e Dolar Pot em linhas separadas, Gold Pot em negrito, sem "Run Pot" */}
             <p className='text-left'>
-              {attendanceAccessDenied ? (
-                <span className='font-normal'>
-                  <i>Encrypted</i>
+              {run.actualPot != null && (
+                <span className='font-bold'>
+                  Gold Pot:{' '}
+                  <span className='font-normal'>
+                    {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
+                  </span>
                 </span>
-              ) : (
-                <>
-                  <span className='font-bold'>
-                    Gold Pot:{' '}
-                    <span className='font-normal'>
-                      {Math.round(Number(run.actualPot)).toLocaleString(
-                        'en-US'
-                      )}
-                    </span>
+              )}
+              {run.actualPot != null && run.actualPotDolar != null && <br />}
+              {run.actualPotDolar != null && (
+                <span className='font-bold'>
+                  Dolar Pot:{' '}
+                  <span className='font-normal'>
+                    {Math.round(Number(run.actualPotDolar)).toLocaleString(
+                      'en-US'
+                    )}
                   </span>
-                  <br />
-                  <span className='font-bold'>
-                    Dolar Pot:{' '}
-                    <span className='font-normal'>
-                      {Math.round(Number(run.actualPotDolar)).toLocaleString(
-                        'en-US'
-                      )}
-                    </span>
-                  </span>
-                </>
+                </span>
               )}
             </p>
           </div>

@@ -15,4 +15,5 @@ export interface BuyerData {
   paymentRealm: string
   playerClass: string
   idRegister: string
+  isEncrypted: boolean
 }
