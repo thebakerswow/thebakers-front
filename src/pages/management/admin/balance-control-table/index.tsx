@@ -104,6 +104,8 @@ export function BalanceControlTable({
         return '#059669' // DTM
       case import.meta.env.VITE_TEAM_GUILD_AZRALON_2:
         return '#2563EB' // DTM
+      case import.meta.env.VITE_TEAM_ROCKET:
+        return '#F472B6' // DTM
       case import.meta.env.VITE_TEAM_ADVERTISER:
         return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
@@ -401,7 +403,12 @@ export function BalanceControlTable({
               >
                 Guild Azralon BR#2
               </MenuItem>
-
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_ROCKET}
+                style={{ backgroundColor: '#BE124D', color: 'white' }} // Lighter green
+              >
+                Rocket
+              </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_ADVERTISER}
                 style={{ backgroundColor: '#D1D5DB', color: 'black' }}

@@ -101,6 +101,7 @@ export function RunsDataGrid({
     Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)', // Rosa para amarelo
     'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)', // Nova cor adicionada
     'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
+    Rocket: 'linear-gradient(90deg, #f472b6, #7DD3FC)',
   }
 
   // Retorna o estilo de fundo associado a um time
