@@ -334,10 +334,10 @@ export function RunDetails() {
                     }}
                     style={{
                       display:
-                      canViewAttendanceButton && hasAttendanceAccess
-                        ? 'inline-flex'
-                        : 'none',
-                    }} or no attendance access
+                        canViewAttendanceButton && hasAttendanceAccess
+                          ? 'inline-flex'
+                          : 'none',
+                    }}
                   >
                     {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                   </Button>
