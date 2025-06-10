@@ -171,13 +171,41 @@ export function BalanceControlTable({
       return
     }
 
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    const formattedValue =
-      rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
-    setCalculatorValues((prev) => ({
-      ...prev,
-      [userId]: rawValue === '0' ? '' : formattedValue,
-    }))
+    let rawValue: string
+    if (isDolar) {
+      // Permite números, hífen e ponto (apenas um ponto)
+      rawValue = value
+        .replace(/[^0-9.-]/g, '')
+        .replace(/(?!^)-/g, '') // apenas um hífen no início
+        .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // apenas um ponto
+
+      // Se houver ponto decimal, separa parte inteira e decimal
+      const parts = rawValue.split('.')
+      let formattedValue = parts[0]
+        ? Number(parts[0].replace(/,/g, '')).toLocaleString('en-US')
+        : ''
+      if (rawValue.startsWith('-') && !formattedValue.startsWith('-')) {
+        formattedValue = '-' + formattedValue
+      }
+      if (parts.length > 1) {
+        formattedValue += '.' + parts[1].replace(/[^0-9]/g, '')
+      }
+      setCalculatorValues((prev) => ({
+        ...prev,
+        [userId]: rawValue === '0' ? '' : formattedValue,
+      }))
+      return
+    } else {
+      // Apenas números e hífen
+      rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+      const formattedValue =
+        rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
+      setCalculatorValues((prev) => ({
+        ...prev,
+        [userId]: rawValue === '0' ? '' : formattedValue,
+      }))
+      return
+    }
   }
 
   // Confirma o valor da calculadora para um usuário específico
@@ -186,7 +214,9 @@ export function BalanceControlTable({
 
     try {
       await api.post('/transaction', {
-        value: Number(calculatorValues[userId].replace(/,/g, '')),
+        value: isDolar
+          ? Number(calculatorValues[userId].replace(/,/g, ''))
+          : Number(calculatorValues[userId].replace(/,/g, '')),
         id_discord: userId,
         is_dolar: isDolar,
       })
@@ -217,7 +247,9 @@ export function BalanceControlTable({
       await Promise.all(
         pendingTransactions.map(([userId, value]) =>
           api.post('/transaction', {
-            value: Number(value.replace(/,/g, '')),
+            value: isDolar
+              ? Number(value.replace(/,/g, ''))
+              : Number(value.replace(/,/g, '')),
             id_discord: userId,
             is_dolar: isDolar,
           })
@@ -591,9 +623,14 @@ export function BalanceControlTable({
                     {Math.round(Number(user.sum_day)).toLocaleString('en-US')}
                   </td>
                   <td className='p-2 text-center'>
-                    {Math.round(Number(user.balance_total)).toLocaleString(
-                      'en-US'
-                    )}
+                    {isDolar
+                      ? Number(user.balance_total).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : Math.round(Number(user.balance_total)).toLocaleString(
+                          'en-US'
+                        )}
                   </td>
 
                   <td className='p-2 text-center'>

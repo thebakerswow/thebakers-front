@@ -155,9 +155,10 @@ export function RunInfo({
                           {item.username}
                         </TableCell>
                         <TableCell align='right' style={{ padding: '10px' }}>
-                          {Math.round(Number(item.sumPot)).toLocaleString(
-                            'en-US'
-                          )}
+                          {Number(item.sumPot).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </TableCell>
                       </TableRow>
                     ))}

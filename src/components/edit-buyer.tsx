@@ -32,12 +32,34 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
+  // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
+  const formatBuyerDolarPot = (value: string) => {
+    let rawValue = value
+      .replace(/[^0-9.-]/g, '')
+      .replace(/(?!^)-/g, '') // apenas um hífen no início
+      .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // apenas um ponto
+
+    const parts = rawValue.split('.')
+    let formattedValue = parts[0]
+      ? Number(parts[0].replace(/,/g, '')).toLocaleString('en-US')
+      : ''
+    if (rawValue.startsWith('-') && !formattedValue.startsWith('-')) {
+      formattedValue = '-' + formattedValue
+    }
+    if (parts.length > 1) {
+      formattedValue += '.' + parts[1].replace(/[^0-9]/g, '')
+    }
+    return rawValue === '0' ? '' : formattedValue
+  }
+
   const handleChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value =
         field === 'buyerPot'
           ? e.target.value.replace(/\D/g, '') // Remove non-numeric characters
-          : e.target.value
+          : field === 'buyerDolarPot'
+            ? formatBuyerDolarPot(e.target.value)
+            : e.target.value
       setFormData((prev) => ({
         ...prev,
         [field]:

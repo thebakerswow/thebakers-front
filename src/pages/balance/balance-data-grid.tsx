@@ -346,20 +346,33 @@ export function BalanceDataGrid({
                       </Select>
                     </TableCell>
                     <TableCell align='center'>
-                      {Math.round(Number(player.balance_total)).toLocaleString(
-                        'en-US'
-                      )}
+                      {is_dolar
+                        ? Number(player.balance_total).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                        : Math.round(
+                            Number(player.balance_total)
+                          ).toLocaleString('en-US')}
                     </TableCell>
                     {getSortedDates().map((date) => (
                       <TableCell key={`${player.id}-${date}`} align='center'>
-                        {player.dailyValues[date]
-                          ? Number(player.dailyValues[date]).toLocaleString(
-                              'en-US',
-                              {
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0,
-                              }
-                            )
+                        {player.dailyValues[date] !== undefined
+                          ? is_dolar
+                            ? Number(player.dailyValues[date]).toLocaleString(
+                                'en-US',
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }
+                              )
+                            : Number(player.dailyValues[date]).toLocaleString(
+                                'en-US',
+                                {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 0,
+                                }
+                              )
                           : '-'}
                       </TableCell>
                     ))}

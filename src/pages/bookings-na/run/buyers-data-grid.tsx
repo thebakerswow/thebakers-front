@@ -649,9 +649,10 @@ export function BuyersDataGrid({
                       '-'
                     )
                   ) : buyer.buyerDolarPot > 0 ? (
-                    Math.round(Number(buyer.buyerDolarPot)).toLocaleString(
-                      'en-US'
-                    )
+                    Number(buyer.buyerDolarPot).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
                   ) : (
                     '-'
                   )}
@@ -669,6 +670,11 @@ export function BuyersDataGrid({
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.buyerActualPot == null ? (
                     <i>Encrypted</i>
+                  ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                    Number(buyer.buyerActualPot).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
                   ) : (
                     Math.round(Number(buyer.buyerActualPot)).toLocaleString(
                       'en-US'

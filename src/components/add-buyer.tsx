@@ -74,6 +74,28 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
     return rawValue ? Number(rawValue).toLocaleString('en-US') : ''
   }
 
+  // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
+  const formatBuyerDolarPot = (value: string) => {
+    // Permite números, hífen e ponto (apenas um ponto)
+    let rawValue = value
+      .replace(/[^0-9.-]/g, '')
+      .replace(/(?!^)-/g, '') // apenas um hífen no início
+      .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // apenas um ponto
+
+    // Se houver ponto decimal, separa parte inteira e decimal
+    const parts = rawValue.split('.')
+    let formattedValue = parts[0]
+      ? Number(parts[0].replace(/,/g, '')).toLocaleString('en-US')
+      : ''
+    if (rawValue.startsWith('-') && !formattedValue.startsWith('-')) {
+      formattedValue = '-' + formattedValue
+    }
+    if (parts.length > 1) {
+      formattedValue += '.' + parts[1].replace(/[^0-9]/g, '')
+    }
+    return rawValue === '0' ? '' : formattedValue
+  }
+
   // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -247,7 +269,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    buyerDolarPot: formatBuyerPot(e.target.value),
+                    buyerDolarPot: formatBuyerDolarPot(e.target.value),
                   }))
                 }
                 variant='outlined'
