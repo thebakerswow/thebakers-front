@@ -9,6 +9,14 @@ import { useNavigate } from 'react-router-dom'
 import services from '../../assets/services.png'
 import schedule from '../../assets/schedule.png'
 
+// Tipos para os serviços
+interface Service {
+  id: number
+  name: string
+  description: string
+  price: number
+}
+
 type DiscordTokenPayload = {
   username: string
   discriminator: string
@@ -22,11 +30,20 @@ export function HomePage() {
   const [userRoles, setUserRoles] = useState<string[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [weekRuns, setWeekRuns] = useState<Record<number, any[]>>({})
+  const [servicesList, setServicesList] = useState<Service[]>([])
+  const [loadingServices, setLoadingServices] = useState(false)
 
   // Pegue as roles do .env
   const TEAM_ADVERTISER = import.meta.env.VITE_TEAM_ADVERTISER
   const TEAM_CHEFE = import.meta.env.VITE_TEAM_CHEFE
   const navigate = useNavigate()
+
+  // Mova a função para cima, antes dos efeitos
+  const hasRequiredRole = (requiredRoles: string[]): boolean => {
+    return requiredRoles.some((required) =>
+      userRoles.some((userRole) => userRole.toString() === required.toString())
+    )
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('jwt')
@@ -84,11 +101,30 @@ export function HomePage() {
     fetchWeekRuns()
   }, [])
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
-  }
+  // Buscar serviços para exibir nos cards
+  useEffect(() => {
+    // Adicione userRoles como dependência e remova o early return
+    if (!hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) return
+    const fetchServices = async () => {
+      setLoadingServices(true)
+      try {
+        const res = await api.get('/services')
+        setServicesList(res.data.info)
+      } catch (err: any) {
+        setError({
+          message:
+            err?.response?.data?.message ||
+            err.message ||
+            'Erro ao buscar serviços',
+          response: err?.response?.data,
+          status: err?.response?.status,
+        })
+      } finally {
+        setLoadingServices(false)
+      }
+    }
+    fetchServices()
+  }, [TEAM_ADVERTISER, TEAM_CHEFE, userRoles]) // <-- inclua userRoles aqui
 
   if (error) {
     return (
@@ -102,49 +138,6 @@ export function HomePage() {
 
   // Renderize outra homepage se o usuário possuir a role do .env
   if (hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) {
-    // Planos para exibir nos cards
-    const plans = [
-      {
-        name: 'Basic Plan',
-        description: 'Manage your schedules efficiently.',
-        price: '$19.99/month',
-      },
-      {
-        name: 'Premium Plan',
-        description: 'Advanced features for growing businesses.',
-        price: '$39.99/month',
-      },
-      {
-        name: 'Enterprise Plan',
-        description: 'Comprehensive solutions for enterprises.',
-        price: '$99.99/month',
-      },
-      {
-        name: 'Pro Plan',
-        description: 'Tailored for professionals seeking efficiency.',
-        price: '$49.99/month',
-      },
-      {
-        name: 'Startup Plan',
-        description: 'Ideal for new businesses to kickstart.',
-        price: '$29.99/month',
-      },
-      {
-        name: 'Custom Plan',
-        description: 'Customizable solutions for unique needs.',
-        price: 'Contact Us',
-      },
-      {
-        name: 'Family Plan',
-        description: 'Great for families managing multiple schedules.',
-        price: '$59.99/month',
-      },
-      {
-        name: 'Ultimate Plan',
-        description: 'The all-in-one solution for ultimate control.',
-        price: '$129.99/month',
-      },
-    ]
     return (
       <div
         className='min-h-max w-full bg-cover bg-fixed bg-center bg-no-repeat'
@@ -170,7 +163,7 @@ export function HomePage() {
               </p>
             </div>
           </div>
-          <div className='mx-auto mt-8 w-full max-w-6xl'>
+          <div className='mx-auto mt-8 max-w-[80%]'>
             <div className='flex w-full flex-col items-center'>
               <img
                 src={services}
@@ -183,30 +176,36 @@ export function HomePage() {
               </h2>
             </div>
             <div className='mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4'>
-              {plans.map((plan, _) => (
-                <div
-                  key={plan.name}
-                  className='flex min-h-[180px] flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105'
-                >
-                  <div>
-                    <div className='mb-2 text-lg font-bold text-white'>
-                      {plan.name}
-                    </div>
-                    <div className='mb-4 text-sm text-gray-300'>
-                      {plan.description}
-                    </div>
-                  </div>
-                  <div
-                    className={
-                      plan.price === 'Contact Us'
-                        ? 'mt-auto text-base font-bold text-red-500'
-                        : 'mt-auto text-lg font-bold text-red-500'
-                    }
-                  >
-                    {plan.price}
-                  </div>
+              {loadingServices ? (
+                <div className='col-span-full flex h-40 items-center justify-center'>
+                  <span className='text-lg text-white'>
+                    Loading services...
+                  </span>
                 </div>
-              ))}
+              ) : servicesList.length === 0 ? (
+                <div className='col-span-full flex h-40 items-center justify-center'>
+                  <span className='text-lg text-white'>No services found.</span>
+                </div>
+              ) : (
+                servicesList.map((service) => (
+                  <div
+                    key={service.id}
+                    className='flex min-h-[180px] max-w-[350px] flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105'
+                  >
+                    <div>
+                      <div className='mb-2 text-lg font-bold text-white'>
+                        {service.name}
+                      </div>
+                      <div className='mb-4 text-sm text-gray-300'>
+                        {service.description}
+                      </div>
+                    </div>
+                    <div className='mt-auto text-lg font-bold text-red-500'>
+                      {service.price.toLocaleString('en-US')}g
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
           {/* Seta para baixo */}

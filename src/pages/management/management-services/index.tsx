@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -20,49 +20,121 @@ import {
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import Swal from 'sweetalert2'
+import { api } from '../../../services/axiosConfig'
 
-const initialServices = [
-  {
-    id: 1,
-    name: 'Premium Haircut',
-    description: 'High quality haircut',
-    price: 30,
-  },
-  {
-    id: 2,
-    name: 'Beard Trim',
-    description: 'Professional beard trim',
-    price: 15,
-  },
-  {
-    id: 3,
-    name: 'Luxury Spa',
-    description: 'Relaxing spa experience',
-    price: 50,
-  },
-]
+// Tipos
+interface Service {
+  id: number
+  name: string
+  description: string
+  price: number
+}
+
+interface ServiceForm {
+  name: string
+  description: string
+  price: string
+}
+
+const emptyForm: ServiceForm = { name: '', description: '', price: '' }
 
 export default function PriceTableManagement() {
-  const [services, setServices] = useState(initialServices)
+  const [services, setServices] = useState<Service[]>([])
   const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '' })
+  const [editing, setEditing] = useState<Service | null>(null)
+  const [form, setForm] = useState<ServiceForm>(emptyForm)
+  const [loading, setLoading] = useState(false)
 
-  const handleOpen = (service = null) => {
+  // Buscar serviços ao montar
+  useEffect(() => {
+    fetchServices()
+  }, [])
+
+  const fetchServices = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/services')
+      setServices(res.data.info)
+    } catch (err) {
+      Swal.fire('Error', 'Failed to fetch services', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOpen = (service: Service | null = null) => {
     setEditing(service)
-
+    if (service) {
+      setForm({
+        name: service.name,
+        description: service.description,
+        price: formatPriceInput(String(service.price)), // aplica formatação ao abrir o edit
+      })
+    } else {
+      setForm(emptyForm)
+    }
     setOpen(true)
   }
 
-  const handleClose = () => setOpen(false)
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const handleClose = () => {
+    setOpen(false)
+    setEditing(null)
+    setForm(emptyForm)
   }
 
-  const handleSave = () => {}
+  // Formata o valor inserido com vírgula como separador de milhar (ex: 111111 => 111,111)
+  function formatPriceInput(value: string) {
+    if (!value) return ''
+    // Remove tudo que não for número
+    let clean = value.replace(/\D/g, '')
+    if (!clean) return ''
+    // Adiciona vírgula a cada 3 dígitos da direita para a esquerda
+    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
 
-  const handleDelete = (id) => {
+  // Novo handleChange para o campo price
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    if (name === 'price') {
+      setForm({ ...form, [name]: formatPriceInput(value) })
+    } else {
+      setForm({ ...form, [name]: value })
+    }
+  }
+
+  const handleSave = async () => {
+    const { name, description, price } = form
+    if (!name || !description || !price) {
+      Swal.fire('Error', 'Please fill all fields', 'warning')
+      return
+    }
+    try {
+      if (editing) {
+        // Editar serviço
+        await api.put('/services', {
+          id: editing.id,
+          name,
+          description,
+          price: Number(price.replace(/,/g, '')),
+        })
+        Swal.fire('Success', 'Service updated!', 'success')
+      } else {
+        // Adicionar serviço
+        await api.post('/services', {
+          name,
+          description,
+          price: Number(price.replace(/,/g, '')),
+        })
+        Swal.fire('Success', 'Service added!', 'success')
+      }
+      handleClose()
+      fetchServices()
+    } catch (err: any) {
+      Swal.fire('Error', err?.response?.data?.message || err.message, 'error')
+    }
+  }
+
+  const handleDelete = (id: number) => {
     Swal.fire({
       title: 'Are you sure?',
       text: 'This service will be deleted!',
@@ -71,10 +143,19 @@ export default function PriceTableManagement() {
       confirmButtonColor: '#d32f2f',
       cancelButtonColor: '#888',
       confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setServices(services.filter((s) => s.id !== id))
-        Swal.fire('Deleted!', 'Service has been deleted.', 'success')
+        try {
+          await api.delete(`/services/${id}`)
+          setServices((prev) => prev.filter((s) => s.id !== id))
+          Swal.fire('Deleted!', 'Service has been deleted.', 'success')
+        } catch (err: any) {
+          Swal.fire(
+            'Error',
+            err?.response?.data?.message || err.message,
+            'error'
+          )
+        }
       }
     })
   }
@@ -116,7 +197,12 @@ export default function PriceTableManagement() {
                   {service.description}
                 </TableCell>
                 <TableCell sx={{ color: '#b0b0b0' }}>
-                  ${service.price}
+                  {(() => {
+                    // Exibe separador de milhar como vírgula, sem casas decimais
+                    return service.price
+                      .toLocaleString('en-US', { maximumFractionDigits: 0 })
+                      .replace(/,/g, ',')
+                  })()}
                 </TableCell>
                 <TableCell>
                   <IconButton color='error' onClick={() => handleOpen(service)}>
@@ -159,10 +245,11 @@ export default function PriceTableManagement() {
             margin='dense'
             label='Price'
             name='price'
-            type='number'
+            type='text'
             fullWidth
             value={form.price}
             onChange={handleChange}
+            inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
           />
         </DialogContent>
         <DialogActions>
