@@ -8,6 +8,7 @@ import { api } from '../../services/axiosConfig'
 import { useNavigate } from 'react-router-dom'
 import services from '../../assets/services.png'
 import schedule from '../../assets/schedule.png'
+import fireImg from '../../assets/fire.png'
 
 // Tipos para os serviços
 interface Service {
@@ -15,6 +16,13 @@ interface Service {
   name: string
   description: string
   price: number
+  serviceCategoryId: number
+  hotItem?: boolean
+}
+
+interface Category {
+  id: number
+  name: string
 }
 
 type DiscordTokenPayload = {
@@ -32,6 +40,7 @@ export function HomePage() {
   const [weekRuns, setWeekRuns] = useState<Record<number, any[]>>({})
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
 
   // Pegue as roles do .env
   const TEAM_ADVERTISER = import.meta.env.VITE_TEAM_ADVERTISER
@@ -101,21 +110,28 @@ export function HomePage() {
     fetchWeekRuns()
   }, [])
 
-  // Buscar serviços para exibir nos cards
+  // Buscar serviços e categorias para exibir nos cards
   useEffect(() => {
-    // Adicione userRoles como dependência e remova o early return
     if (!hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) return
-    const fetchServices = async () => {
+    const fetchServicesAndCategories = async () => {
       setLoadingServices(true)
       try {
-        const res = await api.get('/services')
-        setServicesList(res.data.info)
+        const [servicesRes, categoriesRes] = await Promise.all([
+          api.get('/services'),
+          api.get('/services-categories'),
+        ])
+        setServicesList(servicesRes.data.info)
+        setCategories(
+          Array.isArray(categoriesRes.data.info) ? categoriesRes.data.info : []
+        )
       } catch (err: any) {
+        setServicesList([]) // Garante array vazio em erro
+        setCategories([])
         setError({
           message:
             err?.response?.data?.message ||
             err.message ||
-            'Erro ao buscar serviços',
+            'Erro ao buscar serviços ou categorias',
           response: err?.response?.data,
           status: err?.response?.status,
         })
@@ -123,8 +139,8 @@ export function HomePage() {
         setLoadingServices(false)
       }
     }
-    fetchServices()
-  }, [TEAM_ADVERTISER, TEAM_CHEFE, userRoles]) // <-- inclua userRoles aqui
+    fetchServicesAndCategories()
+  }, [TEAM_ADVERTISER, TEAM_CHEFE, userRoles])
 
   if (error) {
     return (
@@ -175,72 +191,110 @@ export function HomePage() {
                 <span className='absolute left-1/2 top-full block h-1 w-24 -translate-x-1/2 rounded bg-gradient-to-r from-red-600 via-red-400 to-yellow-400 opacity-80'></span>
               </h2>
             </div>
-            <div className='mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4'>
-              {loadingServices ? (
-                <div className='col-span-full flex h-40 items-center justify-center'>
-                  <span className='text-lg text-white'>
-                    Loading services...
-                  </span>
-                </div>
-              ) : servicesList.length === 0 ? (
-                <div className='col-span-full flex h-40 items-center justify-center'>
-                  <span className='text-lg text-white'>No services found.</span>
-                </div>
-              ) : (
-                servicesList.map((service) => (
-                  <div
-                    key={service.id}
-                    className='flex min-h-[180px] max-w-[350px] flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105'
-                  >
-                    <div>
-                      <div className='mb-2 text-lg font-bold text-white'>
-                        {service.name}
+            {/* Seção Hot Items e Categorias */}
+            {loadingServices ? (
+              <div className='col-span-full flex h-40 items-center justify-center'>
+                <span className='text-lg text-white'>Loading services...</span>
+              </div>
+            ) : (
+              <>
+                {/* Hot Services */}
+                {categories.length > 0 &&
+                  servicesList.some((s) => s.hotItem) && (
+                    <div className='mb-8 flex flex-col gap-4'>
+                      <div className='flex items-center gap-2'>
+                        <span className='mb-2 mt-4 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                          🔥 HOT SERVICES
+                        </span>
                       </div>
-                      <div className='mb-4 text-sm text-gray-300'>
-                        {service.description}
+                      <div className='flex flex-wrap justify-center gap-6'>
+                        {servicesList
+                          .filter((s) => s.hotItem)
+                          .map((service) => (
+                            <div
+                              key={service.id}
+                              className={`relative flex min-h-[180px] min-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-yellow-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
+                              style={{
+                                backgroundImage: `url(${fireImg})`,
+                                backgroundRepeat: 'no-repeat',
+                                backgroundPosition: 'right bottom',
+                                backgroundSize: '160px auto',
+                              }}
+                            >
+                              <div className='relative z-10'>
+                                <div className='mb-2 text-lg font-bold text-white'>
+                                  {service.name}
+                                </div>
+                                <div className='mb-4 text-sm text-gray-300'>
+                                  {service.description}
+                                </div>
+                              </div>
+                              <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
+                                {service.price.toLocaleString('en-US')}g
+                              </div>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                    <div className='mt-auto text-lg font-bold text-red-500'>
-                      {service.price.toLocaleString('en-US')}g
+                  )}
+                {/* Agrupamento dos cards por categoria */}
+                <div className='mx-auto flex flex-col gap-8'>
+                  {!servicesList || servicesList.length === 0 ? (
+                    <div className='col-span-full flex h-40 items-center justify-center'>
+                      <span className='text-lg text-white'>
+                        No services found.
+                      </span>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-          {/* Seta para baixo */}
-          <div className='mt-8 flex w-full justify-center'>
-            <button
-              onClick={() => {
-                const section = document.getElementById('semana-tabelas')
-                if (section) {
-                  section.scrollIntoView({ behavior: 'smooth' })
-                }
-              }}
-              aria-label='Rolar para baixo'
-              className='rounded-full bg-white/70 p-2 shadow transition-colors hover:bg-white'
-            >
-              <svg
-                width='32'
-                height='32'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                className='feather feather-arrow-down'
-              >
-                <line x1='12' y1='5' x2='12' y2='19'></line>
-                <polyline points='19 12 12 19 5 12'></polyline>
-              </svg>
-            </button>
+                  ) : categories.length > 0 ? (
+                    categories.map((category) => {
+                      const servicesInCategory = servicesList.filter(
+                        (service) => service.serviceCategoryId === category.id
+                      )
+                      if (servicesInCategory.length === 0) return null
+                      return (
+                        <div key={category.id} className='flex flex-col gap-4'>
+                          <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                            {category.name}
+                          </div>
+                          <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4'>
+                            {servicesInCategory.map((service) => (
+                              <div
+                                key={service.id}
+                                className={`relative flex min-h-[180px] max-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
+                              >
+                                <div className='relative z-10'>
+                                  <div className='mb-2 text-lg font-bold text-white'>
+                                    {service.name}
+                                  </div>
+                                  <div className='mb-4 text-sm text-gray-300'>
+                                    {service.description}
+                                  </div>
+                                </div>
+                                <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
+                                  {service.price.toLocaleString('en-US')}g
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className='col-span-full flex h-40 items-center justify-center'>
+                      <span className='text-lg text-white'>
+                        No categories found.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </section>
         {/* Segunda sessão: Tabelas dos dias da semana */}
         <section
           id='semana-tabelas'
-          className='flex min-h-screen w-full flex-col items-center'
+          className='mt-20 flex min-h-screen w-full flex-col items-center'
         >
           <div className='flex w-full flex-col items-center'>
             <img
@@ -309,7 +363,7 @@ export function HomePage() {
                 return (
                   <div
                     key={dia}
-                    className='flex max-h-[800px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                    className='flex h-[900px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                   >
                     <div className='mb-4 text-2xl font-semibold text-white'>
                       {daysEn[idx]}
@@ -337,12 +391,12 @@ export function HomePage() {
                           <div className='mb-1 text-lg font-bold text-white'>
                             {formatTime12h(run.time)} - {run.raid}
                           </div>
-                          <div className='mb-1 text-sm text-gray-300'>
+                          <div className='mb-1 text-sm text-gray-700'>
                             {run.difficulty} {run.loot ? `- ${run.loot}` : ''}
                           </div>
                           {typeof run.maxBuyers === 'number' &&
                             typeof run.slotAvailable === 'number' && (
-                              <div className='text-xs text-gray-400'>
+                              <div className='text-xs text-gray-700'>
                                 Buyers:{' '}
                                 <span className='font-semibold text-white'>
                                   {run.maxBuyers - run.slotAvailable}/

@@ -45,3 +45,7 @@ button {
   scrollbar-width: thin;
   scrollbar-color: #444 transparent;
 }
+
+.swal2-container.swal2-zindex-fix {
+  z-index: 20000 !important;
+}
