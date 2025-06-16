@@ -304,7 +304,7 @@ export function HomePage() {
             />
           </div>
           <div className='relative w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
-            <div className='flex w-full flex-wrap justify-center gap-8 px-8'>
+            <div className='flex w-full flex-wrap justify-center gap-4'>
               {[
                 'Domingo',
                 'Segunda',
@@ -363,13 +363,13 @@ export function HomePage() {
                 return (
                   <div
                     key={dia}
-                    className='flex h-[900px] min-w-[260px] max-w-xs flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                    className='flex h-[900px] min-w-[300px] max-w-md flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                   >
                     <div className='mb-4 text-2xl font-semibold text-white'>
                       {daysEn[idx]}
                     </div>
                     <div
-                      className='custom-scrollbar relative flex flex-col gap-4 pr-1'
+                      className='custom-scrollbar relative flex flex-col gap-2 pr-1'
                       style={{ minHeight: 600, overflowY: 'auto' }}
                     >
                       {runsToShow.length === 0 && (
@@ -389,18 +389,15 @@ export function HomePage() {
                           }
                         >
                           <div className='mb-1 text-lg font-bold text-white'>
-                            {formatTime12h(run.time)} - {run.raid}
-                          </div>
-                          <div className='mb-1 text-sm text-gray-700'>
-                            {run.difficulty} {run.loot ? `- ${run.loot}` : ''}
+                            {formatTime12h(run.time)} - {run.difficulty}
+                            {run.loot ? ` - ${run.loot}` : ''}
                           </div>
                           {typeof run.maxBuyers === 'number' &&
                             typeof run.slotAvailable === 'number' && (
                               <div className='text-xs text-gray-700'>
-                                Buyers:{' '}
+                                Spots:{' '}
                                 <span className='font-semibold text-white'>
-                                  {run.maxBuyers - run.slotAvailable}/
-                                  {run.maxBuyers}
+                                  {run.slotAvailable}
                                 </span>
                               </div>
                             )}
