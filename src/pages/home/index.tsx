@@ -247,8 +247,11 @@ export function HomePage() {
                     </div>
                   ) : categories.length > 0 ? (
                     categories.map((category) => {
+                      // Filtrar serviços da categoria, excluindo os hotItem
                       const servicesInCategory = servicesList.filter(
-                        (service) => service.serviceCategoryId === category.id
+                        (service) =>
+                          service.serviceCategoryId === category.id &&
+                          !service.hotItem
                       )
                       if (servicesInCategory.length === 0) return null
                       return (
