@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import services from '../../assets/services.png'
 import schedule from '../../assets/schedule.png'
 import fireImg from '../../assets/fire.png'
+import gally from '../../assets/gally.png'
 
 // Tipos para os serviços
 interface Service {
@@ -157,7 +158,7 @@ export function HomePage() {
     return (
       <div
         className='min-h-max w-full bg-cover bg-fixed bg-center bg-no-repeat'
-        style={{ backgroundImage: "url('/src/assets/gally.png')" }}
+        style={{ backgroundImage: `url(${gally})` }}
       >
         {/* Sessão Hero: Mensagem + Cards + Seta */}
         <section
