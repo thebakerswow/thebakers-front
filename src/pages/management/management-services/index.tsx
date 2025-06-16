@@ -274,7 +274,7 @@ export default function PriceTableManagement() {
     swal
       .fire({
         title: 'Are you sure?',
-        text: 'This category will be deleted!',
+        text: 'This category and all services related will be deleted!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d32f2f',
@@ -343,11 +343,11 @@ export default function PriceTableManagement() {
     <Box
       sx={{
         width: '100%',
-        m: 2,
+        m: 4,
         minHeight: '100vh',
-        bgcolor: '#111',
         color: '#fff',
-        p: 4,
+        mb: 6, // margem inferior extra
+        pb: 6,
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -372,7 +372,14 @@ export default function PriceTableManagement() {
           </Button>
         </Box>
       </Box>
-      <TableContainer component={Paper} sx={{ bgcolor: '#18181b' }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          bgcolor: '#111', // background escuro agora acompanha a tabela
+          color: '#fff',
+          p: 4, // padding interno para a tabela
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
