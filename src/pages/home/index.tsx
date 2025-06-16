@@ -389,8 +389,11 @@ export function HomePage() {
                           }
                         >
                           <div className='mb-1 text-lg font-bold text-white'>
-                            {formatTime12h(run.time)} - {run.difficulty}
-                            {run.loot ? ` - ${run.loot}` : ''}
+                            {formatTime12h(run.time)} -{' '}
+                            <span className='text-base'>
+                              {run.difficulty}
+                              {run.loot ? ` - ${run.loot}` : ''}
+                            </span>
                           </div>
                           {typeof run.maxBuyers === 'number' &&
                             typeof run.slotAvailable === 'number' && (
