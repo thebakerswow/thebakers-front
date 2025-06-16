@@ -31,3 +31,21 @@ button {
   background-color: #9f7aea !important; /* Roxo */
   color: white !important;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
+  opacity: 0.5;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
+}
+
+.swal2-container.swal2-zindex-fix {
+  z-index: 20000 !important;
+}

@@ -21,6 +21,7 @@ import { AdminPage } from './pages/management/admin'
 import { Register } from './pages/register'
 import backgroundTeste from './assets/background_teste.png'
 import { CheckAccess } from './pages/error-pages/check-access'
+import ManagementServices from './pages/management/management-services'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -84,6 +85,10 @@ export function App() {
                 <Route
                   path='/check-access'
                   element={<PrivateRoute element={<CheckAccess />} />}
+                />
+                <Route
+                  path='/services'
+                  element={<PrivateRoute element={<ManagementServices />} />}
                 />
 
                 {/* Rota catch-all */}

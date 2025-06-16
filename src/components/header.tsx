@@ -14,8 +14,41 @@ import {
   UsersFour,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/auth-context'
+
+// Componente para mostrar o horário EST em tempo real
+function EstClock() {
+  const [time, setTime] = useState<string>('')
+
+  // Atualiza o horário a cada segundo
+  useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      // Converte para o fuso horário EST (America/New_York)
+      const estTime = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'America/New_York',
+      })
+      setTime(estTime)
+    }
+    update()
+    const interval = setInterval(update, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <Typography
+      variant='body2'
+      sx={{ fontWeight: 500, fontSize: '1.1rem', minWidth: '180px' }}
+    >
+      EST Timezone: {time}
+    </Typography>
+  )
+}
 
 export function Header() {
   const navigate = useNavigate()
@@ -51,11 +84,19 @@ export function Header() {
         position='static'
         sx={{ background: 'linear-gradient(to right, black, #333)' }}
       >
-        <Toolbar sx={{ justifyContent: 'center' }}>
+        <Toolbar>
+          {/* EST Clock na esquerda */}
+          <EstClock />
           <Typography
             variant='h6'
             component='div'
-            sx={{ fontSize: '1.8rem', textAlign: 'center' }}
+            sx={{
+              fontSize: '1.8rem',
+              textAlign: 'center',
+              flexGrow: 1,
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/')}
           >
             TheBakers <span style={{ color: 'red' }}>Hub</span>
           </Typography>
@@ -70,6 +111,8 @@ export function Header() {
       sx={{ background: 'linear-gradient(to right, black, #333)' }}
     >
       <Toolbar sx={{ justifyContent: 'space-around' }}>
+        {/* EST Clock na esquerda */}
+        <EstClock />
         <Typography
           variant='h6'
           component='div'
@@ -125,6 +168,16 @@ export function Header() {
               >
                 <UsersFour size={20} />
                 Teams
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigate('/services')
+                  handleMenuClose()
+                }}
+                sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <CalendarBlank size={20} />
+                Services
               </MenuItem>
             </Menu>
           </>
