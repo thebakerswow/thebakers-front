@@ -385,7 +385,7 @@ export function HomePage() {
                     >
                       <div className='mb-4 text-2xl font-semibold text-white'>
                         <span className='inline-flex items-center gap-2'>
-                          {daysEn[idx]} {dayNumber}/{monthNumber}
+                          {daysEn[idx]} {monthNumber}/{dayNumber}
                           {idx === todayIdx && (
                             <span className='rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-black'>
                               Today
