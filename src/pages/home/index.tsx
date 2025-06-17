@@ -469,6 +469,7 @@ const teamColors: { [key: string]: string } = {
   KFFC: '#34D399',
   Sapoculeano: '#7DD3FC',
   Greensky: '#fde68a',
+  Rocket: '#a78bfa',
   'Guild Azralon BR#1': '#16a34a',
   'Guild Azralon BR#2': '#16a34a',
 }
