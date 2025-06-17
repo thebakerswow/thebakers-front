@@ -17,6 +17,6 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 500, // Opcional: Aumenta o limite do aviso
+    chunkSizeWarningLimit: 1000, // Opcional: Aumenta o limite do aviso
   },
 })
