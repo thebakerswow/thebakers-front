@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
-import { format, startOfWeek, addDays } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { api } from '../../services/axiosConfig'
 import { useNavigate } from 'react-router-dom'
 import services from '../../assets/services.png'
@@ -38,7 +38,7 @@ export function HomePage() {
   const [username, setUsername] = useState('')
   const [userRoles, setUserRoles] = useState<string[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [weekRuns, setWeekRuns] = useState<Record<number, any[]>>({})
+  const [weekRuns, setWeekRuns] = useState<Record<string, any[]>>({})
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -82,10 +82,10 @@ export function HomePage() {
   // Buscar runs da semana atual
   useEffect(() => {
     const fetchWeekRuns = async () => {
-      const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 }) // Domingo
+      const today = new Date()
       const days: string[] = []
       for (let i = 0; i < 7; i++) {
-        days.push(format(addDays(weekStart, i), 'yyyy-MM-dd'))
+        days.push(format(addDays(today, i), 'yyyy-MM-dd'))
       }
       try {
         // Supondo que a API aceite múltiplas datas ou precise de várias requisições
@@ -97,12 +97,12 @@ export function HomePage() {
             }))
           )
         )
-        // Organiza as runs por índice do dia da semana (0=Domingo, 6=Sábado)
-        const runsByDay: Record<number, any[]> = {}
-        results.forEach((result, idx) => {
-          runsByDay[idx] = result.runs
+        // Organiza as runs por data (yyyy-MM-dd)
+        const runsByDate: Record<string, any[]> = {}
+        results.forEach((result) => {
+          runsByDate[result.date] = result.runs
         })
-        setWeekRuns(runsByDay)
+        setWeekRuns(runsByDate)
       } catch (err) {
         // ignore errors for now
       }
@@ -320,19 +320,9 @@ export function HomePage() {
                   'Friday',
                   'Saturday',
                 ]
-                // Descobre o índice do dia atual
-                const todayIdx = new Date().getDay()
                 const todayDate = new Date()
-                // Gera a ordem circular começando do dia atual
-                const orderedIdx = Array.from(
-                  { length: 7 },
-                  (_, i) => (todayIdx + i) % 7
-                )
-                // Calcula as datas correspondentes a cada coluna
-                const weekStart = new Date(todayDate)
-                weekStart.setDate(todayDate.getDate() - todayIdx)
-                return orderedIdx.map((idx, colIdx) => {
-                  // Calcula a data do dia da coluna
+                return Array.from({ length: 7 }, (_, colIdx) => {
+                  // Calcula a data do dia da coluna (hoje + colIdx)
                   const columnDate = new Date(todayDate)
                   columnDate.setDate(todayDate.getDate() + colIdx)
                   const dayNumber = columnDate
@@ -342,6 +332,8 @@ export function HomePage() {
                   const monthNumber = (columnDate.getMonth() + 1)
                     .toString()
                     .padStart(2, '0')
+                  const weekDayIdx = columnDate.getDay()
+                  const columnDateString = format(columnDate, 'yyyy-MM-dd')
                   // Nova ordem de prioridade dos times
                   const teamOrder = [
                     'Garçom',
@@ -361,7 +353,7 @@ export function HomePage() {
                     'Raio',
                   ]
                   // Ordena as runs do dia pelo horário e prioridade do time
-                  const runsSorted = (weekRuns[idx] || [])
+                  const runsSorted = (weekRuns[columnDateString] || [])
                     .slice()
                     .sort((a, b) => {
                       if (!a?.time || !b?.time) return 0
@@ -380,13 +372,13 @@ export function HomePage() {
                   const runsToShow = runsSorted.length ? runsSorted : []
                   return (
                     <div
-                      key={daysEn[idx]}
+                      key={daysEn[weekDayIdx] + monthNumber + dayNumber}
                       className='flex h-[900px] min-w-[300px] max-w-md flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                     >
                       <div className='mb-4 text-2xl font-semibold text-white'>
                         <span className='inline-flex items-center gap-2'>
-                          {daysEn[idx]} {monthNumber}/{dayNumber}
-                          {idx === todayIdx && (
+                          {daysEn[weekDayIdx]} {monthNumber}/{dayNumber}
+                          {colIdx === 0 && (
                             <span className='rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-black'>
                               Today
                             </span>
