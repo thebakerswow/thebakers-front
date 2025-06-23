@@ -15,6 +15,7 @@ import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
 import { Freelancers } from '../../../components/freelancers'
 import { Button } from '@mui/material'
+import { RunChat } from '../../../components/run-chat'
 
 export function RunDetails() {
   const navigate = useNavigate()
@@ -380,6 +381,7 @@ export function RunDetails() {
           runId={runData.id}
         />
       )}
+      {runData?.id && <RunChat runId={runData.id} />}
     </div>
   )
 }
