@@ -44,15 +44,12 @@ export function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
 
   // Pegue as roles do .env
-  const TEAM_ADVERTISER = import.meta.env.VITE_TEAM_ADVERTISER
-  const TEAM_CHEFE = import.meta.env.VITE_TEAM_CHEFE
+  const TEAM_FREELANCER = import.meta.env.VITE_TEAM_FREELANCER
   const navigate = useNavigate()
 
-  // Mova a função para cima, antes dos efeitos
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
+  // Função utilitária para verificar se o usuário tem apenas o cargo freelancer (usando env)
+  const isOnlyFreelancer = () => {
+    return userRoles.length === 1 && userRoles[0] === TEAM_FREELANCER
   }
 
   useEffect(() => {
@@ -113,7 +110,6 @@ export function HomePage() {
 
   // Buscar serviços e categorias para exibir nos cards
   useEffect(() => {
-    if (!hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) return
     const fetchServicesAndCategories = async () => {
       setLoadingServices(true)
       try {
@@ -141,7 +137,7 @@ export function HomePage() {
       }
     }
     fetchServicesAndCategories()
-  }, [TEAM_ADVERTISER, TEAM_CHEFE, userRoles])
+  }, [userRoles])
 
   if (error) {
     return (
@@ -153,74 +149,118 @@ export function HomePage() {
     )
   }
 
-  // Renderize outra homepage se o usuário possuir a role do .env
-  if (hasRequiredRole([TEAM_ADVERTISER, TEAM_CHEFE])) {
-    return (
-      <div
-        className='min-h-max w-full bg-cover bg-fixed bg-center bg-no-repeat'
-        style={{ backgroundImage: `url(${gally})` }}
+  // Renderize a homepage para todos os usuários
+  return (
+    <div
+      className='min-h-max w-full bg-cover bg-fixed bg-center bg-no-repeat'
+      style={{ backgroundImage: `url(${gally})` }}
+    >
+      {/* Sessão Hero: Mensagem + Cards + Seta */}
+      <section
+        id='hero'
+        className='mb-10 flex min-h-screen w-full flex-col items-center justify-center px-4'
       >
-        {/* Sessão Hero: Mensagem + Cards + Seta */}
-        <section
-          id='hero'
-          className='flex min-h-screen w-full flex-col items-center justify-center px-4'
-        >
-          <div className='relative mx-auto mt-8 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
-            <div className='absolute inset-0 z-0 rounded-2xl bg-black/60 backdrop-blur-md' />
-            <div className='relative z-10 rounded-2xl px-8 py-6'>
-              <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
-                Welcome to TheBakers{' '}
-                <span className='font-bold text-red-700'>Hub</span>
-                {username ? `, ${username}!` : ", [User's Name]!"}
-              </h1>
-              <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
-                At The Bakers, we strive to bring you the best experience in
-                managing your schedules and pricing. Explore our offerings and
-                see how we can help you achieve more.
-              </p>
-            </div>
+        <div className='relative mx-auto mt-8 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
+          <div className='absolute inset-0 z-0 rounded-2xl bg-black/60 backdrop-blur-md' />
+          <div className='relative z-10 rounded-2xl px-8 py-6'>
+            <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
+              Welcome to TheBakers{' '}
+              <span className='font-bold text-red-700'>Hub</span>
+              {username ? `, ${username}!` : ", [User's Name]!"}
+            </h1>
+            <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
+              At The Bakers, we strive to bring you the best experience in
+              managing your schedules and pricing. Explore our offerings and see
+              how we can help you achieve more.
+            </p>
           </div>
-          <div className='mx-auto mt-8 max-w-[80%]'>
-            <div className='flex w-full flex-col items-center'>
-              <img
-                src={services}
-                alt='Services'
-                className='w-80 drop-shadow-lg'
-                draggable={false}
-              />
-              <h2 className='relative mb-10 text-center text-3xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl'>
-                <span className='absolute left-1/2 top-full block h-1 w-24 -translate-x-1/2 rounded bg-gradient-to-r from-red-600 via-red-400 to-yellow-400 opacity-80'></span>
-              </h2>
+        </div>
+        <div className='mx-auto mt-8 max-w-[80%]'>
+          <div className='flex w-full flex-col items-center'>
+            <img
+              src={services}
+              alt='Services'
+              className='w-80 drop-shadow-lg'
+              draggable={false}
+            />
+            <h2 className='relative mb-10 text-center text-3xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl'>
+              <span className='absolute left-1/2 top-full block h-1 w-24 -translate-x-1/2 rounded bg-gradient-to-r from-red-600 via-red-400 to-yellow-400 opacity-80'></span>
+            </h2>
+          </div>
+          {/* Seção Hot Items e Categorias */}
+          {loadingServices ? (
+            <div className='col-span-full flex h-40 items-center justify-center'>
+              <span className='text-lg text-white'>Loading services...</span>
             </div>
-            {/* Seção Hot Items e Categorias */}
-            {loadingServices ? (
-              <div className='col-span-full flex h-40 items-center justify-center'>
-                <span className='text-lg text-white'>Loading services...</span>
-              </div>
-            ) : (
-              <>
-                {/* Hot Services */}
-                {categories.length > 0 &&
-                  servicesList.some((s) => s.hotItem) && (
-                    <div className='mb-8 flex flex-col gap-4'>
-                      <div className='flex items-center gap-2'>
-                        <span className='mb-2 mt-4 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
-                          🔥 HOT SERVICES
-                        </span>
-                      </div>
-                      <div className='flex flex-wrap justify-center gap-6'>
-                        {servicesList
-                          .filter((s) => s.hotItem)
-                          .map((service) => (
+          ) : (
+            <>
+              {/* Hot Services */}
+              {categories.length > 0 && servicesList.some((s) => s.hotItem) && (
+                <div className='mb-8 flex flex-col gap-4'>
+                  <div className='flex items-center gap-2'>
+                    <span className='mb-2 mt-4 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                      🔥 HOT SERVICES
+                    </span>
+                  </div>
+                  <div className='flex w-full justify-center'>
+                    <div className='grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5'>
+                      {servicesList
+                        .filter((s) => s.hotItem)
+                        .map((service) => (
+                          <div
+                            key={service.id}
+                            className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-yellow-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
+                            style={{
+                              backgroundImage: `url(${fireImg})`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right bottom',
+                              backgroundSize: '160px auto',
+                            }}
+                          >
+                            <div className='relative z-10'>
+                              <div className='mb-2 text-lg font-bold text-white'>
+                                {service.name}
+                              </div>
+                              <div className='mb-4 text-sm text-gray-300'>
+                                {service.description}
+                              </div>
+                            </div>
+                            <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
+                              {service.price.toLocaleString('en-US')}g
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Agrupamento dos cards por categoria */}
+              <div className='mx-auto flex flex-col gap-8'>
+                {!servicesList || servicesList.length === 0 ? (
+                  <div className='col-span-full flex h-40 items-center justify-center'>
+                    <span className='text-lg text-white'>
+                      No services found.
+                    </span>
+                  </div>
+                ) : categories.length > 0 ? (
+                  categories.map((category) => {
+                    // Filtrar serviços da categoria, excluindo os hotItem
+                    const servicesInCategory = servicesList.filter(
+                      (service) =>
+                        service.serviceCategoryId === category.id &&
+                        !service.hotItem
+                    )
+                    if (servicesInCategory.length === 0) return null
+                    return (
+                      <div key={category.id} className='flex flex-col gap-4'>
+                        <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                          {category.name}
+                        </div>
+                        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5'>
+                          {servicesInCategory.map((service) => (
                             <div
                               key={service.id}
-                              className={`relative flex min-h-[180px] min-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-yellow-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
-                              style={{
-                                backgroundImage: `url(${fireImg})`,
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: 'right bottom',
-                                backgroundSize: '160px auto',
-                              }}
+                              className={`relative flex min-h-[180px] max-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
                             >
                               <div className='relative z-10'>
                                 <div className='mb-2 text-lg font-bold text-white'>
@@ -235,67 +275,24 @@ export function HomePage() {
                               </div>
                             </div>
                           ))}
-                      </div>
-                    </div>
-                  )}
-                {/* Agrupamento dos cards por categoria */}
-                <div className='mx-auto flex flex-col gap-8'>
-                  {!servicesList || servicesList.length === 0 ? (
-                    <div className='col-span-full flex h-40 items-center justify-center'>
-                      <span className='text-lg text-white'>
-                        No services found.
-                      </span>
-                    </div>
-                  ) : categories.length > 0 ? (
-                    categories.map((category) => {
-                      // Filtrar serviços da categoria, excluindo os hotItem
-                      const servicesInCategory = servicesList.filter(
-                        (service) =>
-                          service.serviceCategoryId === category.id &&
-                          !service.hotItem
-                      )
-                      if (servicesInCategory.length === 0) return null
-                      return (
-                        <div key={category.id} className='flex flex-col gap-4'>
-                          <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
-                            {category.name}
-                          </div>
-                          <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4'>
-                            {servicesInCategory.map((service) => (
-                              <div
-                                key={service.id}
-                                className={`relative flex min-h-[180px] max-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
-                              >
-                                <div className='relative z-10'>
-                                  <div className='mb-2 text-lg font-bold text-white'>
-                                    {service.name}
-                                  </div>
-                                  <div className='mb-4 text-sm text-gray-300'>
-                                    {service.description}
-                                  </div>
-                                </div>
-                                <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
-                                  {service.price.toLocaleString('en-US')}g
-                                </div>
-                              </div>
-                            ))}
-                          </div>
                         </div>
-                      )
-                    })
-                  ) : (
-                    <div className='col-span-full flex h-40 items-center justify-center'>
-                      <span className='text-lg text-white'>
-                        No categories found.
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-        {/* Segunda sessão: Tabelas dos dias da semana */}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className='col-span-full flex h-40 items-center justify-center'>
+                    <span className='text-lg text-white'>
+                      No categories found.
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+      {/* Segunda sessão: Tabelas dos dias da semana */}
+      {!isOnlyFreelancer() && (
         <section
           id='semana-tabelas'
           className='mt-20 flex min-h-screen w-full flex-col items-center'
@@ -431,19 +428,6 @@ export function HomePage() {
             </div>
           </div>
         </section>
-      </div>
-    )
-  }
-
-  return (
-    <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center rounded-xl bg-zinc-900 p-4 text-4xl font-semibold text-gray-100 shadow-2xl'>
-      <div>
-        Welcome to TheBakers <span className='font-bold text-red-700'>Hub</span>
-      </div>
-      {username && (
-        <div className='mt-4 text-2xl'>
-          Hello, <span className='text-red-500'>{username}</span>!
-        </div>
       )}
     </div>
   )
