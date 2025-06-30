@@ -92,7 +92,16 @@ export function RunChat({ runId }: { runId: string }) {
         const data = JSON.parse(event.data)
         switch (data.type) {
           case 'new_message':
-            setMessages((prev) => [...prev, data.payload])
+            setMessages((prev) => [
+              ...prev,
+              {
+                ...data.payload,
+                user_name:
+                  data.payload.user_name ||
+                  data.payload.username ||
+                  'Usuário desconhecido',
+              },
+            ])
             if (
               !open &&
               String(data.payload.id_discord) !== String(idDiscord)
