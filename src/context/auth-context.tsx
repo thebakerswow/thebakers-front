@@ -10,6 +10,7 @@ import {
 interface JwtPayload {
   roles: string[]
   exp: number // Adiciona a expiração do token
+  user_id: string // Corrigido de idDiscord para user_id
 }
 
 type AuthContextType = {
@@ -19,6 +20,7 @@ type AuthContextType = {
   logout: () => void
   userRoles: string[]
   isPermissionAuthenticated: boolean
+  idDiscord: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
   const [userRoles, setUserRoles] = useState<string[]>([])
+  const [idDiscord, setIdDiscord] = useState<string | null>(null)
 
   const checkAuth = () => {
     const token = localStorage.getItem('jwt')
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUserRoles(decoded.roles.map((r) => r.toString()))
+        setIdDiscord(decoded.user_id) // Corrigido para ler user_id
         setIsAuthenticated(true)
       } catch (error) {
         console.error('Erro ao decodificar token:', error)
@@ -70,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('jwt')
     setUserRoles([])
+    setIdDiscord(null)
     setIsAuthenticated(false)
   }
 
@@ -82,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         userRoles,
         isPermissionAuthenticated: userRoles.length > 0,
+        idDiscord,
       }}
     >
       {children}

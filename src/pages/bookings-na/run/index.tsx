@@ -15,6 +15,7 @@ import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
 import { Freelancers } from '../../../components/freelancers'
 import { Button } from '@mui/material'
+import { RunChat } from '../../../components/run-chat'
 
 export function RunDetails() {
   const navigate = useNavigate()
@@ -30,7 +31,7 @@ export function RunDetails() {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isActive, setIsActive] = useState(true)
   const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
-  const { userRoles } = useAuth()
+  const { userRoles, idDiscord } = useAuth()
   const [showDetails, setShowDetails] = useState(false)
 
   const allowedRoles = [
@@ -380,6 +381,9 @@ export function RunDetails() {
           runId={runData.id}
         />
       )}
+      {runData?.id &&
+        (idDiscord === '105690011801792512' ||
+          idDiscord === '369923381094776833') && <RunChat runId={runData.id} />}
     </div>
   )
 }
