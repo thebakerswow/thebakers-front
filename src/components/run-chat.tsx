@@ -107,6 +107,7 @@ export function RunChat({ runId }: { runId: string }) {
                 'Notification' in window &&
                 Notification.permission === 'granted'
               ) {
+                console.log('Disparando notificação:', newMsg)
                 new Notification('Nova mensagem no Run Chat', {
                   body: `${newMsg.user_name}: ${newMsg.message}`,
                   icon: '/src/assets/logo.ico', // ajuste o caminho do ícone se necessário
@@ -156,7 +157,9 @@ export function RunChat({ runId }: { runId: string }) {
 
   const handleSendToRaidLeader = async () => {
     if (!selectedMessageId) return
-    const msg = messages.find((m) => m.id === selectedMessageId)
+    const msg = messages.find(
+      (m, idx) => (m.id || `${m.id_discord}-${idx}`) === selectedMessageId
+    )
     if (!msg) return
     if (!raidLeaders.length) {
       Swal.fire({
@@ -271,10 +274,11 @@ export function RunChat({ runId }: { runId: string }) {
                 {messages.map((msg, index) => {
                   const isOwnMessage =
                     String(msg.id_discord) === String(idDiscord)
-                  const isSelected = selectedMessageId === msg.id
+                  const messageKey = msg.id || `${msg.id_discord}-${index}`
+                  const isSelected = selectedMessageId === messageKey
                   return (
                     <div
-                      key={msg.id || `${msg.id_discord}-${index}`}
+                      key={messageKey}
                       className={`flex flex-col ${
                         isOwnMessage ? 'items-end' : 'items-start'
                       }`}
@@ -290,9 +294,9 @@ export function RunChat({ runId }: { runId: string }) {
                         onClick={() => {
                           if (isOwnMessage) {
                             setSelectedMessageId(
-                              selectedMessageId === (msg.id ?? null)
+                              selectedMessageId === messageKey
                                 ? null
-                                : (msg.id ?? null)
+                                : messageKey
                             )
                           }
                         }}
