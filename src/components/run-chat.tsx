@@ -219,7 +219,7 @@ export function RunChat({ runId }: { runId: string }) {
       {!open ? (
         <Badge
           color='error'
-          invisible={hasUnread}
+          invisible={!hasUnread}
           overlap='circular'
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
@@ -343,6 +343,7 @@ export function RunChat({ runId }: { runId: string }) {
               fullWidth
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              inputProps={{ autoComplete: 'off' }}
               sx={{
                 input: {
                   color: '#fff',
