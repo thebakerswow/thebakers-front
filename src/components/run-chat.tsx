@@ -92,21 +92,26 @@ export function RunChat({ runId }: { runId: string }) {
         const data = JSON.parse(event.data)
         switch (data.type) {
           case 'new_message':
-            setMessages((prev) => [
-              ...prev,
-              {
-                ...data.payload,
-                user_name:
-                  data.payload.user_name ||
-                  data.payload.username ||
-                  'Usuário desconhecido',
-              },
-            ])
-            if (
-              !open &&
-              String(data.payload.id_discord) !== String(idDiscord)
-            ) {
+            let newMsg = {
+              ...data.payload,
+              user_name:
+                data.payload.user_name ||
+                data.payload.username ||
+                'Usuário desconhecido',
+            }
+            setMessages((prev) => [...prev, newMsg])
+            if (!open && String(newMsg.id_discord) !== String(idDiscord)) {
               setHasUnread(true)
+              // Notificação do navegador
+              if (
+                'Notification' in window &&
+                Notification.permission === 'granted'
+              ) {
+                new Notification('Nova mensagem no Run Chat', {
+                  body: `${newMsg.user_name}: ${newMsg.message}`,
+                  icon: '/src/assets/logo.ico', // ajuste o caminho do ícone se necessário
+                })
+              }
             }
             break
           case 'confirmation':
@@ -189,6 +194,25 @@ export function RunChat({ runId }: { runId: string }) {
       })
     }
   }
+
+  useEffect(() => {
+    // Solicita permissão para notificações do navegador ao montar o componente
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      setHasUnread(false)
+    } else if (messages.length > 0) {
+      // Se a última mensagem não for do usuário logado, marque como não lida
+      const lastMsg = messages[messages.length - 1]
+      if (lastMsg && String(lastMsg.id_discord) !== String(idDiscord)) {
+        setHasUnread(true)
+      }
+    }
+  }, [open, messages, idDiscord])
 
   return (
     <div className='fixed bottom-6 right-12 z-[1000]'>
