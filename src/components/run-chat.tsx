@@ -9,6 +9,7 @@ import {
 } from '@mui/material'
 import { api } from '../services/axiosConfig'
 import { useAuth } from '../context/auth-context'
+import Swal from 'sweetalert2'
 
 interface ChatMessage {
   id?: string | number
@@ -27,6 +28,12 @@ export function RunChat({ runId }: { runId: string }) {
   const [hasUnread, setHasUnread] = useState(false)
   const ws = useRef<WebSocket | null>(null)
   const messagesEndRef = useRef<null | HTMLDivElement>(null)
+  const [selectedMessageId, setSelectedMessageId] = useState<
+    string | number | null
+  >(null)
+  const [raidLeaders, setRaidLeaders] = useState<
+    { idDiscord: string; username: string }[]
+  >([])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -68,7 +75,7 @@ export function RunChat({ runId }: { runId: string }) {
 
       const token = localStorage.getItem('jwt')
       if (!token) {
-        console.error('Token JWT não encontrado. O usuário está logado?')
+        console.error('Token JWT not found. Is the user logged in?')
         return
       }
 
@@ -104,6 +111,16 @@ export function RunChat({ runId }: { runId: string }) {
         }
       }
 
+      // Fetch raid leaders for the run
+      api
+        .get(`/run/${runId}`)
+        .then((response) => {
+          setRaidLeaders(response.data.info.raidLeaders || [])
+        })
+        .catch((error) => {
+          console.error('Error fetching raid leaders:', error)
+        })
+
       return () => {
         ws.current?.close()
       }
@@ -120,6 +137,47 @@ export function RunChat({ runId }: { runId: string }) {
         })
       )
       setInput('')
+    }
+  }
+
+  const handleSendToRaidLeader = async () => {
+    if (!selectedMessageId) return
+    const msg = messages.find((m) => m.id === selectedMessageId)
+    if (!msg) return
+    if (!raidLeaders.length) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'No raid leader found.',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
+    try {
+      await Promise.all(
+        raidLeaders.map((rl) =>
+          api.post('/discord/send_message', {
+            id_discord_recipient: rl.idDiscord,
+            message: `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${runId}`,
+          })
+        )
+      )
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'Message sent to raid leader.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } catch (error) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'Failed to send message to raid leader.',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     }
   }
 
@@ -167,7 +225,10 @@ export function RunChat({ runId }: { runId: string }) {
               <X size={22} />
             </IconButton>
           </div>
-          <div className='flex flex-1 flex-col gap-3 overflow-y-auto bg-zinc-800 p-4'>
+          <div
+            className='custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto p-4'
+            style={{ background: 'none' }}
+          >
             {loading ? (
               <div className='flex h-full items-center justify-center'>
                 <CircularProgress color='error' />
@@ -177,6 +238,7 @@ export function RunChat({ runId }: { runId: string }) {
                 {messages.map((msg, index) => {
                   const isOwnMessage =
                     String(msg.id_discord) === String(idDiscord)
+                  const isSelected = selectedMessageId === msg.id
                   return (
                     <div
                       key={msg.id || `${msg.id_discord}-${index}`}
@@ -185,11 +247,25 @@ export function RunChat({ runId }: { runId: string }) {
                       }`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                        className={`max-w-[85%] cursor-pointer rounded-lg px-3 py-2 ${
                           isOwnMessage
-                            ? 'bg-red-500 text-white'
+                            ? isSelected
+                              ? 'border-2 border-yellow-400 bg-red-700 text-white'
+                              : 'bg-red-500 text-white'
                             : 'bg-zinc-700 text-gray-200'
                         }`}
+                        onClick={() => {
+                          if (isOwnMessage) {
+                            setSelectedMessageId(
+                              selectedMessageId === (msg.id ?? null)
+                                ? null
+                                : (msg.id ?? null)
+                            )
+                          }
+                        }}
+                        title={
+                          isOwnMessage ? 'Click to select this message' : ''
+                        }
                       >
                         {!isOwnMessage && (
                           <div className='text-xs font-bold text-red-400'>
@@ -205,12 +281,31 @@ export function RunChat({ runId }: { runId: string }) {
               </>
             )}
           </div>
+          {/* Botão para enviar mensagem selecionada ao raid leader */}
+          {selectedMessageId && (
+            <div className='flex items-center justify-end gap-2 border-t border-zinc-700 bg-zinc-900 px-4 py-2'>
+              <Button
+                variant='contained'
+                color='warning'
+                onClick={handleSendToRaidLeader}
+                sx={{
+                  backgroundColor: 'rgb(251, 191, 36)',
+                  color: '#000',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  '&:hover': { backgroundColor: 'rgb(253, 224, 71)' },
+                }}
+              >
+                Tag Raid Leader
+              </Button>
+            </div>
+          )}
           <form
             className='flex gap-2 border-t border-zinc-700 bg-zinc-900 px-2 py-2'
             onSubmit={handleSendMessage}
           >
             <TextField
-              placeholder='Digite sua mensagem...'
+              placeholder='Type your message...'
               size='small'
               fullWidth
               value={input}
