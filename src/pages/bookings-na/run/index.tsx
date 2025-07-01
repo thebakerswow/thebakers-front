@@ -46,7 +46,7 @@ export function RunDetails() {
   // --- CHAT STATES ---
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatLoading, setChatLoading] = useState(false)
-  const [chatHasUnread, setChatHasUnread] = useState(false)
+  const [chatUnreadCount, setChatUnreadCount] = useState(0)
   const [chatSelectedMessageId, setChatSelectedMessageId] = useState<
     string | number | null
   >(null)
@@ -54,6 +54,7 @@ export function RunDetails() {
     { idDiscord: string; username: string }[]
   >([])
   const chatWs = useRef<WebSocket | null>(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   const allowedRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
@@ -338,9 +339,11 @@ export function RunDetails() {
               'Usuário desconhecido',
           }
           setChatMessages((prev) => [...prev, newMsg])
-          // Notificação se não for do usuário logado
+          // Notificação e contador se não for do usuário logado
           if (String(newMsg.id_discord) !== String(idDiscord)) {
-            setChatHasUnread(true)
+            if (!isChatOpen) {
+              setChatUnreadCount((prev) => prev + 1)
+            }
             if (
               'Notification' in window &&
               Notification.permission === 'granted'
@@ -427,6 +430,13 @@ export function RunDetails() {
       })
     }
   }
+
+  // Zerar contador de não lidas ao abrir o chat
+  useEffect(() => {
+    if (isChatOpen) {
+      setChatUnreadCount(0)
+    }
+  }, [isChatOpen])
 
   if (error) {
     return (
@@ -558,8 +568,7 @@ export function RunDetails() {
             runId={runData.id}
             messages={chatMessages}
             loading={chatLoading}
-            hasUnread={chatHasUnread}
-            setHasUnread={setChatHasUnread}
+            unreadCount={chatUnreadCount}
             inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
             onSendMessage={handleSendChatMessage}
             selectedMessageId={chatSelectedMessageId}
@@ -567,6 +576,8 @@ export function RunDetails() {
             onTagRaidLeader={handleTagRaidLeader}
             raidLeaders={chatRaidLeaders}
             idDiscord={idDiscord}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
           />
         )}
     </div>

@@ -20,8 +20,7 @@ interface RunChatProps {
   runId: string
   messages: ChatMessage[]
   loading: boolean
-  hasUnread: boolean
-  setHasUnread: (v: boolean) => void
+  unreadCount: number
   inputDisabled: boolean
   onSendMessage: (msg: string) => void
   selectedMessageId: string | number | null
@@ -29,13 +28,14 @@ interface RunChatProps {
   onTagRaidLeader: () => void
   raidLeaders: { idDiscord: string; username: string }[]
   idDiscord: string
+  isChatOpen: boolean
+  setIsChatOpen: (open: boolean) => void
 }
 
 export function RunChat({
   messages,
   loading,
-  hasUnread,
-  setHasUnread,
+  unreadCount,
   inputDisabled,
   onSendMessage,
   selectedMessageId,
@@ -43,8 +43,10 @@ export function RunChat({
   onTagRaidLeader,
 
   idDiscord,
+  isChatOpen,
+  setIsChatOpen,
 }: RunChatProps) {
-  const [open, setOpen] = useState(false)
+  const open = isChatOpen
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<null | HTMLDivElement>(null)
 
@@ -54,21 +56,6 @@ export function RunChat({
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, open])
-
-  useEffect(() => {
-    if (open) setHasUnread(false)
-  }, [open, setHasUnread])
-
-  useEffect(() => {
-    if (open) {
-      setHasUnread(false)
-    } else if (messages.length > 0) {
-      const lastMsg = messages[messages.length - 1]
-      if (lastMsg && String(lastMsg.id_discord) !== String(idDiscord)) {
-        setHasUnread(true)
-      }
-    }
-  }, [open, messages, idDiscord, setHasUnread])
 
   const handleSendMessage = (e: FormEvent) => {
     e.preventDefault()
@@ -83,12 +70,13 @@ export function RunChat({
       {!open ? (
         <Badge
           color='error'
-          invisible={!hasUnread}
+          invisible={unreadCount === 0}
+          badgeContent={unreadCount > 0 ? unreadCount : undefined}
           overlap='circular'
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <Button
-            onClick={() => setOpen(true)}
+            onClick={() => setIsChatOpen(true)}
             variant='contained'
             sx={{
               minWidth: 0,
@@ -110,7 +98,7 @@ export function RunChat({
           <div className='flex items-center justify-between bg-red-500 px-4 py-3 text-white'>
             <span className='font-semibold'>Run Chat</span>
             <IconButton
-              onClick={() => setOpen(false)}
+              onClick={() => setIsChatOpen(false)}
               size='small'
               sx={{
                 color: '#fff',
