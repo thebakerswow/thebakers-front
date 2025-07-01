@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { RunInfo } from './run-info'
 import { BuyersDataGrid } from './buyers-data-grid'
 import axios from 'axios'
@@ -16,6 +16,16 @@ import { useAuth } from '../../../context/auth-context'
 import { Freelancers } from '../../../components/freelancers'
 import { Button } from '@mui/material'
 import { RunChat } from '../../../components/run-chat'
+import Swal from 'sweetalert2'
+
+// ChatMessage interface igual ao run-chat.tsx
+interface ChatMessage {
+  id?: string | number
+  user_name: string
+  id_discord: string
+  message: string
+  created_at: string
+}
 
 export function RunDetails() {
   const navigate = useNavigate()
@@ -33,6 +43,17 @@ export function RunDetails() {
   const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
   const { userRoles, idDiscord } = useAuth()
   const [showDetails, setShowDetails] = useState(false)
+  // --- CHAT STATES ---
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatLoading, setChatLoading] = useState(false)
+  const [chatHasUnread, setChatHasUnread] = useState(false)
+  const [chatSelectedMessageId, setChatSelectedMessageId] = useState<
+    string | number | null
+  >(null)
+  const [chatRaidLeaders, setChatRaidLeaders] = useState<
+    { idDiscord: string; username: string }[]
+  >([])
+  const chatWs = useRef<WebSocket | null>(null)
 
   const allowedRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
@@ -258,6 +279,155 @@ export function RunDetails() {
     ? rows.filter((buyer) => buyer.status === 'group').length
     : 0
 
+  // --- CHAT WEBSOCKET EFFECT ---
+  useEffect(() => {
+    if (!id) return
+    setChatLoading(true)
+    // Fetch previous messages
+    api
+      .get(`/chat/${id}`)
+      .then((response) => {
+        setChatMessages(response.data.info || [])
+      })
+      .catch((error) => {
+        console.error('Falha ao buscar mensagens anteriores:', error)
+      })
+      .finally(() => setChatLoading(false))
+
+    // Fetch raid leaders
+    api
+      .get(`/run/${id}`)
+      .then((response) => {
+        setChatRaidLeaders(response.data.info.raidLeaders || [])
+      })
+      .catch((error) => {
+        console.error('Error fetching raid leaders:', error)
+      })
+
+    // WebSocket connection
+    const apiUrl = import.meta.env.VITE_API_BASE_URL as string
+    if (!apiUrl) {
+      console.error(
+        'VITE_API_BASE_URL não está definida! Verifique seu arquivo .env'
+      )
+      return
+    }
+    const token = localStorage.getItem('jwt')
+    if (!token) {
+      console.error('Token JWT not found. Is the user logged in?')
+      return
+    }
+    const wsUrl =
+      apiUrl.replace(/^http/, 'ws') +
+      `/v1/chat?id_run=${id}&authorization=${token}`
+    chatWs.current = new WebSocket(wsUrl)
+
+    chatWs.current.onopen = () => console.log('WebSocket Chat Conectado')
+    chatWs.current.onclose = () => console.log('WebSocket Chat Desconectado')
+    chatWs.current.onerror = (err) =>
+      console.error('WebSocket Chat Error:', err)
+    chatWs.current.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      switch (data.type) {
+        case 'new_message': {
+          let newMsg = {
+            ...data.payload,
+            user_name:
+              data.payload.user_name ||
+              data.payload.username ||
+              'Usuário desconhecido',
+          }
+          setChatMessages((prev) => [...prev, newMsg])
+          // Notificação se não for do usuário logado
+          if (String(newMsg.id_discord) !== String(idDiscord)) {
+            setChatHasUnread(true)
+            if (
+              'Notification' in window &&
+              Notification.permission === 'granted'
+            ) {
+              new Notification('Nova mensagem no Run Chat', {
+                body: `${newMsg.user_name}: ${newMsg.message}`,
+                icon: '/src/assets/logo.ico',
+              })
+            }
+          }
+          break
+        }
+        case 'confirmation':
+          console.log('Confirmação:', data.payload)
+          break
+        case 'error':
+          console.error('Erro do Servidor:', data.payload)
+          break
+        default:
+          console.warn('Tipo de mensagem desconhecido:', data.type)
+      }
+    }
+    // Solicita permissão para notificações ao montar
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+    return () => {
+      chatWs.current?.close()
+    }
+  }, [id, idDiscord])
+
+  // Função para enviar mensagem
+  const handleSendChatMessage = (msg: string) => {
+    if (msg.trim() && chatWs.current?.readyState === WebSocket.OPEN) {
+      chatWs.current.send(
+        JSON.stringify({
+          type: 'send_message',
+          payload: { message: msg },
+        })
+      )
+    }
+  }
+
+  // Função para taggear raid leader
+  const handleTagRaidLeader = async () => {
+    if (!chatSelectedMessageId) return
+    const msg = chatMessages.find(
+      (m, idx) => (m.id || `${m.id_discord}-${idx}`) === chatSelectedMessageId
+    )
+    if (!msg) return
+    if (!chatRaidLeaders.length) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'No raid leader found.',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
+    try {
+      await Promise.all(
+        chatRaidLeaders.map((rl) =>
+          api.post('/discord/send_message', {
+            id_discord_recipient: rl.idDiscord,
+            message: `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${id}`,
+          })
+        )
+      )
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'Message sent to raid leader.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } catch (error) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'Failed to send message to raid leader.',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    }
+  }
+
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
@@ -383,7 +553,22 @@ export function RunDetails() {
       )}
       {runData?.id &&
         (idDiscord === '105690011801792512' ||
-          idDiscord === '369923381094776833') && <RunChat runId={runData.id} />}
+          idDiscord === '369923381094776833') && (
+          <RunChat
+            runId={runData.id}
+            messages={chatMessages}
+            loading={chatLoading}
+            hasUnread={chatHasUnread}
+            setHasUnread={setChatHasUnread}
+            inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
+            onSendMessage={handleSendChatMessage}
+            selectedMessageId={chatSelectedMessageId}
+            setSelectedMessageId={setChatSelectedMessageId}
+            onTagRaidLeader={handleTagRaidLeader}
+            raidLeaders={chatRaidLeaders}
+            idDiscord={idDiscord}
+          />
+        )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useRef, FormEvent, useEffect } from 'react'
 import { ChatTeardropText, PaperPlaneRight, X } from '@phosphor-icons/react'
 import {
   Button,
@@ -7,9 +7,6 @@ import {
   CircularProgress,
   Badge,
 } from '@mui/material'
-import { api } from '../services/axiosConfig'
-import { useAuth } from '../context/auth-context'
-import Swal from 'sweetalert2'
 
 interface ChatMessage {
   id?: string | number
@@ -19,203 +16,67 @@ interface ChatMessage {
   created_at: string
 }
 
-export function RunChat({ runId }: { runId: string }) {
-  const { idDiscord } = useAuth()
+interface RunChatProps {
+  runId: string
+  messages: ChatMessage[]
+  loading: boolean
+  hasUnread: boolean
+  setHasUnread: (v: boolean) => void
+  inputDisabled: boolean
+  onSendMessage: (msg: string) => void
+  selectedMessageId: string | number | null
+  setSelectedMessageId: (id: string | number | null) => void
+  onTagRaidLeader: () => void
+  raidLeaders: { idDiscord: string; username: string }[]
+  idDiscord: string
+}
+
+export function RunChat({
+  messages,
+  loading,
+  hasUnread,
+  setHasUnread,
+  inputDisabled,
+  onSendMessage,
+  selectedMessageId,
+  setSelectedMessageId,
+  onTagRaidLeader,
+
+  idDiscord,
+}: RunChatProps) {
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [hasUnread, setHasUnread] = useState(false)
-  const ws = useRef<WebSocket | null>(null)
   const messagesEndRef = useRef<null | HTMLDivElement>(null)
-  const [selectedMessageId, setSelectedMessageId] = useState<
-    string | number | null
-  >(null)
-  const [raidLeaders, setRaidLeaders] = useState<
-    { idDiscord: string; username: string }[]
-  >([])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
+  // Scroll para o final ao abrir ou ao receber mensagens
   useEffect(() => {
     if (messages.length && open) {
-      scrollToBottom()
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, open])
 
   useEffect(() => {
     if (open) setHasUnread(false)
-  }, [open])
-
-  useEffect(() => {
-    if (open) {
-      const fetchPreviousMessages = async () => {
-        setLoading(true)
-        try {
-          const response = await api.get(`/chat/${runId}`)
-          setMessages(response.data.info || [])
-        } catch (error) {
-          console.error('Falha ao buscar mensagens anteriores:', error)
-        } finally {
-          setLoading(false)
-        }
-      }
-
-      fetchPreviousMessages()
-
-      const apiUrl = import.meta.env.VITE_API_BASE_URL as string
-      if (!apiUrl) {
-        console.error(
-          'VITE_API_BASE_URL não está definida! Verifique seu arquivo .env'
-        )
-        return
-      }
-
-      const token = localStorage.getItem('jwt')
-      if (!token) {
-        console.error('Token JWT not found. Is the user logged in?')
-        return
-      }
-
-      const wsUrl =
-        apiUrl.replace(/^http/, 'ws') +
-        `/v1/chat?id_run=${runId}&authorization=${token}`
-      ws.current = new WebSocket(wsUrl)
-
-      ws.current.onopen = () => console.log('WebSocket Conectado')
-      ws.current.onclose = () => console.log('WebSocket Desconectado')
-      ws.current.onerror = (err) => console.error('WebSocket Error:', err)
-
-      ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data)
-        switch (data.type) {
-          case 'new_message':
-            let newMsg = {
-              ...data.payload,
-              user_name:
-                data.payload.user_name ||
-                data.payload.username ||
-                'Usuário desconhecido',
-            }
-            setMessages((prev) => [...prev, newMsg])
-            if (!open && String(newMsg.id_discord) !== String(idDiscord)) {
-              setHasUnread(true)
-              // Notificação do navegador
-              if (
-                'Notification' in window &&
-                Notification.permission === 'granted'
-              ) {
-                console.log('Disparando notificação:', newMsg)
-                new Notification('Nova mensagem no Run Chat', {
-                  body: `${newMsg.user_name}: ${newMsg.message}`,
-                  icon: '/src/assets/logo.ico', // ajuste o caminho do ícone se necessário
-                })
-              }
-            }
-            break
-          case 'confirmation':
-            console.log('Confirmação:', data.payload)
-            break
-          case 'error':
-            console.error('Erro do Servidor:', data.payload)
-            break
-          default:
-            console.warn('Tipo de mensagem desconhecido:', data.type)
-        }
-      }
-
-      // Fetch raid leaders for the run
-      api
-        .get(`/run/${runId}`)
-        .then((response) => {
-          setRaidLeaders(response.data.info.raidLeaders || [])
-        })
-        .catch((error) => {
-          console.error('Error fetching raid leaders:', error)
-        })
-
-      return () => {
-        ws.current?.close()
-      }
-    }
-  }, [open, runId, idDiscord])
-
-  const handleSendMessage = (e: FormEvent) => {
-    e.preventDefault()
-    if (input.trim() && ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(
-        JSON.stringify({
-          type: 'send_message',
-          payload: { message: input },
-        })
-      )
-      setInput('')
-    }
-  }
-
-  const handleSendToRaidLeader = async () => {
-    if (!selectedMessageId) return
-    const msg = messages.find(
-      (m, idx) => (m.id || `${m.id_discord}-${idx}`) === selectedMessageId
-    )
-    if (!msg) return
-    if (!raidLeaders.length) {
-      Swal.fire({
-        title: 'Erro',
-        text: 'No raid leader found.',
-        icon: 'error',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-      return
-    }
-    try {
-      await Promise.all(
-        raidLeaders.map((rl) =>
-          api.post('/discord/send_message', {
-            id_discord_recipient: rl.idDiscord,
-            message: `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${runId}`,
-          })
-        )
-      )
-      Swal.fire({
-        title: 'Sucesso!',
-        text: 'Message sent to raid leader.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-    } catch (error) {
-      Swal.fire({
-        title: 'Erro',
-        text: 'Failed to send message to raid leader.',
-        icon: 'error',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-    }
-  }
-
-  useEffect(() => {
-    // Solicita permissão para notificações do navegador ao montar o componente
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-  }, [])
+  }, [open, setHasUnread])
 
   useEffect(() => {
     if (open) {
       setHasUnread(false)
     } else if (messages.length > 0) {
-      // Se a última mensagem não for do usuário logado, marque como não lida
       const lastMsg = messages[messages.length - 1]
       if (lastMsg && String(lastMsg.id_discord) !== String(idDiscord)) {
         setHasUnread(true)
       }
     }
-  }, [open, messages, idDiscord])
+  }, [open, messages, idDiscord, setHasUnread])
+
+  const handleSendMessage = (e: FormEvent) => {
+    e.preventDefault()
+    if (input.trim()) {
+      onSendMessage(input)
+      setInput('')
+    }
+  }
 
   return (
     <div className='fixed bottom-6 right-12 z-[1000]'>
@@ -279,9 +140,7 @@ export function RunChat({ runId }: { runId: string }) {
                   return (
                     <div
                       key={messageKey}
-                      className={`flex flex-col ${
-                        isOwnMessage ? 'items-end' : 'items-start'
-                      }`}
+                      className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
                     >
                       <div
                         className={`max-w-[85%] cursor-pointer rounded-lg px-3 py-2 ${
@@ -324,7 +183,7 @@ export function RunChat({ runId }: { runId: string }) {
               <Button
                 variant='contained'
                 color='warning'
-                onClick={handleSendToRaidLeader}
+                onClick={onTagRaidLeader}
                 sx={{
                   backgroundColor: 'rgb(251, 191, 36)',
                   color: '#000',
@@ -365,11 +224,12 @@ export function RunChat({ runId }: { runId: string }) {
                   borderRadius: 8,
                 },
               }}
+              disabled={inputDisabled}
             />
             <Button
               type='submit'
               variant='contained'
-              disabled={!input.trim()}
+              disabled={!input.trim() || inputDisabled}
               sx={{
                 backgroundColor: 'rgb(239, 68, 68)',
                 borderRadius: 2,
