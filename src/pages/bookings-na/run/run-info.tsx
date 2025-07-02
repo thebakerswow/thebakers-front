@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
+import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import undermineLogo from '../../../assets/undermine-logo.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
@@ -17,6 +17,7 @@ import {
   Paper,
 } from '@mui/material'
 import { api } from '../../../services/axiosConfig'
+import { EditHistoryDialog } from '../../../components/edit-history-dialog'
 
 interface RunInfoProps {
   run: RunData
@@ -35,6 +36,7 @@ export function RunInfo({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
+  const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
 
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
     return requiredRoles.some((required) =>
@@ -290,6 +292,21 @@ export function RunInfo({
               >
                 Edit Raid
               </Button>
+              {/* Edit History Button */}
+              <Button
+                variant='contained'
+                startIcon={<Clock size={18} />}
+                fullWidth
+                onClick={() => setIsEditHistoryOpen(true)}
+                sx={{
+                  backgroundColor: 'rgb(239, 68, 68)',
+                  '&:hover': {
+                    backgroundColor: 'rgb(248, 113, 113)',
+                  },
+                }}
+              >
+                Edit History
+              </Button>
               <Button
                 variant='contained'
                 startIcon={
@@ -331,6 +348,12 @@ export function RunInfo({
           run={run}
           onClose={handleCloseEditModal}
           onRunEdit={onRunEdit}
+        />
+      )}
+      {isEditHistoryOpen && (
+        <EditHistoryDialog
+          open={isEditHistoryOpen}
+          onClose={() => setIsEditHistoryOpen(false)}
         />
       )}
     </div>
