@@ -80,8 +80,8 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
   }, [isDolar])
 
   return (
-    <div className='flex max-h-[70%] flex-col'>
-      <TableContainer component={Paper} className='mt-12'>
+    <div className='flex max-h-[50%] flex-col'>
+      <TableContainer component={Paper} className='mt-6'>
         <Table>
           <TableHead>
             <TableRow>

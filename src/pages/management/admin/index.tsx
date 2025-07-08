@@ -5,6 +5,7 @@ import { BalanceControlTable } from './balance-control-table'
 import { GBanksTable } from './gbanks-control'
 import { VerifyTable } from './verify-table'
 import LatestTransactions from '../../../components/latest-transactions'
+import RunWithoutAttendanceTable from '../../../components/run-without-attendance-table'
 
 export function AdminPage() {
   const [selectedDate, setSelectedDate] = useState('')
@@ -36,7 +37,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className='flex w-full items-center justify-around'>
+    <div className='flex w-full items-center justify-around gap-2'>
       {/* Primeira Tabela */}
       <BalanceControlTable
         selectedTeam={selectedTeam}
@@ -53,6 +54,7 @@ export function AdminPage() {
       <div className='h-[90%] min-w-[20%]'>
         <VerifyTable />
         <LatestTransactions isDolar={isDolar} />
+        <RunWithoutAttendanceTable />
       </div>
     </div>
   )
