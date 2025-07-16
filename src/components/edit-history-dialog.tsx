@@ -101,7 +101,7 @@ export function EditHistoryDialog({
                   <TableCell>Old Value</TableCell>
                   <TableCell>New Value</TableCell>
                   <TableCell>Author</TableCell>
-                  <TableCell>Created At</TableCell>
+                  <TableCell>Time</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
