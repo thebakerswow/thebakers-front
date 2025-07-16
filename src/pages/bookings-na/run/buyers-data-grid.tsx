@@ -38,6 +38,7 @@ import {
 } from '@mui/material'
 import { Modal as MuiModal, Box } from '@mui/material'
 import Swal from 'sweetalert2'
+import { useAuth } from '../../../context/auth-context'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -45,6 +46,7 @@ interface BuyersGridProps {
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
   runIsLocked?: boolean // Added runIsLocked prop
+  runIdTeam?: string // Adicionada para permissão correta
 }
 
 const statusOptions = [
@@ -65,13 +67,47 @@ const statusPriorities: Record<string, number> = {
   closed: 6,
 }
 
+const TEAM_ROLE_IDS = [
+  import.meta.env.VITE_TEAM_PADEIRINHO,
+  import.meta.env.VITE_TEAM_GARCOM,
+  import.meta.env.VITE_TEAM_CONFEITEIROS,
+  import.meta.env.VITE_TEAM_JACKFRUIT,
+  import.meta.env.VITE_TEAM_MILHARAL,
+  import.meta.env.VITE_TEAM_RAIO,
+  import.meta.env.VITE_TEAM_APAE,
+  import.meta.env.VITE_TEAM_DTM,
+  import.meta.env.VITE_TEAM_KFFC,
+  import.meta.env.VITE_TEAM_SAPOCULEANO,
+  import.meta.env.VITE_TEAM_GREENSKY,
+  import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
+  import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
+  import.meta.env.VITE_TEAM_ROCKET,
+]
+function hasPrefeitoTeamAccess(
+  runIdTeam: string,
+  userRoles: string[]
+): boolean {
+  const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+  if (!isPrefeito) return false
+  const userTeamRole = TEAM_ROLE_IDS.find((teamId) =>
+    userRoles.includes(teamId)
+  )
+  if (!userTeamRole) return false
+  return runIdTeam === userTeamRole
+}
+
 export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
   runIsLocked, // Destructure runIsLocked
+  runIdTeam, // Nova prop
 }: BuyersGridProps) {
+  const { userRoles } = useAuth()
+  const canSeeIdBuyer =
+    userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
+    (runIdTeam && hasPrefeitoTeamAccess(runIdTeam, userRoles))
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
@@ -449,12 +485,24 @@ export function BuyersDataGrid({
       <Table>
         <TableHead>
           <TableRow>
+            {canSeeIdBuyer && (
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Id Buyer
+              </TableCell>
+            )}
             <TableCell
               sx={{ textAlign: 'center' }}
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               Slot
@@ -576,9 +624,9 @@ export function BuyersDataGrid({
             <TableRow sx={{ height: '32px', minHeight: '32px' }}>
               {/* Increased height */}
               <TableCell
-                colSpan={11}
+                colSpan={canSeeIdBuyer ? 12 : 11}
                 align='center'
-                sx={{ padding: '20px', textAlign: 'center' }} // Adjusted padding
+                sx={{ padding: '20px', textAlign: 'center' }}
               >
                 No Buyers
               </TableCell>
@@ -590,6 +638,11 @@ export function BuyersDataGrid({
                 className={getBuyerColor(buyer.status)}
                 sx={{ height: '40px' }} // Set minimum height
               >
+                {canSeeIdBuyer && (
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.id ?? '-'}
+                  </TableCell>
+                )}
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {index + 1}
                 </TableCell>

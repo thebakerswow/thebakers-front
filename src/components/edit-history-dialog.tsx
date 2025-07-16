@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -15,95 +15,57 @@ import {
   TextField,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import { getRunHistory } from '../services/axiosConfig'
+import { RunHistory } from '../types/runs-interface'
+import dayjs from 'dayjs'
 
 interface EditHistoryDialogProps {
   open: boolean
   onClose: () => void
+  idRun?: number
 }
 
-// Definição de tipos discriminados para os edits
-
-type RunEdit = {
-  type: 'run'
-  id: number
-  field: string
-  oldValue: string | number
-  newValue: string | number
-  editedBy: string
-  date: string
-}
-type BuyerEdit = {
-  type: 'buyer'
-  id: number
-  buyer: string
-  field: string
-  oldValue: string | number
-  newValue: string | number
-  editedBy: string
-  date: string
-}
-type Edit = RunEdit | BuyerEdit
-
-const mockRunEdits: RunEdit[] = [
-  {
-    type: 'run',
-    id: 1,
-    field: 'Max Buyers',
-    oldValue: 10,
-    newValue: 12,
-    editedBy: 'Calmakarai',
-    date: '2024-06-01 12:00',
-  },
-  {
-    type: 'run',
-    id: 2,
-    field: 'Loot',
-    oldValue: 'Saved',
-    newValue: 'Unsaved',
-    editedBy: 'Duckduck',
-    date: '2024-06-02 15:30',
-  },
-]
-const mockBuyerEdits: BuyerEdit[] = [
-  {
-    type: 'buyer',
-    id: 1,
-    buyer: 'Player1',
-    field: 'Status',
-    oldValue: 'waiting',
-    newValue: 'group',
-    editedBy: 'Calmakarai',
-    date: '2024-06-01 13:00',
-  },
-  {
-    type: 'buyer',
-    id: 2,
-    buyer: 'Player2',
-    field: 'Paid Full',
-    oldValue: 'false',
-    newValue: 'true',
-    editedBy: 'Calmakarai',
-    date: '2024-06-02 16:00',
-  },
-]
-
-const allEdits: Edit[] = [...mockRunEdits, ...mockBuyerEdits].sort(
-  (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-)
-
-export function EditHistoryDialog({ open, onClose }: EditHistoryDialogProps) {
+export function EditHistoryDialog({
+  open,
+  onClose,
+  idRun,
+}: EditHistoryDialogProps) {
   const [filter, setFilter] = useState('')
+  const [history, setHistory] = useState<RunHistory[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredEdits = useMemo(() => {
-    if (!filter.trim()) return allEdits
+  useEffect(() => {
+    if (!open || !idRun) return
+    setLoading(true)
+    getRunHistory(idRun)
+      .then((data) => setHistory(Array.isArray(data) ? data : []))
+      .finally(() => setLoading(false))
+  }, [open, idRun])
+
+  const filteredHistory = useMemo(() => {
+    if (!filter.trim()) return history
     const lower = filter.toLowerCase()
-    return allEdits.filter((edit) =>
-      Object.values(edit).join(' ').toLowerCase().includes(lower)
-    )
-  }, [filter])
+    return history.filter((edit) => {
+      const idBuyerStr =
+        edit.id_buyer && edit.id_buyer.Valid
+          ? edit.id_buyer.Int64.toString()
+          : ''
+      const searchString = [
+        idBuyerStr,
+        edit.field,
+        edit.old_value,
+        edit.new_value,
+        edit.name_edited_by,
+        edit.created_at,
+      ]
+        .join(' ')
+        .toLowerCase()
+      return searchString.includes(lower)
+    })
+  }, [filter, history])
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth='lg' fullWidth>
       <DialogTitle>
         Edit History
         <IconButton
@@ -115,6 +77,11 @@ export function EditHistoryDialog({ open, onClose }: EditHistoryDialogProps) {
         </IconButton>
       </DialogTitle>
       <DialogContent>
+        {!idRun ? (
+          <Box color='error.main' mb={2}>
+            No run id provided
+          </Box>
+        ) : null}
         <TextField
           label='Filter edits'
           variant='outlined'
@@ -129,31 +96,45 @@ export function EditHistoryDialog({ open, onClose }: EditHistoryDialogProps) {
             <Table size='small'>
               <TableHead>
                 <TableRow>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Buyer</TableCell>
+                  <TableCell>Id Buyer</TableCell>
                   <TableCell>Field</TableCell>
                   <TableCell>Old Value</TableCell>
                   <TableCell>New Value</TableCell>
-                  <TableCell>Edited By</TableCell>
-                  <TableCell>Date</TableCell>
+                  <TableCell>Author</TableCell>
+                  <TableCell>Created At</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredEdits.map((edit, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>
-                      {edit.type === 'buyer' ? 'Buyer' : 'Run'}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align='center'>
+                      Loading...
                     </TableCell>
-                    <TableCell>
-                      {edit.type === 'buyer' ? edit.buyer : '-'}
-                    </TableCell>
-                    <TableCell>{edit.field}</TableCell>
-                    <TableCell>{edit.oldValue}</TableCell>
-                    <TableCell>{edit.newValue}</TableCell>
-                    <TableCell>{edit.editedBy}</TableCell>
-                    <TableCell>{edit.date}</TableCell>
                   </TableRow>
-                ))}
+                ) : filteredHistory.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align='center'>
+                      No history found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredHistory.map((edit, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        {edit.id_buyer && edit.id_buyer.Valid
+                          ? edit.id_buyer.Int64.toString()
+                          : '-'}
+                      </TableCell>
+                      <TableCell>{edit.field}</TableCell>
+                      <TableCell>{edit.old_value}</TableCell>
+                      <TableCell>{edit.new_value}</TableCell>
+                      <TableCell>{edit.name_edited_by}</TableCell>
+                      <TableCell>
+                        {dayjs(edit.created_at).format('HH:mm - MM/DD/YYYY')}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>

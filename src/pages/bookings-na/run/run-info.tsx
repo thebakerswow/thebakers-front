@@ -38,11 +38,6 @@ export function RunInfo({
   const { userRoles } = useAuth() // Obtenha as roles do contexto
   const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
-  }
 
   const handleOpenEditModal = () => {
     setIsEditModalOpen(true)
@@ -97,6 +92,34 @@ export function RunInfo({
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
     }
+  }
+
+  // Mapeamento dos cargos de time
+  const TEAM_ROLE_IDS = [
+    import.meta.env.VITE_TEAM_PADEIRINHO,
+    import.meta.env.VITE_TEAM_GARCOM,
+    import.meta.env.VITE_TEAM_CONFEITEIROS,
+    import.meta.env.VITE_TEAM_JACKFRUIT,
+    import.meta.env.VITE_TEAM_MILHARAL,
+    import.meta.env.VITE_TEAM_RAIO,
+    import.meta.env.VITE_TEAM_APAE,
+    import.meta.env.VITE_TEAM_DTM,
+    import.meta.env.VITE_TEAM_KFFC,
+    import.meta.env.VITE_TEAM_SAPOCULEANO,
+    import.meta.env.VITE_TEAM_GREENSKY,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
+    import.meta.env.VITE_TEAM_ROCKET,
+  ]
+
+  function hasPrefeitoTeamAccess(run: RunData, userRoles: string[]): boolean {
+    const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+    if (!isPrefeito) return false
+    const userTeamRole = TEAM_ROLE_IDS.find((teamId) =>
+      userRoles.includes(teamId)
+    )
+    if (!userTeamRole) return false
+    return run.idTeam === userTeamRole
   }
 
   return (
@@ -267,11 +290,8 @@ export function RunInfo({
             Add Buyer
           </Button>
           {/* Permissoes prefeito, chefe de cozinha, staff */}
-          {hasRequiredRole([
-            import.meta.env.VITE_TEAM_PREFEITO,
-            import.meta.env.VITE_TEAM_CHEFE,
-            import.meta.env.VITE_TEAM_STAFF,
-          ]) ? (
+          {hasPrefeitoTeamAccess(run, userRoles) ||
+          userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ? (
             <>
               <Button
                 variant='contained'
@@ -354,6 +374,7 @@ export function RunInfo({
         <EditHistoryDialog
           open={isEditHistoryOpen}
           onClose={() => setIsEditHistoryOpen(false)}
+          idRun={Number(run.id)}
         />
       )}
     </div>

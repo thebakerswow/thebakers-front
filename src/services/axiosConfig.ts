@@ -22,3 +22,8 @@ api.interceptors.request.use(
     return Promise.reject(error)
   }
 )
+
+export const getRunHistory = async (idRun: number) => {
+  const response = await api.get(`/run/${idRun}/history`)
+  return response.data.info
+}
