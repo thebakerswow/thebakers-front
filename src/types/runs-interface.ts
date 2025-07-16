@@ -30,3 +30,14 @@ export interface RunData {
   buyersCount: string
   quantityBoss: { String: string; Valid: boolean } // ajustado para aceitar objeto do backend
 }
+
+export interface RunHistory {
+  id: number
+  id_run: number
+  id_buyer: { Int64: number; Valid: boolean } | null
+  field: string
+  old_value: string
+  new_value: string
+  name_edited_by: string
+  created_at: string
+}

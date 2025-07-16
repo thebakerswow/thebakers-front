@@ -438,6 +438,36 @@ export function RunDetails() {
     }
   }, [isChatOpen])
 
+  // Adicionar o mesmo mapeamento e função utilitária já usada em run-info.tsx
+  const TEAM_ROLE_IDS = [
+    import.meta.env.VITE_TEAM_PADEIRINHO,
+    import.meta.env.VITE_TEAM_GARCOM,
+    import.meta.env.VITE_TEAM_CONFEITEIROS,
+    import.meta.env.VITE_TEAM_JACKFRUIT,
+    import.meta.env.VITE_TEAM_MILHARAL,
+    import.meta.env.VITE_TEAM_RAIO,
+    import.meta.env.VITE_TEAM_APAE,
+    import.meta.env.VITE_TEAM_DTM,
+    import.meta.env.VITE_TEAM_KFFC,
+    import.meta.env.VITE_TEAM_SAPOCULEANO,
+    import.meta.env.VITE_TEAM_GREENSKY,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
+    import.meta.env.VITE_TEAM_ROCKET,
+  ]
+  function hasPrefeitoTeamAccess(
+    runIdTeam: string,
+    userRoles: string[]
+  ): boolean {
+    const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+    if (!isPrefeito) return false
+    const userTeamRole = TEAM_ROLE_IDS.find((teamId) =>
+      userRoles.includes(teamId)
+    )
+    if (!userTeamRole) return false
+    return runIdTeam === userTeamRole
+  }
+
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
@@ -486,22 +516,24 @@ export function RunDetails() {
                     marginBottom: 12,
                   }}
                 >
-                  {canViewInviteButton && (
-                    <Button
-                      onClick={handleOpenInviteBuyersModal}
-                      variant='contained'
-                      startIcon={<UserPlus size={18} />}
-                      sx={{
-                        backgroundColor: 'rgb(239, 68, 68)',
-                        '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-                        minWidth: 140,
-                        fontWeight: 500,
-                        boxShadow: 'none',
-                      }}
-                    >
-                      Invite Buyers
-                    </Button>
-                  )}
+                  {runData &&
+                    (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
+                      hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
+                      <Button
+                        onClick={handleOpenInviteBuyersModal}
+                        variant='contained'
+                        startIcon={<UserPlus size={18} />}
+                        sx={{
+                          backgroundColor: 'rgb(239, 68, 68)',
+                          '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                          minWidth: 140,
+                          fontWeight: 500,
+                          boxShadow: 'none',
+                        }}
+                      >
+                        Invite Buyers
+                      </Button>
+                    )}
                   <Button
                     onClick={toggleDetailsVisibility}
                     variant='contained'
@@ -532,6 +564,7 @@ export function RunDetails() {
                   onBuyerNameNoteEdit={reloadAllData}
                   onDeleteSuccess={reloadAllData}
                   runIsLocked={runData?.runIsLocked ?? false}
+                  runIdTeam={runData?.idTeam}
                 />
               </div>
             )}
