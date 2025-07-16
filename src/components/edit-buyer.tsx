@@ -110,6 +110,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
           fullWidth
           value={formData.nameAndRealm}
           onChange={handleChange('nameAndRealm')}
+          slotProps={{ input: { inputProps: { maxLength: 255 } } }}
         />
         <TextField
           label='Pot'

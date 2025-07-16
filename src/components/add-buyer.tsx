@@ -204,6 +204,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
                 onChange={handleTextFieldChange}
                 variant='outlined'
                 fullWidth
+                slotProps={{ input: { inputProps: { maxLength: 255 } } }}
               />
               <FormControl fullWidth variant='outlined'>
                 <InputLabel id='playerClass-label'>Class</InputLabel>
