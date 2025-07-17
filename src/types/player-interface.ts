@@ -1,4 +1,5 @@
 export interface RaidLeader {
+  idCommunication: string
   idDiscord: string
   username: string
 }

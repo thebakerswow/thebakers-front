@@ -38,7 +38,6 @@ export function RunInfo({
   const { userRoles } = useAuth() // Obtenha as roles do contexto
   const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
 
-
   const handleOpenEditModal = () => {
     setIsEditModalOpen(true)
   }
@@ -237,14 +236,19 @@ export function RunInfo({
                 Backups: <span className='font-normal'>{run.backups}</span>
               </span>
             </p>
-            {run.raidLeaders && run.raidLeaders.length > 0 && (
-              <p className='text-left'>
-                <span className='text-base font-bold'>Raid Leader(s): </span>
-                {run.raidLeaders
-                  .map((raidLeader) => raidLeader.username)
-                  .join(', ')}
-              </p>
-            )}
+            {run.raidLeaders &&
+              run.raidLeaders.length > 0 &&
+              run.raidLeaders.some(
+                (leader) => leader.username !== 'Encrypted'
+              ) && (
+                <p className='text-left'>
+                  <span className='text-base font-bold'>Raid Leader(s): </span>
+                  {run.raidLeaders
+                    .filter((raidLeader) => raidLeader.username !== 'Encrypted')
+                    .map((raidLeader) => raidLeader.username)
+                    .join(', ')}
+                </p>
+              )}
             {/* Gold Pot e Dolar Pot em linhas separadas, Gold Pot em negrito, sem "Run Pot" */}
             <p className='text-left'>
               {run.actualPot != null && (

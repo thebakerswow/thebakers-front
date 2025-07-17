@@ -17,6 +17,7 @@ import { Freelancers } from '../../../components/freelancers'
 import { Button } from '@mui/material'
 import { RunChat } from '../../../components/run-chat'
 import Swal from 'sweetalert2'
+import CryptoJS from 'crypto-js'
 
 // ChatMessage interface igual ao run-chat.tsx
 interface ChatMessage {
@@ -25,6 +26,13 @@ interface ChatMessage {
   id_discord: string
   message: string
   created_at: string
+}
+
+// Nova interface para raid leaders
+interface RaidLeader {
+  idCommunication: string
+  idDiscord: string
+  username: string
 }
 
 export function RunDetails() {
@@ -50,9 +58,7 @@ export function RunDetails() {
   const [chatSelectedMessageId, setChatSelectedMessageId] = useState<
     string | number | null
   >(null)
-  const [chatRaidLeaders, setChatRaidLeaders] = useState<
-    { idDiscord: string; username: string }[]
-  >([])
+  const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
 
@@ -323,8 +329,6 @@ export function RunDetails() {
       `/v1/chat?id_run=${id}&authorization=${token}`
     chatWs.current = new WebSocket(wsUrl)
 
-    chatWs.current.onopen = () => console.log('WebSocket Chat Conectado')
-    chatWs.current.onclose = () => console.log('WebSocket Chat Desconectado')
     chatWs.current.onerror = (err) =>
       console.error('WebSocket Chat Error:', err)
     chatWs.current.onmessage = (event) => {
@@ -357,7 +361,6 @@ export function RunDetails() {
           break
         }
         case 'confirmation':
-          console.log('Confirmação:', data.payload)
           break
         case 'error':
           console.error('Erro do Servidor:', data.payload)
@@ -387,6 +390,62 @@ export function RunDetails() {
     }
   }
 
+  // Função para decriptar idCommunication
+  const decryptIdCommunication = (encryptedId: string): string => {
+    try {
+      const secretKey = import.meta.env.VITE_DECRYPTION_KEY
+
+      if (!secretKey) {
+        console.error('VITE_DECRYPTION_KEY não está definida')
+        return ''
+      }
+
+      // Implementação compatível com Go AES-128-CFB
+      try {
+        // 1. Criar hash MD5 da chave (igual ao Go)
+        const keyHash = CryptoJS.MD5(secretKey)
+
+        // 2. Usar os primeiros 16 bytes como IV (igual ao Go)
+        const iv = CryptoJS.lib.WordArray.create(keyHash.words.slice(0, 4))
+
+        // 3. Decriptar usando AES-128-CFB
+        const decrypted = CryptoJS.AES.decrypt(encryptedId, keyHash, {
+          mode: CryptoJS.mode.CFB,
+          padding: CryptoJS.pad.NoPadding,
+          iv: iv,
+        })
+
+        const result = decrypted.toString(CryptoJS.enc.Utf8)
+
+        if (result) {
+          return result
+        }
+      } catch (error) {
+        console.error('Erro na decriptação AES-128-CFB:', error)
+      }
+
+      return ''
+    } catch (error) {
+      console.error('Erro ao decriptar idCommunication:', error)
+      return ''
+    }
+  }
+
+  // Função para obter o ID do Discord do raid leader
+  const getRaidLeaderDiscordId = (raidLeader: RaidLeader): string => {
+    if (raidLeader.idDiscord === 'Encrypted') {
+      const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
+      if (!decryptedId) {
+        console.error(
+          'Falha ao decriptar ID do raid leader:',
+          raidLeader.username
+        )
+      }
+      return decryptedId
+    }
+    return raidLeader.idDiscord
+  }
+
   // Função para taggear raid leader
   const handleTagRaidLeader = async () => {
     if (!chatSelectedMessageId) return
@@ -404,14 +463,37 @@ export function RunDetails() {
       })
       return
     }
+
+    // Validar Discord IDs antes de enviar
+    const validRaidLeaders = chatRaidLeaders.filter((rl) => {
+      const discordId = getRaidLeaderDiscordId(rl)
+      if (!discordId) {
+        console.error(`ID do Discord inválido para raid leader: ${rl.username}`)
+        return false
+      }
+      return true
+    })
+
+    if (validRaidLeaders.length === 0) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'Não foi possível decriptar os IDs dos raid leaders. Verifique se a chave de decriptação está configurada.',
+        icon: 'error',
+        timer: 3000,
+        showConfirmButton: false,
+      })
+      return
+    }
+
     try {
       await Promise.all(
-        chatRaidLeaders.map((rl) =>
-          api.post('/discord/send_message', {
-            id_discord_recipient: rl.idDiscord,
+        validRaidLeaders.map((rl) => {
+          const discordId = getRaidLeaderDiscordId(rl)
+          return api.post('/discord/send_message', {
+            id_discord_recipient: discordId,
             message: `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${id}`,
           })
-        )
+        })
       )
       Swal.fire({
         title: 'Sucesso!',
@@ -421,6 +503,7 @@ export function RunDetails() {
         showConfirmButton: false,
       })
     } catch (error) {
+      console.error('Erro ao enviar mensagem para raid leader:', error)
       Swal.fire({
         title: 'Erro',
         text: 'Failed to send message to raid leader.',
@@ -597,7 +680,8 @@ export function RunDetails() {
       {runData?.id &&
         (idDiscord === '105690011801792512' ||
           idDiscord === '369923381094776833' ||
-          idDiscord === '800168687163146240') && (
+          idDiscord === '800168687163146240' ||
+          idDiscord === '466344718507442177') && (
           <RunChat
             runId={runData.id}
             messages={chatMessages}

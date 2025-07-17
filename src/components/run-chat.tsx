@@ -1,5 +1,10 @@
 import { useState, useRef, FormEvent, useEffect } from 'react'
-import { ChatTeardropText, PaperPlaneRight, X } from '@phosphor-icons/react'
+import {
+  ChatTeardropText,
+  PaperPlaneRight,
+  WarningCircle,
+  X,
+} from '@phosphor-icons/react'
 import {
   Button,
   TextField,
@@ -26,7 +31,11 @@ interface RunChatProps {
   selectedMessageId: string | number | null
   setSelectedMessageId: (id: string | number | null) => void
   onTagRaidLeader: () => void
-  raidLeaders: { idDiscord: string; username: string }[]
+  raidLeaders: {
+    idCommunication: string
+    idDiscord: string
+    username: string
+  }[]
   idDiscord: string
   isChatOpen: boolean
   setIsChatOpen: (open: boolean) => void
@@ -128,10 +137,10 @@ export function RunChat({
                   return (
                     <div
                       key={messageKey}
-                      className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
+                      className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
                     >
                       <div
-                        className={`max-w-[85%] cursor-pointer rounded-lg px-3 py-2 ${
+                        className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
                           isOwnMessage
                             ? isSelected
                               ? 'border-2 border-yellow-400 bg-red-700 text-white'
@@ -158,6 +167,30 @@ export function RunChat({
                         )}
                         <p className='text-sm'>{msg.message}</p>
                       </div>
+                      {/* Ícone de Tag Raid Leader */}
+                      {isOwnMessage && (
+                        <div
+                          className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
+                        >
+                          <span
+                            className='mr-1 cursor-pointer'
+                            title='Tag Raid Leader'
+                            onClick={() => {
+                              setSelectedMessageId(
+                                selectedMessageId === messageKey
+                                  ? null
+                                  : messageKey
+                              )
+                            }}
+                          >
+                            <WarningCircle
+                              size={20}
+                              color='#fbbf24'
+                              weight={isSelected ? 'fill' : 'regular'}
+                            />
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
