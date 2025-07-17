@@ -680,8 +680,7 @@ export function RunDetails() {
       {runData?.id &&
         (idDiscord === '105690011801792512' ||
           idDiscord === '369923381094776833' ||
-          idDiscord === '800168687163146240' ||
-          idDiscord === '466344718507442177') && (
+          idDiscord === '800168687163146240') && (
           <RunChat
             runId={runData.id}
             messages={chatMessages}
