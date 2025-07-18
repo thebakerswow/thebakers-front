@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Badge,
 } from '@mui/material'
+import Swal from 'sweetalert2'
 
 interface ChatMessage {
   id?: string | number
@@ -28,9 +29,7 @@ interface RunChatProps {
   unreadCount: number
   inputDisabled: boolean
   onSendMessage: (msg: string) => void
-  selectedMessageId: string | number | null
-  setSelectedMessageId: (id: string | number | null) => void
-  onTagRaidLeader: () => void
+  onTagRaidLeader: (message?: ChatMessage) => void
   raidLeaders: {
     idCommunication: string
     idDiscord: string
@@ -47,10 +46,7 @@ export function RunChat({
   unreadCount,
   inputDisabled,
   onSendMessage,
-  selectedMessageId,
-  setSelectedMessageId,
   onTagRaidLeader,
-
   idDiscord,
   isChatOpen,
   setIsChatOpen,
@@ -71,6 +67,23 @@ export function RunChat({
     if (input.trim()) {
       onSendMessage(input)
       setInput('')
+    }
+  }
+
+  const handleTagRaidLeader = async (message: ChatMessage) => {
+    const result = await Swal.fire({
+      title: 'Confirmar Tag',
+      text: 'Are you sure you want to tag the raid leader?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'rgb(248, 113, 113)',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Confirm!',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (result.isConfirmed) {
+      onTagRaidLeader(message)
     }
   }
 
@@ -97,7 +110,7 @@ export function RunChat({
               '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
               p: 0,
             }}
-            aria-label='Abrir chat da run'
+            aria-label='Open run chat'
           >
             <ChatTeardropText size={28} color='#fff' />
           </Button>
@@ -133,7 +146,6 @@ export function RunChat({
                   const isOwnMessage =
                     String(msg.id_discord) === String(idDiscord)
                   const messageKey = msg.id || `${msg.id_discord}-${index}`
-                  const isSelected = selectedMessageId === messageKey
                   return (
                     <div
                       key={messageKey}
@@ -142,20 +154,9 @@ export function RunChat({
                       <div
                         className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
                           isOwnMessage
-                            ? isSelected
-                              ? 'border-2 border-yellow-400 bg-red-700 text-white'
-                              : 'bg-red-500 text-white'
+                            ? 'bg-red-500 text-white'
                             : 'bg-zinc-700 text-gray-200'
                         }`}
-                        onClick={() => {
-                          if (isOwnMessage) {
-                            setSelectedMessageId(
-                              selectedMessageId === messageKey
-                                ? null
-                                : messageKey
-                            )
-                          }
-                        }}
                         title={
                           isOwnMessage ? 'Click to select this message' : ''
                         }
@@ -175,18 +176,12 @@ export function RunChat({
                           <span
                             className='mr-1 cursor-pointer'
                             title='Tag Raid Leader'
-                            onClick={() => {
-                              setSelectedMessageId(
-                                selectedMessageId === messageKey
-                                  ? null
-                                  : messageKey
-                              )
-                            }}
+                            onClick={() => handleTagRaidLeader(msg)}
                           >
                             <WarningCircle
                               size={20}
                               color='#fbbf24'
-                              weight={isSelected ? 'fill' : 'regular'}
+                              weight='regular'
                             />
                           </span>
                         </div>
@@ -198,25 +193,7 @@ export function RunChat({
               </>
             )}
           </div>
-          {/* Botão para enviar mensagem selecionada ao raid leader */}
-          {selectedMessageId && (
-            <div className='flex items-center justify-end gap-2 border-t border-zinc-700 bg-zinc-900 px-4 py-2'>
-              <Button
-                variant='contained'
-                color='warning'
-                onClick={onTagRaidLeader}
-                sx={{
-                  backgroundColor: 'rgb(251, 191, 36)',
-                  color: '#000',
-                  fontWeight: 600,
-                  borderRadius: 2,
-                  '&:hover': { backgroundColor: 'rgb(253, 224, 71)' },
-                }}
-              >
-                Tag Raid Leader
-              </Button>
-            </div>
-          )}
+          {/* Removendo o botão que aparecia embaixo */}
           <form
             className='flex gap-2 border-t border-zinc-700 bg-zinc-900 px-2 py-2'
             onSubmit={handleSendMessage}

@@ -55,9 +55,7 @@ export function RunDetails() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatLoading, setChatLoading] = useState(false)
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
-  const [chatSelectedMessageId, setChatSelectedMessageId] = useState<
-    string | number | null
-  >(null)
+
   const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -447,12 +445,26 @@ export function RunDetails() {
   }
 
   // Função para taggear raid leader
-  const handleTagRaidLeader = async () => {
-    if (!chatSelectedMessageId) return
-    const msg = chatMessages.find(
-      (m, idx) => (m.id || `${m.id_discord}-${idx}`) === chatSelectedMessageId
-    )
-    if (!msg) return
+  const handleTagRaidLeader = async (message?: ChatMessage) => {
+    // Se não foi passada uma mensagem específica, usar a última mensagem do usuário
+    let msg = message
+    if (!msg) {
+      const userMessages = chatMessages.filter(
+        (m) => String(m.id_discord) === String(idDiscord)
+      )
+      msg = userMessages[userMessages.length - 1]
+    }
+
+    if (!msg) {
+      Swal.fire({
+        title: 'Erro',
+        text: 'No message found to tag.',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
     if (!chatRaidLeaders.length) {
       Swal.fire({
         title: 'Erro',
@@ -688,8 +700,6 @@ export function RunDetails() {
             unreadCount={chatUnreadCount}
             inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
             onSendMessage={handleSendChatMessage}
-            selectedMessageId={chatSelectedMessageId}
-            setSelectedMessageId={setChatSelectedMessageId}
             onTagRaidLeader={handleTagRaidLeader}
             raidLeaders={chatRaidLeaders}
             idDiscord={idDiscord}
