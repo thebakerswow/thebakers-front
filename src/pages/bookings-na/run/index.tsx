@@ -312,9 +312,7 @@ export function RunDetails() {
     // WebSocket connection
     const apiUrl = import.meta.env.VITE_API_BASE_URL as string
     if (!apiUrl) {
-      console.error(
-        'VITE_API_BASE_URL não está definida! Verifique seu arquivo .env'
-      )
+      console.error('VITE_API_BASE_URL not found!')
       return
     }
     const token = localStorage.getItem('jwt')
@@ -689,24 +687,21 @@ export function RunDetails() {
           runId={runData.id}
         />
       )}
-      {runData?.id &&
-        (idDiscord === '105690011801792512' ||
-          idDiscord === '369923381094776833' ||
-          idDiscord === '800168687163146240') && (
-          <RunChat
-            runId={runData.id}
-            messages={chatMessages}
-            loading={chatLoading}
-            unreadCount={chatUnreadCount}
-            inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
-            onSendMessage={handleSendChatMessage}
-            onTagRaidLeader={handleTagRaidLeader}
-            raidLeaders={chatRaidLeaders}
-            idDiscord={idDiscord}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-          />
-        )}
+      {runData?.id && idDiscord && (
+        <RunChat
+          runId={runData.id}
+          messages={chatMessages}
+          loading={chatLoading}
+          unreadCount={chatUnreadCount}
+          inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
+          onSendMessage={handleSendChatMessage}
+          onTagRaidLeader={handleTagRaidLeader}
+          raidLeaders={chatRaidLeaders}
+          idDiscord={idDiscord}
+          isChatOpen={isChatOpen}
+          setIsChatOpen={setIsChatOpen}
+        />
+      )}
     </div>
   )
 }
