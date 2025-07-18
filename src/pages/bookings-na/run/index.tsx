@@ -457,7 +457,7 @@ export function RunDetails() {
 
     if (!msg) {
       Swal.fire({
-        title: 'Erro',
+        title: 'Error',
         text: 'No message found to tag.',
         icon: 'error',
         timer: 1500,
@@ -467,7 +467,7 @@ export function RunDetails() {
     }
     if (!chatRaidLeaders.length) {
       Swal.fire({
-        title: 'Erro',
+        title: 'Error',
         text: 'No raid leader found.',
         icon: 'error',
         timer: 1500,
@@ -480,7 +480,7 @@ export function RunDetails() {
     const validRaidLeaders = chatRaidLeaders.filter((rl) => {
       const discordId = getRaidLeaderDiscordId(rl)
       if (!discordId) {
-        console.error(`ID do Discord inválido para raid leader: ${rl.username}`)
+        console.error(`Invalid Discord ID for raid leader: ${rl.username}`)
         return false
       }
       return true
@@ -488,8 +488,8 @@ export function RunDetails() {
 
     if (validRaidLeaders.length === 0) {
       Swal.fire({
-        title: 'Erro',
-        text: 'Não foi possível decriptar os IDs dos raid leaders. Verifique se a chave de decriptação está configurada.',
+        title: 'Error',
+        text: 'No valid raid leaders found.',
         icon: 'error',
         timer: 3000,
         showConfirmButton: false,
@@ -508,16 +508,16 @@ export function RunDetails() {
         })
       )
       Swal.fire({
-        title: 'Sucesso!',
+        title: 'Success!',
         text: 'Message sent to raid leader.',
         icon: 'success',
         timer: 1500,
         showConfirmButton: false,
       })
     } catch (error) {
-      console.error('Erro ao enviar mensagem para raid leader:', error)
+      console.error('Error sending message to raid leader:', error)
       Swal.fire({
-        title: 'Erro',
+        title: 'Error',
         text: 'Failed to send message to raid leader.',
         icon: 'error',
         timer: 1500,

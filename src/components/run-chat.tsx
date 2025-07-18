@@ -72,7 +72,7 @@ export function RunChat({
 
   const handleTagRaidLeader = async (message: ChatMessage) => {
     const result = await Swal.fire({
-      title: 'Confirmar Tag',
+      title: 'Confirm Tag',
       text: 'Are you sure you want to tag the raid leader?',
       icon: 'question',
       showCancelButton: true,
