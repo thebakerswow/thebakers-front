@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
-import { api } from '../services/axiosConfig'
+import { getPlayers } from '../services/api/users'
+import { getTransactionLogs } from '../services/api/balance'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 
@@ -37,11 +38,11 @@ export function TransactionExtract() {
     const fetchPlayers = async () => {
       setIsLoading(true)
       try {
-        const response = await api.get('/discord/players')
-        if (!response.data.info) {
+        const response = await getPlayers()
+        if (!response) {
           throw new Error('No players found')
         }
-        setPlayers(response.data.info) // Ensure response.data.info is an array of objects
+        setPlayers(response) // Ensure response is an array of objects
       } catch (error) {
         console.error('Error fetching players:', error)
         console.error(
@@ -65,13 +66,11 @@ export function TransactionExtract() {
     if (!selectedPlayer || !initialDate || !endDate) return
     setIsLoading(true)
     try {
-      const response = await api.get('/transaction/info', {
-        params: {
-          initial_date: initialDate,
-          end_date: endDate,
-          impacted: selectedPlayer,
-          is_dolar: isDolar, // <-- Passa o booleano
-        },
+      const response = await getTransactionLogs({
+        initial_date: initialDate,
+        end_date: endDate,
+        impacted: selectedPlayer,
+        is_dolar: isDolar,
       })
       type LogInfo = {
         name_impacted: string
@@ -80,8 +79,8 @@ export function TransactionExtract() {
         date: string
       }
 
-      const logsData = Array.isArray(response.data.info)
-        ? response.data.info.map((log: LogInfo) => ({
+      const logsData = Array.isArray(response)
+        ? response.map((log: LogInfo) => ({
             player: log.name_impacted || 'N/A',
             action: log.value || 'N/A',
             author: log.made_by || 'N/A',

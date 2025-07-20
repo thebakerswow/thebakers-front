@@ -5,7 +5,11 @@ import {
   ErrorComponent,
 } from '../../../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
-import { api } from '../../../../services/axiosConfig'
+import {
+  getBalanceAdmin,
+  createTransaction,
+  updateNick,
+} from '../../../../services/api/balance'
 import {
   Select,
   MenuItem,
@@ -19,14 +23,7 @@ import {
   TextField,
 } from '@mui/material'
 
-interface BalanceControlTableProps {
-  selectedTeam: string
-  selectedDate: string
-  setSelectedTeam: (team: string) => void
-  setSelectedDate: (date: string) => void
-  isDolar: boolean
-  setIsDolar: (value: boolean) => void
-}
+import { BalanceControlTableProps } from '../../../../types'
 
 export function BalanceControlTable({
   selectedTeam,
@@ -132,14 +129,12 @@ export function BalanceControlTable({
 
       if (showLoading) setIsLoading(true)
       try {
-        const { data } = await api.get('/admin', {
-          params: {
-            id_team: selectedTeam === 'all' ? undefined : selectedTeam,
-            date: selectedDate,
-            is_dolar: isDolarFlag,
-          }, // Handle "all" option
+        const data = await getBalanceAdmin({
+          id_team: selectedTeam === 'all' ? undefined : selectedTeam,
+          date: selectedDate,
+          is_dolar: isDolarFlag,
         })
-        setUsers(data.info)
+        setUsers(data)
       } catch (error) {
         setError(
           axios.isAxiosError(error)
@@ -213,11 +208,12 @@ export function BalanceControlTable({
     if (!calculatorValues[userId]) return
 
     try {
-      await api.post('/transaction', {
+      await createTransaction({
         value: isDolar
           ? Number(calculatorValues[userId].replace(/,/g, ''))
           : Number(calculatorValues[userId].replace(/,/g, '')),
-        id_discord: userId,
+        id_team: selectedTeam,
+        impacted: userId,
         is_dolar: isDolar,
       })
       setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
@@ -246,11 +242,12 @@ export function BalanceControlTable({
     try {
       await Promise.all(
         pendingTransactions.map(([userId, value]) =>
-          api.post('/transaction', {
+          createTransaction({
             value: isDolar
               ? Number(value.replace(/,/g, ''))
               : Number(value.replace(/,/g, '')),
-            id_discord: userId,
+            id_team: selectedTeam,
+            impacted: userId,
             is_dolar: isDolar,
           })
         )
@@ -287,9 +284,10 @@ export function BalanceControlTable({
     if (!selectedUserId || !newNick.trim()) return
 
     try {
-      await api.put('/nick', {
-        id_discord: selectedUserId,
+      await updateNick({
+        id_team: selectedTeam,
         nick: newNick.trim(),
+        impacted: selectedUserId,
       })
       fetchBalanceAdmin()
     } catch (error) {

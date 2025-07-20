@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
-import { api } from '../../services/axiosConfig'
+import { getBalance, updateBalanceColor } from '../../services/api/balance'
 import { LoadingSpinner } from '../../components/loading-spinner'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
@@ -20,40 +20,11 @@ import {
 } from '@mui/material'
 import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
 
-interface PlayerBalance {
-  id_discord: string
-  value: number
-}
-
-interface BalanceResponse {
-  info: {
-    player_balance: {
-      [date: string]: Array<PlayerBalance>
-    }
-    balance_total: Array<{
-      id_discord: string
-      username: string
-      balance_total: number
-      color_balance: string
-    }>
-  }
-  errors: string[]
-}
-
-interface ProcessedPlayer {
-  id: string
-  username: string
-  balance_total: number
-  dailyValues: {
-    [date: string]: number
-  }
-}
-
-interface BalanceDataGridProps {
-  selectedTeam: string | null
-  dateRange: { start: string; end: string } | undefined // Add dateRange prop
-  is_dolar: boolean // Add is_dolar prop
-}
+import {
+  BalanceResponse,
+  ProcessedPlayer,
+  BalanceDataGridProps,
+} from '../../types'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
@@ -112,7 +83,7 @@ export function BalanceDataGrid({
       [playerId]: { background, text: textColor },
     }))
     try {
-      await api.put('/balance/color', {
+      await updateBalanceColor({
         id_discord: playerId,
         color: background,
       })
@@ -144,22 +115,28 @@ export function BalanceDataGrid({
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
     const fetchBalanceData = async () => {
-      if (!dateRange || selectedTeam === null) return
+      if (
+        !dateRange ||
+        selectedTeam === null ||
+        selectedTeam === undefined ||
+        selectedTeam === ''
+      ) {
+        return
+      }
 
       setIsLoadingBalance(true)
       try {
-        const response = await api.get<BalanceResponse>('/balance', {
-          params: {
-            id_team: selectedTeam,
-            date_start: dateRange.start,
-            date_end: dateRange.end,
-            is_dolar, // Pass is_dolar to API
-          },
-        })
+        const params = {
+          id_team:
+            selectedTeam && selectedTeam !== '' ? selectedTeam : undefined,
+          date_start: dateRange.start,
+          date_end: dateRange.end,
+          is_dolar,
+        }
 
-        setBalanceData(
-          response.data.info || { player_balance: {}, balance_total: [] }
-        )
+        const response = await getBalance(params)
+
+        setBalanceData(response || { player_balance: {}, balance_total: [] })
       } catch (error) {
         setError(
           axios.isAxiosError(error)

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Dialog, DialogContent, DialogTitle, Button } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
-import { api } from '../services/axiosConfig'
+import { getInviteBuyers } from '../services/api/buyers'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import Swal from 'sweetalert2'
 
@@ -20,11 +20,11 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
   useEffect(() => {
     // Função para buscar os dados de compradores convidados
     async function fetchInviteBuyersData() {
+      if (!runId) return
+
       try {
-        const response = await api.get(`/run/${runId}/buyers/invite`)
-        setInviteBuyersData(
-          Array.isArray(response.data.info) ? response.data.info : []
-        )
+        const response = await getInviteBuyers(runId)
+        setInviteBuyersData(Array.isArray(response) ? response : [])
         setError(null) // Limpa erros anteriores, se houver
       } catch (err) {
         // Trata erros da requisição

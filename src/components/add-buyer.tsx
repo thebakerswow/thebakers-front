@@ -15,7 +15,8 @@ import {
   Button,
 } from '@mui/material'
 import { RunData } from '../types/runs-interface'
-import { api } from '../services/axiosConfig'
+import { createBuyer } from '../services/api/buyers'
+import { getGhostUsers } from '../services/api/users'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import Swal from 'sweetalert2'
 
@@ -131,7 +132,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
 
     try {
       // Envia os dados do comprador para a API
-      await api.post('/buyer', data)
+      await createBuyer(data)
       await onBuyerAddedReload()
       setIsSuccess(true)
       onClose()
@@ -161,8 +162,8 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   // Função para buscar a lista de anunciantes
   const fetchAdvertisers = useCallback(async () => {
     try {
-      const response = await api.get('/users/ghost')
-      setAdvertisers(response.data.info)
+      const response = await getGhostUsers()
+      setAdvertisers(response)
     } catch (error) {
       setError(
         axios.isAxiosError(error)

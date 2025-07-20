@@ -15,15 +15,11 @@ import {
   TextField,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import { getRunHistory } from '../services/axiosConfig'
+import { getRunHistory } from '../services/api/runs'
 import { RunHistory } from '../types/runs-interface'
 import dayjs from 'dayjs'
 
-interface EditHistoryDialogProps {
-  open: boolean
-  onClose: () => void
-  idRun?: number
-}
+import { EditHistoryDialogProps } from '../types'
 
 export function EditHistoryDialog({
   open,
@@ -37,7 +33,7 @@ export function EditHistoryDialog({
   useEffect(() => {
     if (!open || !idRun) return
     setLoading(true)
-    getRunHistory(idRun)
+    getRunHistory(idRun.toString())
       .then((data) => setHistory(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false))
   }, [open, idRun])

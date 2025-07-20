@@ -16,7 +16,8 @@ import {
   CircularProgress,
 } from '@mui/material'
 import axios from 'axios'
-import { api } from '../services/axiosConfig'
+import { getTeamMembers } from '../services/api/users'
+import { createRun } from '../services/api/runs'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -34,8 +35,8 @@ const fetchApiOptions = async (
   onError: (error: ErrorDetails) => void
 ) => {
   try {
-    const response = await api.get(`/team/${teamId}`)
-    return response.data.info.members || []
+    const response = await getTeamMembers(teamId)
+    return response
   } catch (error) {
     const errorDetails = axios.isAxiosError(error)
       ? {
@@ -113,7 +114,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await api.post('/run', {
+      await createRun({
         ...formData,
         quantityBoss: formData.quantityBoss, // envia como objeto para o backend Go
       })

@@ -12,12 +12,7 @@ import {
 } from '@mui/material'
 import { api } from '../services/axiosConfig'
 
-interface RunWithoutAttendance {
-  idRun: number
-  raid: string
-  text: string
-  date: string
-}
+import { RunWithoutAttendance } from '../types'
 
 function extractUrl(text: string): string | null {
   const match = text.match(/https?:\/\/\S+/)

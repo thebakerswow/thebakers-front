@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { Modal as MuiModal, Box } from '@mui/material'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
-import { api } from '../services/axiosConfig'
+import { updateRunAttendance } from '../services/api/runs'
 import {
   Table,
   TableBody,
@@ -54,6 +54,11 @@ export function Attendance({
   )
 
   const handleAttendanceSave = useCallback(async () => {
+    if (!runId) {
+      setError({ message: 'Run ID is required', response: null })
+      return
+    }
+
     setIsSubmitting(true)
     const payload = attendance.info.map(({ idDiscord, percentage }) => ({
       idDiscord,
@@ -61,7 +66,7 @@ export function Attendance({
     }))
 
     try {
-      await api.put(`/run/${runId}/attendance`, payload)
+      await updateRunAttendance(runId, payload)
       await onAttendanceUpdate()
       setIsSuccess(true)
       setHasUnsavedChanges(false) // Reset unsaved changes

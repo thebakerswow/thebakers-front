@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { DiscordLogo } from '@phosphor-icons/react'
-import { api } from '../../services/axiosConfig'
+import { loginDiscord, loginWithCredentials } from '../../services/api/auth'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
-import { Button, TextField } from '@mui/material'
+import { Modal as MuiModal, Box, Button, TextField } from '@mui/material'
 
 export function Login() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -33,8 +32,8 @@ export function Login() {
 
   const handleLoginDiscord = async () => {
     try {
-      const response = await api.post('/login/discord')
-      if (response.data.info) window.location.href = response.data.info
+      const response = await loginDiscord()
+      if (response.info) window.location.href = response.info
     } catch (error) {
       handleApiError(error)
     }
@@ -42,12 +41,12 @@ export function Login() {
 
   const handleLoginRegister = async () => {
     try {
-      const response = await api.post('/login', {
+      const response = await loginWithCredentials({
         id_discord: discordId,
         password,
       })
-      if (response.data.info) {
-        login(response.data.info)
+      if (response.info) {
+        login(response.info)
         navigate('/home')
       }
     } catch (error) {

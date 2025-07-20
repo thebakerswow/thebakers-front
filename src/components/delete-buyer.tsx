@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import Swal from 'sweetalert2' // Import SweetAlert2
-import { api } from '../services/axiosConfig'
+import { deleteBuyer } from '../services/api/buyers'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import Button from '@mui/material/Button'
 import { LoadingSpinner } from './loading-spinner' // Import reusable spinner
@@ -28,7 +28,7 @@ export function DeleteBuyer({
     setError(null) // Reset error state before attempting deletion
 
     try {
-      await api.delete(`/buyer/${buyer.id}`)
+      await deleteBuyer(buyer.id)
       Swal.fire({
         title: 'Success!',
         text: 'Buyer deleted successfully',

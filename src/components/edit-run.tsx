@@ -15,7 +15,8 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import { RunData } from '../types/runs-interface'
-import { api } from '../services/axiosConfig'
+import { updateRun } from '../services/api/runs'
+import { getTeamMembers } from '../services/api/users'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -63,9 +64,8 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     const fetchOptions = async () => {
       try {
         const teamId = import.meta.env.VITE_TEAM_PREFEITO
-        const response = await api.get(`/team/${teamId}`)
-        if (response.data.info.members)
-          setApiOptions(response.data.info.members)
+        const response = await getTeamMembers(teamId)
+        if (response) setApiOptions(response)
       } catch (err) {
         console.error('Failed to fetch API options:', err)
       }
@@ -98,7 +98,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     }
 
     try {
-      await api.put('/run', data)
+      await updateRun(run.id, data)
       await onRunEdit()
       setIsSuccess(true)
       onClose() // Close the modal first

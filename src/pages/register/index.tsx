@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { api } from '../../services/axiosConfig'
+import { register } from '../../services/api/auth'
 import axios from 'axios'
 import { TextField, Button, Modal as MuiModal, Box } from '@mui/material'
 import Swal from 'sweetalert2'
@@ -27,8 +27,8 @@ export function Register() {
   const handleRegister = async () => {
     setIsConfirmModalOpen(true)
     try {
-      await api.post('/login/register', {
-        id_discord: discordId,
+      await register({
+        username: discordId,
         password,
       })
       Swal.fire({

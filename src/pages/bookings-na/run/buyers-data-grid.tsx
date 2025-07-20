@@ -17,7 +17,11 @@ import Warlock from '../../../assets/class_icons/warlock.png'
 import Warrior from '../../../assets/class_icons/warrior.png'
 import axios from 'axios'
 import { BuyerData } from '../../../types/buyer-interface'
-import { api } from '../../../services/axiosConfig'
+import {
+  updateBuyerPaid,
+  updateBuyerStatus,
+} from '../../../services/api/buyers'
+import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { DeleteBuyer } from '../../../components/delete-buyer'
 import { EditBuyer } from '../../../components/edit-buyer'
@@ -142,12 +146,11 @@ export function BuyersDataGrid({
   }
 
   const handleApiCall = async (
-    url: string,
-    payload: object,
+    apiFunction: () => Promise<any>,
     callback: () => void
   ) => {
     try {
-      await api.put(url, payload)
+      await apiFunction()
       callback()
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -166,17 +169,21 @@ export function BuyersDataGrid({
     if (cooldownPaid[buyerId]) return // Prevent spam
     const buyer = data.find((b) => b.id === buyerId)
     if (!buyer) return
-    const payload = { id_buyer: buyerId, is_paid: !buyer.isPaid }
     setCooldownPaid((prev) => ({ ...prev, [buyerId]: true }))
-    handleApiCall('/buyer/paid', payload, onBuyerStatusEdit)
+    handleApiCall(
+      () => updateBuyerPaid(buyerId, !buyer.isPaid),
+      onBuyerStatusEdit
+    )
     setTimeout(() => {
       setCooldownPaid((prev) => ({ ...prev, [buyerId]: false }))
     }, 3000) // 3 seconds cooldown
   }
 
   const handleStatusChange = (buyerId: string, newStatus: string) => {
-    const payload = { id_buyer: buyerId, status: newStatus }
-    handleApiCall('/buyer/status', payload, onBuyerStatusEdit)
+    handleApiCall(
+      () => updateBuyerStatus(buyerId, newStatus),
+      onBuyerStatusEdit
+    )
   }
 
   const handleGlobalAction = (action: () => void) => {
@@ -234,12 +241,11 @@ export function BuyersDataGrid({
       }
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
-        const payload = {
-          id_discord_recipient: recipientId,
-          message: `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
-        }
         try {
-          await api.post('/discord/send_message', payload)
+          await sendDiscordMessage(
+            recipientId,
+            `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
         } catch (error) {
           if (axios.isAxiosError(error)) {
             setError({
@@ -301,12 +307,11 @@ export function BuyersDataGrid({
       }
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
-        const payload = {
-          id_discord_recipient: recipientId,
-          message: `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`,
-        }
         try {
-          await api.post('/discord/send_message', payload)
+          await sendDiscordMessage(
+            recipientId,
+            `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
         } catch (error) {
           if (axios.isAxiosError(error)) {
             setError({

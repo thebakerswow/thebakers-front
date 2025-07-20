@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { BalanceDataGrid } from './balance-data-grid'
 import { BalanceTeamFilter } from '../../components/balance-team-filter'
-import { WeekRangeFilter } from './week-range-filter'
+import { WeekRangeFilter } from '../../components/week-range-filter'
 import { Button } from '@mui/material'
 import { useAuth } from '../../context/auth-context'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>()
+  const [dateRange, setDateRange] = useState<
+    { start: string; end: string } | undefined
+  >(undefined)
   const [isDolar, setIsDolar] = useState(false)
   const { userRoles = [] } = useAuth()
   const freelancerRole = import.meta.env.VITE_TEAM_FREELANCER

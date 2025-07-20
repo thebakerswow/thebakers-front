@@ -6,10 +6,7 @@ export interface ErrorDetails {
   status?: number
 }
 
-interface ErrorComponentProps {
-  error: ErrorDetails
-  onClose: () => void
-}
+import { ErrorComponentProps } from '../types'
 
 export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
   const { response, message } = error

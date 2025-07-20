@@ -6,7 +6,13 @@ import {
   ErrorComponent,
 } from '../../../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
-import { api } from '../../../../services/axiosConfig'
+import {
+  getGbanks,
+  createGBank,
+  updateGBankValue,
+  updateGBank,
+  deleteGBank as deleteGBankService,
+} from '../../../../services/api/gbanks'
 import {
   TextField,
   Button,
@@ -24,13 +30,7 @@ import {
   IconButton,
 } from '@mui/material'
 
-interface GBank {
-  id: string
-  name: string
-  balance: number
-  calculatorValue: string
-  color?: string
-}
+import { GBank } from '../../../../types'
 
 const colorOptions = [
   { value: '#D97706', label: 'Padeirinho' },
@@ -77,9 +77,9 @@ export function GBanksTable() {
   // Busca os GBanks da API e formata os dados recebidos
   const fetchGBanks = async () => {
     try {
-      const response = await api.get('/gbanks')
+      const response = await getGbanks()
       const formattedGBanks =
-        response.data?.info?.map((gbank: any) => ({
+        response?.map((gbank: any) => ({
           ...gbank,
           calculatorValue: gbank.calculatorValue
             ? formatCalculatorValue(gbank.calculatorValue.toString())
@@ -198,7 +198,7 @@ export function GBanksTable() {
               onClick={() =>
                 handleAction(
                   () =>
-                    api.post('/gbanks', {
+                    createGBank({
                       name: newGBankName,
                       color: newGBankColor || '#FFFFFF',
                     }),
@@ -355,7 +355,7 @@ export function GBanksTable() {
                           e.preventDefault()
                           handleAction(
                             () =>
-                              api.put('/gbanks/value', {
+                              updateGBankValue({
                                 id: gbank.id,
                                 balance: Number(
                                   e.currentTarget.value.replace(/,/g, '')
@@ -416,7 +416,7 @@ export function GBanksTable() {
               onClick={() =>
                 handleAction(
                   () =>
-                    api.put('/gbanks', {
+                    updateGBank({
                       id: editGBank.id,
                       name: editGBank.name,
                       color: editGBank.color || '#FFFFFF',
@@ -448,7 +448,7 @@ export function GBanksTable() {
               color='error'
               onClick={() =>
                 handleAction(
-                  () => api.delete(`/gbanks/${deleteGBank.id}`),
+                  () => deleteGBankService(deleteGBank!.id),
                   'Erro ao deletar G-Bank'
                 ).then(() => setDeleteGBank(null))
               }

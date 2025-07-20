@@ -10,14 +10,9 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material'
-import { api } from '../services/axiosConfig'
+import { getLatestTransactions } from '../services/api/gbanks'
 
-interface Transaction {
-  name_impacted: string
-  value: number
-  date: string
-  type?: string
-}
+import { Transaction } from '../types'
 
 export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
@@ -51,10 +46,10 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await api.get('/transaction/latest')
+        const response = await getLatestTransactions()
         const combinedTransactions = [
-          ...response.data.info.transactions,
-          ...response.data.info.transactions_gbanks,
+          ...response.transactions,
+          ...response.transactions_gbanks,
         ]
         // Filtra pelo tipo de acordo com isDolar
         const filteredTransactions = combinedTransactions.filter((t) =>

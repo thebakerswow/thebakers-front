@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { api } from '../../../../services/axiosConfig'
+import { getGbanksGeneral } from '../../../../services/api/gbanks'
 import { ErrorDetails } from '../../../../components/error-display'
 import { TransactionExtract } from '../../../../components/transaction-extract'
 import { GbankExtract } from '../../../../components/gbank-extract'
@@ -19,10 +19,7 @@ import {
   Button,
 } from '@mui/material'
 
-interface VerifyTableData {
-  general_balance_gbank: number
-  general_balance: number
-}
+import { VerifyTableData } from '../../../../types'
 
 export function VerifyTable() {
   const [sumsData, setSumsData] = useState<VerifyTableData | null>(null)
@@ -37,8 +34,8 @@ export function VerifyTable() {
    */
   const fetchSumsData = async () => {
     try {
-      const { data } = await api.get('/gbanks/general')
-      setSumsData(data.info) // Atualiza os dados de soma
+      const data = await getGbanksGeneral()
+      setSumsData(data) // Atualiza os dados de soma
       setError(null) // Limpa erros anteriores
     } catch (err) {
       setError(

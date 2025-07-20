@@ -6,7 +6,14 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { UserPlus } from '@phosphor-icons/react'
 import { InviteBuyers } from '../../../components/invite-buyers'
 import { LoadingSpinner } from '../../../components/loading-spinner'
-import { api } from '../../../services/axiosConfig'
+import {
+  getRun,
+  getRunBuyers,
+  getRunAttendance,
+} from '../../../services/api/runs'
+import { checkRunAccess as checkRunAccessService } from '../../../services/api/auth'
+import { getChatMessages } from '../../../services/api/chat'
+import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { RunData } from '../../../types/runs-interface'
 import { Modal as MuiModal, Box } from '@mui/material'
@@ -92,8 +99,7 @@ export function RunDetails() {
   // Função para buscar os dados da run
   async function fetchRunData() {
     try {
-      const response = await api.get(`/run/${id}`)
-      const data = response.data.info
+      const data = await getRun(id!)
       setRunData({
         ...data,
         slotAvailable: Number(data.slotAvailable),
@@ -122,9 +128,9 @@ export function RunDetails() {
   async function fetchBuyersData() {
     try {
       setIsLoadingBuyers(false)
-      const response = await api.get(`/run/${id}/buyers`)
+      const data = await getRunBuyers(id!)
 
-      setRows(response.data.info)
+      setRows(data)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -145,10 +151,10 @@ export function RunDetails() {
   }
 
   // Função para verificar acesso à run
-  async function checkRunAccess() {
+  async function verifyRunAccess() {
     try {
-      const response = await api.get(`/access/run/${id}`)
-      if (!response.data.info) {
+      const hasAccess = await checkRunAccessService(id!)
+      if (!hasAccess) {
         navigate('/check-access') // Redireciona para a home se o acesso for negado
       }
     } catch (error) {
@@ -160,7 +166,7 @@ export function RunDetails() {
     if (!id) return
 
     // Verifica acesso antes de buscar dados
-    checkRunAccess().then(() => {
+    verifyRunAccess().then(() => {
       fetchBuyersData()
       fetchRunData()
     })
@@ -221,8 +227,7 @@ export function RunDetails() {
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
     try {
-      const response = await api.get(`/run/${id}/attendance`)
-      const data = response.data.info
+      const data = await getRunAttendance(id!)
 
       setAttendance({ info: data })
       setHasAttendanceAccess(true)
@@ -289,10 +294,9 @@ export function RunDetails() {
     if (!id) return
     setChatLoading(true)
     // Fetch previous messages
-    api
-      .get(`/chat/${id}`)
-      .then((response) => {
-        setChatMessages(response.data.info || [])
+    getChatMessages(id!)
+      .then((messages) => {
+        setChatMessages(messages || [])
       })
       .catch((error) => {
         console.error('Falha ao buscar mensagens anteriores:', error)
@@ -300,10 +304,9 @@ export function RunDetails() {
       .finally(() => setChatLoading(false))
 
     // Fetch raid leaders
-    api
-      .get(`/run/${id}`)
-      .then((response) => {
-        setChatRaidLeaders(response.data.info.raidLeaders || [])
+    getRun(id!)
+      .then((data) => {
+        setChatRaidLeaders(data.raidLeaders || [])
       })
       .catch((error) => {
         console.error('Error fetching raid leaders:', error)
@@ -499,10 +502,10 @@ export function RunDetails() {
       await Promise.all(
         validRaidLeaders.map((rl) => {
           const discordId = getRaidLeaderDiscordId(rl)
-          return api.post('/discord/send_message', {
-            id_discord_recipient: discordId,
-            message: `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${id}`,
-          })
+          return sendDiscordMessage(
+            discordId,
+            `Run Chat Message:\n${msg.user_name}: ${msg.message}\nRun Link: ${window.location.origin}/bookings-na/run/${id}`
+          )
         })
       )
       Swal.fire({

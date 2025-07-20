@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material'
 import axios from 'axios'
-import { api } from '../services/axiosConfig'
+import { getBalanceTeams } from '../services/api/teams'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 import { useAuth } from '../context/auth-context'
@@ -35,9 +35,9 @@ export function BalanceTeamFilter({
 
     setIsLoadingTeams(true)
     try {
-      const response = await api.get('/teams/balance')
+      const response = await getBalanceTeams()
 
-      const uniqueTeams = response.data.info.reduce(
+      const uniqueTeams = response.reduce(
         (acc: any[], team: any) =>
           acc.some((t) => t.team_name === team.team_name)
             ? acc
@@ -46,7 +46,6 @@ export function BalanceTeamFilter({
       )
       setTeams(uniqueTeams)
     } catch (error) {
-      console.error('Error fetching teams:', error)
       setError(
         axios.isAxiosError(error)
           ? {
@@ -81,12 +80,14 @@ export function BalanceTeamFilter({
   // Remove o useMemo e usa useEffect para definir o time inicial
   useEffect(() => {
     if (!selectedTeam && teams.length > 0) {
-      onChange(teams[0].id_discord)
+      const initialTeam = teams[0].id_discord
+      onChange(initialTeam)
     }
   }, [selectedTeam, teams, onChange])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
-    onChange(event.target.value || null)
+    const value = event.target.value
+    onChange(value || null)
   }
 
   if (isRestrictedUser) return null
@@ -109,6 +110,7 @@ export function BalanceTeamFilter({
         onChange={handleSelectChange}
         disabled={isLoadingTeams}
         className='mt-4 text-black'
+        displayEmpty
         sx={{
           backgroundColor: 'white',
           height: '40px', // Define uma altura menor para o Select
@@ -131,6 +133,11 @@ export function BalanceTeamFilter({
           },
         }}
       >
+        {teams.length === 0 && (
+          <MenuItem value='' disabled>
+            {isLoadingTeams ? 'Loading teams...' : 'No teams available'}
+          </MenuItem>
+        )}
         {options}
       </Select>
     </FormControl>

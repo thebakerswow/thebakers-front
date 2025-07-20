@@ -22,31 +22,22 @@ import {
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import Swal from 'sweetalert2'
-import { api } from '../../../services/axiosConfig'
-
-// Tipos
-interface Service {
-  id: number
-  name: string
-  description: string
-  price: number
-  serviceCategoryId: number
-  category?: { id: number; name: string }
-  hotItem: boolean // novo campo
-}
-
-interface ServiceForm {
-  name: string
-  description: string
-  price: string
-  serviceCategoryId: string
-  hotItem: boolean // novo campo
-}
-
-interface Category {
-  id: number
-  name: string
-}
+import {
+  getServices,
+  createService,
+  updateService,
+  deleteService,
+  getServiceCategories,
+  createServiceCategory,
+  updateServiceCategory,
+  deleteServiceCategory,
+} from '../../../services/api/services'
+import {
+  Service,
+  ServiceForm,
+  ServiceCategory,
+  CategoryForm,
+} from '../../../types'
 
 const emptyForm: ServiceForm = {
   name: '',
@@ -64,7 +55,7 @@ const swal = Swal.mixin({
 
 export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
   const [form, setForm] = useState<ServiceForm>(emptyForm)
@@ -72,13 +63,11 @@ export default function PriceTableManagement() {
   const [openCategories, setOpenCategories] = useState(false)
 
   // --- CATEGORIAS ---
-  interface CategoryForm {
-    name: string
-  }
   const emptyCategoryForm: CategoryForm = { name: '' }
   const [categoryForm, setCategoryForm] =
     useState<CategoryForm>(emptyCategoryForm)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [editingCategory, setEditingCategory] =
+    useState<ServiceCategory | null>(null)
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
 
   // Ordenação
@@ -95,8 +84,8 @@ export default function PriceTableManagement() {
   const fetchServices = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/services')
-      setServices(res.data.info)
+      const res = await getServices()
+      setServices(res)
     } catch (err) {
       swal.fire('Error', 'Failed to fetch services', 'error')
     } finally {
@@ -106,8 +95,8 @@ export default function PriceTableManagement() {
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get('/services-categories')
-      setCategories(Array.isArray(res.data.info) ? res.data.info : [])
+      const res = await getServiceCategories()
+      setCategories(Array.isArray(res) ? res : [])
     } catch (err) {
       swal.fire('Error', 'Failed to fetch categories', 'error')
     }
@@ -168,7 +157,7 @@ export default function PriceTableManagement() {
     try {
       if (editing) {
         // Editar serviço
-        await api.put('/services', {
+        await updateService({
           id: editing.id,
           name,
           description,
@@ -179,7 +168,7 @@ export default function PriceTableManagement() {
         swal.fire('Success', 'Service updated!', 'success')
       } else {
         // Adicionar serviço
-        await api.post('/services', {
+        await createService({
           name,
           description,
           price: Number(price.replace(/,/g, '')),
@@ -209,7 +198,7 @@ export default function PriceTableManagement() {
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
-            await api.delete(`/services/${id}`)
+            await deleteService(id)
             setServices((prev) => prev.filter((s) => s.id !== id))
             swal.fire('Deleted!', 'Service has been deleted.', 'success')
           } catch (err: any) {
@@ -223,7 +212,9 @@ export default function PriceTableManagement() {
       })
   }
 
-  const handleOpenCategoryDialog = (category: Category | null = null) => {
+  const handleOpenCategoryDialog = (
+    category: ServiceCategory | null = null
+  ) => {
     setEditingCategory(category)
     if (category) {
       setCategoryForm({ name: category.name })
@@ -252,13 +243,13 @@ export default function PriceTableManagement() {
     }
     try {
       if (editingCategory) {
-        await api.put('/services-categories', {
+        await updateServiceCategory({
           id: editingCategory.id,
           name,
         })
         swal.fire('Success', 'Category updated!', 'success')
       } else {
-        await api.post('/services-categories', {
+        await createServiceCategory({
           name,
         })
         swal.fire('Success', 'Category added!', 'success')
@@ -284,7 +275,7 @@ export default function PriceTableManagement() {
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
-            await api.delete(`/services-categories/${id}`)
+            await deleteServiceCategory(id)
             setCategories((prev) => prev.filter((c) => c.id !== id))
             swal.fire('Deleted!', 'Category has been deleted.', 'success')
           } catch (err: any) {

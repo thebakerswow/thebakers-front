@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../../../services/axiosConfig'
+import { checkAdminAccess } from '../../../services/api/auth'
 import { BalanceControlTable } from './balance-control-table'
 import { GBanksTable } from './gbanks-control'
 import { VerifyTable } from './verify-table'
@@ -15,10 +15,10 @@ export function AdminPage() {
   const navigate = useNavigate()
 
   // Function to check admin access
-  async function checkAdminAccess() {
+  async function verifyAdminAccess() {
     try {
-      const response = await api.get('/access/admin')
-      if (!response.data.info) {
+      const hasAccess = await checkAdminAccess()
+      if (!hasAccess) {
         navigate('/') // Redirect to home if access is denied
       } else {
         setIsAuthorized(true)
@@ -29,7 +29,7 @@ export function AdminPage() {
   }
 
   useEffect(() => {
-    checkAdminAccess()
+    verifyAdminAccess()
   }, [])
 
   if (!isAuthorized) {

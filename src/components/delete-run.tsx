@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { api } from '../services/axiosConfig'
+import { deleteRun } from '../services/api/runs'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import {
   Dialog,
@@ -12,15 +12,7 @@ import {
 } from '@mui/material'
 import Swal from 'sweetalert2'
 
-interface DeleteRunProps {
-  run: {
-    id: string
-    raid: string
-    date: string
-  }
-  onClose: () => void
-  onDeleteSuccess: () => void
-}
+import { DeleteRunProps } from '../types'
 
 export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,7 +23,7 @@ export function DeleteRun({ run, onClose, onDeleteSuccess }: DeleteRunProps) {
     setError(null)
 
     try {
-      await api.delete(`/run/${run.id}`)
+      await deleteRun(run.id)
       onClose() // Close the modal before showing the alert
       await Swal.fire({
         title: 'Deleted!',

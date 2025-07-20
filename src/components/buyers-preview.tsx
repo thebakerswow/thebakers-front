@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { BuyersDataGrid } from '../pages/bookings-na/run/buyers-data-grid'
-import { api } from '../services/axiosConfig'
+import { getRun } from '../services/api/runs'
+import { getRunBuyers } from '../services/api/buyers'
 import { BuyerData } from '../types/buyer-interface'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import { RunData } from '../types/runs-interface'
@@ -10,10 +11,7 @@ import DialogContent from '@mui/material/DialogContent'
 import Button from '@mui/material/Button'
 import { AddBuyer } from './add-buyer'
 
-interface BuyersPreviewProps {
-  runId: string
-  onClose: () => void
-}
+import { BuyersPreviewProps } from '../types'
 
 function handleApiError(error: unknown): ErrorDetails {
   // Trata erros da API e retorna detalhes estruturados
@@ -40,16 +38,16 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
       if (showLoading) setIsLoading(true)
       try {
         const [runResponse, buyersResponse] = await Promise.all([
-          api.get(`/run/${runId}`),
-          api.get(`/run/${runId}/buyers`),
+          getRun(runId),
+          getRunBuyers(runId),
         ])
-        const runInfo = runResponse.data.info
+        const runInfo = runResponse
         setRunData({
           ...runInfo,
           slotAvailable: Number(runInfo.slotAvailable),
           maxBuyers: Number(runInfo.maxBuyers),
         })
-        setRows(buyersResponse.data.info)
+        setRows(buyersResponse)
       } catch (error) {
         setError(handleApiError(error))
       } finally {

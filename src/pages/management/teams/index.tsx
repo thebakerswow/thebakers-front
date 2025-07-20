@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../../../services/axiosConfig'
+import { getTeams } from '../../../services/api/teams'
 import { Team, teamOrder } from '../../../types/team-interface'
 import { LoadingSpinner } from '../../../components/loading-spinner'
 import axios from 'axios'
@@ -39,11 +39,11 @@ export function TeamsManagement() {
     const fetchTeams = async () => {
       try {
         setIsLoading(true)
-        const response = await api.get('/teams')
+        const response = await getTeams()
         const uniqueTeamOrder = Array.from(new Set(teamOrder)) // Remove duplicates
         const orderedTeams = uniqueTeamOrder.map((teamName) => ({
           name: teamName,
-          members: (response.data.info[teamName] || []).map((member: any) => ({
+          members: (response[teamName] || []).map((member: any) => ({
             global_name: member.global_name,
             username: member.username,
           })),

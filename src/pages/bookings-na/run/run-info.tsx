@@ -16,7 +16,7 @@ import {
   TableRow,
   Paper,
 } from '@mui/material'
-import { api } from '../../../services/axiosConfig'
+import { toggleRunLock as toggleRunLockService } from '../../../services/api/runs'
 import { EditHistoryDialog } from '../../../components/edit-history-dialog'
 
 interface RunInfoProps {
@@ -79,15 +79,11 @@ export function RunInfo({
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
   }
 
-  const toggleRunLock = async () => {
+  const handleToggleRunLock = async () => {
     try {
-      const response = await api.put(`/run/${run.id}/lock`, {
-        isLocked: !isRunLocked,
-      })
-      if (response.status === 200) {
-        setIsRunLocked(!isRunLocked)
-        window.location.reload() // Reload the page after toggling the lock
-      }
+      await toggleRunLockService(run.id, isRunLocked)
+      setIsRunLocked(!isRunLocked)
+      window.location.reload() // Reload the page after toggling the lock
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
     }
@@ -337,7 +333,7 @@ export function RunInfo({
                   isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
                 }
                 fullWidth
-                onClick={toggleRunLock}
+                onClick={handleToggleRunLock}
                 sx={{
                   backgroundColor: 'rgb(239, 68, 68)',
                   '&:hover': {

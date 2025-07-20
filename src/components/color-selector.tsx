@@ -14,9 +14,7 @@ export const getTextColorForBackground = (backgroundColor: string): string => {
   return luminance > 186 ? 'black' : 'white'
 }
 
-interface ColorSelectorProps {
-  onSelectColor: (color: string) => void
-}
+import { ColorSelectorProps } from '../types'
 
 export function ColorSelector({ onSelectColor }: ColorSelectorProps) {
   const backgroundColors: Color[] = useMemo(

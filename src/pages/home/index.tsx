@@ -4,27 +4,15 @@ import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 import { format, addDays } from 'date-fns'
-import { api } from '../../services/axiosConfig'
+import { getRuns } from '../../services/api/runs'
+import { getServices, getServiceCategories } from '../../services/api/services'
 import { useNavigate } from 'react-router-dom'
 import services from '../../assets/services.png'
 import schedule from '../../assets/schedule.png'
 import fireImg from '../../assets/fire.png'
 import gally from '../../assets/gally.png'
 
-// Tipos para os serviços
-interface Service {
-  id: number
-  name: string
-  description: string
-  price: number
-  serviceCategoryId: number
-  hotItem?: boolean
-}
-
-interface Category {
-  id: number
-  name: string
-}
+import { Service, ServiceCategory } from '../../types'
 
 type DiscordTokenPayload = {
   username: string
@@ -41,7 +29,7 @@ export function HomePage() {
   const [weekRuns, setWeekRuns] = useState<Record<string, any[]>>({})
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<ServiceCategory[]>([])
 
   // Pegue as roles do .env
   const TEAM_FREELANCER = import.meta.env.VITE_TEAM_FREELANCER
@@ -88,9 +76,9 @@ export function HomePage() {
         // Supondo que a API aceite múltiplas datas ou precise de várias requisições
         const results = await Promise.all(
           days.map((date) =>
-            api.get('/run', { params: { date } }).then((res) => ({
+            getRuns(date).then((runs) => ({
               date,
-              runs: res.data.info || [],
+              runs: runs || [],
             }))
           )
         )
@@ -114,13 +102,11 @@ export function HomePage() {
       setLoadingServices(true)
       try {
         const [servicesRes, categoriesRes] = await Promise.all([
-          api.get('/services'),
-          api.get('/services-categories'),
+          getServices(),
+          getServiceCategories(),
         ])
-        setServicesList(servicesRes.data.info)
-        setCategories(
-          Array.isArray(categoriesRes.data.info) ? categoriesRes.data.info : []
-        )
+        setServicesList(servicesRes)
+        setCategories(Array.isArray(categoriesRes) ? categoriesRes : [])
       } catch (err: any) {
         setServicesList([]) // Garante array vazio em erro
         setCategories([])

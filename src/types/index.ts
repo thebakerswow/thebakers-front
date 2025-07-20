@@ -1,0 +1,13 @@
+// Re-exportações de todos os tipos para facilitar imports
+export * from './player-interface'
+export * from './runs-interface'
+export * from './buyer-interface'
+export * from './team-interface'
+export * from './service-interface'
+export * from './auth-interface'
+export * from './chat-interface'
+export * from './transaction-interface'
+export * from './gbank-interface'
+export * from './balance-interface'
+export * from './component-interface'
+export * from './user-interface'

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
-import { DateFilter } from './date-filter'
+import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
 import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'
 import { useAuth } from '../../context/auth-context'
-import { api } from '../../services/axiosConfig'
+import { getRuns, createRun } from '../../services/api/runs'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
@@ -100,7 +100,7 @@ export function FullRaidsNa() {
       }))
 
       for (const run of formattedRuns) {
-        await api.post('/run', run)
+        await createRun(run)
       }
 
       Swal.fire({
@@ -170,12 +170,10 @@ export function FullRaidsNa() {
         return
       }
 
-      const { data } = await api.get('/run', {
-        params: { date: format(selectedDate, 'yyyy-MM-dd') },
-      })
+      const data = await getRuns(format(selectedDate, 'yyyy-MM-dd'))
 
       setRows(
-        (data.info || []).map((run: any) => ({
+        (data || []).map((run: any) => ({
           ...run,
           buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
         }))

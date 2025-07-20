@@ -41,7 +41,12 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
 export function App() {
   return (
     <div className='flex h-full'>
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <AuthProvider>
           <div className='flex flex-grow flex-col'>
             <Header />

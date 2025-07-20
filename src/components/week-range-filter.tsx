@@ -19,7 +19,7 @@ interface WeekRangeFilterProps {
 
 export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
-  const [selectedWeek, setSelectedWeek] = useState<number>(0)
+  const [selectedWeek, setSelectedWeek] = useState<number>(-1) // Inicializa com -1 para indicar "não selecionado"
   const [weeksInMonth, setWeeksInMonth] = useState<Date[][]>([])
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
@@ -54,6 +54,9 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
     // Se encontrou uma semana atual, configura
     if (currentWeekIndex !== -1) {
       setSelectedWeek(currentWeekIndex)
+    } else if (weeks.length > 0) {
+      // Se não encontrou a semana atual, seleciona a primeira semana
+      setSelectedWeek(0)
     }
   }, [selectedMonth])
 
@@ -74,7 +77,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const handleMonthChange = (date: Date | null) => {
     if (date) {
       setSelectedMonth(date)
-      setSelectedWeek(0) // Reset to the first week of the selected month
+      setSelectedWeek(-1) // Reset to -1 when changing month
       setIsCalendarOpen(false)
     }
   }
@@ -93,6 +96,8 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
 
     if (currentWeekIndex !== -1) {
       setSelectedWeek(currentWeekIndex)
+    } else if (weeksInMonth.length > 0) {
+      setSelectedWeek(0)
     }
   }
 
@@ -121,7 +126,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
         <label className='mb-1 text-sm text-white'>Week</label>
         <div className='relative'>
           <Select
-            value={selectedWeek}
+            value={selectedWeek >= 0 ? selectedWeek : ''}
             onChange={(e) => setSelectedWeek(Number(e.target.value))}
             displayEmpty
             className='bg-white text-zinc-900'
@@ -148,6 +153,11 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
               },
             }}
           >
+            {weeksInMonth.length === 0 && (
+              <MenuItem value='' disabled>
+                No weeks available
+              </MenuItem>
+            )}
             {weeksInMonth.map((week, index) => (
               <MenuItem key={index} value={index}>
                 Week {index + 1} ({format(week[0], 'dd/MM')} -{' '}

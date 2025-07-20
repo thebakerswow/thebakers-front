@@ -28,7 +28,7 @@ import {
   CircularProgress,
   IconButton,
 } from '@mui/material'
-import { api } from '../../services/axiosConfig'
+import { toggleRunLock as toggleRunLockService } from '../../services/api/runs'
 import Swal from 'sweetalert2'
 
 interface RunsDataProps {
@@ -240,22 +240,18 @@ export function RunsDataGrid({
   // Function to toggle the lock status of a run
   const toggleRunLock = async (runId: string, isLocked: boolean) => {
     try {
-      const response = await api.put(`/run/${runId}/lock`, {
-        isLocked: !isLocked,
-      })
-      if (response.status === 200) {
-        setRuns((prevRuns) =>
-          prevRuns.map((run) =>
-            run.id === runId ? { ...run, runIsLocked: !isLocked } : run
-          )
+      await toggleRunLockService(runId, isLocked)
+      setRuns((prevRuns) =>
+        prevRuns.map((run) =>
+          run.id === runId ? { ...run, runIsLocked: !isLocked } : run
         )
-        Swal.fire({
-          icon: 'success',
-          title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
-          timer: 1500,
-          showConfirmButton: false,
-        })
-      }
+      )
+      Swal.fire({
+        icon: 'success',
+        title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
       Swal.fire({

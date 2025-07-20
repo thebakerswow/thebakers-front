@@ -13,7 +13,7 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import { api } from '../services/axiosConfig'
+import { getGbanks, getGbankLogs } from '../services/api/gbanks'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 
@@ -30,11 +30,11 @@ export function GbankExtract() {
   useEffect(() => {
     const fetchGbanks = async () => {
       try {
-        const response = await api.get('/gbanks')
-        if (!response.data.info) {
+        const response = await getGbanks()
+        if (!response) {
           throw new Error('No gbanks found')
         }
-        setGbanks(response.data.info) // Ensure response.data.info is an array of objects
+        setGbanks(response) // Ensure response is an array of objects
       } catch (error) {
         console.error('Error fetching gbanks:', error)
       }
@@ -46,12 +46,10 @@ export function GbankExtract() {
     if (!initialDate || !endDate || !selectedGbank) return
     setIsLoading(true)
     try {
-      const response = await api.get('/gbanks/logs', {
-        params: {
-          initial_date: initialDate,
-          end_date: endDate,
-          impacted: selectedGbank, // Send the name of the selected Gbank
-        },
+      const response = await getGbankLogs({
+        initial_date: initialDate,
+        end_date: endDate,
+        impacted: selectedGbank, // Send the name of the selected Gbank
       })
       type LogInfo = {
         name_impacted: string
@@ -60,8 +58,8 @@ export function GbankExtract() {
         date: string // Added date field
       }
 
-      const logsData = Array.isArray(response.data.info)
-        ? response.data.info.map((log: LogInfo) => ({
+      const logsData = Array.isArray(response)
+        ? response.map((log: LogInfo) => ({
             player: log.name_impacted || 'N/A',
             action: log.value || 'N/A',
             author: log.made_by || 'N/A',

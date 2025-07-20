@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api } from '../services/axiosConfig'
+import {
+  getFreelancers,
+  getFreelancerUsers,
+  createFreelancer,
+  deleteFreelancer,
+  updateFreelancerAttendance,
+} from '../services/api/users'
 import { CircleNotch } from '@phosphor-icons/react'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
@@ -23,16 +29,7 @@ import {
 import { Delete as DeleteIcon } from '@mui/icons-material'
 import { Modal, Modal as MuiModal, Box } from '@mui/material'
 
-interface User {
-  id_discord: string
-  username: string
-  percentage: number
-}
-
-interface FreelancersProps {
-  runId: string | undefined
-  runIsLocked: boolean // Add runIsLocked prop
-}
+import { User, FreelancersProps } from '../types'
 
 export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [freelancers, setFreelancers] = useState<User[]>([])
@@ -51,15 +48,6 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     string | null
   >(null) // Track the specific freelancer being deleted
 
-  const fetchData = useCallback(async (url: string, setter: Function) => {
-    try {
-      const response = await api.get(url)
-      setter(response.data.info || [])
-    } catch (error) {
-      handleError(error)
-    }
-  }, [])
-
   const handleError = (error: unknown) => {
     if (axios.isAxiosError(error)) {
       setError({
@@ -74,12 +62,15 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
 
   useEffect(() => {
     if (runId) {
-      fetchData(`/freelancers/${runId}`, setFreelancers).finally(() =>
-        setIsLoadingFreelancers(false)
-      )
-      fetchData(`/freelancer/users/${runId}`, setUsers)
+      getFreelancers(runId)
+        .then((response) => setFreelancers(response || []))
+        .finally(() => setIsLoadingFreelancers(false))
+
+      getFreelancerUsers(runId)
+        .then((response) => setUsers(response || []))
+        .catch(handleError)
     }
-  }, [runId, fetchData])
+  }, [runId])
 
   useEffect(() => {
     setFilteredUsers(
@@ -95,11 +86,12 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     if (!selectedUser || !runId || runIsLocked) return // Prevent adding if runIsLocked
     setIsSubmitting(true)
     try {
-      await api.post('/freelancer', {
+      await createFreelancer({
         id_discord: selectedUser.id_discord,
         id_run: runId,
       })
-      await fetchData(`/freelancers/${runId}`, setFreelancers)
+      const response = await getFreelancers(runId)
+      setFreelancers(response || [])
       setSearch('')
       setSelectedUser(null)
     } catch (error) {
@@ -124,10 +116,9 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     setDeletingFreelancerId(freelancerToDelete) // Set the ID of the freelancer being deleted
     setError(null) // Reset error state before attempting deletion
     try {
-      await api.delete(
-        `/freelancer/id_discord/${freelancerToDelete}/run/${runId}`
-      )
-      await fetchData(`/freelancers/${runId}`, setFreelancers)
+      await deleteFreelancer(freelancerToDelete, runId)
+      const response = await getFreelancers(runId)
+      setFreelancers(response || [])
     } catch (err) {
       const errorDetails = axios.isAxiosError(err)
         ? {
@@ -150,7 +141,11 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     if (!runId) return
 
     try {
-      await api.put('/freelancer', { id_discord, id_run: runId, percentage })
+      await updateFreelancerAttendance({
+        id_discord,
+        id_run: runId,
+        percentage,
+      })
       setFreelancers((prev) =>
         prev.map((freelancer) =>
           freelancer.id_discord === id_discord
@@ -169,13 +164,13 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     []
   )
 
-  const renderSelect = (idDiscord: string, percentage: number) => (
+  const renderSelect = (idDiscord: string, percentage: number | undefined) => (
     <Select
-      value={percentage}
+      value={percentage || 0}
       onChange={(e) => handleAttendanceClick(idDiscord, Number(e.target.value))}
       disabled={runIsLocked} // Disable attendance selection if runIsLocked
       style={{
-        backgroundColor: getColorForPercentage(percentage),
+        backgroundColor: getColorForPercentage(percentage || 0),
         color: 'white',
         height: '30px',
         fontSize: '14px',

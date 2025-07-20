@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { api } from '../services/axiosConfig'
+import { updateBuyer } from '../services/api/buyers'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import { Button, TextField } from '@mui/material'
 
@@ -80,7 +80,7 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     }
 
     try {
-      await api.put('/buyer', payload)
+      await updateBuyer(buyer.id, payload)
       await onEditSuccess()
       onClose()
     } catch (error) {
