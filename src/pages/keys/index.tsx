@@ -1,250 +1,364 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { KeysDataGrid } from './keys-data-grid'
-import { format, addDays, subDays } from 'date-fns'
-import { AddBuyer } from '../../components/add-buyer'
-import { RunData, SumPot } from '../../types/runs-interface'
-import undermineLogo from '../../assets/undermine-logo.png'
+import { DateFilter } from '../../components/date-filter'
+import { format } from 'date-fns'
+import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
+import { AddKeyRun } from '../../components/add-key-run'
+import { useAuth } from '../../context/auth-context'
+import { api } from '../../services/axiosConfig'
+import axios from 'axios'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { RunData } from '../../types/runs-interface'
+import Button from '@mui/material/Button'
 import {
-  ArrowCircleLeft,
-  ArrowCircleRight,
-  Lock,
-  UserPlus,
-} from '@phosphor-icons/react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Paper,
-  Button,
-  Card,
-  CardContent,
+  Modal as MuiModal,
+  Box,
+  TextareaAutosize,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import Swal from 'sweetalert2'
 
-// Mock inicial para buyers do dia
-const mockBuyers = [
-  {
-    id: '1',
-    nameAndRealm: 'BuyerOne-Azralon',
-    buyerPot: 100000,
-    buyerDolarPot: 0,
-    buyerNote: 'VIP',
-    nameOwnerBuyer: 'Owner1',
-    nameCollector: 'Collector1',
-    isPaid: false,
-    status: 'waiting',
-    playerClass: 'Mage',
-    buyerActualPot: 100000,
-    isEncrypted: false,
-    fieldIsBlocked: false,
-    idBuyerAdvertiser: '',
-    idOwnerBuyer: '',
-    paymentRealm: '',
-    idRegister: '',
-  },
-]
+export function KeysPage() {
+  const [error, setError] = useState<ErrorDetails | null>(null)
+  const [rows, setRows] = useState<RunData[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isAddRunOpen, setIsAddRunOpen] = useState(false)
+  const [isBulkAddOpen, setIsBulkAddOpen] = useState(false)
+  const [bulkRunsData, setBulkRunsData] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { userRoles } = useAuth()
 
-// Mock collectors
-const mockSumPot: SumPot[] = [
-  { idDiscord: '1', username: 'goldcollector1', sumPot: 2080000, type: 'gold' },
-  { idDiscord: '2', username: 'goldcollector2', sumPot: 160000, type: 'gold' },
-  { idDiscord: '3', username: 'dollarcollector1', sumPot: 500, type: 'dolar' },
-]
+  // Verifica se o usuário possui o papel necessário
+  const hasRequiredRole = (requiredRoles: string[]) =>
+    requiredRoles.some((required) => userRoles.includes(required.toString()))
 
-function getMockRun(date: Date, runIsLocked = false): RunData {
-  return {
-    id: date.toISOString(),
-    runIsLocked,
-    idTeam: 'keys',
-    date: date.toISOString().slice(0, 10),
-    time: '00:00',
-    raid: 'Keys Service',
-    runType: 'Daily',
-    difficulty: '-',
-    team: 'Keys',
-    backups: 0,
-    actualPot: 0,
-    actualPotDolar: 0,
-    slotAvailable: 0,
-    maxBuyers: '0',
-    raidLeaders: [],
-    loot: '-',
-    note: '',
-    sumPot: mockSumPot,
-    players: [],
-    buyersCount: '0',
-    quantityBoss: { String: '', Valid: false },
-  }
-}
+  // Copia os dados das corridas para a área de transferência
+  const copyRunsToClipboard = () => {
+    if (rows.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No runs available to copy.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
 
-export default function KeysPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [buyers] = useState(mockBuyers)
-  const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
-  const [isLocked] = useState(false)
+    const formattedRuns = rows.map((run) => ({
+      date: run.date,
+      time: run.time,
+      raid: run.raid,
+      runType: run.runType,
+      difficulty: run.difficulty,
+      idTeam: run.idTeam,
+      maxBuyers: run.maxBuyers.toString(),
+      raidLeader:
+        run.raidLeaders?.map(
+          (leader) => `${leader.idDiscord};${leader.username}`
+        ) || [],
+      loot: run.loot,
+      quantityBoss: run.quantityBoss,
+      note: run.note || '',
+    }))
 
-  // Função para simular reload dos buyers após adicionar
-  const handleBuyerAddedReload = () => {
-    setIsAddBuyerOpen(false)
+    setIsCopying(true)
+    navigator.clipboard
+      .writeText(JSON.stringify(formattedRuns, null, 2))
+      .then(() => {
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000) // Reset after 2 seconds
+      })
+      .finally(() => setIsCopying(false))
   }
 
-  const run = getMockRun(selectedDate, isLocked)
+  // Adiciona múltiplas corridas
+  const handleBulkAddRuns = async () => {
+    setIsSubmitting(true)
+    try {
+      const parsedRuns = JSON.parse(bulkRunsData)
+      const runsArray = Array.isArray(parsedRuns) ? parsedRuns : [parsedRuns]
+
+      const formattedRuns = runsArray.map((run) => ({
+        date: run.date,
+        time: run.time,
+        raid: run.raid,
+        runType: run.runType,
+        difficulty: run.difficulty,
+        idTeam: run.idTeam,
+        maxBuyers: run.maxBuyers.toString(), // Converte para string
+        raidLeader: run.raidLeader,
+        loot: run.loot,
+        quantityBoss: run.quantityBoss,
+        note: run.note || '',
+      }))
+
+      for (const run of formattedRuns) {
+        await api.post('/run', run)
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Runs added successfully!',
+        confirmButtonColor: '#22c55e',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setBulkRunsData('')
+      setIsBulkAddOpen(false)
+      fetchRuns(true)
+    } catch (error) {
+      console.error('Error adding runs:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to add runs.',
+        text: 'Please check the data format.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCloseBulkAddDialog = () => {
+    setIsBulkAddOpen(false)
+    setBulkRunsData('') // Clear the text area when the dialog is closed
+  }
+
+  const handleBulkRunsDataChange = (value: string) => {
+    if (!selectedDate) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Please select a date from the filter.',
+        confirmButtonColor: '#ef4444',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
+
+    try {
+      const parsedRuns = JSON.parse(value)
+      const runsArray = Array.isArray(parsedRuns) ? parsedRuns : [parsedRuns]
+
+      const updatedRuns = runsArray.map((run) => ({
+        ...run,
+        date: format(selectedDate, 'yyyy-MM-dd'), // Automatically replace the date with the selected date
+      }))
+
+      setBulkRunsData(JSON.stringify(updatedRuns, null, 2))
+    } catch (error) {
+      setBulkRunsData(value) // Keep the raw input if it's not valid JSON
+    }
+  }
+
+  // Busca os dados das corridas na API
+  const fetchRuns = async (isUserRequest: boolean) => {
+    if (isUserRequest && selectedDate) setIsLoading(true)
+
+    try {
+      if (!selectedDate) {
+        setRows([])
+        return
+      }
+
+      const { data } = await api.get('/run', {
+        params: { date: format(selectedDate, 'yyyy-MM-dd') },
+      })
+
+      // Filtra apenas as runs do time específico
+      const filteredRuns = (data.info || []).filter(
+        (run: any) => run.idTeam === '1354858326327820297'
+      )
+
+      setRows(
+        filteredRuns.map((run: any) => ({
+          ...run,
+          buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+        }))
+      )
+    } catch (error) {
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Erro inesperado', response: error }
+      console.error('Erro:', errorDetails)
+      setError(errorDetails)
+    } finally {
+      if (isUserRequest) setIsLoading(false)
+    }
+  }
+
+  const handleEditRunSuccess = () => {
+    Swal.fire({
+      title: 'Success!',
+      text: 'Run edited successfully!',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+    })
+  }
+
+  // Busca inicial e configuração de polling
+  useEffect(() => {
+    fetchRuns(true)
+
+    const interval = setInterval(() => fetchRuns(false), 20000)
+    return () => clearInterval(interval)
+  }, [selectedDate])
+
+  if (error) {
+    return (
+      <MuiModal open={!!error} onClose={() => setError(null)}>
+        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        </Box>
+      </MuiModal>
+    )
+  }
 
   return (
-    <div className='m-8 flex w-full flex-col gap-4'>
-      <div className='flex gap-2 rounded-md'>
-        {/* Imagem grande à esquerda */}
-        <img
-          className='min-h-[220px] max-w-[400px] rounded-md'
-          src={undermineLogo}
-          alt='Keys Cover'
-        />
-        {/* Collectors */}
-        {run.sumPot?.some(
-          (item) => item.type === 'gold' && item.sumPot !== 0
-        ) && (
-          <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
-            <h2 className='text-lg font-semibold'>Gold Collectors</h2>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableBody>
-                  {run.sumPot
-                    ?.filter(
-                      (item) => item.type === 'gold' && item.sumPot !== 0
-                    )
-                    .map((item) => (
-                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                        <TableCell style={{ padding: '10px' }}>
-                          {item.username}
-                        </TableCell>
-                        <TableCell align='right' style={{ padding: '10px' }}>
-                          {Math.round(Number(item.sumPot)).toLocaleString(
-                            'en-US'
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-        )}
-        {run.sumPot?.some(
-          (item) => item.type === 'dolar' && item.sumPot !== 0
-        ) && (
-          <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
-            <h2 className='text-lg font-semibold'>Dolar Collectors</h2>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableBody>
-                  {run.sumPot
-                    ?.filter(
-                      (item) => item.type === 'dolar' && item.sumPot !== 0
-                    )
-                    .map((item) => (
-                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                        <TableCell style={{ padding: '10px' }}>
-                          {item.username}
-                        </TableCell>
-                        <TableCell align='right' style={{ padding: '10px' }}>
-                          {Number(item.sumPot).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-        )}
-        {/* Centro/direita: navegação de datas e botões */}
-        <Card
-          className='grid flex-1 grid-cols-4 items-center text-left text-zinc-900'
-          style={{ minWidth: '1000px', backgroundColor: '#f3f4f6' }}
-        >
-          <CardContent className='col-span-3 mb-6 ml-10 flex flex-col items-center'>
-            {/* Navegação de datas */}
-            <div className='mt-4 flex items-center gap-4'>
-              <DatePicker
-                selected={selectedDate}
-                onChange={(date: Date | null) => {
-                  if (date) setSelectedDate(date)
-                }}
-                dateFormat='dd/MM/yyyy'
-                className='w-[140px] rounded border bg-white px-2 py-1 text-center text-lg font-bold shadow'
-                popperPlacement='bottom-start'
-                calendarClassName='z-50'
-                inline
-              />
-              <button
-                type='button'
-                onClick={() => setSelectedDate((d) => subDays(d, 1))}
-                className='flex h-14 w-14 items-center justify-center rounded-full text-blue-600 shadow-md transition-colors duration-150 hover:bg-blue-200'
-              >
-                <ArrowCircleLeft size={40} />
-              </button>
-              <span className='text-lg font-bold'>
-                {format(selectedDate, 'EEEE, dd/MM/yyyy')}
-              </span>
-              <button
-                type='button'
-                onClick={() => setSelectedDate((d) => addDays(d, 1))}
-                className='flex h-14 w-14 items-center justify-center rounded-full text-blue-600 shadow-md transition-colors duration-150 hover:bg-blue-200'
-              >
-                <ArrowCircleRight size={40} />
-              </button>
-            </div>
-          </CardContent>
-          <CardContent className='m-4 flex flex-col items-center justify-center gap-2'>
+    <div className='flex min-h-screen w-full flex-col items-center justify-center'>
+      <DateFilter onDaySelect={setSelectedDate} />
+      <div
+        className='mx-auto mt-6 flex w-[90%] flex-col p-4'
+        style={{
+          minHeight: '500px',
+          height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
+        }}
+      >
+        {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
+        {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
+          <div className='mb-2 flex gap-2 self-start'>
             <Button
               variant='contained'
-              startIcon={<UserPlus size={18} />}
-              fullWidth
-              onClick={() => setIsAddBuyerOpen(true)}
-              disabled={isLocked}
               sx={{
-                backgroundColor: isLocked
-                  ? 'rgb(209, 213, 219)'
-                  : 'rgb(239, 68, 68)',
-                '&:hover': {
-                  backgroundColor: isLocked
-                    ? 'rgb(209, 213, 219)'
-                    : 'rgb(248, 113, 113)',
-                },
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                padding: '10px 20px',
+                boxShadow: 3,
+                display: 'flex',
+                alignItems: 'center',
               }}
+              startIcon={<UserPlus size={18} />}
+              onClick={() => setIsAddRunOpen(true)}
             >
-              Add Buyer
+              Add Run
             </Button>
             <Button
               variant='contained'
-              startIcon={<Lock size={18} />}
-              fullWidth
               sx={{
                 backgroundColor: 'rgb(239, 68, 68)',
                 '&:hover': {
                   backgroundColor: 'rgb(248, 113, 113)',
                 },
+                padding: '10px 20px',
+                boxShadow: 3,
+                display: 'flex',
+                justify: 'center',
               }}
+              startIcon={<ClipboardText size={18} />}
+              onClick={copyRunsToClipboard}
             >
-              Lock Day
+              {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
             </Button>
-          </CardContent>
-        </Card>
+            <Button
+              variant='contained'
+              sx={{
+                backgroundColor: 'rgb(239, 68, 68)',
+                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                padding: '10px 20px',
+                boxShadow: 3,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              startIcon={<UsersFour size={18} />}
+              onClick={() => setIsBulkAddOpen(true)}
+            >
+              Add Multiple Runs
+            </Button>
+          </div>
+        )}
+
+        {isBulkAddOpen && (
+          <Dialog
+            open={isBulkAddOpen}
+            onClose={handleCloseBulkAddDialog}
+            fullWidth
+            maxWidth='md'
+          >
+            <DialogTitle>Add Multiple Runs</DialogTitle>
+            <DialogContent>
+              <TextareaAutosize
+                minRows={10}
+                placeholder='Paste runs data here (JSON format)'
+                value={bulkRunsData}
+                onChange={(e) => handleBulkRunsDataChange(e.target.value)} // Automatically handle pasted data
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button
+                variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(34, 197, 94)',
+                  '&:hover': { backgroundColor: 'rgb(52, 211, 153)' },
+                }}
+                onClick={handleBulkAddRuns}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Runs'}
+              </Button>
+              <Button
+                variant='outlined'
+                sx={{
+                  borderColor: 'rgb(239, 68, 68)',
+                  color: 'rgb(239, 68, 68)',
+                  '&:hover': {
+                    borderColor: 'rgb(248, 113, 113)',
+                    color: 'rgb(248, 113, 113)',
+                  },
+                }}
+                onClick={handleCloseBulkAddDialog}
+              >
+                Cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        <div className='mb-4 flex flex-1 flex-col'>
+          <KeysDataGrid
+            data={rows}
+            isLoading={isLoading}
+            onDeleteSuccess={() => fetchRuns(true)}
+            onEditSuccess={handleEditRunSuccess}
+          />
+        </div>
+
+        {isAddRunOpen && (
+          <AddKeyRun
+            onClose={() => setIsAddRunOpen(false)}
+            onRunAddedReload={() => fetchRuns(true)}
+          />
+        )}
       </div>
-      <KeysDataGrid data={buyers} />
-      {/* Modal de adicionar buyer */}
-      {isAddBuyerOpen && (
-        <AddBuyer
-          run={run}
-          onClose={() => setIsAddBuyerOpen(false)}
-          onBuyerAddedReload={handleBuyerAddedReload}
-        />
-      )}
     </div>
   )
 }

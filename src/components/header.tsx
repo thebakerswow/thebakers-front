@@ -13,6 +13,8 @@ import {
   SignOut,
   UsersFour,
   List,
+  Key,
+  ArrowFatUp,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
@@ -179,7 +181,7 @@ export function Header() {
             }}
             sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <Coins size={20} /> Keys
+            <Key size={20} /> Keys
           </MenuItem>
           <MenuItem
             onClick={() => {
@@ -188,7 +190,7 @@ export function Header() {
             }}
             sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <UsersFour size={20} /> Leveling
+            <ArrowFatUp size={20} /> Leveling
           </MenuItem>
         </Menu>
 

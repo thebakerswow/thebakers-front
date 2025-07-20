@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
-import { DateFilter } from './date-filter'
+import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
 import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
 import { AddRun } from '../../components/add-run'

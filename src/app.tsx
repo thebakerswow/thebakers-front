@@ -22,8 +22,10 @@ import { Register } from './pages/register'
 import backgroundTeste from './assets/background_teste.png'
 import { CheckAccess } from './pages/error-pages/check-access'
 import ManagementServices from './pages/management/management-services'
-import Keys from './pages/keys'
-import LevelingPage from './pages/leveling'
+import { KeysPage } from './pages/keys'
+import { KeyDetails } from './pages/keys/key-details'
+import { LevelingPage } from './pages/leveling'
+import { LevelingDetails } from './pages/leveling/leveling-details'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -81,6 +83,14 @@ export function App() {
                   element={<PrivateRoute element={<RunDetails />} />}
                 />
                 <Route
+                  path='/bookings-na/key/:id'
+                  element={<PrivateRoute element={<KeyDetails />} />}
+                />
+                <Route
+                  path='/bookings-na/leveling/:id'
+                  element={<PrivateRoute element={<LevelingDetails />} />}
+                />
+                <Route
                   path='/admin'
                   element={<PrivateRoute element={<AdminPage />} />}
                 />
@@ -94,7 +104,7 @@ export function App() {
                 />
                 <Route
                   path='/keys'
-                  element={<PrivateRoute element={<Keys />} />}
+                  element={<PrivateRoute element={<KeysPage />} />}
                 />
                 <Route
                   path='/leveling'

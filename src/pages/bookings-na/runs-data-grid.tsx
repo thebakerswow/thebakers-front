@@ -162,7 +162,12 @@ export function RunsDataGrid({
 
   // Ordena os dados por horário e prioridade do time
   const sortedData = useMemo(() => {
-    const sorted = [...runs].sort((a, b) => {
+    // Filtra as runs do time Milharal
+    const filteredRuns = runs.filter(
+      (run) => run.idTeam !== '1354858326327820297'
+    )
+
+    const sorted = [...filteredRuns].sort((a, b) => {
       if (!a.time || !b.time) return 0
 
       const timeA = convertTimeToMinutes(a.time)
