@@ -71,12 +71,27 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
+
+    // Validar se os valores são números válidos
+    const buyerPotValue = Number(formData.buyerPot.replace(/,/g, ''))
+    const buyerDolarPotValue = Number(formData.buyerDolarPot.replace(/,/g, ''))
+
+    if (isNaN(buyerPotValue) || isNaN(buyerDolarPotValue)) {
+      setError({
+        message: 'Invalid numeric values',
+        response: 'Please enter valid numbers for Pot and Dolar Pot fields',
+        status: 400,
+      })
+      setIsSubmitting(false)
+      return
+    }
+
     const payload = {
       id_buyer: buyer.id,
-      nameAndRealm: formData.nameAndRealm,
-      buyerPot: Number(formData.buyerPot.replace(/,/g, '')), // Remove commas for backend
-      buyerDolarPot: Number(formData.buyerDolarPot.replace(/,/g, '')),
-      buyerNote: formData.buyerNote,
+      nameAndRealm: formData.nameAndRealm || '',
+      buyerPot: buyerPotValue || 0,
+      buyerDolarPot: buyerDolarPotValue || 0,
+      buyerNote: formData.buyerNote || '',
     }
 
     try {

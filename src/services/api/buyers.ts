@@ -5,8 +5,8 @@ export const createBuyer = async (buyerData: any) => {
   return response.data
 }
 
-export const updateBuyer = async (buyerId: string, buyerData: any) => {
-  const response = await api.put(`/buyer/${buyerId}`, buyerData)
+export const updateBuyer = async (buyerId: string | number, buyerData: any) => {
+  const response = await api.put('/buyer', { id_buyer: buyerId, ...buyerData })
   return response.data
 }
 
