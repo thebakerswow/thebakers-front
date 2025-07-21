@@ -89,32 +89,15 @@ export function RunInfo({
     }
   }
 
-  // Mapeamento dos cargos de time
-  const TEAM_ROLE_IDS = [
-    import.meta.env.VITE_TEAM_PADEIRINHO,
-    import.meta.env.VITE_TEAM_GARCOM,
-    import.meta.env.VITE_TEAM_CONFEITEIROS,
-    import.meta.env.VITE_TEAM_JACKFRUIT,
-    import.meta.env.VITE_TEAM_MILHARAL,
-    import.meta.env.VITE_TEAM_RAIO,
-    import.meta.env.VITE_TEAM_APAE,
-    import.meta.env.VITE_TEAM_DTM,
-    import.meta.env.VITE_TEAM_KFFC,
-    import.meta.env.VITE_TEAM_SAPOCULEANO,
-    import.meta.env.VITE_TEAM_GREENSKY,
-    import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
-    import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
-    import.meta.env.VITE_TEAM_ROCKET,
-  ]
-
   function hasPrefeitoTeamAccess(run: RunData, userRoles: string[]): boolean {
     const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
     if (!isPrefeito) return false
-    const userTeamRole = TEAM_ROLE_IDS.find((teamId) =>
-      userRoles.includes(teamId)
-    )
-    if (!userTeamRole) return false
-    return run.idTeam === userTeamRole
+
+    // Verifica se o usuário tem o cargo do time específico desta run
+    const hasTeamRoleForThisRun = userRoles.includes(run.idTeam)
+    if (!hasTeamRoleForThisRun) return false
+
+    return true
   }
 
   return (
