@@ -31,7 +31,7 @@ export function BalanceDataGrid({
   dateRange, // Destructure dateRange
   is_dolar, // Destructure is_dolar
 }: BalanceDataGridProps) {
-  const { userRoles = [] } = useAuth() // Garante que userRoles seja um array
+  const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
   const restrictedFreelancerRole = import.meta.env.VITE_TEAM_FREELANCER
   const restrictedAdvertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
 
@@ -43,8 +43,8 @@ export function BalanceDataGrid({
       [restrictedFreelancerRole, restrictedAdvertiserRole].includes(role)
     )
 
-  // Força selectedTeam como string vazia se o usuário for restrito
-  const selectedTeam = isRestrictedUser ? '' : initialSelectedTeam
+  // Para usuários restritos, usa o ID do próprio usuário como selectedTeam
+  const selectedTeam = isRestrictedUser ? idDiscord : initialSelectedTeam
 
   // Estado para armazenar os dados de balanceamento, times, estilos de jogadores e erros
   const [balanceData, setBalanceData] = useState<BalanceResponse['info']>({
@@ -119,22 +119,61 @@ export function BalanceDataGrid({
         !dateRange ||
         selectedTeam === null ||
         selectedTeam === undefined ||
-        selectedTeam === ''
+        (selectedTeam === '' && !isRestrictedUser) // Só impede se não for usuário restrito
       ) {
         return
       }
 
       setIsLoadingBalance(true)
       try {
-        const params = {
-          id_team:
-            selectedTeam && selectedTeam !== '' ? selectedTeam : undefined,
-          date_start: dateRange.start,
-          date_end: dateRange.end,
-          is_dolar,
-        }
+        let response
 
-        const response = await getBalance(params)
+        if (isRestrictedUser) {
+          // Para usuários restritos, busca dados de todos os times e filtra no frontend
+          const params = {
+            date_start: dateRange.start,
+            date_end: dateRange.end,
+            is_dolar,
+          }
+          response = await getBalance(params)
+
+          // Filtra os dados para mostrar apenas o usuário logado
+          if (response) {
+            const filteredResponse: {
+              player_balance: { [date: string]: any[] }
+              balance_total: any[]
+            } = {
+              player_balance: {},
+              balance_total: response.balance_total.filter(
+                (player: any) => player.id_discord === selectedTeam
+              ),
+            }
+
+            // Filtra também os dados diários
+            Object.entries(response.player_balance || {}).forEach(
+              ([date, players]) => {
+                const filteredPlayers = (players as any[]).filter(
+                  (player: any) => player.id_discord === selectedTeam
+                )
+                if (filteredPlayers.length > 0) {
+                  filteredResponse.player_balance[date] = filteredPlayers
+                }
+              }
+            )
+
+            response = filteredResponse
+          }
+        } else {
+          // Para usuários normais, busca dados por time
+          const params = {
+            id_team:
+              selectedTeam && selectedTeam !== '' ? selectedTeam : undefined,
+            date_start: dateRange.start,
+            date_end: dateRange.end,
+            is_dolar,
+          }
+          response = await getBalance(params)
+        }
 
         setBalanceData(response || { player_balance: {}, balance_total: [] })
       } catch (error) {

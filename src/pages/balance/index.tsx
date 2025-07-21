@@ -13,8 +13,11 @@ export function BalancePage() {
   const [isDolar, setIsDolar] = useState(false)
   const { userRoles = [] } = useAuth()
   const freelancerRole = import.meta.env.VITE_TEAM_FREELANCER
-  const isOnlyFreelancer =
-    userRoles.length === 1 && userRoles[0] === freelancerRole
+  const advertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
+  const isRestrictedUser =
+    userRoles.every((role) =>
+      [freelancerRole, advertiserRole].includes(role)
+    ) && userRoles.length <= 2
 
   return (
     <div className='relative mx-8 flex min-h-screen w-full flex-col'>
@@ -24,7 +27,7 @@ export function BalancePage() {
             selectedTeam={selectedTeam}
             onChange={setSelectedTeam}
           />
-          {!isOnlyFreelancer && (
+          {!isRestrictedUser && (
             <Button
               variant='contained'
               sx={{
