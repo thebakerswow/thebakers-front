@@ -27,7 +27,7 @@ export const createRun = async (runData: any) => {
 }
 
 export const updateRun = async (runId: string, runData: any) => {
-  const response = await api.put(`/run/${runId}`, runData)
+  const response = await api.put('/run', { ...runData, id: runId })
   return response.data
 }
 
