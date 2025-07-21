@@ -30,9 +30,8 @@ export const getTransactionLogs = async (params: {
 }
 
 export const createTransaction = async (data: {
-  id_team: string
   value: number
-  impacted: string
+  id_discord: string
   is_dolar: boolean
 }) => {
   const response = await api.post('/transaction', data)

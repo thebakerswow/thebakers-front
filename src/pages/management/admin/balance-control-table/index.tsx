@@ -212,8 +212,7 @@ export function BalanceControlTable({
         value: isDolar
           ? Number(calculatorValues[userId].replace(/,/g, ''))
           : Number(calculatorValues[userId].replace(/,/g, '')),
-        id_team: selectedTeam,
-        impacted: userId,
+        id_discord: userId,
         is_dolar: isDolar,
       })
       setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
@@ -246,8 +245,7 @@ export function BalanceControlTable({
             value: isDolar
               ? Number(value.replace(/,/g, ''))
               : Number(value.replace(/,/g, '')),
-            id_team: selectedTeam,
-            impacted: userId,
+            id_discord: userId,
             is_dolar: isDolar,
           })
         )
