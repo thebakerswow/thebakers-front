@@ -432,16 +432,6 @@ export function RunsDataGrid({
                 textAlign: 'center',
               }}
             >
-              Mythic Cut
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
               Loot
             </TableCell>
             <TableCell
@@ -522,11 +512,6 @@ export function RunsDataGrid({
                 {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
                 {renderTableCell(run.runType)}
                 {renderTableCell(run.difficulty)}
-                {renderTableCell(
-                  run.quantityBoss && typeof run.quantityBoss === 'object'
-                    ? run.quantityBoss.String || '-'
-                    : '-'
-                )}
                 {renderTableCell(run.loot)}
                 {renderTableCell(run.note)}
                 {renderTableCell(
