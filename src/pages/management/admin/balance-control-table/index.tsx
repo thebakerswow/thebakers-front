@@ -283,9 +283,8 @@ export function BalanceControlTable({
 
     try {
       await updateNick({
-        id_team: selectedTeam,
         nick: newNick.trim(),
-        impacted: selectedUserId,
+        id_discord: selectedUserId,
       })
       fetchBalanceAdmin()
     } catch (error) {

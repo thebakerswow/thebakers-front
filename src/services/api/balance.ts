@@ -39,11 +39,10 @@ export const createTransaction = async (data: {
 }
 
 export const updateNick = async (data: {
-  id_team: string
   nick: string
-  impacted: string
+  id_discord: string
 }) => {
-  const response = await api.put('/transaction/nick', data)
+  const response = await api.put('/nick', data)
   return response.data
 }
 
