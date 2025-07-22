@@ -231,7 +231,7 @@ export function HomePage() {
                                 .map((service) => (
                                   <div
                                     key={service.id}
-                                    className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-yellow-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
+                                    className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-purple-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
                                     style={{
                                       backgroundImage: `url(${fireImg})`,
                                       backgroundRepeat: 'no-repeat',
