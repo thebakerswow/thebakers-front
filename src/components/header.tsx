@@ -13,7 +13,7 @@ import {
   SignOut,
   UsersFour,
 } from '@phosphor-icons/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/auth-context'
 
@@ -52,6 +52,7 @@ function EstClock() {
 
 export function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -98,7 +99,8 @@ export function Header() {
             }}
             onClick={() => navigate('/')}
           >
-            TheBakers <span style={{ color: 'red' }}>Hub</span>
+            TheBakers{' '}
+            <span className='font-extrabold text-purple-500'>Hub</span>
           </Typography>
         </Toolbar>
       </AppBar>
@@ -119,7 +121,14 @@ export function Header() {
           sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
           onClick={() => navigate('/home')}
         >
-          TheBakers <span style={{ color: 'red' }}>Hub</span>
+          TheBakers{' '}
+          <span
+            className={`font-extrabold ${
+              location.pathname === '/home' ? 'text-purple-500' : 'text-red-500'
+            }`}
+          >
+            Hub
+          </span>
         </Typography>
 
         <Button
