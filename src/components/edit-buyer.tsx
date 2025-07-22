@@ -3,6 +3,7 @@ import axios from 'axios'
 import { updateBuyer } from '../services/api/buyers'
 import { ErrorDetails, ErrorComponent } from './error-display'
 import { Button, TextField } from '@mui/material'
+import Swal from 'sweetalert2'
 
 interface EditBuyerProps {
   buyer: {
@@ -97,6 +98,15 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     try {
       await updateBuyer(buyer.id, payload)
       await onEditSuccess()
+
+      Swal.fire({
+        title: 'Success!',
+        text: 'Buyer updated successfully',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+
       onClose()
     } catch (error) {
       if (axios.isAxiosError(error)) {

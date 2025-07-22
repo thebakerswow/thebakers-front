@@ -1,6 +1,8 @@
 import { UserPlus } from '@phosphor-icons/react'
 import axios from 'axios'
 import { useState, useEffect, useCallback } from 'react'
+import Swal from 'sweetalert2'
+
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +20,6 @@ import { RunData } from '../types/runs-interface'
 import { createBuyer } from '../services/api/buyers'
 import { getGhostUsers } from '../services/api/users'
 import { ErrorComponent, ErrorDetails } from './error-display'
-import Swal from 'sweetalert2'
 
 interface AddBuyerProps {
   run: RunData
@@ -46,7 +47,7 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
   })
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [isSuccess] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -134,15 +135,23 @@ export function AddBuyer({ run, onClose, onBuyerAddedReload }: AddBuyerProps) {
       // Envia os dados do comprador para a API
       await createBuyer(data)
       await onBuyerAddedReload()
-      setIsSuccess(true)
+
+      // Fecha o dialog imediatamente após o sucesso
       onClose()
-      Swal.fire({
-        title: 'Success!',
-        text: 'Buyer added successfully!',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      })
+
+      // Mostra alerta de confirmação após fechar o dialog
+      setTimeout(() => {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Buyer added successfully!',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'swal2-custom-popup',
+          },
+        })
+      }, 150) // Delay um pouco maior para garantir que o dialog foi fechado
     } catch (error) {
       // Captura e armazena erros
       setError(

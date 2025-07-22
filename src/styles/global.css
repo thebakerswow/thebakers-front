@@ -1,3 +1,25 @@
 .z-50 {
   z-index: 50;
 }
+
+/* SweetAlert2 Custom Styles */
+.swal2-custom-popup {
+  border-radius: 12px !important;
+  font-family: inherit !important;
+}
+
+.swal2-custom-confirm {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 12px 24px !important;
+}
+
+/* Garantir que o SweetAlert2 apareça centralizado e acima de outros elementos */
+.swal2-container {
+  z-index: 9999 !important;
+}
+
+.swal2-popup {
+  margin: auto !important;
+}

@@ -645,6 +645,7 @@ export function RunDetails() {
                   onDeleteSuccess={reloadAllData}
                   runIsLocked={runData?.runIsLocked ?? false}
                   runIdTeam={runData?.idTeam}
+                  raidLeaders={runData?.raidLeaders}
                 />
               </div>
             )}

@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
-import { RiWifiOffLine, RiZzzFill } from 'react-icons/ri'
+import {
+  RiWifiOffLine,
+  RiZzzFill,
+  RiUserHeartLine,
+  RiLoginCircleLine,
+  RiAlertLine,
+  RiSwordLine,
+} from 'react-icons/ri'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
 import Druid from '../../../assets/class_icons/druid.png'
@@ -43,6 +50,7 @@ import {
 import { Modal as MuiModal, Box } from '@mui/material'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
+import CryptoJS from 'crypto-js'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -51,6 +59,11 @@ interface BuyersGridProps {
   onDeleteSuccess: () => void
   runIsLocked?: boolean // Added runIsLocked prop
   runIdTeam?: string // Adicionada para permissão correta
+  raidLeaders?: {
+    idCommunication: string
+    idDiscord: string
+    username: string
+  }[] // Added raid leaders prop
 }
 
 const statusOptions = [
@@ -107,11 +120,87 @@ export function BuyersDataGrid({
   onDeleteSuccess,
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Nova prop
+  raidLeaders, // Added raid leaders prop
 }: BuyersGridProps) {
-  const { userRoles } = useAuth()
+  const { userRoles, idDiscord } = useAuth()
   const canSeeIdBuyer =
     userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
     (runIdTeam && hasPrefeitoTeamAccess(runIdTeam, userRoles))
+
+  // Function to check if current user is the advertiser of a buyer
+  const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
+    return idDiscord === buyer.idOwnerBuyer
+  }
+
+  // Function to decrypt idCommunication
+  const decryptIdCommunication = (encryptedId: string): string => {
+    try {
+      const secretKey = import.meta.env.VITE_DECRYPTION_KEY
+
+      if (!secretKey) {
+        console.error('VITE_DECRYPTION_KEY não está definida')
+        return ''
+      }
+
+      // Implementação compatível com Go AES-128-CFB
+      try {
+        // 1. Criar hash MD5 da chave (igual ao Go)
+        const keyHash = CryptoJS.MD5(secretKey)
+
+        // 2. Usar os primeiros 16 bytes como IV (igual ao Go)
+        const iv = CryptoJS.lib.WordArray.create(keyHash.words.slice(0, 4))
+
+        // 3. Decriptar usando AES-128-CFB
+        const decrypted = CryptoJS.AES.decrypt(encryptedId, keyHash, {
+          mode: CryptoJS.mode.CFB,
+          padding: CryptoJS.pad.NoPadding,
+          iv: iv,
+        })
+
+        const result = decrypted.toString(CryptoJS.enc.Utf8)
+
+        if (result) {
+          return result
+        }
+      } catch (error) {
+        console.error('Erro na decriptação AES-128-CFB:', error)
+      }
+
+      return ''
+    } catch (error) {
+      console.error('Erro ao decriptar idCommunication:', error)
+      return ''
+    }
+  }
+
+  // Function to get Discord ID from raid leader
+  const getRaidLeaderDiscordId = (raidLeader: {
+    idCommunication: string
+    idDiscord: string
+    username: string
+  }): string => {
+    if (raidLeader.idDiscord === 'Encrypted') {
+      const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
+      if (!decryptedId) {
+        console.error(
+          'Falha ao decriptar ID do raid leader:',
+          raidLeader.username
+        )
+      }
+      return decryptedId
+    }
+    return raidLeader.idDiscord
+  }
+
+  // Function to check if current user is a raid leader
+  const isRaidLeader = (): boolean => {
+    if (!raidLeaders || !idDiscord) return false
+    return raidLeaders.some((leader) => {
+      const leaderDiscordId = getRaidLeaderDiscordId(leader)
+      return leaderDiscordId === idDiscord
+    })
+  }
+
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
@@ -125,6 +214,18 @@ export function BuyersDataGrid({
   const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
   const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
   const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
+  const [cooldownBuyerReady, setCooldownBuyerReady] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Buyer Ready button
+  const [cooldownBuyerLogging, setCooldownBuyerLogging] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Buyer Logging button
+  const [cooldownAttention, setCooldownAttention] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Attention button
+  const [cooldownBuyerCombat, setCooldownBuyerCombat] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Buyer in Combat button
   const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
     {}
   ) // Track button clicks
@@ -231,7 +332,7 @@ export function BuyersDataGrid({
       // 1129084739597377767: funcionário do baby johny
       // 466344718507442177: baby johny
       let recipientIds: string[] = []
-      if (buyer.idBuyerAdvertiser === '466344718507442177') {
+      if (buyer.idOwnerBuyer === '466344718507442177') {
         // baby johny
         recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
       } else if (buyer.idBuyerAdvertiser) {
@@ -297,7 +398,7 @@ export function BuyersDataGrid({
       // 1129084739597377767: funcionário do baby johny
       // 466344718507442177: baby johny
       let recipientIds: string[] = []
-      if (buyer.idBuyerAdvertiser === '466344718507442177') {
+      if (buyer.idOwnerBuyer === '466344718507442177') {
         // baby johny
         recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
       } else if (buyer.idBuyerAdvertiser) {
@@ -334,6 +435,264 @@ export function BuyersDataGrid({
       setCooldown((prev) => ({ ...prev, [buyerId]: true }))
       setTimeout(() => {
         setCooldown((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    })
+  }
+
+  const handleSendBuyerReadyMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownBuyerReady[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+
+      // Get raid leader Discord IDs
+      const recipientIds: string[] = []
+      for (const leader of raidLeaders) {
+        const leaderDiscordId = getRaidLeaderDiscordId(leader)
+        if (leaderDiscordId) {
+          recipientIds.push(leaderDiscordId)
+        }
+      }
+
+      // Envia mensagem para todos os raid leaders
+      for (const recipientId of recipientIds) {
+        try {
+          await sendDiscordMessage(
+            recipientId,
+            `Buyer Ready\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Raid leaders notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownBuyerReady((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownBuyerReady((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    })
+  }
+
+  const handleSendBuyerLoggingMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownBuyerLogging[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+
+      // Get raid leader Discord IDs
+      const recipientIds: string[] = []
+      for (const leader of raidLeaders) {
+        const leaderDiscordId = getRaidLeaderDiscordId(leader)
+        if (leaderDiscordId) {
+          recipientIds.push(leaderDiscordId)
+        }
+      }
+
+      // Envia mensagem para todos os raid leaders
+      for (const recipientId of recipientIds) {
+        try {
+          await sendDiscordMessage(
+            recipientId,
+            `Buyer Logging\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Raid leaders notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownBuyerLogging((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownBuyerLogging((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    })
+  }
+
+  const handleSendAttentionMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownAttention[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+
+      // Get raid leader Discord IDs
+      const recipientIds: string[] = []
+      for (const leader of raidLeaders) {
+        const leaderDiscordId = getRaidLeaderDiscordId(leader)
+        if (leaderDiscordId) {
+          recipientIds.push(leaderDiscordId)
+        }
+      }
+
+      // Envia mensagem para todos os raid leaders
+      for (const recipientId of recipientIds) {
+        try {
+          await sendDiscordMessage(
+            recipientId,
+            `Attention! Check Note\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Raid leaders notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownAttention((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownAttention((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    })
+  }
+
+  const handleSendBuyerCombatMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownBuyerCombat[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId) return // Ensure buyer and runId exist
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+      // 1144320612966338751: funcionário do baby johny
+      // 1129084739597377767: funcionário do baby johny
+      // 466344718507442177: baby johny
+      let recipientIds: string[] = []
+      if (buyer.idOwnerBuyer === '466344718507442177') {
+        // baby johny
+        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
+      } else if (buyer.idBuyerAdvertiser) {
+        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
+      } else {
+        recipientIds = [buyer.idOwnerBuyer]
+      }
+      // Envia mensagem para todos os destinatários
+      for (const recipientId of recipientIds) {
+        try {
+          await sendDiscordMessage(
+            recipientId,
+            `Buyer in combat and not in our group\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: false }))
       }, 15000)
     })
   }
@@ -754,6 +1113,151 @@ export function BuyersDataGrid({
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm === 'Encrypted' ? null : (
                     <div className='flex justify-center gap-1'>
+                      {isRaidLeader() && (
+                        <>
+                          <Tooltip title='AFK'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked && handleSendAFKMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownAFK[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownAFK[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiZzzFill size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Offline'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendOfflineMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldown[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldown[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiWifiOffLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Buyer in combat'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendBuyerCombatMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownBuyerCombat[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownBuyerCombat[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiSwordLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                      {isBuyerAdvertiser(buyer) && (
+                        <>
+                          <Tooltip title='Buyer Ready'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendBuyerReadyMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownBuyerReady[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownBuyerReady[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiUserHeartLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Buyer Logging'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendBuyerLoggingMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownBuyerLogging[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownBuyerLogging[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiLoginCircleLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Attention! Check Note'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendAttentionMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownAttention[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownAttention[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiAlertLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
                       <Tooltip title='Edit'>
                         <IconButton
                           onClick={() =>
@@ -762,48 +1266,6 @@ export function BuyersDataGrid({
                           disabled={runIsLocked}
                         >
                           <Pencil size={18} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='AFK'>
-                        <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleSendAFKMessage(buyer.id)
-                          }
-                          disabled={
-                            runIsLocked ||
-                            cooldownAFK[buyer.id] ||
-                            globalCooldown
-                          }
-                          sx={{
-                            opacity:
-                              cooldownAFK[buyer.id] ||
-                              runIsLocked ||
-                              globalCooldown
-                                ? 0.5
-                                : 1,
-                          }}
-                        >
-                          <RiZzzFill size={18} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Offline'>
-                        <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleSendOfflineMessage(buyer.id)
-                          }
-                          disabled={
-                            runIsLocked || cooldown[buyer.id] || globalCooldown
-                          }
-                          sx={{
-                            opacity:
-                              cooldown[buyer.id] ||
-                              runIsLocked ||
-                              globalCooldown
-                                ? 0.5
-                                : 1,
-                          }}
-                        >
-                          <RiWifiOffLine size={18} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title='Delete'>
