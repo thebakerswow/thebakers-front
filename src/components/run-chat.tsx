@@ -13,7 +13,6 @@ import {
   Badge,
 } from '@mui/material'
 import Swal from 'sweetalert2'
-
 import { ChatMessage, RunChatProps } from '../types'
 
 export function RunChat({
@@ -63,6 +62,16 @@ export function RunChat({
     }
   }
 
+  // Determinar o status da conexão
+  const getConnectionStatus = () => {
+    if (inputDisabled) {
+      return { text: 'Disconnected', color: 'text-red-400' }
+    }
+    return { text: 'Connected', color: 'text-green-400' }
+  }
+
+  const connectionStatus = getConnectionStatus()
+
   return (
     <div className='fixed bottom-6 right-12 z-[1000]'>
       {!open ? (
@@ -94,7 +103,12 @@ export function RunChat({
       ) : (
         <div className='flex h-[500px] w-[400px] flex-col overflow-hidden rounded-2xl bg-zinc-900 shadow-2xl'>
           <div className='flex items-center justify-between bg-red-500 px-4 py-3 text-white'>
-            <span className='font-semibold'>Run Chat</span>
+            <div className='flex items-center gap-2'>
+              <span className='font-semibold'>Run Chat</span>
+              <span className={`text-xs ${connectionStatus.color}`}>
+                {connectionStatus.text}
+              </span>
+            </div>
             <IconButton
               onClick={() => setIsChatOpen(false)}
               size='small'
@@ -118,53 +132,59 @@ export function RunChat({
               </div>
             ) : (
               <>
-                {messages.map((msg, index) => {
-                  const isOwnMessage =
-                    String(msg.id_discord) === String(idDiscord)
-                  const messageKey = msg.id || `${msg.id_discord}-${index}`
-                  return (
-                    <div
-                      key={messageKey}
-                      className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
-                    >
+                {messages.length === 0 ? (
+                  <div className='flex h-full items-center justify-center text-gray-400'>
+                    <p>No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  messages.map((msg, index) => {
+                    const isOwnMessage =
+                      String(msg.id_discord) === String(idDiscord)
+                    const messageKey = msg.id || `${msg.id_discord}-${index}`
+                    return (
                       <div
-                        className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
-                          isOwnMessage
-                            ? 'bg-red-500 text-white'
-                            : 'bg-zinc-700 text-gray-200'
-                        }`}
-                        title={
-                          isOwnMessage ? 'Click to select this message' : ''
-                        }
+                        key={messageKey}
+                        className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
                       >
-                        {!isOwnMessage && (
-                          <div className='text-xs font-bold text-red-400'>
-                            {msg.user_name || 'Usuário desconhecido'}
+                        <div
+                          className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
+                            isOwnMessage
+                              ? 'bg-red-500 text-white'
+                              : 'bg-zinc-700 text-gray-200'
+                          }`}
+                          title={
+                            isOwnMessage ? 'Click to select this message' : ''
+                          }
+                        >
+                          {!isOwnMessage && (
+                            <div className='text-xs font-bold text-red-400'>
+                              {msg.user_name || 'Usuário desconhecido'}
+                            </div>
+                          )}
+                          <p className='text-sm'>{msg.message}</p>
+                        </div>
+                        {/* Ícone de Tag Raid Leader */}
+                        {isOwnMessage && (
+                          <div
+                            className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
+                          >
+                            <span
+                              className='mr-1 cursor-pointer'
+                              title='Tag Raid Leader'
+                              onClick={() => handleTagRaidLeader(msg)}
+                            >
+                              <WarningCircle
+                                size={20}
+                                color='#fbbf24'
+                                weight='regular'
+                              />
+                            </span>
                           </div>
                         )}
-                        <p className='text-sm'>{msg.message}</p>
                       </div>
-                      {/* Ícone de Tag Raid Leader */}
-                      {isOwnMessage && (
-                        <div
-                          className={`flex items-center gap-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
-                        >
-                          <span
-                            className='mr-1 cursor-pointer'
-                            title='Tag Raid Leader'
-                            onClick={() => handleTagRaidLeader(msg)}
-                          >
-                            <WarningCircle
-                              size={20}
-                              color='#fbbf24'
-                              weight='regular'
-                            />
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
                 <div ref={messagesEndRef} />
               </>
             )}

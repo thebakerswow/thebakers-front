@@ -66,6 +66,7 @@ export function RunDetails() {
   const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [wsConnected, setWsConnected] = useState(false)
 
   const allowedRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
@@ -292,101 +293,150 @@ export function RunDetails() {
   // --- CHAT WEBSOCKET EFFECT ---
   useEffect(() => {
     if (!id) return
-    setChatLoading(true)
-    // Fetch previous messages
-    getChatMessages(id!)
-      .then((messages) => {
-        setChatMessages(messages || [])
-      })
-      .catch((error) => {
-        console.error('Falha ao buscar mensagens anteriores:', error)
-      })
-      .finally(() => setChatLoading(false))
 
-    // Fetch raid leaders
-    getRun(id!)
-      .then((data) => {
-        setChatRaidLeaders(data.raidLeaders || [])
-      })
-      .catch((error) => {
-        console.error('Error fetching raid leaders:', error)
-      })
+    let reconnectAttempts = 0
+    const maxReconnectAttempts = 5
+    const reconnectDelay = 2000 // 2 segundos
 
-    // WebSocket connection
-    const apiUrl = import.meta.env.VITE_API_BASE_URL as string
-    if (!apiUrl) {
-      console.error('VITE_API_BASE_URL not found!')
-      return
-    }
-    const token = localStorage.getItem('jwt')
-    if (!token) {
-      console.error('Token JWT not found. Is the user logged in?')
-      return
-    }
-    const wsUrl =
-      apiUrl.replace(/^http/, 'ws') +
-      `/v1/chat?id_run=${id}&authorization=${token}`
-    chatWs.current = new WebSocket(wsUrl)
+    const connectWebSocket = () => {
+      setChatLoading(true)
 
-    chatWs.current.onerror = (err) =>
-      console.error('WebSocket Chat Error:', err)
-    chatWs.current.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      switch (data.type) {
-        case 'new_message': {
-          let newMsg = {
-            ...data.payload,
-            user_name:
-              data.payload.user_name ||
-              data.payload.username ||
-              'Usuário desconhecido',
-          }
-          setChatMessages((prev) => [...prev, newMsg])
-          // Notificação e contador se não for do usuário logado
-          if (String(newMsg.id_discord) !== String(idDiscord)) {
-            if (!isChatOpen) {
-              setChatUnreadCount((prev) => prev + 1)
-            }
-            if (
-              'Notification' in window &&
-              Notification.permission === 'granted'
-            ) {
-              new Notification('Nova mensagem no Run Chat', {
-                body: `${newMsg.user_name}: ${newMsg.message}`,
-                icon: '/src/assets/logo.ico',
-              })
-            }
-          }
-          break
+      // Fetch previous messages
+      getChatMessages(id!)
+        .then((messages) => {
+          setChatMessages(messages || [])
+        })
+        .catch((error) => {
+          console.error('Falha ao buscar mensagens anteriores:', error)
+        })
+        .finally(() => setChatLoading(false))
+
+      // Fetch raid leaders
+      getRun(id!)
+        .then((data) => {
+          setChatRaidLeaders(data.raidLeaders || [])
+        })
+        .catch((error) => {
+          console.error('Error fetching raid leaders:', error)
+        })
+
+      // WebSocket connection
+      const apiUrl = import.meta.env.VITE_API_BASE_URL as string
+      if (!apiUrl) {
+        console.error('VITE_API_BASE_URL not found!')
+        return
+      }
+      const token = localStorage.getItem('jwt')
+      if (!token) {
+        console.error('Token JWT not found. Is the user logged in?')
+        return
+      }
+
+      const wsUrl =
+        apiUrl.replace(/^http/, 'ws') +
+        `/v1/chat?id_run=${id}&authorization=${token}`
+
+      setWsConnected(false) // Reset connection status when attempting to connect
+      chatWs.current = new WebSocket(wsUrl)
+
+      chatWs.current.onopen = () => {
+        setWsConnected(true)
+        reconnectAttempts = 0 // Reset reconnect attempts on successful connection
+      }
+
+      chatWs.current.onerror = (err) => {
+        console.error('WebSocket Chat Error:', err)
+      }
+
+      chatWs.current.onclose = (event) => {
+        setWsConnected(false)
+
+        // Attempt to reconnect if not a normal closure
+        if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++
+          setTimeout(connectWebSocket, reconnectDelay)
         }
-        case 'confirmation':
-          break
-        case 'error':
-          console.error('Erro do Servidor:', data.payload)
-          break
-        default:
-          console.warn('Tipo de mensagem desconhecido:', data.type)
+      }
+
+      chatWs.current.onmessage = (event) => {
+        const data = JSON.parse(event.data)
+        switch (data.type) {
+          case 'new_message': {
+            let newMsg = {
+              ...data.payload,
+              user_name:
+                data.payload.user_name ||
+                data.payload.username ||
+                'Usuário desconhecido',
+            }
+            setChatMessages((prev) => {
+              const updated = [...prev, newMsg]
+              return updated
+            })
+            // Notificação e contador se não for do usuário logado
+            if (String(newMsg.id_discord) !== String(idDiscord)) {
+              if (!isChatOpen) {
+                setChatUnreadCount((prev) => prev + 1)
+              }
+              if (
+                'Notification' in window &&
+                Notification.permission === 'granted'
+              ) {
+                new Notification('Nova mensagem no Run Chat', {
+                  body: `${newMsg.user_name}: ${newMsg.message}`,
+                  icon: '/src/assets/logo.ico',
+                })
+              }
+            }
+            break
+          }
+          case 'confirmation':
+            break
+          case 'error':
+            console.error('Erro do Servidor:', data.payload)
+            break
+          default:
+            console.warn('Tipo de mensagem desconhecido:', data.type)
+        }
       }
     }
+
+    // Initial connection
+    connectWebSocket()
+
     // Solicita permissão para notificações ao montar
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
+
     return () => {
-      chatWs.current?.close()
+      setWsConnected(false)
+      if (chatWs.current) {
+        chatWs.current.close(1000, 'Component unmounting')
+      }
     }
   }, [id, idDiscord])
 
   // Função para enviar mensagem
   const handleSendChatMessage = (msg: string) => {
-    if (msg.trim() && chatWs.current?.readyState === WebSocket.OPEN) {
-      chatWs.current.send(
-        JSON.stringify({
-          type: 'send_message',
-          payload: { message: msg },
-        })
-      )
+    if (!msg.trim()) {
+      return
     }
+
+    if (!chatWs.current) {
+      return
+    }
+
+    if (chatWs.current.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    const messageData = {
+      type: 'send_message',
+      payload: { message: msg },
+    }
+
+    chatWs.current.send(JSON.stringify(messageData))
   }
 
   // Função para decriptar idCommunication
@@ -681,7 +731,7 @@ export function RunDetails() {
           messages={chatMessages}
           loading={chatLoading}
           unreadCount={chatUnreadCount}
-          inputDisabled={chatWs.current?.readyState !== WebSocket.OPEN}
+          inputDisabled={!wsConnected}
           onSendMessage={handleSendChatMessage}
           onTagRaidLeader={handleTagRaidLeader}
           raidLeaders={chatRaidLeaders}
