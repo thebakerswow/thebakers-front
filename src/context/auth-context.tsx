@@ -8,9 +8,14 @@ import {
 } from 'react'
 
 interface JwtPayload {
-  roles: string[]
-  exp: number // Adiciona a expiração do token
-  user_id: string // Corrigido de idDiscord para user_id
+  roles?: string[]
+  role?: string
+  roles_array?: string[]
+  exp?: number
+  user_id?: string
+  userId?: string
+  id?: string
+  sub?: string
 }
 
 type AuthContextType = {
@@ -39,15 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded = jwtDecode<JwtPayload>(token)
 
-        // Verifica se o token expirou
-        const now = Date.now() / 1000 // Tempo atual em segundos
-        if (decoded.exp < now) {
-          logout()
-          return
-        }
+        const roles = decoded.roles || decoded.role || decoded.roles_array
+        const userId =
+          decoded.user_id || decoded.userId || decoded.id || decoded.sub
 
-        setUserRoles(decoded.roles.map((r) => r.toString()))
-        setIdDiscord(decoded.user_id) // Corrigido para ler user_id
+        const finalRoles = roles
+          ? Array.isArray(roles)
+            ? roles.map((r) => r.toString())
+            : [roles.toString()]
+          : ['user']
+        const finalUserId = userId ? userId.toString() : 'unknown'
+
+        setUserRoles(finalRoles)
+        setIdDiscord(finalUserId)
         setIsAuthenticated(true)
       } catch (error) {
         console.error('Erro ao decodificar token:', error)

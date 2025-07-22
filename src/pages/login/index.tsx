@@ -11,6 +11,7 @@ export function Login() {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [discordId, setDiscordId] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoadingDiscord, setIsLoadingDiscord] = useState(false)
   const { isAuthenticated, login } = useAuth()
   const navigate = useNavigate()
 
@@ -31,11 +32,27 @@ export function Login() {
   }
 
   const handleLoginDiscord = async () => {
+    setIsLoadingDiscord(true)
     try {
       const response = await loginDiscord()
-      if (response.info) window.location.href = response.info
+
+      if (response.info) {
+        // Verifica se a URL é válida
+        try {
+          new URL(response.info)
+          // Redirecionamento direto
+          window.location.assign(response.info)
+        } catch (urlError) {
+          console.error('Invalid URL:', response.info, urlError)
+          setIsLoadingDiscord(false)
+        }
+      } else {
+        console.error('No info found in response:', response)
+        setIsLoadingDiscord(false)
+      }
     } catch (error) {
       handleApiError(error)
+      setIsLoadingDiscord(false)
     }
   }
 
@@ -83,10 +100,13 @@ export function Login() {
         variant='contained'
         color='primary'
         startIcon={<DiscordLogo size={40} weight='fill' />}
-        onClick={handleLoginDiscord}
+        onClick={() => {
+          handleLoginDiscord()
+        }}
+        disabled={isLoadingDiscord}
         style={{ padding: '10px 20px', fontSize: '1rem', fontWeight: 'bold' }}
       >
-        Sign in with Discord
+        {isLoadingDiscord ? 'Loading...' : 'Sign in with Discord'}
       </Button>
       <span className='text-sm font-thin'>or</span>
       <div className='flex flex-col gap-2'>

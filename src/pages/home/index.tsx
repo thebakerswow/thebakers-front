@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { jwtDecode } from 'jwt-decode'
-import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 import { format, addDays } from 'date-fns'
 import { getRuns } from '../../services/api/runs'
 import { getServices, getServiceCategories } from '../../services/api/services'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/auth-context'
 import services from '../../assets/services.png'
 import schedule from '../../assets/schedule.png'
 import fireImg from '../../assets/fire.png'
@@ -14,17 +13,7 @@ import gally from '../../assets/gally.png'
 
 import { Service, ServiceCategory } from '../../types'
 
-type DiscordTokenPayload = {
-  username: string
-  discriminator: string
-  avatar: string
-  roles: string
-  id: string
-}
-
 export function HomePage() {
-  const [username, setUsername] = useState('')
-  const [userRoles, setUserRoles] = useState<string[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [weekRuns, setWeekRuns] = useState<Record<string, any[]>>({})
   const [servicesList, setServicesList] = useState<Service[]>([])
@@ -34,35 +23,35 @@ export function HomePage() {
   // Pegue as roles do .env
   const TEAM_FREELANCER = import.meta.env.VITE_TEAM_FREELANCER
   const navigate = useNavigate()
+  const { isAuthenticated, loading, userRoles, idDiscord } = useAuth()
+  // Novo: username extraído do token
+  const [username, setUsername] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Tenta extrair username do token salvo
+    const token = localStorage.getItem('jwt')
+    if (token) {
+      try {
+        const decoded: any = JSON.parse(atob(token.split('.')[1]))
+        if (decoded.username) setUsername(decoded.username)
+        else setUsername(null)
+      } catch {
+        setUsername(null)
+      }
+    }
+  }, [])
 
   // Função utilitária para verificar se o usuário tem apenas o cargo freelancer (usando env)
   const isOnlyFreelancer = () => {
     return userRoles.length === 1 && userRoles[0] === TEAM_FREELANCER
   }
 
+  // Verifica se o usuário está autenticado
   useEffect(() => {
-    const token = localStorage.getItem('jwt')
-    if (!token) return
-
-    try {
-      const decoded = jwtDecode<DiscordTokenPayload>(token)
-      setUsername(decoded.username)
-      // roles pode ser string separada por vírgula ou array, ajuste conforme necessário
-      const rolesArray = Array.isArray(decoded.roles)
-        ? decoded.roles
-        : decoded.roles?.split(',').map((r) => r.trim()) || []
-      setUserRoles(rolesArray)
-    } catch (err) {
-      const errorDetails = axios.isAxiosError(err)
-        ? {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status,
-          }
-        : { message: 'Erro inesperado', response: err }
-      setError(errorDetails)
+    if (!loading && !isAuthenticated) {
+      navigate('/login')
     }
-  }, [])
+  }, [isAuthenticated, loading, navigate])
 
   // Buscar runs da semana atual
   useEffect(() => {
@@ -125,6 +114,20 @@ export function HomePage() {
     fetchServicesAndCategories()
   }, [userRoles])
 
+  // Mostra loading enquanto verifica autenticação
+  if (loading) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <p className='text-lg text-white'>Loading...</p>
+      </div>
+    )
+  }
+
+  // Redireciona se não estiver autenticado
+  if (!isAuthenticated) {
+    return null // O useEffect já vai redirecionar
+  }
+
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
@@ -152,7 +155,11 @@ export function HomePage() {
             <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
               Welcome to TheBakers{' '}
               <span className='font-bold text-red-700'>Hub</span>
-              {username ? `, ${username}!` : ", [User's Name]!"}
+              {username
+                ? `, ${username}!`
+                : idDiscord
+                  ? `, ${idDiscord}!`
+                  : ", [User's Name]!"}
             </h1>
             <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
               At The Bakers, we strive to bring you the best experience in
