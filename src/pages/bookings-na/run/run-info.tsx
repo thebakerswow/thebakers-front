@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
-import undermineLogo from '../../../assets/undermine-logo.png'
+import omega from '../../../assets/omega.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
@@ -104,7 +104,7 @@ export function RunInfo({
     <div className='m-4 flex gap-2 rounded-md'>
       <img
         className='min-h-[220px] max-w-[400px] rounded-md'
-        src={undermineLogo}
+        src={omega}
         alt='Run Cover'
       />
       {run.sumPot?.some(

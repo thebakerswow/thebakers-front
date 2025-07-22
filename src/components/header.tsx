@@ -96,11 +96,11 @@ export function Header() {
               textAlign: 'center',
               flexGrow: 1,
               cursor: 'pointer',
+              marginRight: '200px',
             }}
             onClick={() => navigate('/')}
           >
-            TheBakers{' '}
-            <span className='font-extrabold text-purple-500'>Hub</span>
+            TheBakers <span className='font-extrabold text-red-500'>Hub</span>
           </Typography>
         </Toolbar>
       </AppBar>
