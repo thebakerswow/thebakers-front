@@ -146,11 +146,11 @@ export function HomePage() {
   // Renderize a homepage para todos os usuários
   return (
     <div
-      className='relative min-h-max w-full overflow-y-auto bg-cover bg-fixed bg-center bg-no-repeat'
+      className='relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
       style={{ backgroundImage: `url(${manaforge})` }}
     >
-      {/* Overlay escuro para escurecer a imagem de fundo */}
-      <div className='absolute inset-0 z-0 bg-black/50'></div>
+      {/* Overlay escuro para escurecer a imagem de fundo - cobrindo toda a tela */}
+      <div className='fixed inset-0 z-0 h-full w-full bg-black/50'></div>
       {isOnlyFreelancer() ? (
         // Layout simples para freelancers - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
