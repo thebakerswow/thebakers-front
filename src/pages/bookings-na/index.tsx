@@ -224,15 +224,9 @@ export function FullRaidsNa() {
   }
 
   return (
-    <div className='flex min-h-screen w-full flex-col items-center justify-center'>
+    <div className='flex min-h-screen w-full flex-col items-center overflow-auto pb-20'>
       <DateFilter onDaySelect={setSelectedDate} />
-      <div
-        className='mx-auto mt-6 flex w-[90%] flex-col p-4'
-        style={{
-          minHeight: '500px',
-          height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
-        }}
-      >
+      <div className='mx-auto mt-6 flex w-[90%] flex-col p-4'>
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
         {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
           <div className='mb-2 flex gap-2 self-start'>
@@ -347,14 +341,12 @@ export function FullRaidsNa() {
           </Dialog>
         )}
 
-        <div className='mb-4 flex flex-1 flex-col'>
-          <RunsDataGrid
-            data={rows}
-            isLoading={isLoading}
-            onDeleteSuccess={() => fetchRuns(true)}
-            onEditSuccess={handleEditRunSuccess}
-          />
-        </div>
+        <RunsDataGrid
+          data={rows}
+          isLoading={isLoading}
+          onDeleteSuccess={() => fetchRuns(true)}
+          onEditSuccess={handleEditRunSuccess}
+        />
 
         {isAddRunOpen && (
           <AddRun

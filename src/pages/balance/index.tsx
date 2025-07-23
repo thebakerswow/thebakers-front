@@ -17,8 +17,8 @@ export function BalancePage() {
     userRoles.length === 1 && userRoles[0] === freelancerRole
 
   return (
-    <div className='page-container relative mx-8 flex w-full flex-col'>
-      <div className='relative mx-4 mt-8 flex flex-wrap items-center justify-between'>
+    <div className='flex w-full flex-col overflow-auto px-10 pb-10'>
+      <div className='mx-4 mt-8 flex flex-wrap items-center justify-between'>
         <div className='flex items-center gap-2'>
           <BalanceTeamFilter
             selectedTeam={selectedTeam}

@@ -315,14 +315,7 @@ export function RunsDataGrid({
   }
 
   return (
-    <TableContainer
-      component={Paper}
-      className='relative mb-8 rounded-sm'
-      style={{
-        fontSize: '1rem',
-        overflow: 'hidden',
-      }}
-    >
+    <TableContainer component={Paper} className='rounded-sm'>
       <Table stickyHeader>
         <TableHead>
           <TableRow>

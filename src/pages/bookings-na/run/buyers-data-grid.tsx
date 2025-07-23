@@ -27,10 +27,10 @@ import { BuyerData } from '../../../types/buyer-interface'
 import {
   updateBuyerPaid,
   updateBuyerStatus,
+  deleteBuyer,
 } from '../../../services/api/buyers'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { DeleteBuyer } from '../../../components/delete-buyer'
 import { EditBuyer } from '../../../components/edit-buyer'
 import {
   Table,
@@ -44,8 +44,9 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Modal as MuiModal,
+  Box,
 } from '@mui/material'
-import { Modal as MuiModal, Box } from '@mui/material'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
 import CryptoJS from 'crypto-js'
@@ -209,7 +210,6 @@ export function BuyersDataGrid({
     buyerDolarPot: number
     buyerNote: string
   } | null>(null)
-  const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
   const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
   const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
   const [cooldownBuyerReady, setCooldownBuyerReady] = useState<{
@@ -232,7 +232,7 @@ export function BuyersDataGrid({
     {}
   ) // Cooldown for Paid Full button
 
-  const handleOpenModal = (buyer: BuyerData, type: 'edit' | 'delete') => {
+  const handleOpenModal = (buyer: BuyerData) => {
     setEditingBuyer({
       id: buyer.id,
       nameAndRealm: buyer.nameAndRealm,
@@ -240,7 +240,6 @@ export function BuyersDataGrid({
       buyerDolarPot: buyer.buyerDolarPot,
       buyerNote: buyer.buyerNote,
     })
-    setModalType(type)
     setOpenModal(true)
   }
 
@@ -693,6 +692,45 @@ export function BuyersDataGrid({
         setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: false }))
       }, 15000)
     })
+  }
+
+  const handleDeleteBuyer = async (buyer: BuyerData) => {
+    if (runIsLocked) return
+
+    const result = await Swal.fire({
+      title: 'Confirm Deletion',
+      text: `Are you sure you want to delete ${buyer.nameAndRealm}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await deleteBuyer(buyer.id)
+        Swal.fire({
+          title: 'Success!',
+          text: 'Buyer deleted successfully',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        onDeleteSuccess()
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          setError({
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          })
+        } else {
+          setError({ message: 'Unexpected error', response: error })
+        }
+      }
+    }
   }
 
   const renderStatusSelect = (buyer: BuyerData) => (
@@ -1258,9 +1296,7 @@ export function BuyersDataGrid({
                       )}
                       <Tooltip title='Edit'>
                         <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleOpenModal(buyer, 'edit')
-                          }
+                          onClick={() => !runIsLocked && handleOpenModal(buyer)}
                           disabled={runIsLocked}
                         >
                           <Pencil size={18} />
@@ -1269,7 +1305,7 @@ export function BuyersDataGrid({
                       <Tooltip title='Delete'>
                         <IconButton
                           onClick={() =>
-                            !runIsLocked && handleOpenModal(buyer, 'delete')
+                            !runIsLocked && handleDeleteBuyer(buyer)
                           }
                           disabled={runIsLocked}
                         >
@@ -1284,34 +1320,19 @@ export function BuyersDataGrid({
           )}
         </TableBody>
       </Table>
-      {openModal &&
-        editingBuyer &&
-        (modalType === 'edit' ? (
-          <EditBuyer
-            buyer={{
-              id: editingBuyer.id,
-              nameAndRealm: editingBuyer.nameAndRealm,
-              buyerPot: editingBuyer.buyerPot,
-              buyerDolarPot: editingBuyer.buyerDolarPot,
-              buyerNote: editingBuyer.buyerNote,
-            }}
-            onClose={() => setOpenModal(false)}
-            onEditSuccess={onBuyerNameNoteEdit}
-          />
-        ) : (
-          <MuiModal open={openModal} onClose={() => setOpenModal(false)}>
-            <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform shadow-lg'>
-              <DeleteBuyer
-                buyer={{
-                  id: editingBuyer.id,
-                  nameAndRealm: editingBuyer.nameAndRealm,
-                }}
-                onClose={() => setOpenModal(false)}
-                onDeleteSuccess={onDeleteSuccess}
-              />
-            </Box>
-          </MuiModal>
-        ))}
+      {openModal && editingBuyer && (
+        <EditBuyer
+          buyer={{
+            id: editingBuyer.id,
+            nameAndRealm: editingBuyer.nameAndRealm,
+            buyerPot: editingBuyer.buyerPot,
+            buyerDolarPot: editingBuyer.buyerDolarPot,
+            buyerNote: editingBuyer.buyerNote,
+          }}
+          onClose={() => setOpenModal(false)}
+          onEditSuccess={onBuyerNameNoteEdit}
+        />
+      )}
     </TableContainer>
   )
 }
