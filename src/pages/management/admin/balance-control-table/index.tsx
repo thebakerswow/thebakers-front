@@ -21,7 +21,9 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  IconButton,
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 
 import { BalanceControlTableProps } from '../../../../types'
 
@@ -479,7 +481,6 @@ export function BalanceControlTable({
           </Button>
           <Button
             variant='contained'
-            color='error'
             size='small'
             disabled={Object.values(calculatorValues).every(
               (value) => value.trim() === ''
@@ -488,6 +489,8 @@ export function BalanceControlTable({
             sx={{
               textTransform: 'uppercase',
               opacity: isBulkingSubmitting ? 0.5 : 1,
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
             }}
           >
             {isBulkingSubmitting ? 'Sending...' : 'Send All'}
@@ -650,7 +653,16 @@ export function BalanceControlTable({
       </div>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Update Nick</DialogTitle>
+        <DialogTitle className='relative'>
+          Update Nick
+          <IconButton
+            aria-label='close'
+            onClick={handleCloseDialog}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -674,10 +686,17 @@ export function BalanceControlTable({
         open={isFreelancerDialogOpen}
         onClose={handleCloseFreelancerDialog}
       >
-        <DialogTitle className='text-center'>
+        <DialogTitle className='relative text-center'>
           {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER
             ? 'Freelancer Payout'
             : 'Advertiser Payout'}
+          <IconButton
+            aria-label='close'
+            onClick={handleCloseFreelancerDialog}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
         <DialogContent className='flex flex-col items-center gap-4'>
           {sortedUsers.filter((user) => Number(user.balance_total) > 0).length >

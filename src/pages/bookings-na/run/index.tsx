@@ -610,7 +610,7 @@ export function RunDetails() {
 
   return (
     <div
-      className={`flex min-h-screen w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
+      className={`flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >
@@ -619,7 +619,7 @@ export function RunDetails() {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className='mx-2 p-4'>
+        <div className='p-4'>
           {runData ? (
             <RunInfo
               run={runData}
@@ -637,15 +637,8 @@ export function RunDetails() {
                 <LoadingSpinner />
               </div>
             ) : (
-              <div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    marginBottom: 12,
-                  }}
-                >
+              <>
+                <div className='mb-4 flex items-center gap-3'>
                   {runData &&
                     (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
                       hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
@@ -654,8 +647,8 @@ export function RunDetails() {
                         variant='contained'
                         startIcon={<UserPlus size={18} />}
                         sx={{
-                          backgroundColor: 'rgb(239, 68, 68)',
-                          '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                          backgroundColor: 'rgb(147, 51, 234)',
+                          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                           minWidth: 140,
                           fontWeight: 500,
                           boxShadow: 'none',
@@ -668,8 +661,8 @@ export function RunDetails() {
                     onClick={toggleDetailsVisibility}
                     variant='contained'
                     sx={{
-                      backgroundColor: 'rgb(239, 68, 68)',
-                      '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                      backgroundColor: 'rgb(147, 51, 234)',
+                      '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                       minWidth: 160,
                       fontWeight: 500,
                       boxShadow: 'none',
@@ -697,7 +690,7 @@ export function RunDetails() {
                   runIdTeam={runData?.idTeam}
                   raidLeaders={runData?.raidLeaders}
                 />
-              </div>
+              </>
             )}
           </div>
           {runData && hasAttendanceAccess && showDetails && (

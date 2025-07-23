@@ -253,7 +253,7 @@ export function BalanceDataGrid({
   return (
     <div className='px-4 py-8'>
       {isLoadingBalance ? (
-        <div className='flex h-screen items-center justify-center'>
+        <div className='flex min-h-[400px] items-center justify-center'>
           <LoadingSpinner />
         </div>
       ) : (

@@ -6,10 +6,10 @@ import { getRuns } from '../../services/api/runs'
 import { getServices, getServiceCategories } from '../../services/api/services'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
-import services from '../../assets/services.png'
-import schedule from '../../assets/schedule.png'
+import services from '../../assets/services_new.png'
+import schedule from '../../assets/schedule_new.png'
 import fireImg from '../../assets/fire.png'
-import gally from '../../assets/gally.png'
+import manaforge from '../../assets/manaforge.png'
 
 import { Service, ServiceCategory } from '../../types'
 
@@ -146,18 +146,18 @@ export function HomePage() {
   // Renderize a homepage para todos os usuários
   return (
     <div
-      className='min-h-max w-full overflow-y-auto bg-cover bg-fixed bg-center bg-no-repeat'
-      style={{ backgroundImage: `url(${gally})` }}
+      className='relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
+      style={{ backgroundImage: `url(${manaforge})` }}
     >
       {isOnlyFreelancer() ? (
         // Layout simples para freelancers - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
           <div className='relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center'>
-            <div className='absolute inset-0 z-0 rounded-2xl bg-black/60 backdrop-blur-md' />
-            <div className='relative z-10 rounded-2xl px-8 py-6'>
+            <div className='absolute inset-0 z-10 rounded-2xl bg-black/60 backdrop-blur-md' />
+            <div className='relative z-20 rounded-2xl px-8 py-6'>
               <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
                 Welcome to TheBakers{' '}
-                <span className='font-bold text-red-700'>Hub</span>
+                <span className='font-bold text-purple-500'>Hub</span>
                 {username
                   ? `, ${username}!`
                   : idDiscord
@@ -172,14 +172,14 @@ export function HomePage() {
           {/* Sessão Hero: Mensagem + Cards + Seta */}
           <section
             id='hero'
-            className='mb-10 flex min-h-screen w-full flex-col items-center justify-center px-4'
+            className='flex min-h-screen w-full flex-col items-center justify-center px-4'
           >
-            <div className='relative mx-auto mt-8 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
-              <div className='absolute inset-0 z-0 rounded-2xl bg-black/60 backdrop-blur-md' />
-              <div className='relative z-10 rounded-2xl px-8 py-6'>
+            <div className='relative mx-auto mt-12 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
+              <div className='absolute inset-0 z-10 rounded-2xl bg-black/60 backdrop-blur-md' />
+              <div className='relative z-20 rounded-2xl px-8 py-6'>
                 <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
                   Welcome to TheBakers{' '}
-                  <span className='font-bold text-red-700'>Hub</span>
+                  <span className='font-extrabold text-purple-500'>Hub</span>
                   {username
                     ? `, ${username}!`
                     : idDiscord
@@ -195,17 +195,14 @@ export function HomePage() {
             </div>
             {/* Seção de serviços - apenas para usuários que não são freelancer */}
             {!isOnlyFreelancer() && (
-              <div className='mx-auto mt-8 max-w-[80%]'>
+              <div className='relative z-10 mx-auto max-w-[80%]'>
                 <div className='flex w-full flex-col items-center'>
                   <img
                     src={services}
                     alt='Services'
-                    className='w-80 drop-shadow-lg'
+                    className='w-96 drop-shadow-lg'
                     draggable={false}
                   />
-                  <h2 className='relative mb-10 text-center text-3xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl'>
-                    <span className='absolute left-1/2 top-full block h-1 w-24 -translate-x-1/2 rounded bg-gradient-to-r from-red-600 via-red-400 to-yellow-400 opacity-80'></span>
-                  </h2>
                 </div>
                 {/* Seção Hot Items e Categorias */}
                 {loadingServices ? (
@@ -221,7 +218,7 @@ export function HomePage() {
                       servicesList.some((s) => s.hotItem) && (
                         <div className='mb-8 flex flex-col gap-4'>
                           <div className='flex items-center gap-2'>
-                            <span className='mb-2 mt-4 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                            <span className='mb-2 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
                               🔥 HOT SERVICES
                             </span>
                           </div>
@@ -232,7 +229,7 @@ export function HomePage() {
                                 .map((service) => (
                                   <div
                                     key={service.id}
-                                    className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-yellow-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
+                                    className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-purple-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
                                     style={{
                                       backgroundImage: `url(${fireImg})`,
                                       backgroundRepeat: 'no-repeat',
@@ -248,7 +245,7 @@ export function HomePage() {
                                         {service.description}
                                       </div>
                                     </div>
-                                    <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
+                                    <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
                                       {service.price.toLocaleString('en-US')}g
                                     </div>
                                   </div>
@@ -279,7 +276,7 @@ export function HomePage() {
                               key={category.id}
                               className='flex flex-col gap-4'
                             >
-                              <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-yellow-300 shadow'>
+                              <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
                                 {category.name}
                               </div>
                               <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5'>
@@ -296,7 +293,7 @@ export function HomePage() {
                                         {service.description}
                                       </div>
                                     </div>
-                                    <div className='relative z-10 mt-auto text-lg font-bold text-red-500'>
+                                    <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
                                       {service.price.toLocaleString('en-US')}g
                                     </div>
                                   </div>
@@ -322,16 +319,16 @@ export function HomePage() {
           {!isOnlyFreelancer() && (
             <section
               id='semana-tabelas'
-              className='mt-20 flex min-h-screen w-full flex-col items-center'
+              className='relative z-10 flex min-h-screen w-full flex-col items-center'
             >
               <div className='flex w-full flex-col items-center'>
                 <img
                   src={schedule}
                   alt='Schedule'
-                  className='w-80 drop-shadow-lg'
+                  className='w-96 drop-shadow-lg'
                 />
               </div>
-              <div className='relative w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
+              <div className='relative z-10 mb-10 w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
                 <div className='flex w-full flex-wrap justify-center gap-4'>
                   {(() => {
                     // Dias em inglês
@@ -397,13 +394,13 @@ export function HomePage() {
                       return (
                         <div
                           key={daysEn[weekDayIdx] + monthNumber + dayNumber}
-                          className='flex h-[900px] min-w-[300px] max-w-md flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                          className='flex h-[900px] min-w-[200px] max-w-md flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                         >
                           <div className='mb-4 text-2xl font-semibold text-white'>
                             <span className='inline-flex items-center gap-2'>
                               {daysEn[weekDayIdx]} {monthNumber}/{dayNumber}
                               {colIdx === 0 && (
-                                <span className='rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-black'>
+                                <span className='rounded bg-purple-400 px-2 py-1 text-xs font-bold text-black'>
                                   Today
                                 </span>
                               )}

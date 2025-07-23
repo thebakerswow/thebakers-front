@@ -18,7 +18,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 
 export function FullRaidsNa() {
@@ -222,23 +224,17 @@ export function FullRaidsNa() {
   }
 
   return (
-    <div className='flex min-h-screen w-full flex-col items-center justify-center'>
+    <div className='flex min-h-screen w-full flex-col items-center overflow-auto pb-20'>
       <DateFilter onDaySelect={setSelectedDate} />
-      <div
-        className='mx-auto mt-6 flex w-[90%] flex-col p-4'
-        style={{
-          minHeight: '500px',
-          height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
-        }}
-      >
+      <div className='mx-auto mt-6 flex w-[90%] flex-col p-4'>
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
         {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
           <div className='mb-2 flex gap-2 self-start'>
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -252,9 +248,9 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgb(147, 51, 234)',
                 '&:hover': {
-                  backgroundColor: 'rgb(248, 113, 113)',
+                  backgroundColor: 'rgb(168, 85, 247)',
                 },
                 padding: '10px 20px',
                 boxShadow: 3,
@@ -269,8 +265,8 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -291,7 +287,16 @@ export function FullRaidsNa() {
             fullWidth
             maxWidth='md'
           >
-            <DialogTitle>Add Multiple Runs</DialogTitle>
+            <DialogTitle className='relative'>
+              Add Multiple Runs
+              <IconButton
+                aria-label='close'
+                onClick={handleCloseBulkAddDialog}
+                sx={{ position: 'absolute', right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
             <DialogContent>
               <TextareaAutosize
                 minRows={10}
@@ -321,11 +326,11 @@ export function FullRaidsNa() {
               <Button
                 variant='outlined'
                 sx={{
-                  borderColor: 'rgb(239, 68, 68)',
-                  color: 'rgb(239, 68, 68)',
+                  borderColor: 'rgb(147, 51, 234)',
+                  color: 'rgb(147, 51, 234)',
                   '&:hover': {
-                    borderColor: 'rgb(248, 113, 113)',
-                    color: 'rgb(248, 113, 113)',
+                    borderColor: 'rgb(168, 85, 247)',
+                    color: 'rgb(168, 85, 247)',
                   },
                 }}
                 onClick={handleCloseBulkAddDialog}
@@ -336,14 +341,12 @@ export function FullRaidsNa() {
           </Dialog>
         )}
 
-        <div className='mb-4 flex flex-1 flex-col'>
-          <RunsDataGrid
-            data={rows}
-            isLoading={isLoading}
-            onDeleteSuccess={() => fetchRuns(true)}
-            onEditSuccess={handleEditRunSuccess}
-          />
-        </div>
+        <RunsDataGrid
+          data={rows}
+          isLoading={isLoading}
+          onDeleteSuccess={() => fetchRuns(true)}
+          onEditSuccess={handleEditRunSuccess}
+        />
 
         {isAddRunOpen && (
           <AddRun

@@ -144,8 +144,8 @@ export function VerifyTable() {
         <Button
           variant='contained'
           sx={{
-            backgroundColor: 'rgb(239, 68, 68)',
-            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            backgroundColor: 'rgb(147, 51, 234)',
+            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
           }}
           onClick={() => setIsDialogOpen(true)} // Abre o diálogo do Player Extract
         >
@@ -154,8 +154,8 @@ export function VerifyTable() {
         <Button
           variant='contained'
           sx={{
-            backgroundColor: 'rgb(239, 68, 68)',
-            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            backgroundColor: 'rgb(147, 51, 234)',
+            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
           }}
           onClick={() => setIsGbankDialogOpen(true)} // Abre o diálogo do G-Bank Extract
         >

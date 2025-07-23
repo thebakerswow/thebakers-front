@@ -82,7 +82,10 @@ export function Header() {
     return (
       <AppBar
         position='static'
-        sx={{ background: 'linear-gradient(to right, black, #333)' }}
+        sx={{
+          background: 'linear-gradient(to right, black, #333)',
+          zIndex: 1000,
+        }}
       >
         <Toolbar>
           {/* EST Clock na esquerda */}
@@ -95,10 +98,12 @@ export function Header() {
               textAlign: 'center',
               flexGrow: 1,
               cursor: 'pointer',
+              marginRight: '200px',
             }}
             onClick={() => navigate('/')}
           >
-            TheBakers <span style={{ color: 'red' }}>Hub</span>
+            TheBakers{' '}
+            <span className='font-extrabold text-purple-500'>Hub</span>
           </Typography>
         </Toolbar>
       </AppBar>
@@ -108,7 +113,10 @@ export function Header() {
   return (
     <AppBar
       position='static'
-      sx={{ background: 'linear-gradient(to right, black, #333)' }}
+      sx={{
+        background: 'linear-gradient(to right, black, #333)',
+        zIndex: 1000,
+      }}
     >
       <Toolbar sx={{ justifyContent: 'space-around' }}>
         {/* EST Clock na esquerda */}
@@ -119,7 +127,7 @@ export function Header() {
           sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
           onClick={() => navigate('/home')}
         >
-          TheBakers <span style={{ color: 'red' }}>Hub</span>
+          TheBakers <span className='font-extrabold text-purple-500'>Hub</span>
         </Typography>
 
         <Button
@@ -143,11 +151,25 @@ export function Header() {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
-              slotProps={{
-                paper: {
-                  sx: { width: '150px' }, // Adjust the width as needed
+              sx={{
+                zIndex: 99999,
+                '& .MuiPaper-root': {
+                  zIndex: 99999,
+                },
+                '& .MuiBackdrop-root': {
+                  zIndex: 99998,
                 },
               }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    width: '150px',
+                    zIndex: 99999,
+                    position: 'relative',
+                  },
+                },
+              }}
+              style={{ zIndex: 99999 }}
             >
               <MenuItem
                 onClick={() => {

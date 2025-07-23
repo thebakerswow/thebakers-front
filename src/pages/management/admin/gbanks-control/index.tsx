@@ -29,6 +29,8 @@ import {
   Paper,
   IconButton,
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
+import Swal from 'sweetalert2'
 
 import { GBank } from '../../../../types'
 
@@ -53,7 +55,6 @@ export function GBanksTable() {
   const [newGBankName, setNewGBankName] = useState('')
   const [newGBankColor, setNewGBankColor] = useState('')
   const [editGBank, setEditGBank] = useState<GBank | null>(null)
-  const [deleteGBank, setDeleteGBank] = useState<GBank | null>(null)
   const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -122,6 +123,31 @@ export function GBanksTable() {
     }
   }
 
+  // Handle G-Bank deletion with SweetAlert confirmation
+  const handleDeleteGBank = async (gbank: GBank) => {
+    const result = await Swal.fire({
+      title: 'Confirm Deletion',
+      text: `Are you sure you want to delete G-Bank "${gbank.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#9333EA',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+      heightAuto: false,
+      scrollbarPadding: false,
+    })
+
+    if (result.isConfirmed) {
+      await handleAction(
+        () => deleteGBankService(gbank.id),
+        'Error deleting G-Bank'
+      )
+    }
+  }
+
   useEffect(() => {
     // Busca os GBanks ao montar o componente e atualiza periodicamente
     fetchGBanks()
@@ -148,8 +174,8 @@ export function GBanksTable() {
           color='error'
           onClick={() => setAddGBankModalOpen(true)}
           sx={{
-            backgroundColor: 'rgb(239, 68, 68)',
-            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            backgroundColor: 'rgb(147, 51, 234)',
+            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
           }}
         >
           Add G-Bank
@@ -162,7 +188,16 @@ export function GBanksTable() {
           open={addGBankModalOpen}
           onClose={() => setAddGBankModalOpen(false)}
         >
-          <DialogTitle className='text-center'>Add New G-Bank</DialogTitle>
+          <DialogTitle className='relative text-center'>
+            Add New G-Bank
+            <IconButton
+              aria-label='close'
+              onClick={() => setAddGBankModalOpen(false)}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
@@ -194,7 +229,6 @@ export function GBanksTable() {
           <DialogActions sx={{ justifyContent: 'center' }}>
             <Button
               variant='contained'
-              color='primary'
               onClick={() =>
                 handleAction(
                   () =>
@@ -211,17 +245,17 @@ export function GBanksTable() {
               }
               disabled={isSubmitting}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              {isSubmitting ? 'Adicionando...' : 'Salvar'}
+              {isSubmitting ? 'Adding...' : 'Save'}
             </Button>
             <Button
               variant='outlined'
               onClick={() => setAddGBankModalOpen(false)}
             >
-              Cancelar
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -316,7 +350,7 @@ export function GBanksTable() {
                             variant='text'
                             color='error'
                             onClick={() => {
-                              setDeleteGBank(gbank)
+                              handleDeleteGBank(gbank)
                               setOpenRowIndex(null)
                             }}
                           >
@@ -376,7 +410,16 @@ export function GBanksTable() {
 
       {editGBank && (
         <Dialog open={!!editGBank} onClose={() => setEditGBank(null)}>
-          <DialogTitle className='text-center'>Editar G-Bank</DialogTitle>
+          <DialogTitle className='relative text-center'>
+            Editar G-Bank
+            <IconButton
+              aria-label='close'
+              onClick={() => setEditGBank(null)}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
@@ -426,42 +469,11 @@ export function GBanksTable() {
               }
               disabled={isSubmitting}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-
-      {deleteGBank && (
-        <Dialog open={!!deleteGBank} onClose={() => setDeleteGBank(null)}>
-          <DialogTitle className='text-center'>Confirm Deletion</DialogTitle>
-          <DialogContent>
-            <p>Are you sure you want to delete G-Bank "{deleteGBank.name}"?</p>
-          </DialogContent>
-          <DialogActions sx={{ justifyContent: 'center' }}>
-            <Button
-              variant='contained'
-              color='error'
-              onClick={() =>
-                handleAction(
-                  () => deleteGBankService(deleteGBank!.id),
-                  'Erro ao deletar G-Bank'
-                ).then(() => setDeleteGBank(null))
-              }
-              disabled={isSubmitting}
-              sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
-              }}
-            >
-              {isSubmitting ? 'Excluindo...' : 'Excluir'}
-            </Button>
-            <Button variant='outlined' onClick={() => setDeleteGBank(null)}>
-              Cancelar
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </DialogActions>
         </Dialog>

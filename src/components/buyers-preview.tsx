@@ -9,7 +9,9 @@ import { RunData } from '../types/runs-interface'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import { AddBuyer } from './add-buyer'
+import CloseIcon from '@mui/icons-material/Close'
 
 import { BuyersPreviewProps } from '../types'
 
@@ -74,6 +76,13 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
   return (
     <Dialog open={true} onClose={onClose} fullWidth maxWidth='lg'>
       <DialogContent>
+        <IconButton
+          aria-label='close'
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
         <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden'>
           {/* Botão Add Buyer sempre visível */}
           <div
@@ -88,8 +97,8 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
               onClick={() => setIsAddBuyerOpen(true)}
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 minWidth: 140,
                 fontWeight: 500,
                 boxShadow: 'none',
