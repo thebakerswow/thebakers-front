@@ -149,8 +149,6 @@ export function HomePage() {
       className='relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
       style={{ backgroundImage: `url(${manaforge})` }}
     >
-      {/* Overlay escuro para escurecer a imagem de fundo */}
-      <div className='fixed inset-0 z-0 w-full bg-black/50'></div>
       {isOnlyFreelancer() ? (
         // Layout simples para freelancers - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
