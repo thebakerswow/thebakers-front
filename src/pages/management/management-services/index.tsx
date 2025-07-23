@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  Box,
   Button,
   Dialog,
   DialogActions,
@@ -332,352 +331,353 @@ export default function PriceTableManagement() {
   }
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        m: 4,
-        minHeight: '100vh',
-        color: '#fff',
-        mb: 6, // margem inferior extra
-        pb: 6,
-      }}
-    >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant='h4' fontWeight='bold'>
-          Price Table Management
-        </Typography>
-        <Box>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={() => setOpenCategories(true)}
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              mr: 2,
-            }}
-          >
-            Manage Categories
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={() => handleOpen()}
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-            }}
-          >
-            Add Service
-          </Button>
-        </Box>
-      </Box>
-      <TableContainer
-        component={Paper}
-        sx={{
-          bgcolor: '#111', // background escuro agora acompanha a tabela
-          color: '#fff',
-          p: 4, // padding interno para a tabela
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                onClick={() => handleSort('name')}
-              >
-                Service
-                {orderBy === 'name' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
-              </TableCell>
-              <TableCell sx={{ color: '#b0b0b0' }}>Description</TableCell>
-              <TableCell
-                sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                onClick={() => handleSort('price')}
-              >
-                Price
-                {orderBy === 'price' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
-              </TableCell>
-              <TableCell
-                sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                onClick={() => handleSort('category')}
-              >
-                Category
-                {orderBy === 'category' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
-              </TableCell>
-              <TableCell sx={{ color: '#b0b0b0' }}>Hot</TableCell>
-              <TableCell sx={{ color: '#b0b0b0' }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Array.isArray(services) &&
-              getSortedServices().map((service) => (
-                <TableRow key={service.id} hover>
-                  <TableCell sx={{ color: '#b0b0b0' }}>
-                    {service.name}
-                  </TableCell>
-                  <TableCell sx={{ color: '#b0b0b0' }}>
-                    {service.description}
-                  </TableCell>
-                  <TableCell sx={{ color: '#b0b0b0' }}>
-                    {(() => {
-                      // Exibe separador de milhar como vírgula, sem casas decimais
-                      return service.price
-                        .toLocaleString('en-US', { maximumFractionDigits: 0 })
-                        .replace(/,/g, ',')
-                    })()}
-                  </TableCell>
-                  <TableCell sx={{ color: '#b0b0b0' }}>
-                    {service.category?.name ||
-                      categories.find((c) => c.id === service.serviceCategoryId)
-                        ?.name ||
-                      '-'}
-                  </TableCell>
-                  <TableCell sx={{ color: '#b0b0b0', textAlign: 'center' }}>
-                    {service.hotItem ? '🔥' : ''}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      color='error'
-                      onClick={() => handleOpen(service)}
-                      sx={{
-                        color: 'rgb(147, 51, 234)',
-                        '&:hover': { color: 'rgb(168, 85, 247)' },
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color='error'
-                      onClick={() => handleDelete(service.id)}
-                      sx={{
-                        color: 'rgb(147, 51, 234)',
-                        '&:hover': { color: 'rgb(168, 85, 247)' },
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Dialog for Add/Edit */}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle className='relative'>
-          {editing ? 'Edit Service' : 'Add Service'}
-          <IconButton
-            aria-label='close'
-            onClick={handleClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ minWidth: 350 }}>
-          <TextField
-            margin='dense'
-            label='Service Name'
-            name='name'
-            fullWidth
-            value={form.name}
-            onChange={handleChange}
-          />
-          <TextField
-            margin='dense'
-            label='Description'
-            name='description'
-            fullWidth
-            value={form.description}
-            onChange={handleChange}
-          />
-          <TextField
-            margin='dense'
-            label='Price'
-            name='price'
-            type='text'
-            fullWidth
-            value={form.price}
-            onChange={handleChange}
-            inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
-          />
-          <Box>
-            <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
-              Category
-            </Typography>
-            <Select
-              name='serviceCategoryId'
-              value={form.serviceCategoryId}
-              onChange={(event) => {
-                const { name, value } = event.target as {
-                  name: string
-                  value: string
-                }
-                setForm({ ...form, [name]: value })
-              }}
-              style={{
-                width: '100%',
-              }}
-            >
-              <MenuItem value='' disabled>
-                Select a category
-              </MenuItem>
-              {categories.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-          <Box sx={{ mt: 2 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type='checkbox'
-                name='hotItem'
-                checked={form.hotItem}
-                onChange={handleChange}
-                style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
-              />
-              <span>Hot Item</span>
-            </label>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color='inherit'>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            color='error'
-            variant='contained'
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-            }}
-          >
-            {editing ? 'Save' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog for Categories CRUD */}
-      <Dialog
-        open={openCategories}
-        onClose={() => setOpenCategories(false)}
-        maxWidth='md'
-        fullWidth
-      >
-        <DialogContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant='h6' fontWeight='bold'>
-              Category Management
-            </Typography>
+    <div className='w-full overflow-auto overflow-x-hidden pr-20'>
+      <div className='m-8 min-h-screen w-full pb-12 text-white'>
+        <div className='mb-6 flex justify-between'>
+          <Typography variant='h4' fontWeight='bold'>
+            Price Table Management
+          </Typography>
+          <div>
             <Button
               variant='contained'
               color='error'
-              onClick={() => handleOpenCategoryDialog()}
+              onClick={() => setOpenCategories(true)}
+              sx={{
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                mr: 2,
+              }}
+            >
+              Manage Categories
+            </Button>
+            <Button
+              variant='contained'
+              color='error'
+              onClick={() => handleOpen()}
               sx={{
                 backgroundColor: 'rgb(147, 51, 234)',
                 '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              Add Category
+              Add Service
             </Button>
-          </Box>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Array.isArray(categories) &&
-                  categories.map((category) => (
-                    <TableRow key={category.id} hover>
-                      <TableCell>{category.name}</TableCell>
-                      <TableCell>
-                        <IconButton
-                          color='error'
-                          onClick={() => handleOpenCategoryDialog(category)}
-                          sx={{
-                            color: 'rgb(147, 51, 234)',
-                            '&:hover': { color: 'rgb(168, 85, 247)' },
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color='error'
-                          onClick={() => handleDeleteCategory(category.id)}
-                          sx={{
-                            color: 'rgb(147, 51, 234)',
-                            '&:hover': { color: 'rgb(168, 85, 247)' },
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {/* Dialog interno para Add/Edit Category */}
-          <Dialog open={openCategoryDialog} onClose={handleCloseCategoryDialog}>
-            <DialogTitle className='relative'>
-              {editingCategory ? 'Edit Category' : 'Add Category'}
-              <IconButton
-                aria-label='close'
-                onClick={handleCloseCategoryDialog}
-                sx={{ position: 'absolute', right: 8, top: 8 }}
+          </div>
+        </div>
+        <TableContainer
+          component={Paper}
+          sx={{
+            bgcolor: '#111', // background escuro agora acompanha a tabela
+            color: '#fff',
+            p: 4, // padding interno para a tabela
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
+                  onClick={() => handleSort('name')}
+                >
+                  Service
+                  {orderBy === 'name' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
+                </TableCell>
+                <TableCell sx={{ color: '#b0b0b0' }}>Description</TableCell>
+                <TableCell
+                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
+                  onClick={() => handleSort('price')}
+                >
+                  Price
+                  {orderBy === 'price' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
+                </TableCell>
+                <TableCell
+                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
+                  onClick={() => handleSort('category')}
+                >
+                  Category
+                  {orderBy === 'category'
+                    ? order === 'asc'
+                      ? ' ▲'
+                      : ' ▼'
+                    : ''}
+                </TableCell>
+                <TableCell sx={{ color: '#b0b0b0' }}>Hot</TableCell>
+                <TableCell sx={{ color: '#b0b0b0' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Array.isArray(services) &&
+                getSortedServices().map((service) => (
+                  <TableRow key={service.id} hover>
+                    <TableCell sx={{ color: '#b0b0b0' }}>
+                      {service.name}
+                    </TableCell>
+                    <TableCell sx={{ color: '#b0b0b0' }}>
+                      {service.description}
+                    </TableCell>
+                    <TableCell sx={{ color: '#b0b0b0' }}>
+                      {(() => {
+                        // Exibe separador de milhar como vírgula, sem casas decimais
+                        return service.price
+                          .toLocaleString('en-US', { maximumFractionDigits: 0 })
+                          .replace(/,/g, ',')
+                      })()}
+                    </TableCell>
+                    <TableCell sx={{ color: '#b0b0b0' }}>
+                      {service.category?.name ||
+                        categories.find(
+                          (c) => c.id === service.serviceCategoryId
+                        )?.name ||
+                        '-'}
+                    </TableCell>
+                    <TableCell sx={{ color: '#b0b0b0', textAlign: 'center' }}>
+                      {service.hotItem ? '🔥' : ''}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        color='error'
+                        onClick={() => handleOpen(service)}
+                        sx={{
+                          color: 'rgb(147, 51, 234)',
+                          '&:hover': { color: 'rgb(168, 85, 247)' },
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color='error'
+                        onClick={() => handleDelete(service.id)}
+                        sx={{
+                          color: 'rgb(147, 51, 234)',
+                          '&:hover': { color: 'rgb(168, 85, 247)' },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Dialog for Add/Edit */}
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle className='relative'>
+            {editing ? 'Edit Service' : 'Add Service'}
+            <IconButton
+              aria-label='close'
+              onClick={handleClose}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ minWidth: 350 }}>
+            <TextField
+              margin='dense'
+              label='Service Name'
+              name='name'
+              fullWidth
+              value={form.name}
+              onChange={handleChange}
+            />
+            <TextField
+              margin='dense'
+              label='Description'
+              name='description'
+              fullWidth
+              value={form.description}
+              onChange={handleChange}
+            />
+            <TextField
+              margin='dense'
+              label='Price'
+              name='price'
+              type='text'
+              fullWidth
+              value={form.price}
+              onChange={handleChange}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
+            />
+            <div>
+              <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
+                Category
+              </Typography>
+              <Select
+                name='serviceCategoryId'
+                value={form.serviceCategoryId}
+                onChange={(event) => {
+                  const { name, value } = event.target as {
+                    name: string
+                    value: string
+                  }
+                  setForm({ ...form, [name]: value })
+                }}
+                style={{
+                  width: '100%',
+                }}
               >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent sx={{ minWidth: 350 }}>
-              <TextField
-                margin='dense'
-                label='Category Name'
-                name='name'
-                fullWidth
-                value={categoryForm.name}
-                onChange={handleChangeCategory}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseCategoryDialog} color='inherit'>
-                Cancel
-              </Button>
+                <MenuItem value='' disabled>
+                  Select a category
+                </MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </div>
+            <div style={{ marginTop: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type='checkbox'
+                  name='hotItem'
+                  checked={form.hotItem}
+                  onChange={handleChange}
+                  style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
+                />
+                <span>Hot Item</span>
+              </label>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color='inherit'>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              color='error'
+              variant='contained'
+              sx={{
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              }}
+            >
+              {editing ? 'Save' : 'Add'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog for Categories CRUD */}
+        <Dialog
+          open={openCategories}
+          onClose={() => setOpenCategories(false)}
+          maxWidth='md'
+          fullWidth
+        >
+          <DialogContent>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+              }}
+            >
+              <Typography variant='h6' fontWeight='bold'>
+                Category Management
+              </Typography>
               <Button
-                onClick={handleSaveCategory}
-                color='error'
                 variant='contained'
+                color='error'
+                onClick={() => handleOpenCategoryDialog()}
                 sx={{
                   backgroundColor: 'rgb(147, 51, 234)',
                   '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 }}
               >
-                {editingCategory ? 'Save' : 'Add'}
+                Add Category
               </Button>
-            </DialogActions>
-          </Dialog>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCategories(false)} color='inherit'>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            </div>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Category</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Array.isArray(categories) &&
+                    categories.map((category) => (
+                      <TableRow key={category.id} hover>
+                        <TableCell>{category.name}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            color='error'
+                            onClick={() => handleOpenCategoryDialog(category)}
+                            sx={{
+                              color: 'rgb(147, 51, 234)',
+                              '&:hover': { color: 'rgb(168, 85, 247)' },
+                            }}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            color='error'
+                            onClick={() => handleDeleteCategory(category.id)}
+                            sx={{
+                              color: 'rgb(147, 51, 234)',
+                              '&:hover': { color: 'rgb(168, 85, 247)' },
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {/* Dialog interno para Add/Edit Category */}
+            <Dialog
+              open={openCategoryDialog}
+              onClose={handleCloseCategoryDialog}
+            >
+              <DialogTitle className='relative'>
+                {editingCategory ? 'Edit Category' : 'Add Category'}
+                <IconButton
+                  aria-label='close'
+                  onClick={handleCloseCategoryDialog}
+                  sx={{ position: 'absolute', right: 8, top: 8 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent sx={{ minWidth: 350 }}>
+                <TextField
+                  margin='dense'
+                  label='Category Name'
+                  name='name'
+                  fullWidth
+                  value={categoryForm.name}
+                  onChange={handleChangeCategory}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseCategoryDialog} color='inherit'>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveCategory}
+                  color='error'
+                  variant='contained'
+                  sx={{
+                    backgroundColor: 'rgb(147, 51, 234)',
+                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                  }}
+                >
+                  {editingCategory ? 'Save' : 'Add'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenCategories(false)} color='inherit'>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </div>
   )
 }
-
-/* Adicione este CSS globalmente (por exemplo, em App.css ou index.css):
-.swal2-zindex-fix {
-  z-index: 20000 !important;
-}
-*/

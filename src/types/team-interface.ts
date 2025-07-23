@@ -1,11 +1,11 @@
 export const teamOrder = [
   'Garçom',
-  'Padeirinho',
   'Confeiteiros',
   'Jackfruit',
   'APAE',
   'Jackfruit',
   'Sapoculeano',
+  'Raio',
   'KFFC',
   'DTM',
   'Greensky',
@@ -14,7 +14,7 @@ export const teamOrder = [
   'Rocket',
   'Advertiser',
   'Milharal',
-  'Raio',
+  'Padeirinho',
 ] as const
 
 export type TeamOrder = (typeof teamOrder)[number]
