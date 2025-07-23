@@ -6,9 +6,9 @@ import {
   Lock,
   LockOpen,
 } from '@phosphor-icons/react'
-import { TableSortLabel, Tooltip } from '@mui/material'
+import { Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal as MuiModal, Box } from '@mui/material'
 import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
@@ -28,7 +28,7 @@ import {
   CircularProgress,
   IconButton,
 } from '@mui/material'
-import { toggleRunLock as toggleRunLockService } from '../../services/api/runs'
+import { api } from '../../services/axiosConfig'
 import Swal from 'sweetalert2'
 
 interface RunsDataProps {
@@ -38,14 +38,13 @@ interface RunsDataProps {
   onEditSuccess?: () => void
 }
 
-export function RunsDataGrid({
+export function LevelingDataGrid({
   data,
   isLoading,
   onDeleteSuccess,
 }: RunsDataProps) {
   const navigate = useNavigate()
 
-  const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
   const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
@@ -73,35 +72,12 @@ export function RunsDataGrid({
     )
   }
 
-  const teamPriority: { [key: string]: number } = {
-    Garçom: 1,
-    Confeiteiros: 2,
-    Jackfruit: 3,
-    Raio: 4,
-    APAE: 5,
-    Milharal: 6,
-    DTM: 7,
-    Kffc: 8,
-    Sapoculeano: 9,
-    Greensky: 10,
-    Padeirinho: 11,
-  }
+
 
   const teamColors: { [key: string]: string } = {
-    Padeirinho: 'linear-gradient(90deg, #FDE68A, #ca8a04)',
-    Garçom: 'linear-gradient(90deg, #60A5FA, #2563EB)',
-    Confeiteiros: 'linear-gradient(90deg, #A78BFA, #f472b6)',
-    Jackfruit: 'linear-gradient(90deg, #86EFAC, #16a34a)',
+
     Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
-    Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
-    APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
-    DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)',
-    KFFC: 'linear-gradient(90deg, #065F46, #34D399)', // Atualizado
-    Sapoculeano: 'linear-gradient(90deg, #1E3A8A,#7DD3FC )', // Atualizado
-    Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)', // Rosa para amarelo
-    'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)', // Nova cor adicionada
-    'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
-    Rocket: 'linear-gradient(90deg, #f472b6, #7DD3FC)',
+
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -151,65 +127,7 @@ export function RunsDataGrid({
 
   // Redireciona para a página de detalhes da run
   const handleRedirect = (id: string) => {
-    navigate(`/bookings-na/run/${id}`)
-  }
-
-  // Converte o horário no formato HH:mm para minutos totais
-  const convertTimeToMinutes = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number)
-    return hours * 60 + minutes
-  }
-
-  // Ordena os dados por horário e prioridade do time
-  const sortedData = useMemo(() => {
-    // Filtra as runs do time Milharal
-    const filteredRuns = runs.filter(
-      (run) => run.idTeam !== '1354858326327820297'
-    )
-
-    const sorted = [...filteredRuns].sort((a, b) => {
-      if (!a.time || !b.time) return 0
-
-      const timeA = convertTimeToMinutes(a.time)
-      const timeB = convertTimeToMinutes(b.time)
-
-      if (timeA !== timeB) {
-        return isTimeSortedAsc ? timeA - timeB : timeB - timeA
-      }
-
-      const priorityA = teamPriority[a.team] || 999
-      const priorityB = teamPriority[b.team] || 999
-
-      return priorityA - priorityB
-    })
-
-    return sorted
-  }, [runs, isTimeSortedAsc])
-
-  // Alterna a ordem de classificação por horário
-  const handleSortByTime = useCallback(() => {
-    setIsTimeSortedAsc((prev) => !prev)
-  }, [])
-
-  // Converte o horário de EST para BRT
-  const convertFromEST = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = (hours + 1) % 24 // Ajusta para o fuso horário BRT (UTC-3)
-
-    const period = adjustedHours >= 12 ? 'PM' : 'AM'
-    const formattedHours = adjustedHours % 12 || 12
-
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
-  }
-
-  // Formata o horário para o formato de 12 horas EST
-  const formatTo12HourEST = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number)
-
-    const period = hours >= 12 ? 'PM' : 'AM'
-    const formattedHours = hours % 12 || 12
-
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+    navigate(`/bookings-na/leveling/${id}`)
   }
 
   // Function to copy an individual run's data to the clipboard
@@ -245,18 +163,22 @@ export function RunsDataGrid({
   // Function to toggle the lock status of a run
   const toggleRunLock = async (runId: string, isLocked: boolean) => {
     try {
-      await toggleRunLockService(runId, isLocked)
-      setRuns((prevRuns) =>
-        prevRuns.map((run) =>
-          run.id === runId ? { ...run, runIsLocked: !isLocked } : run
-        )
-      )
-      Swal.fire({
-        icon: 'success',
-        title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
-        timer: 1500,
-        showConfirmButton: false,
+      const response = await api.put(`/run/${runId}/lock`, {
+        isLocked: !isLocked,
       })
+      if (response.status === 200) {
+        setRuns((prevRuns) =>
+          prevRuns.map((run) =>
+            run.id === runId ? { ...run, runIsLocked: !isLocked } : run
+          )
+        )
+        Swal.fire({
+          icon: 'success',
+          title: `Run ${!isLocked ? 'locked' : 'unlocked'} successfully.`,
+          timer: 1500,
+          showConfirmButton: false,
+        })
+      }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
       Swal.fire({
@@ -297,18 +219,6 @@ export function RunsDataGrid({
       : '-'
   }
 
-  // Renderiza o horário em ambos os formatos EST e BRT
-  const renderTime = (time: string | undefined, date: string | undefined) =>
-    time && date ? (
-      <>
-        {formatTo12HourEST(time)} EST
-        <br />
-        {convertFromEST(time)} BRT
-      </>
-    ) : (
-      '-'
-    )
-
   if (error) {
     return (
       <MuiModal open={!!error} onClose={() => setError(null)}>
@@ -320,7 +230,14 @@ export function RunsDataGrid({
   }
 
   return (
-    <TableContainer component={Paper} className='rounded-sm'>
+    <TableContainer
+      component={Paper}
+      className='relative mb-8 rounded-sm'
+      style={{
+        fontSize: '1rem',
+        overflow: 'hidden',
+      }}
+    >
       <Table stickyHeader>
         <TableHead>
           <TableRow>
@@ -343,44 +260,6 @@ export function RunsDataGrid({
               }}
             >
               Date
-            </TableCell>
-            <TableCell
-              sortDirection={isTimeSortedAsc ? 'asc' : 'desc'}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              <TableSortLabel
-                active
-                direction={isTimeSortedAsc ? 'asc' : 'desc'}
-                onClick={handleSortByTime}
-                style={{ cursor: 'pointer' }}
-              >
-                Time
-              </TableSortLabel>
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Raid
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Buyers
             </TableCell>
             <TableCell
               style={{
@@ -410,36 +289,6 @@ export function RunsDataGrid({
                 textAlign: 'center',
               }}
             >
-              Run Type
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Difficulty
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Loot
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
               Note
             </TableCell>
             <TableCell
@@ -456,7 +305,7 @@ export function RunsDataGrid({
           {isLoading ? (
             <TableRow style={{ height: '400px', border: 'none' }}>
               <TableCell
-                colSpan={12}
+                colSpan={6}
                 align='center'
                 style={{
                   verticalAlign: 'middle',
@@ -468,10 +317,10 @@ export function RunsDataGrid({
                 <CircularProgress />
               </TableCell>
             </TableRow>
-          ) : sortedData.length === 0 ? (
+          ) : runs.length === 0 ? (
             <TableRow style={{ height: '400px', border: 'none' }}>
               <TableCell
-                colSpan={12}
+                colSpan={6}
                 align='center'
                 style={{
                   verticalAlign: 'middle',
@@ -484,7 +333,7 @@ export function RunsDataGrid({
               </TableCell>
             </TableRow>
           ) : (
-            sortedData.map((run, index) => (
+            runs.map((run: RunData, index: number) => (
               <TableRow
                 key={index}
                 onDoubleClick={() => handleRedirect(run.id)}
@@ -503,14 +352,8 @@ export function RunsDataGrid({
                 {renderTableCell(
                   run.date ? format(parseISO(run.date), 'EEEE LL/dd') : null
                 )}
-                {renderTableCell(renderTime(run.time, run.date))}
-                {renderTableCell(run.raid)}
-                {renderTableCell(run.buyersCount)}
                 {renderTableCell(run.team)}
                 {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
-                {renderTableCell(run.runType)}
-                {renderTableCell(run.difficulty)}
-                {renderTableCell(run.loot)}
                 {renderTableCell(run.note)}
                 {renderTableCell(
                   hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (

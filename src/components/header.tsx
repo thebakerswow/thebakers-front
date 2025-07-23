@@ -12,6 +12,9 @@ import {
   CalendarBlank,
   SignOut,
   UsersFour,
+  List,
+  Key,
+  ArrowFatUp,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
@@ -54,6 +57,9 @@ export function Header() {
   const navigate = useNavigate()
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [bookingsAnchorEl, setBookingsAnchorEl] = useState<null | HTMLElement>(
+    null
+  )
 
   const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
     if (exactMatch) {
@@ -76,6 +82,14 @@ export function Header() {
 
   const handleMenuClose = () => {
     setAnchorEl(null)
+  }
+
+  const handleBookingsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setBookingsAnchorEl(event.currentTarget)
+  }
+
+  const handleBookingsMenuClose = () => {
+    setBookingsAnchorEl(null)
   }
 
   if (!isAuthenticated) {
@@ -137,6 +151,56 @@ export function Header() {
         >
           Balance
         </Button>
+
+        {/* Bookings (NA) Dropdown */}
+        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
+          <Button
+            color='inherit'
+            onClick={handleBookingsMenuOpen}
+            startIcon={<CalendarBlank size={20} />}
+          >
+            Bookings (NA)
+          </Button>
+        )}
+
+        <Menu
+          anchorEl={bookingsAnchorEl}
+          open={Boolean(bookingsAnchorEl)}
+          onClose={handleBookingsMenuClose}
+          slotProps={{
+            paper: {
+              sx: { width: '180px' },
+            },
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              navigate('/bookings-na')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <List size={20} /> Full Raids
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate('/keys')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Key size={20} /> Keys
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate('/leveling')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <ArrowFatUp size={20} /> Leveling
+          </MenuItem>
+        </Menu>
 
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <>
@@ -205,15 +269,6 @@ export function Header() {
           </>
         )}
 
-        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
-          <Button
-            color='inherit'
-            onClick={() => navigate('/bookings-na')}
-            startIcon={<CalendarBlank size={20} />}
-          >
-            Full Raids (NA)
-          </Button>
-        )}
 
         <Button
           color='inherit'
