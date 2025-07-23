@@ -162,9 +162,9 @@ export function RunsDataGrid({
 
   // Ordena os dados por horário e prioridade do time
   const sortedData = useMemo(() => {
-    // Filtra as runs do time Milharal
+    // Filtra as runs do time MPlus
     const filteredRuns = runs.filter(
-      (run) => run.idTeam !== '1354858326327820297'
+      (run) => run.idTeam !== import.meta.env.VITE_TEAM_MPLUS
     )
 
     const sorted = [...filteredRuns].sort((a, b) => {

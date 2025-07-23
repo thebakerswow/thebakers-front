@@ -72,12 +72,8 @@ export function KeysDataGrid({
     )
   }
 
-
-
   const teamColors: { [key: string]: string } = {
-
-    Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
-
+    'M+': 'linear-gradient(90deg, #ccc8cc, #80367c)',
   }
 
   // Retorna o estilo de fundo associado a um time

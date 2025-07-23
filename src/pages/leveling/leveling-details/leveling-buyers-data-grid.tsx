@@ -18,8 +18,9 @@ import Warrior from '../../../assets/class_icons/warrior.png'
 import axios from 'axios'
 import { BuyerData } from '../../../types/buyer-interface'
 import { api } from '../../../services/axiosConfig'
+import { deleteBuyer } from '../../../services/api/buyers'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { DeleteBuyer } from '../../../components/delete-buyer'
+
 import { EditBuyer } from '../../../components/edit-buyer'
 import {
   Table,
@@ -295,6 +296,45 @@ export function LevelingBuyersDataGrid({
         setCooldown((prev) => ({ ...prev, [buyerId]: false }))
       }, 15000)
     })
+  }
+
+  const handleDeleteBuyer = async (buyer: BuyerData) => {
+    if (runIsLocked) return
+
+    const result = await Swal.fire({
+      title: 'Confirm Deletion',
+      text: `Are you sure you want to delete ${buyer.nameAndRealm}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await deleteBuyer(buyer.id)
+        Swal.fire({
+          title: 'Success!',
+          text: 'Buyer deleted successfully',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        onDeleteSuccess()
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          setError({
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          })
+        } else {
+          setError({ message: 'Unexpected error', response: error })
+        }
+      }
+    }
   }
 
   const renderStatusSelect = (buyer: BuyerData) => (
@@ -751,7 +791,7 @@ export function LevelingBuyersDataGrid({
                       <Tooltip title='Delete'>
                         <IconButton
                           onClick={() =>
-                            !runIsLocked && handleOpenModal(buyer, 'delete')
+                            !runIsLocked && handleDeleteBuyer(buyer)
                           }
                           disabled={runIsLocked}
                         >
@@ -766,43 +806,28 @@ export function LevelingBuyersDataGrid({
           )}
         </TableBody>
       </Table>
-      {openModal &&
-        editingBuyer &&
-        (modalType === 'edit' ? (
-          <Dialog
-            open={openModal}
-            onClose={() => setOpenModal(false)}
-            fullWidth
-            maxWidth='sm'
-          >
-            <DialogContent>
-              <EditBuyer
-                buyer={{
-                  id: editingBuyer.id,
-                  nameAndRealm: editingBuyer.nameAndRealm,
-                  buyerPot: editingBuyer.buyerPot,
-                  buyerDolarPot: editingBuyer.buyerDolarPot,
-                  buyerNote: editingBuyer.buyerNote,
-                }}
-                onClose={() => setOpenModal(false)}
-                onEditSuccess={onBuyerNameNoteEdit}
-              />
-            </DialogContent>
-          </Dialog>
-        ) : (
-          <MuiModal open={openModal} onClose={() => setOpenModal(false)}>
-            <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform shadow-lg'>
-              <DeleteBuyer
-                buyer={{
-                  id: editingBuyer.id,
-                  nameAndRealm: editingBuyer.nameAndRealm,
-                }}
-                onClose={() => setOpenModal(false)}
-                onDeleteSuccess={onDeleteSuccess}
-              />
-            </Box>
-          </MuiModal>
-        ))}
+      {openModal && editingBuyer && modalType === 'edit' && (
+        <Dialog
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          fullWidth
+          maxWidth='sm'
+        >
+          <DialogContent>
+            <EditBuyer
+              buyer={{
+                id: editingBuyer.id,
+                nameAndRealm: editingBuyer.nameAndRealm,
+                buyerPot: editingBuyer.buyerPot,
+                buyerDolarPot: editingBuyer.buyerDolarPot,
+                buyerNote: editingBuyer.buyerNote,
+              }}
+              onClose={() => setOpenModal(false)}
+              onEditSuccess={onBuyerNameNoteEdit}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </TableContainer>
   )
 }

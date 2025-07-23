@@ -176,7 +176,7 @@ export function KeysPage() {
 
       // Filtra apenas as runs do time específico
       const filteredRuns = (data.info || []).filter(
-        (run: any) => run.idTeam === '1354858326327820297'
+        (run: any) => run.idTeam === import.meta.env.VITE_TEAM_MPLUS
       )
 
       setRows(
@@ -244,8 +244,8 @@ export function KeysPage() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -259,10 +259,8 @@ export function KeysPage() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': {
-                  backgroundColor: 'rgb(248, 113, 113)',
-                },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -276,8 +274,8 @@ export function KeysPage() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',

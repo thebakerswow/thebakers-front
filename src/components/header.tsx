@@ -152,56 +152,6 @@ export function Header() {
           Balance
         </Button>
 
-        {/* Bookings (NA) Dropdown */}
-        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
-          <Button
-            color='inherit'
-            onClick={handleBookingsMenuOpen}
-            startIcon={<CalendarBlank size={20} />}
-          >
-            Bookings (NA)
-          </Button>
-        )}
-
-        <Menu
-          anchorEl={bookingsAnchorEl}
-          open={Boolean(bookingsAnchorEl)}
-          onClose={handleBookingsMenuClose}
-          slotProps={{
-            paper: {
-              sx: { width: '180px' },
-            },
-          }}
-        >
-          <MenuItem
-            onClick={() => {
-              navigate('/bookings-na')
-              handleBookingsMenuClose()
-            }}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <List size={20} /> Full Raids
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              navigate('/keys')
-              handleBookingsMenuClose()
-            }}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Key size={20} /> Keys
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              navigate('/leveling')
-              handleBookingsMenuClose()
-            }}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <ArrowFatUp size={20} /> Leveling
-          </MenuItem>
-        </Menu>
-
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <>
             <Button
@@ -269,6 +219,69 @@ export function Header() {
           </>
         )}
 
+        {/* Bookings (NA) Dropdown */}
+        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
+          <Button
+            color='inherit'
+            onClick={handleBookingsMenuOpen}
+            startIcon={<CalendarBlank size={20} />}
+          >
+            Bookings (NA)
+          </Button>
+        )}
+
+        <Menu
+          anchorEl={bookingsAnchorEl}
+          open={Boolean(bookingsAnchorEl)}
+          onClose={handleBookingsMenuClose}
+          sx={{
+            zIndex: 99999,
+            '& .MuiPaper-root': {
+              zIndex: 99999,
+            },
+            '& .MuiBackdrop-root': {
+              zIndex: 99998,
+            },
+          }}
+          slotProps={{
+            paper: {
+              sx: {
+                width: '150px',
+                zIndex: 99999,
+                position: 'relative',
+              },
+            },
+          }}
+          style={{ zIndex: 99999 }}
+        >
+          <MenuItem
+            onClick={() => {
+              navigate('/bookings-na')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <List size={20} /> Full Raids
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate('/keys')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Key size={20} /> Keys
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate('/leveling')
+              handleBookingsMenuClose()
+            }}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <ArrowFatUp size={20} /> Leveling
+          </MenuItem>
+        </Menu>
 
         <Button
           color='inherit'
