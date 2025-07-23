@@ -1,15 +1,11 @@
 import axios from 'axios'
 import { useState, useEffect, useCallback } from 'react'
-import {
-  ErrorDetails,
-  ErrorComponent,
-} from '../../../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { ErrorDetails } from '../../../components/error-display'
 import {
   getBalanceAdmin,
   createTransaction,
   updateNick,
-} from '../../../../services/api/balance'
+} from '../../../services/api/balance'
 import {
   Select,
   MenuItem,
@@ -25,7 +21,11 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
-import { BalanceControlTableProps } from '../../../../types'
+import { BalanceControlTableProps } from '../../../types'
+
+interface ExtendedBalanceControlTableProps extends BalanceControlTableProps {
+  onError?: (error: ErrorDetails) => void
+}
 
 export function BalanceControlTable({
   selectedTeam,
@@ -34,9 +34,9 @@ export function BalanceControlTable({
   setSelectedDate,
   isDolar,
   setIsDolar,
-}: BalanceControlTableProps) {
+  onError,
+}: ExtendedBalanceControlTableProps) {
   const [users, setUsers] = useState<any[]>([])
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [calculatorValues, setCalculatorValues] = useState<{
     [key: string]: string
   }>({})
@@ -138,20 +138,22 @@ export function BalanceControlTable({
         })
         setUsers(data)
       } catch (error) {
-        setError(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Erro inesperado', response: error }
-        )
+        const errorDetails = axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Erro inesperado', response: error }
+
+        if (onError) {
+          onError(errorDetails)
+        }
       } finally {
         if (showLoading) setIsLoading(false)
       }
     },
-    [selectedTeam, selectedDate, isDolar]
+    [selectedTeam, selectedDate, isDolar, onError]
   )
 
   // Fetch data only when selectedTeam, selectedDate ou isDolar mudam
@@ -220,15 +222,17 @@ export function BalanceControlTable({
       setCalculatorValues((prev) => ({ ...prev, [userId]: '' }))
       fetchBalanceAdmin()
     } catch (error) {
-      setError(
-        axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Erro inesperado', response: error }
-      )
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Erro inesperado', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
@@ -255,15 +259,17 @@ export function BalanceControlTable({
       setCalculatorValues({})
       fetchBalanceAdmin()
     } catch (error) {
-      setError(
-        axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Erro inesperado', response: error }
-      )
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Erro inesperado', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     } finally {
       setIsBulkingSubmitting(false)
     }
@@ -290,15 +296,17 @@ export function BalanceControlTable({
       })
       fetchBalanceAdmin()
     } catch (error) {
-      setError(
-        axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Erro inesperado', response: error }
-      )
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Erro inesperado', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     } finally {
       handleCloseDialog()
     }
@@ -310,16 +318,6 @@ export function BalanceControlTable({
 
   const handleCloseFreelancerDialog = () => {
     setIsFreelancerDialogOpen(false)
-  }
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
   }
 
   return (

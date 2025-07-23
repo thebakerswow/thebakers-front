@@ -30,7 +30,7 @@ import {
   deleteBuyer,
 } from '../../../services/api/buyers'
 import { sendDiscordMessage } from '../../../services/api/discord'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
+import { ErrorDetails } from '../../../components/error-display'
 import { EditBuyer } from '../../../components/edit-buyer'
 import {
   Table,
@@ -44,8 +44,6 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
-  Modal as MuiModal,
-  Box,
 } from '@mui/material'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
@@ -63,6 +61,7 @@ interface BuyersGridProps {
     idDiscord: string
     username: string
   }[] // Added raid leaders prop
+  onError?: (error: ErrorDetails) => void
 }
 
 const statusOptions = [
@@ -120,6 +119,7 @@ export function BuyersDataGrid({
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Nova prop
   raidLeaders, // Added raid leaders prop
+  onError,
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
   const canSeeIdBuyer =
@@ -201,7 +201,7 @@ export function BuyersDataGrid({
   }
 
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
-  const [error, setError] = useState<ErrorDetails | null>(null)
+  const [, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
     id: string
@@ -252,13 +252,19 @@ export function BuyersDataGrid({
       callback()
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        setError({
+        const errorDetails = {
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
-        })
+        }
+        if (onError) {
+          onError(errorDetails)
+        }
       } else {
-        setError({ message: 'Unexpected error', response: error })
+        const errorDetails = { message: 'Unexpected error', response: error }
+        if (onError) {
+          onError(errorDetails)
+        }
       }
     }
   }
@@ -721,13 +727,19 @@ export function BuyersDataGrid({
         onDeleteSuccess()
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          setError({
+          const errorDetails = {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
-          })
+          }
+          if (onError) {
+            onError(errorDetails)
+          }
         } else {
-          setError({ message: 'Unexpected error', response: error })
+          const errorDetails = { message: 'Unexpected error', response: error }
+          if (onError) {
+            onError(errorDetails)
+          }
         }
       }
     }
@@ -809,16 +821,6 @@ export function BuyersDataGrid({
         return priorityA - priorityB
       })
     : []
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
 
   function getClassImage(className: string): string {
     switch (className) {

@@ -11,8 +11,6 @@ import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
 import Button from '@mui/material/Button'
 import {
-  Modal as MuiModal,
-  Box,
   TextareaAutosize,
   Dialog,
   DialogTitle,
@@ -39,6 +37,10 @@ export function FullRaidsNa() {
   // Verifica se o usuário possui o papel necessário
   const hasRequiredRole = (requiredRoles: string[]) =>
     requiredRoles.some((required) => userRoles.includes(required.toString()))
+
+  const handleError = (error: ErrorDetails | null) => {
+    setError(error)
+  }
 
   // Copia os dados das corridas para a área de transferência
   const copyRunsToClipboard = () => {
@@ -180,6 +182,7 @@ export function FullRaidsNa() {
           buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
         }))
       )
+      setError(null) // Clear any previous errors
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
         ? {
@@ -213,18 +216,9 @@ export function FullRaidsNa() {
     return () => clearInterval(interval)
   }, [selectedDate])
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div className='flex min-h-screen w-full flex-col items-center overflow-auto pb-20'>
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
       <DateFilter onDaySelect={setSelectedDate} />
       <div className='mx-auto mt-6 flex w-[90%] flex-col p-4'>
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
@@ -346,12 +340,14 @@ export function FullRaidsNa() {
           isLoading={isLoading}
           onDeleteSuccess={() => fetchRuns(true)}
           onEditSuccess={handleEditRunSuccess}
+          onError={handleError}
         />
 
         {isAddRunOpen && (
           <AddRun
             onClose={() => setIsAddRunOpen(false)}
             onRunAddedReload={() => fetchRuns(true)}
+            onError={handleError}
           />
         )}
       </div>

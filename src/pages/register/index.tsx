@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { register } from '../../services/api/auth'
 import axios from 'axios'
-import { TextField, Button, Modal as MuiModal, Box } from '@mui/material'
+import { TextField, Button } from '@mui/material'
 import Swal from 'sweetalert2'
 
 export function Register() {
@@ -65,16 +65,6 @@ export function Register() {
     },
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div className='min-h-screen'>
       <div className='mt-20 flex h-[400px] w-[800px] flex-col items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
@@ -117,6 +107,8 @@ export function Register() {
         {/* Modal de confirmação */}
         {isConfirmModalOpen && null}
       </div>
+
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
     </div>
   )
 }

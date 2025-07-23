@@ -7,7 +7,7 @@ import {
 import { Header } from './components/header'
 import { HomePage } from './pages/home'
 import { BalancePage } from './pages/balance'
-import { TeamsManagement } from './pages/management/teams'
+import TeamsManagement from './pages/management/teams'
 import { FullRaidsNa } from './pages/bookings-na'
 import { RunDetails } from './pages/bookings-na/run'
 import { Login } from './pages/login'

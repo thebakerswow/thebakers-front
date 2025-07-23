@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
-import { Modal as MuiModal, Box } from '@mui/material'
 import axios from 'axios'
-import { ErrorComponent, ErrorDetails } from './error-display'
+import { ErrorDetails } from './error-display'
 import { updateRunAttendance } from '../services/api/runs'
 import {
   Table,
@@ -24,6 +23,7 @@ interface AttendanceProps {
   handleAttendanceClick: (playerId: string, value: number) => void
   onAttendanceUpdate: () => void
   runIsLocked: boolean // Added prop
+  onError?: (error: ErrorDetails) => void // Callback para passar erro para o componente pai
 }
 
 export function Attendance({
@@ -33,8 +33,8 @@ export function Attendance({
   onAttendanceUpdate,
   runId,
   runIsLocked, // Added prop
+  onError, // Added prop
 }: AttendanceProps) {
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(true) // Default to true for unsaved state
@@ -55,11 +55,13 @@ export function Attendance({
 
   const handleAttendanceSave = useCallback(async () => {
     if (!runId) {
-      setError({ message: 'Run ID is required', response: null })
+      const error = { message: 'Run ID is required', response: null }
+      onError?.(error)
       return
     }
 
     setIsSubmitting(true)
+
     const payload = attendance.info.map(({ idDiscord, percentage }) => ({
       idDiscord,
       percentage,
@@ -72,29 +74,20 @@ export function Attendance({
       setHasUnsavedChanges(false) // Reset unsaved changes
       setTimeout(() => setIsSuccess(false), 2000)
     } catch (error) {
-      setError(
-        axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Erro inesperado', response: error }
-      )
+      console.error('Error updating attendance:', error)
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Unexpected error updating attendance', response: error }
+
+      onError?.(errorDetails)
     } finally {
       setIsSubmitting(false)
     }
-  }, [attendance.info, onAttendanceUpdate, runId])
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
+  }, [attendance.info, onAttendanceUpdate, runId, onError])
 
   const renderSelect = (idDiscord: string, percentage: number) => (
     <Select

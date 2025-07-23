@@ -3,11 +3,9 @@ import { KeyRunInfo } from './key-run-info'
 import { KeysBuyersDataGrid } from './keys-buyers-data-grid'
 import axios from 'axios'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LoadingSpinner } from '../../../components/loading-spinner'
 import { api } from '../../../services/axiosConfig'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { RunData } from '../../../types/runs-interface'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
@@ -16,8 +14,7 @@ import { sendDiscordMessage } from '../../../services/api/discord'
 import { RunChat } from '../../../components/run-chat'
 import Swal from 'sweetalert2'
 import CryptoJS from 'crypto-js'
-
-import { Button } from '@mui/material'
+import { Button, CircularProgress } from '@mui/material'
 
 // ChatMessage interface igual ao run-chat.tsx
 interface ChatMessage {
@@ -74,6 +71,16 @@ export function KeyDetails() {
     await fetchBuyersData() // Atualiza lista de buyers
   }
 
+  // Handle errors from child components
+  const handleError = (errorDetails: ErrorDetails) => {
+    setError(errorDetails)
+  }
+
+  // Clear error when successful operations occur
+  const clearError = () => {
+    setError(null)
+  }
+
   // Função para buscar os dados da run
   async function fetchRunData() {
     try {
@@ -84,6 +91,7 @@ export function KeyDetails() {
         slotAvailable: Number(data.slotAvailable),
         maxBuyers: Number(data.maxBuyers),
       })
+      clearError() // Clear error on successful API call
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -110,6 +118,7 @@ export function KeyDetails() {
       const response = await api.get(`/run/${id}/buyers`)
 
       setRows(response.data.info)
+      clearError() // Clear error on successful API call
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -211,6 +220,7 @@ export function KeyDetails() {
 
       setAttendance({ info: data })
       setHasAttendanceAccess(true)
+      clearError() // Clear error on successful API call
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 403) {
@@ -565,25 +575,17 @@ export function KeyDetails() {
     ? rows.filter((buyer) => buyer.status === 'group').length
     : 0
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div
       className={`flex min-h-screen w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >
+      {error && <ErrorComponent error={error} onClose={clearError} />}
+
       {isLoadingRun ? (
         <div className='flex flex-col items-center'>
-          <LoadingSpinner />
+          <CircularProgress />
         </div>
       ) : (
         <div className='mx-2 p-4'>
@@ -593,6 +595,7 @@ export function KeyDetails() {
               onBuyerAddedReload={reloadAllData}
               onRunEdit={fetchRunData}
               attendanceAccessDenied={!hasAttendanceAccess}
+              onError={handleError}
             />
           ) : (
             <div>Loading</div>
@@ -601,7 +604,7 @@ export function KeyDetails() {
           <div className='p-4'>
             {isLoadingBuyers ? (
               <div className='mt-40 flex flex-col items-center'>
-                <LoadingSpinner />
+                <CircularProgress />
               </div>
             ) : (
               <div>
@@ -645,6 +648,7 @@ export function KeyDetails() {
                   runIsLocked={runData?.runIsLocked ?? false}
                   raidLeaders={chatRaidLeaders}
                   runIdTeam={runData?.idTeam}
+                  onError={handleError}
                 />
               </div>
             )}
@@ -658,6 +662,7 @@ export function KeyDetails() {
                 onAttendanceUpdate={fetchAttendanceData}
                 runIsLocked={runData?.runIsLocked ?? false}
                 runId={runData.id}
+                onError={handleError}
               />
             </div>
           )}

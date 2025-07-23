@@ -4,6 +4,7 @@ import levelingLogo from '../../../assets/leveling.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
+import { ErrorDetails } from '../../../components/error-display'
 import {
   Button,
   Card,
@@ -16,18 +17,21 @@ import {
   Paper,
 } from '@mui/material'
 import { api } from '../../../services/axiosConfig'
+import axios from 'axios'
 
 interface LevelingRunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
   onRunEdit: () => void
   attendanceAccessDenied: boolean
+  onError?: (error: ErrorDetails) => void
 }
 
 export function LevelingRunInfo({
   run,
   onBuyerAddedReload,
   attendanceAccessDenied,
+  onError,
 }: LevelingRunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
@@ -38,8 +42,6 @@ export function LevelingRunInfo({
       userRoles.some((userRole) => userRole.toString() === required.toString())
     )
   }
-
-
 
   function handleOpenAddBuyer() {
     setIsAddBuyerOpen(true)
@@ -60,6 +62,15 @@ export function LevelingRunInfo({
       }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
+      if (axios.isAxiosError(error)) {
+        onError?.({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        onError?.({ message: 'Unexpected error', response: error })
+      }
     }
   }
 
@@ -178,7 +189,6 @@ export function LevelingRunInfo({
             import.meta.env.VITE_TEAM_STAFF,
           ]) ? (
             <>
-             
               <Button
                 variant='contained'
                 startIcon={

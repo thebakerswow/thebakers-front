@@ -2,9 +2,8 @@ import { Eye, Trash, Lock, LockOpen } from '@phosphor-icons/react'
 import { Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { RunData } from '../../types/runs-interface'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
 import { format, parseISO } from 'date-fns'
@@ -22,22 +21,24 @@ import {
 } from '@mui/material'
 import { api } from '../../services/axiosConfig'
 import Swal from 'sweetalert2'
+import axios from 'axios'
 
 interface RunsDataProps {
   data: RunData[]
   isLoading: boolean
   onDeleteSuccess: () => void
   onEditSuccess?: () => void
+  onError?: (error: ErrorDetails) => void
 }
 
 export function LevelingDataGrid({
   data,
   isLoading,
   onDeleteSuccess,
+  onError,
 }: RunsDataProps) {
   const navigate = useNavigate()
 
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
   const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
     id: string
@@ -123,11 +124,15 @@ export function LevelingDataGrid({
       }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to toggle run lock.',
-        text: 'Please try again later.',
-      })
+      if (axios.isAxiosError(error)) {
+        onError?.({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        onError?.({ message: 'Unexpected error', response: error })
+      }
     }
   }
 
@@ -159,16 +164,6 @@ export function LevelingDataGrid({
     return raidLeaders && raidLeaders.length > 0
       ? raidLeaders.map((leader) => leader.username).join(', ')
       : '-'
-  }
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
   }
 
   return (

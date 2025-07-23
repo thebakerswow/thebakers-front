@@ -18,12 +18,14 @@ import {
 } from '@mui/material'
 import { toggleRunLock as toggleRunLockService } from '../../../services/api/runs'
 import { EditHistoryDialog } from '../../../components/edit-history-dialog'
+import { ErrorDetails } from '../../../components/error-display'
 
 interface RunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
   onRunEdit: () => void
   attendanceAccessDenied: boolean
+  onError?: (error: ErrorDetails) => void
 }
 
 export function RunInfo({
@@ -31,6 +33,7 @@ export function RunInfo({
   onBuyerAddedReload,
   onRunEdit,
   attendanceAccessDenied,
+  onError,
 }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -343,6 +346,7 @@ export function RunInfo({
           run={run}
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
+          onError={onError}
         />
       )}
       {isEditModalOpen && (
@@ -351,6 +355,7 @@ export function RunInfo({
           run={run}
           onClose={handleCloseEditModal}
           onRunEdit={onRunEdit}
+          onError={onError}
         />
       )}
       {isEditHistoryOpen && (

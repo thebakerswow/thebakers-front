@@ -22,6 +22,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
+import axios from 'axios'
+import { ErrorDetails } from '../../../components/error-display'
 import {
   getServices,
   createService,
@@ -47,13 +49,13 @@ const emptyForm: ServiceForm = {
   hotItem: false, // novo campo
 }
 
-const swal = Swal.mixin({
-  customClass: {
-    container: 'swal2-zindex-fix',
-  },
-})
+interface ManagementServicesProps {
+  onError?: (error: ErrorDetails) => void
+}
 
-export default function PriceTableManagement() {
+export default function PriceTableManagement({
+  onError,
+}: ManagementServicesProps) {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [open, setOpen] = useState(false)
@@ -86,8 +88,18 @@ export default function PriceTableManagement() {
     try {
       const res = await getServices()
       setServices(res)
-    } catch (err) {
-      swal.fire('Error', 'Failed to fetch services', 'error')
+    } catch (error) {
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Failed to fetch services', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     } finally {
       setLoading(false)
     }
@@ -97,8 +109,18 @@ export default function PriceTableManagement() {
     try {
       const res = await getServiceCategories()
       setCategories(Array.isArray(res) ? res : [])
-    } catch (err) {
-      swal.fire('Error', 'Failed to fetch categories', 'error')
+    } catch (error) {
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Failed to fetch categories', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
@@ -151,7 +173,10 @@ export default function PriceTableManagement() {
   const handleSave = async () => {
     const { name, description, price, serviceCategoryId, hotItem } = form
     if (!name || !description || !price || !serviceCategoryId) {
-      swal.fire('Error', 'Please fill all fields', 'warning')
+      const errorDetails = { message: 'Please fill all fields', response: null }
+      if (onError) {
+        onError(errorDetails)
+      }
       return
     }
     try {
@@ -165,7 +190,7 @@ export default function PriceTableManagement() {
           serviceCategoryId: Number(serviceCategoryId),
           hotItem, // novo campo
         })
-        swal.fire('Success', 'Service updated!', 'success')
+        Swal.fire('Success', 'Service updated!', 'success')
       } else {
         // Adicionar serviço
         await createService({
@@ -175,41 +200,55 @@ export default function PriceTableManagement() {
           serviceCategoryId: Number(serviceCategoryId),
           hotItem, // novo campo
         })
-        swal.fire('Success', 'Service added!', 'success')
+        Swal.fire('Success', 'Service added!', 'success')
       }
       handleClose()
       fetchServices()
-    } catch (err: any) {
-      swal.fire('Error', err?.response?.data?.message || err.message, 'error')
+    } catch (error) {
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.response?.data?.message || error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Unexpected error', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
   const handleDelete = (id: number) => {
-    swal
-      .fire({
-        title: 'Are you sure?',
-        text: 'This service will be deleted!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d32f2f',
-        cancelButtonColor: '#888',
-        confirmButtonText: 'Yes, delete it!',
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await deleteService(id)
-            setServices((prev) => prev.filter((s) => s.id !== id))
-            swal.fire('Deleted!', 'Service has been deleted.', 'success')
-          } catch (err: any) {
-            swal.fire(
-              'Error',
-              err?.response?.data?.message || err.message,
-              'error'
-            )
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This service will be deleted!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, delete it!',
+    }).then(async (result: any) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteService(id)
+          setServices((prev) => prev.filter((s) => s.id !== id))
+          Swal.fire('Deleted!', 'Service has been deleted.', 'success')
+        } catch (error) {
+          const errorDetails = axios.isAxiosError(error)
+            ? {
+                message: error.response?.data?.message || error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+
+          if (onError) {
+            onError(errorDetails)
           }
         }
-      })
+      }
+    })
   }
 
   const handleOpenCategoryDialog = (
@@ -238,7 +277,10 @@ export default function PriceTableManagement() {
   const handleSaveCategory = async () => {
     const { name } = categoryForm
     if (!name) {
-      swal.fire('Error', 'Please fill the name', 'warning')
+      const errorDetails = { message: 'Please fill the name', response: null }
+      if (onError) {
+        onError(errorDetails)
+      }
       return
     }
     try {
@@ -247,46 +289,60 @@ export default function PriceTableManagement() {
           id: editingCategory.id,
           name,
         })
-        swal.fire('Success', 'Category updated!', 'success')
+        Swal.fire('Success', 'Category updated!', 'success')
       } else {
         await createServiceCategory({
           name,
         })
-        swal.fire('Success', 'Category added!', 'success')
+        Swal.fire('Success', 'Category added!', 'success')
       }
       handleCloseCategoryDialog()
       fetchCategories()
-    } catch (err: any) {
-      swal.fire('Error', err?.response?.data?.message || err.message, 'error')
+    } catch (error) {
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.response?.data?.message || error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Unexpected error', response: error }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
   const handleDeleteCategory = (id: number) => {
-    swal
-      .fire({
-        title: 'Are you sure?',
-        text: 'This category and all services related will be deleted!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d32f2f',
-        cancelButtonColor: '#888',
-        confirmButtonText: 'Yes, delete it!',
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await deleteServiceCategory(id)
-            setCategories((prev) => prev.filter((c) => c.id !== id))
-            swal.fire('Deleted!', 'Category has been deleted.', 'success')
-          } catch (err: any) {
-            swal.fire(
-              'Error',
-              err?.response?.data?.message || err.message,
-              'error'
-            )
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This category and all services related will be deleted!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, delete it!',
+    }).then(async (result: any) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteServiceCategory(id)
+          setCategories((prev) => prev.filter((c) => c.id !== id))
+          Swal.fire('Deleted!', 'Category has been deleted.', 'success')
+        } catch (error) {
+          const errorDetails = axios.isAxiosError(error)
+            ? {
+                message: error.response?.data?.message || error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+
+          if (onError) {
+            onError(errorDetails)
           }
         }
-      })
+      }
+    })
   }
 
   // Função para ordenar os serviços

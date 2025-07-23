@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { format, addDays } from 'date-fns'
 import { getRuns } from '../../services/api/runs'
 import { getServices, getServiceCategories } from '../../services/api/services'
@@ -10,7 +9,6 @@ import services from '../../assets/services_new.png'
 import schedule from '../../assets/schedule_new.png'
 import fireImg from '../../assets/fire.png'
 import manaforge from '../../assets/manaforge.png'
-
 import { Service, ServiceCategory } from '../../types'
 
 export function HomePage() {
@@ -101,6 +99,7 @@ export function HomePage() {
         ])
         setServicesList(servicesRes)
         setCategories(Array.isArray(categoriesRes) ? categoriesRes : [])
+        setError(null) // Clear any previous errors
       } catch (err: any) {
         setServicesList([]) // Garante array vazio em erro
         setCategories([])
@@ -133,22 +132,13 @@ export function HomePage() {
     return null // O useEffect já vai redirecionar
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   // Renderize a homepage para todos os usuários
   return (
     <div
       className='relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
       style={{ backgroundImage: `url(${manaforge})` }}
     >
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
       {isOnlyFreelancer() ? (
         // Layout simples para freelancers - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
@@ -358,12 +348,11 @@ export function HomePage() {
                       // Nova ordem de prioridade dos times
                       const teamOrder = [
                         'Garçom',
-                        'Padeirinho',
                         'Confeiteiros',
+                        'Sapoculeano',
                         'Jackfruit',
                         'APAE',
-                        'Jackfruit',
-                        'Sapoculeano',
+                        'Raio',
                         'KFFC',
                         'DTM',
                         'Greensky',
@@ -371,7 +360,7 @@ export function HomePage() {
                         'Guild Azralon BR#2',
                         'Advertiser',
                         'Milharal',
-                        'Raio',
+                        'Padeirinho',
                       ]
                       // Filtra as runs dos times MPlus e Leveling
                       const filteredRuns = (

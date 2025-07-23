@@ -25,7 +25,7 @@ import axios from 'axios'
 import { BuyerData } from '../../../types/buyer-interface'
 import { api } from '../../../services/axiosConfig'
 import { deleteBuyer } from '../../../services/api/buyers'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
+import { ErrorDetails } from '../../../components/error-display'
 
 import { EditBuyer } from '../../../components/edit-buyer'
 import {
@@ -43,7 +43,6 @@ import {
   DialogContent,
   Tooltip,
 } from '@mui/material'
-import { Modal as MuiModal, Box } from '@mui/material'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
 import CryptoJS from 'crypto-js'
@@ -60,6 +59,7 @@ interface BuyersGridProps {
     idDiscord: string
     username: string
   }[] // Added raid leaders prop
+  onError?: (error: ErrorDetails) => void
 }
 
 const statusOptions = [
@@ -87,10 +87,10 @@ export function LevelingBuyersDataGrid({
   onDeleteSuccess,
   runIsLocked, // Destructure runIsLocked
   raidLeaders, // Added raid leaders prop
+  onError,
 }: BuyersGridProps) {
   const { idDiscord } = useAuth()
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
     id: string
@@ -215,13 +215,13 @@ export function LevelingBuyersDataGrid({
       callback()
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        setError({
+        onError?.({
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
         })
       } else {
-        setError({ message: 'Unexpected error', response: error })
+        onError?.({ message: 'Unexpected error', response: error })
       }
     }
   }
@@ -306,13 +306,13 @@ export function LevelingBuyersDataGrid({
           await api.post('/discord/send_message', payload)
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            setError({
+            onError?.({
               message: error.message,
               response: error.response?.data,
               status: error.response?.status,
             })
           } else {
-            setError({ message: 'Unexpected error', response: error })
+            onError?.({ message: 'Unexpected error', response: error })
           }
         }
       }
@@ -373,13 +373,13 @@ export function LevelingBuyersDataGrid({
           await api.post('/discord/send_message', payload)
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            setError({
+            onError?.({
               message: error.message,
               response: error.response?.data,
               status: error.response?.status,
             })
           } else {
-            setError({ message: 'Unexpected error', response: error })
+            onError?.({ message: 'Unexpected error', response: error })
           }
         }
       }
@@ -438,13 +438,13 @@ export function LevelingBuyersDataGrid({
           await api.post('/discord/send_message', payload)
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            setError({
+            onError?.({
               message: error.message,
               response: error.response?.data,
               status: error.response?.status,
             })
           } else {
-            setError({ message: 'Unexpected error', response: error })
+            onError?.({ message: 'Unexpected error', response: error })
           }
         }
       }
@@ -503,13 +503,13 @@ export function LevelingBuyersDataGrid({
           await api.post('/discord/send_message', payload)
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            setError({
+            onError?.({
               message: error.message,
               response: error.response?.data,
               status: error.response?.status,
             })
           } else {
-            setError({ message: 'Unexpected error', response: error })
+            onError?.({ message: 'Unexpected error', response: error })
           }
         }
       }
@@ -568,13 +568,13 @@ export function LevelingBuyersDataGrid({
           await api.post('/discord/send_message', payload)
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            setError({
+            onError?.({
               message: error.message,
               response: error.response?.data,
               status: error.response?.status,
             })
           } else {
-            setError({ message: 'Unexpected error', response: error })
+            onError?.({ message: 'Unexpected error', response: error })
           }
         }
       }
@@ -619,13 +619,13 @@ export function LevelingBuyersDataGrid({
         onDeleteSuccess()
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          setError({
+          onError?.({
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
           })
         } else {
-          setError({ message: 'Unexpected error', response: error })
+          onError?.({ message: 'Unexpected error', response: error })
         }
       }
     }
@@ -707,16 +707,6 @@ export function LevelingBuyersDataGrid({
         return priorityA - priorityB
       })
     : []
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
 
   function getClassImage(className: string): string {
     switch (className) {

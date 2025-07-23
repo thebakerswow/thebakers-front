@@ -1,11 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { RunInfo } from './run-info'
 import { BuyersDataGrid } from './buyers-data-grid'
 import axios from 'axios'
 import { useParams, useNavigate } from 'react-router-dom'
 import { UserPlus } from '@phosphor-icons/react'
 import { InviteBuyers } from '../../../components/invite-buyers'
-import { LoadingSpinner } from '../../../components/loading-spinner'
 import {
   getRun,
   getRunBuyers,
@@ -16,12 +15,11 @@ import { getChatMessages } from '../../../services/api/chat'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { RunData } from '../../../types/runs-interface'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
 import { Freelancers } from '../../../components/freelancers'
-import { Button } from '@mui/material'
+import { Button, CircularProgress } from '@mui/material'
 import { RunChat } from '../../../components/run-chat'
 import Swal from 'sweetalert2'
 import CryptoJS from 'crypto-js'
@@ -598,141 +596,145 @@ export function RunDetails() {
     return true
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
+  // Função para limpar erro
+  const handleErrorClose = useCallback(() => {
+    setError(null)
+  }, [])
 
   return (
-    <div
-      className={`flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl ${
-        isLoadingRun || !runData ? 'items-center justify-center' : ''
-      }`}
-    >
-      {isLoadingRun ? (
-        <div className='flex flex-col items-center'>
-          <LoadingSpinner />
-        </div>
-      ) : (
-        <div className='p-4'>
-          {runData ? (
-            <RunInfo
-              run={runData}
-              onBuyerAddedReload={reloadAllData}
-              onRunEdit={fetchRunData}
-              attendanceAccessDenied={!hasAttendanceAccess}
-            />
-          ) : (
-            <div>Loading</div>
-          )}
+    <>
+      {/* Renderiza o ErrorComponent de forma não-condicional, mas apenas quando há erro */}
+      {error && <ErrorComponent error={error} onClose={handleErrorClose} />}
 
+      <div
+        className={`flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl ${
+          isLoadingRun || !runData ? 'items-center justify-center' : ''
+        }`}
+      >
+        {isLoadingRun ? (
+          <div className='flex flex-col items-center'>
+            <CircularProgress />
+          </div>
+        ) : (
           <div className='p-4'>
-            {isLoadingBuyers ? (
-              <div className='mt-40 flex flex-col items-center'>
-                <LoadingSpinner />
-              </div>
+            {runData ? (
+              <RunInfo
+                run={runData}
+                onBuyerAddedReload={reloadAllData}
+                onRunEdit={fetchRunData}
+                attendanceAccessDenied={!hasAttendanceAccess}
+                onError={setError}
+              />
             ) : (
-              <>
-                <div className='mb-4 flex items-center gap-3'>
-                  {runData &&
-                    (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
-                      hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
-                      <Button
-                        onClick={handleOpenInviteBuyersModal}
-                        variant='contained'
-                        startIcon={<UserPlus size={18} />}
-                        sx={{
-                          backgroundColor: 'rgb(147, 51, 234)',
-                          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                          minWidth: 140,
-                          fontWeight: 500,
-                          boxShadow: 'none',
-                        }}
-                      >
-                        Invite Buyers
-                      </Button>
-                    )}
-                  <Button
-                    onClick={toggleDetailsVisibility}
-                    variant='contained'
-                    sx={{
-                      backgroundColor: 'rgb(147, 51, 234)',
-                      '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                      minWidth: 160,
-                      fontWeight: 500,
-                      boxShadow: 'none',
-                    }}
-                    style={{
-                      display:
-                        canViewAttendanceButton && hasAttendanceAccess
-                          ? 'inline-flex'
-                          : 'none',
-                    }}
-                  >
-                    {showDetails ? 'Hide Attendance' : 'Show Attendance'}
-                  </Button>
-                  {/* Informativo de status */}
-                  <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
-                    Waiting: {waitingCount} | Group: {groupCount}
-                  </span>
+              <div>Loading</div>
+            )}
+
+            <div className='p-4'>
+              {isLoadingBuyers ? (
+                <div className='mt-40 flex flex-col items-center'>
+                  <CircularProgress />
                 </div>
-                <BuyersDataGrid
-                  data={rows}
-                  onBuyerStatusEdit={reloadAllData}
-                  onBuyerNameNoteEdit={reloadAllData}
-                  onDeleteSuccess={reloadAllData}
+              ) : (
+                <>
+                  <div className='mb-4 flex items-center gap-3'>
+                    {runData &&
+                      (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
+                        hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
+                        <Button
+                          onClick={handleOpenInviteBuyersModal}
+                          variant='contained'
+                          startIcon={<UserPlus size={18} />}
+                          sx={{
+                            backgroundColor: 'rgb(147, 51, 234)',
+                            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                            minWidth: 140,
+                            fontWeight: 500,
+                            boxShadow: 'none',
+                          }}
+                        >
+                          Invite Buyers
+                        </Button>
+                      )}
+                    <Button
+                      onClick={toggleDetailsVisibility}
+                      variant='contained'
+                      sx={{
+                        backgroundColor: 'rgb(147, 51, 234)',
+                        '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                        minWidth: 160,
+                        fontWeight: 500,
+                        boxShadow: 'none',
+                      }}
+                      style={{
+                        display:
+                          canViewAttendanceButton && hasAttendanceAccess
+                            ? 'inline-flex'
+                            : 'none',
+                      }}
+                    >
+                      {showDetails ? 'Hide Attendance' : 'Show Attendance'}
+                    </Button>
+                    {/* Informativo de status */}
+                    <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
+                      Waiting: {waitingCount} | Group: {groupCount}
+                    </span>
+                  </div>
+                  <BuyersDataGrid
+                    data={rows}
+                    onBuyerStatusEdit={reloadAllData}
+                    onBuyerNameNoteEdit={reloadAllData}
+                    onDeleteSuccess={reloadAllData}
+                    runIsLocked={runData?.runIsLocked ?? false}
+                    runIdTeam={runData?.idTeam}
+                    raidLeaders={runData?.raidLeaders}
+                    onError={setError}
+                  />
+                </>
+              )}
+            </div>
+            {runData && hasAttendanceAccess && showDetails && (
+              <div className='mx-4 mt-8 flex justify-center gap-40'>
+                <Attendance
+                  attendance={attendance}
+                  markAllAsFull={markAllAsFull}
+                  handleAttendanceClick={handleAttendanceClick}
+                  onAttendanceUpdate={fetchAttendanceData}
                   runIsLocked={runData?.runIsLocked ?? false}
-                  runIdTeam={runData?.idTeam}
-                  raidLeaders={runData?.raidLeaders}
+                  runId={runData.id}
+                  onError={setError}
                 />
-              </>
+                <Freelancers
+                  runId={runData.id}
+                  runIsLocked={runData?.runIsLocked ?? false}
+                />
+              </div>
             )}
           </div>
-          {runData && hasAttendanceAccess && showDetails && (
-            <div className='mx-4 mt-8 flex justify-center gap-40'>
-              <Attendance
-                attendance={attendance}
-                markAllAsFull={markAllAsFull}
-                handleAttendanceClick={handleAttendanceClick}
-                onAttendanceUpdate={fetchAttendanceData}
-                runIsLocked={runData?.runIsLocked ?? false}
-                runId={runData.id}
-              />
-              <Freelancers
-                runId={runData.id}
-                runIsLocked={runData?.runIsLocked ?? false}
-              />
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {runData && canViewInviteButton && isInviteBuyersOpen && (
-        <InviteBuyers
-          onClose={handleCloseInviteBuyersModal}
-          runId={runData.id}
-        />
-      )}
-      {runData?.id && idDiscord && (
-        <RunChat
-          runId={runData.id}
-          messages={chatMessages}
-          loading={chatLoading}
-          unreadCount={chatUnreadCount}
-          inputDisabled={!wsConnected}
-          onSendMessage={handleSendChatMessage}
-          onTagRaidLeader={handleTagRaidLeader}
-          raidLeaders={chatRaidLeaders}
-          idDiscord={idDiscord}
-          isChatOpen={isChatOpen}
-          setIsChatOpen={setIsChatOpen}
-        />
-      )}
-    </div>
+        {runData && canViewInviteButton && isInviteBuyersOpen && (
+          <InviteBuyers
+            onClose={handleCloseInviteBuyersModal}
+            runId={runData.id}
+            onError={setError}
+          />
+        )}
+        {runData?.id && idDiscord && (
+          <RunChat
+            runId={runData.id}
+            messages={chatMessages}
+            loading={chatLoading}
+            unreadCount={chatUnreadCount}
+            inputDisabled={!wsConnected}
+            onSendMessage={handleSendChatMessage}
+            onTagRaidLeader={handleTagRaidLeader}
+            raidLeaders={chatRaidLeaders}
+            idDiscord={idDiscord}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+          />
+        )}
+      </div>
+    </>
   )
 }

@@ -2,18 +2,19 @@ import { useEffect, useMemo, useState } from 'react'
 import { Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material'
 import axios from 'axios'
 import { getBalanceTeams } from '../services/api/teams'
-import { ErrorComponent, ErrorDetails } from './error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { ErrorDetails } from './error-display'
 import { useAuth } from '../context/auth-context'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
   onChange: (team: string | null) => void
+  onError: (error: ErrorDetails | null) => void
 }
 
 export function BalanceTeamFilter({
   selectedTeam,
   onChange,
+  onError,
 }: BalanceTeamFilterProps) {
   const { userRoles, idDiscord } = useAuth()
   const restrictedRoles = [
@@ -28,7 +29,6 @@ export function BalanceTeamFilter({
   const [teams, setTeams] = useState<
     Array<{ id_discord: string; team_name: string }>
   >([])
-  const [error, setError] = useState<ErrorDetails | null>(null)
 
   const fetchTeams = async () => {
     setIsLoadingTeams(true)
@@ -43,16 +43,16 @@ export function BalanceTeamFilter({
         []
       )
       setTeams(uniqueTeams)
+      onError(null) // Clear any previous errors
     } catch (error) {
-      setError(
-        axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Unexpected error', response: error }
-      )
+      const errorDetails = axios.isAxiosError(error)
+        ? {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+        : { message: 'Unexpected error', response: error }
+      onError(errorDetails)
     } finally {
       setIsLoadingTeams(false)
     }
@@ -95,16 +95,6 @@ export function BalanceTeamFilter({
 
   // Para usuários restritos, não mostra o filtro de times
   if (isRestrictedUser) return null
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
 
   return (
     <FormControl className='relative'>

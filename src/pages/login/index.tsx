@@ -5,7 +5,7 @@ import { DiscordLogo } from '@phosphor-icons/react'
 import { loginDiscord, loginWithCredentials } from '../../services/api/auth'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal as MuiModal, Box, Button, TextField } from '@mui/material'
+import { Button, TextField } from '@mui/material'
 
 export function Login() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -29,6 +29,10 @@ export function Login() {
     } else {
       setError({ message: 'Erro inesperado', response: error })
     }
+  }
+
+  const clearError = () => {
+    setError(null)
   }
 
   const handleLoginDiscord = async () => {
@@ -65,6 +69,7 @@ export function Login() {
       if (response.info) {
         login(response.info)
         navigate('/home')
+        clearError() // Clear error on successful login
       }
     } catch (error) {
       handleApiError(error)
@@ -84,18 +89,10 @@ export function Login() {
     },
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div className='mt-20 flex h-[400px] w-[800px] items-center justify-center gap-10 rounded-xl bg-zinc-900 text-4xl font-semibold text-gray-100 shadow-2xl'>
+      {error && <ErrorComponent error={error} onClose={clearError} />}
+
       <Button
         variant='contained'
         color='primary'

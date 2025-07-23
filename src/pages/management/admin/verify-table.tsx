@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { getGbanksGeneral } from '../../../../services/api/gbanks'
-import { ErrorDetails } from '../../../../components/error-display'
-import { TransactionExtract } from '../../../../components/transaction-extract'
-import { GbankExtract } from '../../../../components/gbank-extract'
+import { getGbanksGeneral } from '../../../services/api/gbanks'
+import { ErrorDetails } from '../../../components/error-display'
+import { TransactionExtract } from '../../../components/transaction-extract'
+import { GbankExtract } from '../../../components/gbank-extract'
 import {
   Table,
   TableBody,
@@ -12,18 +12,20 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
   Dialog,
   DialogContent,
   DialogTitle,
   Button,
 } from '@mui/material'
 
-import { VerifyTableData } from '../../../../types'
+import { VerifyTableData } from '../../../types'
 
-export function VerifyTable() {
+interface VerifyTableProps {
+  onError?: (error: ErrorDetails) => void
+}
+
+export function VerifyTable({ onError }: VerifyTableProps) {
   const [sumsData, setSumsData] = useState<VerifyTableData | null>(null)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true) // Controla se é a primeira requisição
   const [isDialogOpen, setIsDialogOpen] = useState(false) // Estado para controlar o diálogo do Player Extract
   const [isGbankDialogOpen, setIsGbankDialogOpen] = useState(false) // Estado para o diálogo do G-Bank Extract
@@ -36,17 +38,18 @@ export function VerifyTable() {
     try {
       const data = await getGbanksGeneral()
       setSumsData(data) // Atualiza os dados de soma
-      setError(null) // Limpa erros anteriores
     } catch (err) {
-      setError(
-        axios.isAxiosError(err)
-          ? {
-              message: err.message,
-              response: err.response?.data,
-              status: err.response?.status,
-            }
-          : { message: 'Erro inesperado', response: err }
-      )
+      const errorDetails = axios.isAxiosError(err)
+        ? {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status,
+          }
+        : { message: 'Erro inesperado', response: err }
+
+      if (onError) {
+        onError(errorDetails)
+      }
     } finally {
       if (isFirstLoad) {
         setIsFirstLoad(false) // Marca que a primeira requisição foi concluída
@@ -73,72 +76,65 @@ export function VerifyTable() {
 
   return (
     <div className='overflow-y-auto rounded-md'>
-      {error ? (
-        // Exibe mensagem de erro, se houver
-        <Typography color='error' variant='body1' className='p-4'>
-          {error.message}
-        </Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                G-Banks Sum
+              </TableCell>
+              <TableCell
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+                align='center'
+              >
+                Balance Total Sum
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <>
+              {/* Exibe os dados de soma */}
               <TableRow>
-                <TableCell
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: '#ECEBEE',
-                  }}
-                  align='center'
-                >
-                  G-Banks Sum
+                <TableCell align='center'>
+                  {formatNumber(sumsData?.general_balance_gbank)}
                 </TableCell>
-                <TableCell
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: '#ECEBEE',
-                  }}
-                  align='center'
-                >
-                  Balance Total Sum
+                <TableCell align='center'>
+                  {formatNumber(sumsData?.general_balance)}
                 </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              <>
-                {/* Exibe os dados de soma */}
-                <TableRow>
-                  <TableCell align='center'>
-                    {formatNumber(sumsData?.general_balance_gbank)}
-                  </TableCell>
-                  <TableCell align='center'>
-                    {formatNumber(sumsData?.general_balance)}
-                  </TableCell>
-                </TableRow>
-                {/* Exibe a diferença calculada */}
-                <TableRow>
-                  <TableCell
-                    colSpan={2}
-                    align='center'
-                    style={{
-                      fontWeight: 'bold',
-                      fontSize: '1rem',
-                      backgroundColor: '#ECEBEE',
-                    }}
-                  >
-                    Difference:{' '}
-                    {formatNumber(
-                      (sumsData?.general_balance_gbank ?? 0) -
-                        (sumsData?.general_balance ?? 0)
-                    )}
-                  </TableCell>
-                </TableRow>
-              </>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+              {/* Exibe a diferença calculada */}
+              <TableRow>
+                <TableCell
+                  colSpan={2}
+                  align='center'
+                  style={{
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    backgroundColor: '#ECEBEE',
+                  }}
+                >
+                  Difference:{' '}
+                  {formatNumber(
+                    (sumsData?.general_balance_gbank ?? 0) -
+                      (sumsData?.general_balance ?? 0)
+                  )}
+                </TableCell>
+              </TableRow>
+            </>
+          </TableBody>
+        </Table>
+      </TableContainer>
       {/* Botões abaixo da tabela */}
       <div className='mt-4 flex justify-center gap-4'>
         <Button

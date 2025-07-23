@@ -10,10 +10,6 @@ import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
 import Button from '@mui/material/Button'
-import {
-  Modal as MuiModal,
-  Box,
-} from '@mui/material'
 import Swal from 'sweetalert2'
 
 export function LevelingPage() {
@@ -27,6 +23,16 @@ export function LevelingPage() {
   // Verifica se o usuário possui o papel necessário
   const hasRequiredRole = (requiredRoles: string[]) =>
     requiredRoles.some((required) => userRoles.includes(required.toString()))
+
+  // Handle errors from child components
+  const handleError = (errorDetails: ErrorDetails) => {
+    setError(errorDetails)
+  }
+
+  // Clear error when successful operations occur
+  const clearError = () => {
+    setError(null)
+  }
 
   // Busca os dados das corridas na API
   const fetchRuns = async (isUserRequest: boolean) => {
@@ -53,6 +59,7 @@ export function LevelingPage() {
           buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
         }))
       )
+      clearError() // Clear error on successful API call
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
         ? {
@@ -86,18 +93,10 @@ export function LevelingPage() {
     return () => clearInterval(interval)
   }, [selectedDate])
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div className='flex min-h-screen w-full flex-col items-center justify-center'>
+      {error && <ErrorComponent error={error} onClose={clearError} />}
+
       <DateFilter onDaySelect={setSelectedDate} />
       <div
         className='mx-auto mt-6 flex w-[90%] flex-col p-4'
@@ -136,6 +135,7 @@ export function LevelingPage() {
             isLoading={isLoading}
             onDeleteSuccess={() => fetchRuns(true)}
             onEditSuccess={handleEditRunSuccess}
+            onError={handleError}
           />
         </div>
 
@@ -143,6 +143,7 @@ export function LevelingPage() {
           <AddLevelingRun
             onClose={() => setIsAddRunOpen(false)}
             onRunAddedReload={() => fetchRuns(true)}
+            onError={handleError}
           />
         )}
       </div>

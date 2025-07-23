@@ -1,108 +1,106 @@
-import axios from 'axios'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
-  DialogContent,
   DialogTitle,
+  DialogContent,
   Button,
   IconButton,
+  Box,
+  Typography,
 } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { Check } from '@phosphor-icons/react'
 import CloseIcon from '@mui/icons-material/Close'
+import { Copy } from '@phosphor-icons/react'
 import { getInviteBuyers } from '../services/api/buyers'
-import { ErrorComponent, ErrorDetails } from './error-display'
-import Swal from 'sweetalert2'
+import { ErrorDetails } from './error-display'
 
 interface InviteBuyersProps {
   onClose: () => void
   runId: string | undefined
+  onError?: (error: ErrorDetails) => void
 }
 
-export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
-  const [inviteBuyersData, setInviteBuyersData] = useState<string[]>([])
+export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
+  const [inviteData, setInviteData] = useState<string>('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    // Função para buscar os dados de compradores convidados
     async function fetchInviteBuyersData() {
       if (!runId) return
 
       try {
-        const response = await getInviteBuyers(runId)
-        setInviteBuyersData(Array.isArray(response) ? response : [])
-        setError(null) // Limpa erros anteriores, se houver
-      } catch (err) {
-        // Trata erros da requisição
-        setError(
-          axios.isAxiosError(err)
-            ? {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-              }
-            : { message: 'Erro inesperado', response: err }
-        )
+        setLoading(true)
+        const data = await getInviteBuyers(runId)
+        setInviteData(data)
+      } catch (error) {
+        console.error('Error fetching invite buyers data:', error)
+        if (onError) {
+          const errorDetails = {
+            message: 'Error fetching invite buyers data',
+            response: error,
+          }
+          onError(errorDetails)
+        }
       } finally {
-        setLoading(false) // Finaliza o estado de carregamento
+        setLoading(false)
       }
     }
-    fetchInviteBuyersData()
-  }, [runId])
 
-  // Função para copiar os dados para a área de transferência
+    fetchInviteBuyersData()
+  }, [runId, onError])
+
   function handleCopy() {
-    navigator.clipboard
-      .writeText(inviteBuyersData.join('\n'))
-      .then(() => setCopied(true)) // Indica que os dados foram copiados
-      .catch(() => Swal.fire('Erro', 'Erro ao copiar os dados.', 'error')) // Exibe alerta em caso de erro
-    setTimeout(() => setCopied(false), 2000) // Reseta o estado de "copiado" após 2 segundos
+    if (inviteData) {
+      navigator.clipboard.writeText(inviteData)
+    }
   }
 
   return (
-    <Dialog open={true} onClose={onClose}>
+    <Dialog open={true} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle className='relative text-center'>
         Invite Buyers
         <IconButton
           aria-label='close'
           onClick={onClose}
-          sx={{ position: 'absolute', right: 0, top: 13 }}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent className='flex flex-col items-center'>
-        {loading ? (
-          // Exibe mensagem de carregamento
-          <p className='text-center'>Loading...</p>
-        ) : error ? (
-          // Exibe componente de erro, se houver
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        ) : inviteBuyersData.length > 0 ? (
-          // Exibe os dados de compradores convidados
-          <div className='flex flex-col items-center gap-2'>
-            <div className='text-center'>
-              {inviteBuyersData.map((item, index) => (
-                <p key={index} className='font-normal'>
-                  {item}
-                </p>
-              ))}
-            </div>
-            {copied ? (
-              // Ícone de confirmação de cópia
-              <Check className='text-green-500' size={24} />
-            ) : (
-              // Botão para copiar os dados
-              <Button variant='contained' color='primary' onClick={handleCopy}>
-                Copy
-              </Button>
-            )}
-          </div>
-        ) : (
-          // Exibe mensagem caso nenhum dado seja encontrado
-          <p className='text-center'>No data found.</p>
-        )}
+      <DialogContent>
+        <Box className='flex flex-col gap-4'>
+          <Typography variant='h6' className='text-center'>
+            Copy the message below and send it to invite buyers:
+          </Typography>
+          {loading ? (
+            <Box className='flex justify-center'>
+              <Typography>Loading...</Typography>
+            </Box>
+          ) : (
+            <>
+              <Box className='max-h-96 overflow-y-auto rounded border p-4'>
+                <Typography
+                  component='pre'
+                  className='whitespace-pre-wrap text-sm'
+                >
+                  {inviteData}
+                </Typography>
+              </Box>
+              <Box className='flex justify-center'>
+                <Button
+                  variant='contained'
+                  startIcon={<Copy size={20} />}
+                  onClick={handleCopy}
+                  sx={{
+                    backgroundColor: 'rgb(147, 51, 234)',
+                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                  }}
+                >
+                  Copy to Clipboard
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
       </DialogContent>
     </Dialog>
   )

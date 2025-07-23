@@ -4,6 +4,7 @@ import keyLogo from '../../../assets/key.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
+import { ErrorDetails } from '../../../components/error-display'
 import {
   Button,
   Card,
@@ -16,19 +17,21 @@ import {
   Paper,
 } from '@mui/material'
 import { api } from '../../../services/axiosConfig'
+import axios from 'axios'
 
 interface KeyRunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
   onRunEdit: () => void
   attendanceAccessDenied: boolean
+  onError?: (error: ErrorDetails) => void
 }
 
 export function KeyRunInfo({
   run,
   onBuyerAddedReload,
-
   attendanceAccessDenied,
+  onError,
 }: KeyRunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
@@ -59,6 +62,15 @@ export function KeyRunInfo({
       }
     } catch (error) {
       console.error('Failed to toggle run lock:', error)
+      if (axios.isAxiosError(error)) {
+        onError?.({
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        })
+      } else {
+        onError?.({ message: 'Unexpected error', response: error })
+      }
     }
   }
 

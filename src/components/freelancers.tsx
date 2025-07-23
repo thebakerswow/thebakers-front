@@ -9,7 +9,6 @@ import {
 import { CircleNotch } from '@phosphor-icons/react'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
-import { LoadingSpinner } from './loading-spinner' // Import reusable spinner
 import {
   Table,
   TableBody,
@@ -405,7 +404,8 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
                 >
                   {deletingFreelancerId !== null ? (
                     <div className='flex gap-4'>
-                      <LoadingSpinner /> Deleting...
+                      <CircularProgress size={20} />
+                      Deleting...
                     </div>
                   ) : (
                     'Delete'

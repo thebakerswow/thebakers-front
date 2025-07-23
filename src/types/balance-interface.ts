@@ -31,6 +31,9 @@ export interface BalanceDataGridProps {
   selectedTeam: string | null
   dateRange: { start: string; end: string } | undefined
   is_dolar: boolean
+  onError: (
+    error: { message: string; response?: any; status?: number } | null
+  ) => void
 }
 
 export interface BalanceControlTableProps {

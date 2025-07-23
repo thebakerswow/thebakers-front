@@ -9,9 +9,8 @@ import {
 import { TableSortLabel, Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState, useEffect } from 'react'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { RunData } from '../../types/runs-interface'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
 import { EditRun } from '../../components/edit-run'
@@ -36,6 +35,7 @@ interface RunsDataProps {
   isLoading: boolean
   onDeleteSuccess: () => void
   onEditSuccess?: () => void
+  onError: (error: ErrorDetails | null) => void
 }
 
 export function RunsDataGrid({
@@ -46,7 +46,6 @@ export function RunsDataGrid({
   const navigate = useNavigate()
 
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
   const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
     id: string
@@ -310,16 +309,6 @@ export function RunsDataGrid({
     ) : (
       '-'
     )
-
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
 
   return (
     <TableContainer component={Paper} className='rounded-sm'>

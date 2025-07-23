@@ -1,18 +1,14 @@
 import { DotsThreeVertical } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import {
-  ErrorDetails,
-  ErrorComponent,
-} from '../../../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { ErrorDetails } from '../../../components/error-display'
 import {
   getGbanks,
   createGBank,
   updateGBankValue,
   updateGBank,
   deleteGBank as deleteGBankService,
-} from '../../../../services/api/gbanks'
+} from '../../../services/api/gbanks'
 import {
   TextField,
   Button,
@@ -32,7 +28,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 
-import { GBank } from '../../../../types'
+import { GBank } from '../../../types'
 
 const colorOptions = [
   { value: '#D97706', label: 'Padeirinho' },
@@ -50,14 +46,17 @@ const colorOptions = [
   { value: '#FFFFFF', label: 'Default (White)' },
 ]
 
-export function GBanksTable() {
+interface GBanksTableProps {
+  onError?: (error: ErrorDetails) => void
+}
+
+export function GBanksTable({ onError }: GBanksTableProps) {
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [newGBankName, setNewGBankName] = useState('')
   const [newGBankColor, setNewGBankColor] = useState('')
   const [editGBank, setEditGBank] = useState<GBank | null>(null)
   const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -113,13 +112,19 @@ export function GBanksTable() {
   // Trata erros de requisições e exibe mensagens apropriadas
   const handleError = (error: unknown, defaultMessage: string) => {
     if (axios.isAxiosError(error)) {
-      setError({
+      const errorDetails = {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-      })
+      }
+      if (onError) {
+        onError(errorDetails)
+      }
     } else {
-      setError({ message: defaultMessage, response: error })
+      const errorDetails = { message: defaultMessage, response: error }
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
@@ -477,14 +482,6 @@ export function GBanksTable() {
             </Button>
           </DialogActions>
         </Dialog>
-      )}
-
-      {error && (
-        <MuiModal open={!!error} onClose={() => setError(null)}>
-          <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-            <ErrorComponent error={error} onClose={() => setError(null)} />
-          </Box>
-        </MuiModal>
       )}
     </div>
   )

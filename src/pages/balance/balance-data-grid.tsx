@@ -3,9 +3,6 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
 import { getBalance, updateBalanceColor } from '../../services/api/balance'
-import { LoadingSpinner } from '../../components/loading-spinner'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
 import { getTextColorForBackground } from '../../components/color-selector'
 import {
   Table,
@@ -17,6 +14,7 @@ import {
   Paper,
   Select,
   MenuItem,
+  CircularProgress,
 } from '@mui/material'
 import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
 
@@ -30,6 +28,7 @@ export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
   dateRange, // Destructure dateRange
   is_dolar, // Destructure is_dolar
+  onError,
 }: BalanceDataGridProps) {
   const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
   const restrictedFreelancerRole = import.meta.env.VITE_TEAM_FREELANCER
@@ -52,7 +51,6 @@ export function BalanceDataGrid({
     balance_total: [],
   })
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [playerStyles, setPlayerStyles] = useState<{
     [key: string]: { background: string; text: string }
   }>({})
@@ -176,22 +174,22 @@ export function BalanceDataGrid({
         }
 
         setBalanceData(response || { player_balance: {}, balance_total: [] })
+        onError(null) // Clear any previous errors
       } catch (error) {
-        setError(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-        )
+        const errorDetails = axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+        onError(errorDetails)
       } finally {
         setIsLoadingBalance(false)
       }
     }
     fetchBalanceData()
-  }, [dateRange, selectedTeam, isRestrictedUser, is_dolar])
+  }, [dateRange, selectedTeam, isRestrictedUser, is_dolar, onError])
 
   // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {
@@ -240,21 +238,11 @@ export function BalanceDataGrid({
     )
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   return (
     <div className='px-4 py-8'>
       {isLoadingBalance ? (
         <div className='flex min-h-[400px] items-center justify-center'>
-          <LoadingSpinner />
+          <CircularProgress />
         </div>
       ) : (
         <TableContainer

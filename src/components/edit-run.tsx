@@ -19,7 +19,7 @@ import axios from 'axios'
 import { RunData } from '../types/runs-interface'
 import { updateRun } from '../services/api/runs'
 import { getTeamMembers } from '../services/api/users'
-import { ErrorComponent, ErrorDetails } from './error-display'
+import { ErrorDetails } from './error-display'
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
@@ -35,9 +35,10 @@ export interface EditRunProps {
   run: RunData
   onClose: () => void
   onRunEdit: () => void
+  onError?: (error: ErrorDetails) => void
 }
 
-export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
+export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [formData, setFormData] = useState({
     date: run.date,
@@ -60,7 +61,6 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -70,10 +70,20 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
         if (response) setApiOptions(response)
       } catch (err) {
         console.error('Failed to fetch API options:', err)
+        if (onError) {
+          const errorDetails = axios.isAxiosError(err)
+            ? {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+              }
+            : { message: 'Unexpected error', response: err }
+          onError(errorDetails)
+        }
       }
     }
     fetchOptions()
-  }, [])
+  }, [onError])
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -83,7 +93,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     e.preventDefault()
 
     if (!formData.time) {
-      setError({ message: 'Time is required', response: null }) // Exibir erro se o campo estiver vazio
+      if (onError) {
+        onError({ message: 'Time is required', response: null })
+      }
       return
     }
 
@@ -113,13 +125,19 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       })
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError({
+        const errorDetails = {
           message: err.message,
           response: err.response?.data,
           status: err.response?.status,
-        })
+        }
+        if (onError) {
+          onError(errorDetails)
+        }
       } else {
-        setError({ message: 'Unexpected error', response: err })
+        const errorDetails = { message: 'Unexpected error', response: err }
+        if (onError) {
+          onError(errorDetails)
+        }
       }
     } finally {
       setIsSubmitting(false)
@@ -142,229 +160,219 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       )}
       <DialogContent>
         <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
-          {error ? (
-            <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : (
-            <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
-              <TextField
-                type='date'
-                label='Date'
-                value={formData.date}
-                onChange={(e) => handleChange('date', e.target.value)}
-                fullWidth
-                required
-                margin='dense'
+          <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+            <TextField
+              type='date'
+              label='Date'
+              value={formData.date}
+              onChange={(e) => handleChange('date', e.target.value)}
+              fullWidth
+              required
+              margin='dense'
+            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <TimePicker
+                value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    time:
+                      value && dayjs(value).isValid()
+                        ? dayjs(value).format('HH:mm') // Ensure correct 24-hour format
+                        : '',
+                  }))
+                }
+                ampm={true} // Display in 12-hour format
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    margin: 'dense', // Align with other fields
+                  },
+                }}
               />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <TimePicker
-                  value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
-                  onChange={(value) =>
+            </LocalizationProvider>
+            <TextField
+              label='Raid'
+              value={formData.raid}
+              onChange={(e) => handleChange('raid', e.target.value)}
+              fullWidth
+              required
+            />
+            <FormControl fullWidth required>
+              <InputLabel>Run Type</InputLabel>
+              <Select
+                value={formData.runType}
+                onChange={(e) => handleChange('runType', e.target.value)}
+                label='Run Type'
+              >
+                <MenuItem value='Full Raid'>Full Raid</MenuItem>
+                <MenuItem value='AOTC'>AOTC</MenuItem>
+                <MenuItem value='Legacy'>Legacy</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Difficulty</InputLabel>
+              <Select
+                value={formData.difficulty}
+                onChange={(e) => handleChange('difficulty', e.target.value)}
+                label='Difficulty'
+              >
+                <MenuItem value='Normal'>Normal</MenuItem>
+                <MenuItem value='Heroic'>Heroic</MenuItem>
+                <MenuItem value='Mythic'>Mythic</MenuItem>
+              </Select>
+            </FormControl>
+            {formData.difficulty === 'Mythic' && (
+              <FormControl fullWidth variant='outlined' required>
+                <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
+                <Select
+                  id='quantityBoss'
+                  name='quantityBoss'
+                  value={formData.quantityBoss.String}
+                  onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      time:
-                        value && dayjs(value).isValid()
-                          ? dayjs(value).format('HH:mm') // Ensure correct 24-hour format
-                          : '',
+                      quantityBoss: { String: e.target.value, Valid: true },
                     }))
                   }
-                  ampm={true} // Display in 12-hour format
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                      margin: 'dense', // Align with other fields
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-              <TextField
-                label='Raid'
-                value={formData.raid}
-                onChange={(e) => handleChange('raid', e.target.value)}
-                fullWidth
-                required
-              />
-              <FormControl fullWidth required>
-                <InputLabel>Run Type</InputLabel>
-                <Select
-                  value={formData.runType}
-                  onChange={(e) => handleChange('runType', e.target.value)}
-                  label='Run Type'
+                  label='Mythic Option'
                 >
-                  <MenuItem value='Full Raid'>Full Raid</MenuItem>
-                  <MenuItem value='AOTC'>AOTC</MenuItem>
-                  <MenuItem value='Legacy'>Legacy</MenuItem>
+                  <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
+                  <MenuItem value='7/8, 8/8 & Last Boss'>
+                    7/8, 8/8 & Last Boss
+                  </MenuItem>
                 </Select>
               </FormControl>
-              <FormControl fullWidth required>
-                <InputLabel>Difficulty</InputLabel>
-                <Select
-                  value={formData.difficulty}
-                  onChange={(e) => handleChange('difficulty', e.target.value)}
-                  label='Difficulty'
-                >
-                  <MenuItem value='Normal'>Normal</MenuItem>
-                  <MenuItem value='Heroic'>Heroic</MenuItem>
-                  <MenuItem value='Mythic'>Mythic</MenuItem>
-                </Select>
-              </FormControl>
-              {formData.difficulty === 'Mythic' && (
-                <FormControl fullWidth variant='outlined' required>
-                  <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
-                  <Select
-                    id='quantityBoss'
-                    name='quantityBoss'
-                    value={formData.quantityBoss.String}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        quantityBoss: { String: e.target.value, Valid: true },
-                      }))
-                    }
-                    label='Mythic Option'
+            )}
+            <FormControl fullWidth required>
+              <InputLabel>Team</InputLabel>
+              <Select
+                value={formData.idTeam}
+                onChange={(e) => handleChange('idTeam', e.target.value)}
+                label='Team'
+              >
+                <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+                  Padeirinho
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
+                  Garçom
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
+                  Confeiteiros
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
+                  Jackfruit
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+                  Milharal
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>Raio</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>KFFC</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
+                  Sapoculeano
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
+                  Greensky
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
+                  Guild Azralon BR#1
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
+                  Guild Azralon BR#2
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
+                  Rocket
+                </MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label='Max Buyers'
+              value={formData.maxBuyers}
+              onChange={(e) => handleChange('maxBuyers', e.target.value)}
+              fullWidth
+              required
+            />
+            <FormControl fullWidth required>
+              <InputLabel>Raid Leader</InputLabel>
+              <Select
+                multiple
+                label='Raid Leader'
+                value={formData.raidLeader}
+                onChange={(e) => handleChange('raidLeader', e.target.value)}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(selected as string[]).map((value) => (
+                      <Chip
+                        key={value}
+                        label={
+                          apiOptions.find(
+                            (option) =>
+                              `${option.id};${option.username}` === value
+                          )?.global_name || value
+                        }
+                      />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={{
+                  PaperProps: {
+                    style: { maxHeight: 200, overflow: 'auto' },
+                  },
+                }}
+              >
+                {apiOptions.map((option) => (
+                  <MenuItem
+                    key={option.username}
+                    value={`${option.id};${option.username}`}
                   >
-                    <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
-                    <MenuItem value='7/8, 8/8 & Last Boss'>
-                      7/8, 8/8 & Last Boss
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-              <FormControl fullWidth required>
-                <InputLabel>Team</InputLabel>
-                <Select
-                  value={formData.idTeam}
-                  onChange={(e) => handleChange('idTeam', e.target.value)}
-                  label='Team'
-                >
-                  <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
-                    Padeirinho
+                    {option.global_name}
                   </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
-                    Garçom
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
-                    Confeiteiros
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
-                    Jackfruit
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
-                    Milharal
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>
-                    Raio
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_APAE}>
-                    APAE
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>
-                    KFFC
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
-                    Sapoculeano
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
-                    Greensky
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
-                    Guild Azralon BR#1
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
-                    Guild Azralon BR#2
-                  </MenuItem>
-                  <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
-                    Rocket
-                  </MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label='Max Buyers'
-                value={formData.maxBuyers}
-                onChange={(e) => handleChange('maxBuyers', e.target.value)}
-                fullWidth
-                required
-              />
-              <FormControl fullWidth required>
-                <InputLabel>Raid Leader</InputLabel>
-                <Select
-                  multiple
-                  label='Raid Leader'
-                  value={formData.raidLeader}
-                  onChange={(e) => handleChange('raidLeader', e.target.value)}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {(selected as string[]).map((value) => (
-                        <Chip
-                          key={value}
-                          label={
-                            apiOptions.find(
-                              (option) =>
-                                `${option.id};${option.username}` === value
-                            )?.global_name || value
-                          }
-                        />
-                      ))}
-                    </Box>
-                  )}
-                  MenuProps={{
-                    PaperProps: {
-                      style: { maxHeight: 200, overflow: 'auto' },
-                    },
-                  }}
-                >
-                  {apiOptions.map((option) => (
-                    <MenuItem
-                      key={option.username}
-                      value={`${option.id};${option.username}`}
-                    >
-                      {option.global_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth required>
-                <InputLabel>Loot</InputLabel>
-                <Select
-                  value={formData.loot}
-                  onChange={(e) => handleChange('loot', e.target.value)}
-                  label='Loot'
-                >
-                  <MenuItem value='Saved'>Saved</MenuItem>
-                  <MenuItem value='Unsaved'>Unsaved</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label='Note'
-                value={formData.note}
-                onChange={(e) => handleChange('note', e.target.value)}
-                multiline
-                fullWidth
-              />
-              <div className='col-span-2 flex items-center justify-center gap-4'>
-                <Button
-                  type='submit'
-                  variant='contained'
-                  color='primary'
-                  disabled={isSubmitting}
-                  startIcon={
-                    isSubmitting ? (
-                      <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
-                    ) : (
-                      <Pencil size={20} />
-                    )
-                  }
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  }}
-                >
-                  {isSubmitting ? 'Editing...' : 'Edit Run'}
-                </Button>
-              </div>
-            </form>
-          )}
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Loot</InputLabel>
+              <Select
+                value={formData.loot}
+                onChange={(e) => handleChange('loot', e.target.value)}
+                label='Loot'
+              >
+                <MenuItem value='Saved'>Saved</MenuItem>
+                <MenuItem value='Unsaved'>Unsaved</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label='Note'
+              value={formData.note}
+              onChange={(e) => handleChange('note', e.target.value)}
+              multiline
+              fullWidth
+            />
+            <div className='col-span-2 flex items-center justify-center gap-4'>
+              <Button
+                type='submit'
+                variant='contained'
+                color='primary'
+                disabled={isSubmitting}
+                startIcon={
+                  isSubmitting ? (
+                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                  ) : (
+                    <Pencil size={20} />
+                  )
+                }
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                }}
+              >
+                {isSubmitting ? 'Editing...' : 'Edit Run'}
+              </Button>
+            </div>
+          </form>
         </div>
       </DialogContent>
     </Dialog>

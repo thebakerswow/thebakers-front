@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getTeams } from '../../../services/api/teams'
 import { Team, teamOrder } from '../../../types/team-interface'
-import { LoadingSpinner } from '../../../components/loading-spinner'
 import axios from 'axios'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { Modal as MuiModal, Box } from '@mui/material'
+import { ErrorDetails, ErrorComponent } from '../../../components/error-display'
 import {
   Table,
   TableHead,
@@ -13,6 +11,7 @@ import {
   TableCell,
   TableContainer,
   Paper,
+  CircularProgress,
 } from '@mui/material'
 
 const localTeamColors: Record<string, string> = {
@@ -30,10 +29,13 @@ const localTeamColors: Record<string, string> = {
   Advertiser: '#D1D5DB',
 }
 
-export function TeamsManagement() {
+interface TeamsManagementProps {
+  onError?: (error: ErrorDetails) => void
+}
+
+export function TeamsManagement({ onError }: TeamsManagementProps) {
   const [teams, setTeams] = useState<Team[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -50,21 +52,23 @@ export function TeamsManagement() {
         }))
         setTeams(orderedTeams)
       } catch (error) {
-        setError(
-          axios.isAxiosError(error)
-            ? {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Erro inesperado', response: error }
-        )
+        const errorDetails = axios.isAxiosError(error)
+          ? {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Erro inesperado', response: error }
+
+        if (onError) {
+          onError(errorDetails)
+        }
       } finally {
         setIsLoading(false)
       }
     }
     fetchTeams()
-  }, [])
+  }, [onError])
 
   const renderTableHeader = () => (
     <TableHead>
@@ -188,20 +192,10 @@ export function TeamsManagement() {
     )
   }
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className='absolute inset-0 m-8 flex items-center justify-center rounded-xl bg-zinc-700 text-gray-100 shadow-2xl'>
-        <LoadingSpinner />
+        <CircularProgress />
       </div>
     )
   }
@@ -215,5 +209,21 @@ export function TeamsManagement() {
         </Table>
       </TableContainer>
     </div>
+  )
+}
+
+// Wrapper component for centralized error handling
+export default function TeamsManagementPage() {
+  const [error, setError] = useState<ErrorDetails | null>(null)
+
+  const handleError = (errorDetails: ErrorDetails) => {
+    setError(errorDetails)
+  }
+
+  return (
+    <>
+      <TeamsManagement onError={handleError} />
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
+    </>
   )
 }
