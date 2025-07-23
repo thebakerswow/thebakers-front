@@ -111,6 +111,10 @@ export function BalanceControlTable({
         return '#EF4444' // Chefe de Cozinha
       case import.meta.env.VITE_TEAM_FREELANCER:
         return '#86EFAC' // Freelancer
+      case import.meta.env.VITE_TEAM_MPLUS:
+        return '#8B5CF6' // MPLUS
+      case import.meta.env.VITE_TEAM_LEVELING:
+        return '#10B981' // LEVELING
       default:
         return '#FFFFFF' // Default white
     }
@@ -453,6 +457,18 @@ export function BalanceControlTable({
                 style={{ backgroundColor: '#86EFAC', color: 'black' }} // Lighter green
               >
                 Freelancer
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_MPLUS}
+                style={{ backgroundColor: '#8B5CF6', color: 'white' }}
+              >
+                M+
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_LEVELING}
+                style={{ backgroundColor: '#10B981', color: 'white' }}
+              >
+                Leveling
               </MenuItem>
             </Select>
           </FormControl>
