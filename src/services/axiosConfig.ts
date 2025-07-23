@@ -22,3 +22,27 @@ api.interceptors.request.use(
     return Promise.reject(error)
   }
 )
+
+// Interceptor para tratar erros de resposta, especialmente erros de autenticação
+api.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    // Verifica se é um erro de autenticação (401) ou erro de token inválido
+    if (error.response?.status === 401) {
+      // Remove o token do localStorage
+      localStorage.removeItem('jwt')
+
+      // Se não estiver na página de login, redireciona para login
+      if (
+        window.location.pathname !== '/' &&
+        window.location.pathname !== '/login'
+      ) {
+        window.location.href = '/'
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)

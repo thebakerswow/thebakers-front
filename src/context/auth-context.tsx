@@ -44,6 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded = jwtDecode<JwtPayload>(token)
 
+        // Verifica se o token expirou
+        if (decoded.exp && decoded.exp < Date.now() / 1000) {
+          console.log('Token expired, logging out')
+          logout()
+          setLoading(false)
+          return
+        }
+
         const roles = decoded.roles || decoded.role || decoded.roles_array
         const userId =
           decoded.user_id || decoded.userId || decoded.id || decoded.sub

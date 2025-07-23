@@ -1,4 +1,7 @@
 import Button from '@mui/material/Button'
+import { useAuth } from '../context/auth-context'
+import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 
 export interface ErrorDetails {
   message: string
@@ -9,8 +12,28 @@ export interface ErrorDetails {
 import { ErrorComponentProps } from '../types'
 
 export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
-  const { response, message } = error
+  const { response, message, status } = error
   const errorData = response?.errors?.[0]
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  // Verifica se é um erro de autenticação
+  const isAuthError =
+    status === 401 ||
+    errorData?.type === 'autenticacao-invalida' ||
+    errorData?.title === 'Usuário não autenticado'
+
+  useEffect(() => {
+    if (isAuthError) {
+      // Faz logout e redireciona para login após 2 segundos
+      const timer = setTimeout(() => {
+        logout()
+        navigate('/')
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthError, logout, navigate])
 
   return (
     <div className='max-w-2xl rounded-lg bg-zinc-800 p-4 text-center'>
@@ -31,6 +54,14 @@ export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
         <div className='mb-2'>
           <p className='font-semibold text-red-400'>Mensagem:</p>
           <p className='text-red-400'>{message}</p>
+        </div>
+      )}
+
+      {isAuthError && (
+        <div className='mb-2'>
+          <p className='text-yellow-400'>
+            Redirecionando para login em 2 segundos...
+          </p>
         </div>
       )}
 
