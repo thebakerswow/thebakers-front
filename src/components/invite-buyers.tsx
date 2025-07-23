@@ -85,7 +85,7 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
           </div>
         ) : (
           // Exibe mensagem caso nenhum dado seja encontrado
-          <p className='text-center'>Nenhum dado encontrado.</p>
+          <p className='text-center'>No data found.</p>
         )}
       </DialogContent>
     </Dialog>

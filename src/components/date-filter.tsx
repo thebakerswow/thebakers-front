@@ -195,8 +195,8 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                 onClick={handleFilterReset}
                 variant='contained'
                 sx={{
-                  backgroundColor: 'rgb(239, 68, 68)',
-                  '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                  backgroundColor: 'rgb(147, 51, 234) ',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247) ' },
                 }}
                 size='small'
                 className='shadow-lg'
@@ -232,13 +232,13 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                     filterDay &&
                     format(startOfDay(day), 'yyyy-MM-dd') ===
                       format(startOfDay(filterDay), 'yyyy-MM-dd')
-                      ? 'pink' // Slightly darker background for selected
+                      ? '#e9d5ff' // Light purple background for selected
                       : 'white',
                   borderColor:
                     filterDay &&
                     format(startOfDay(day), 'yyyy-MM-dd') ===
                       format(startOfDay(filterDay), 'yyyy-MM-dd')
-                      ? 'pink' // Darker border for selected
+                      ? '#c084fc' // Light purple border for selected
                       : 'gray',
                 }}
               >

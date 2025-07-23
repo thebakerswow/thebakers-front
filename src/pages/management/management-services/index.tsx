@@ -350,7 +350,11 @@ export default function PriceTableManagement() {
             variant='contained'
             color='error'
             onClick={() => setOpenCategories(true)}
-            sx={{ mr: 2 }}
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              mr: 2,
+            }}
           >
             Manage Categories
           </Button>
@@ -358,6 +362,10 @@ export default function PriceTableManagement() {
             variant='contained'
             color='error'
             onClick={() => handleOpen()}
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+            }}
           >
             Add Service
           </Button>
@@ -431,12 +439,20 @@ export default function PriceTableManagement() {
                     <IconButton
                       color='error'
                       onClick={() => handleOpen(service)}
+                      sx={{
+                        color: 'rgb(147, 51, 234)',
+                        '&:hover': { color: 'rgb(168, 85, 247)' },
+                      }}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       color='error'
                       onClick={() => handleDelete(service.id)}
+                      sx={{
+                        color: 'rgb(147, 51, 234)',
+                        '&:hover': { color: 'rgb(168, 85, 247)' },
+                      }}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -522,7 +538,15 @@ export default function PriceTableManagement() {
           <Button onClick={handleClose} color='inherit'>
             Cancel
           </Button>
-          <Button onClick={handleSave} color='error' variant='contained'>
+          <Button
+            onClick={handleSave}
+            color='error'
+            variant='contained'
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+            }}
+          >
             {editing ? 'Save' : 'Add'}
           </Button>
         </DialogActions>
@@ -544,6 +568,10 @@ export default function PriceTableManagement() {
               variant='contained'
               color='error'
               onClick={() => handleOpenCategoryDialog()}
+              sx={{
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              }}
             >
               Add Category
             </Button>
@@ -565,12 +593,20 @@ export default function PriceTableManagement() {
                         <IconButton
                           color='error'
                           onClick={() => handleOpenCategoryDialog(category)}
+                          sx={{
+                            color: 'rgb(147, 51, 234)',
+                            '&:hover': { color: 'rgb(168, 85, 247)' },
+                          }}
                         >
                           <EditIcon />
                         </IconButton>
                         <IconButton
                           color='error'
                           onClick={() => handleDeleteCategory(category.id)}
+                          sx={{
+                            color: 'rgb(147, 51, 234)',
+                            '&:hover': { color: 'rgb(168, 85, 247)' },
+                          }}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -603,6 +639,10 @@ export default function PriceTableManagement() {
                 onClick={handleSaveCategory}
                 color='error'
                 variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                }}
               >
                 {editingCategory ? 'Save' : 'Add'}
               </Button>

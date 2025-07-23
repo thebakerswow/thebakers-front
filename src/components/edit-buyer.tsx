@@ -161,13 +161,12 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
       </div>
       <Button
         variant='contained'
-        color='error'
         fullWidth
         disabled={isSubmitting}
         onClick={handleSubmit}
         sx={{
-          backgroundColor: 'rgb(239, 68, 68)',
-          '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+          backgroundColor: 'rgb(147, 51, 234)',
+          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
           mt: 2,
         }}
       >

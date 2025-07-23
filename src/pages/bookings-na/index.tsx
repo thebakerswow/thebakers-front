@@ -237,8 +237,8 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -252,9 +252,9 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgb(147, 51, 234)',
                 '&:hover': {
-                  backgroundColor: 'rgb(248, 113, 113)',
+                  backgroundColor: 'rgb(168, 85, 247)',
                 },
                 padding: '10px 20px',
                 boxShadow: 3,
@@ -269,8 +269,8 @@ export function FullRaidsNa() {
             <Button
               variant='contained'
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 padding: '10px 20px',
                 boxShadow: 3,
                 display: 'flex',
@@ -321,11 +321,11 @@ export function FullRaidsNa() {
               <Button
                 variant='outlined'
                 sx={{
-                  borderColor: 'rgb(239, 68, 68)',
-                  color: 'rgb(239, 68, 68)',
+                  borderColor: 'rgb(147, 51, 234)',
+                  color: 'rgb(147, 51, 234)',
                   '&:hover': {
-                    borderColor: 'rgb(248, 113, 113)',
-                    color: 'rgb(248, 113, 113)',
+                    borderColor: 'rgb(168, 85, 247)',
+                    color: 'rgb(168, 85, 247)',
                   },
                 }}
                 onClick={handleCloseBulkAddDialog}

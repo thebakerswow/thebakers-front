@@ -150,7 +150,7 @@ export function HomePage() {
       style={{ backgroundImage: `url(${manaforge})` }}
     >
       {/* Overlay escuro para escurecer a imagem de fundo */}
-      <div className='absolute inset-0 z-0 bg-black/40'></div>
+      <div className='absolute inset-0 z-0 bg-black/50'></div>
       {isOnlyFreelancer() ? (
         // Layout simples para freelancers - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
@@ -159,7 +159,7 @@ export function HomePage() {
             <div className='relative z-20 rounded-2xl px-8 py-6'>
               <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
                 Welcome to TheBakers{' '}
-                <span className='font-bold text-red-700'>Hub</span>
+                <span className='font-bold text-purple-500'>Hub</span>
                 {username
                   ? `, ${username}!`
                   : idDiscord

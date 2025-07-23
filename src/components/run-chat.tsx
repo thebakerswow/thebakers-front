@@ -52,7 +52,7 @@ export function RunChat({
       text: 'Are you sure you want to tag the raid leader?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: 'rgb(248, 113, 113)',
+      confirmButtonColor: 'rgb(168, 85, 247)',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Confirm!',
       cancelButtonText: 'Cancel',
@@ -81,9 +81,9 @@ export function RunChat({
               width: 56,
               height: 56,
               borderRadius: '50%',
-              backgroundColor: 'rgb(239, 68, 68)',
+              backgroundColor: 'rgb(147, 51, 234)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               p: 0,
             }}
             aria-label='Open run chat'
@@ -93,7 +93,7 @@ export function RunChat({
         </Badge>
       ) : (
         <div className='flex h-[500px] w-[400px] flex-col overflow-hidden rounded-2xl bg-zinc-900 shadow-2xl'>
-          <div className='flex items-center justify-between bg-red-500 px-4 py-3 text-white'>
+          <div className='flex items-center justify-between bg-purple-500 px-4 py-3 text-white'>
             <span className='font-semibold'>Run Chat</span>
             <IconButton
               onClick={() => setIsChatOpen(false)}
@@ -130,7 +130,7 @@ export function RunChat({
                       <div
                         className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
                           isOwnMessage
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-purple-500 text-white'
                             : 'bg-zinc-700 text-gray-200'
                         }`}
                         title={
@@ -138,7 +138,7 @@ export function RunChat({
                         }
                       >
                         {!isOwnMessage && (
-                          <div className='text-xs font-bold text-red-400'>
+                          <div className='text-xs font-bold text-purple-400'>
                             {msg.user_name || 'Usuário desconhecido'}
                           </div>
                         )}
@@ -205,14 +205,14 @@ export function RunChat({
               variant='contained'
               disabled={!input.trim() || inputDisabled}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgb(147, 51, 234)',
                 borderRadius: 2,
                 fontWeight: 600,
                 px: 2,
                 minWidth: 0,
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                 '&.Mui-disabled': {
-                  backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                  backgroundColor: 'rgba(147, 51, 234, 0.5)',
                   cursor: 'not-allowed',
                 },
               }}

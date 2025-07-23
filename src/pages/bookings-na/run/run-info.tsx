@@ -262,11 +262,11 @@ export function RunInfo({
             sx={{
               backgroundColor: isRunLocked
                 ? 'rgb(209, 213, 219)'
-                : 'rgb(239, 68, 68)', // Gray if disabled
+                : 'rgb(147, 51, 234)', // Gray if disabled
               '&:hover': {
                 backgroundColor: isRunLocked
                   ? 'rgb(209, 213, 219)'
-                  : 'rgb(248, 113, 113)', // Gray if disabled
+                  : 'rgb(168, 85, 247)', // Gray if disabled
               },
             }}
           >
@@ -285,11 +285,11 @@ export function RunInfo({
                 sx={{
                   backgroundColor: isRunLocked
                     ? 'rgb(209, 213, 219)'
-                    : 'rgb(239, 68, 68)', // Gray if disabled
+                    : 'rgb(147, 51, 234)', // Gray if disabled
                   '&:hover': {
                     backgroundColor: isRunLocked
                       ? 'rgb(209, 213, 219)'
-                      : 'rgb(248, 113, 113)', // Gray if disabled
+                      : 'rgb(168, 85, 247)', // Gray if disabled
                   },
                 }}
               >
@@ -302,9 +302,9 @@ export function RunInfo({
                 fullWidth
                 onClick={() => setIsEditHistoryOpen(true)}
                 sx={{
-                  backgroundColor: 'rgb(239, 68, 68)',
+                  backgroundColor: 'rgb(147, 51, 234)',
                   '&:hover': {
-                    backgroundColor: 'rgb(248, 113, 113)',
+                    backgroundColor: 'rgb(168, 85, 247)',
                   },
                 }}
               >
@@ -318,9 +318,9 @@ export function RunInfo({
                 fullWidth
                 onClick={handleToggleRunLock}
                 sx={{
-                  backgroundColor: 'rgb(239, 68, 68)',
+                  backgroundColor: 'rgb(147, 51, 234)',
                   '&:hover': {
-                    backgroundColor: 'rgb(248, 113, 113)',
+                    backgroundColor: 'rgb(168, 85, 247)',
                   },
                 }}
               >
@@ -329,7 +329,7 @@ export function RunInfo({
             </>
           ) : (
             isRunLocked && (
-              <p className='text-center font-semibold text-red-500'>
+              <p className='text-center font-semibold text-purple-500'>
                 This run is currently locked. You do not have permission to
                 unlock it.
               </p>

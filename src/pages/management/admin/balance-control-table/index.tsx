@@ -479,15 +479,17 @@ export function BalanceControlTable({
           </Button>
           <Button
             variant='contained'
-            color='error'
             size='small'
             disabled={Object.values(calculatorValues).every(
               (value) => value.trim() === ''
             )}
             onClick={handleBulkSend}
-            sx={{
-              textTransform: 'uppercase',
-              opacity: isBulkingSubmitting ? 0.5 : 1,
+            sx={
+              { 
+                textTransform: 'uppercase',
+                opacity: isBulkingSubmitting ? 0.5 : 1,
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' }
             }}
           >
             {isBulkingSubmitting ? 'Sending...' : 'Send All'}

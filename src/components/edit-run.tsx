@@ -345,8 +345,8 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                     )
                   }
                   sx={{
-                    backgroundColor: 'rgb(239, 68, 68)',
-                    '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                    backgroundColor: 'rgb(147, 51, 234)',
+                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                   }}
                 >
                   {isSubmitting ? 'Editing...' : 'Edit Run'}

@@ -261,8 +261,8 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
               fontSize: '14px',
               height: '40px',
               minWidth: '100px', // Ensure button width remains consistent
-              backgroundColor: 'rgb(239, 68, 68)',
-              '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
             }}
           >
             {isSubmitting ? 'Adding...' : 'ADD'}

@@ -148,8 +148,8 @@ export function GBanksTable() {
           color='error'
           onClick={() => setAddGBankModalOpen(true)}
           sx={{
-            backgroundColor: 'rgb(239, 68, 68)',
-            '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+            backgroundColor: 'rgb(147, 51, 234)',
+            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
           }}
         >
           Add G-Bank
@@ -194,7 +194,6 @@ export function GBanksTable() {
           <DialogActions sx={{ justifyContent: 'center' }}>
             <Button
               variant='contained'
-              color='primary'
               onClick={() =>
                 handleAction(
                   () =>
@@ -211,17 +210,17 @@ export function GBanksTable() {
               }
               disabled={isSubmitting}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              {isSubmitting ? 'Adicionando...' : 'Salvar'}
+              {isSubmitting ? 'Adding...' : 'Save'}
             </Button>
             <Button
               variant='outlined'
               onClick={() => setAddGBankModalOpen(false)}
             >
-              Cancelar
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
@@ -426,11 +425,11 @@ export function GBanksTable() {
               }
               disabled={isSubmitting}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar'}
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </DialogActions>
         </Dialog>
@@ -445,23 +444,22 @@ export function GBanksTable() {
           <DialogActions sx={{ justifyContent: 'center' }}>
             <Button
               variant='contained'
-              color='error'
               onClick={() =>
                 handleAction(
                   () => deleteGBankService(deleteGBank!.id),
-                  'Erro ao deletar G-Bank'
+                  'Error deleting G-Bank'
                 ).then(() => setDeleteGBank(null))
               }
               disabled={isSubmitting}
               sx={{
-                backgroundColor: 'rgb(239, 68, 68)',
-                '&:hover': { backgroundColor: 'rgb(248, 113, 113)' },
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
               }}
             >
-              {isSubmitting ? 'Excluindo...' : 'Excluir'}
+              {isSubmitting ? 'Deleting...' : 'Delete'}
             </Button>
             <Button variant='outlined' onClick={() => setDeleteGBank(null)}>
-              Cancelar
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>

@@ -30,7 +30,7 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
   if (loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
-        <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-red-400'></div>
+        <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-purple-400'></div>
       </div>
     )
   }
