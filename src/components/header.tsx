@@ -82,7 +82,10 @@ export function Header() {
     return (
       <AppBar
         position='static'
-        sx={{ background: 'linear-gradient(to right, black, #333)' }}
+        sx={{
+          background: 'linear-gradient(to right, black, #333)',
+          zIndex: 1000,
+        }}
       >
         <Toolbar>
           {/* EST Clock na esquerda */}
@@ -110,7 +113,10 @@ export function Header() {
   return (
     <AppBar
       position='static'
-      sx={{ background: 'linear-gradient(to right, black, #333)' }}
+      sx={{
+        background: 'linear-gradient(to right, black, #333)',
+        zIndex: 1000,
+      }}
     >
       <Toolbar sx={{ justifyContent: 'space-around' }}>
         {/* EST Clock na esquerda */}
@@ -145,11 +151,25 @@ export function Header() {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
-              slotProps={{
-                paper: {
-                  sx: { width: '150px' }, // Adjust the width as needed
+              sx={{
+                zIndex: 99999,
+                '& .MuiPaper-root': {
+                  zIndex: 99999,
+                },
+                '& .MuiBackdrop-root': {
+                  zIndex: 99998,
                 },
               }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    width: '150px',
+                    zIndex: 99999,
+                    position: 'relative',
+                  },
+                },
+              }}
+              style={{ zIndex: 99999 }}
             >
               <MenuItem
                 onClick={() => {
