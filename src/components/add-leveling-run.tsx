@@ -57,11 +57,11 @@ export function AddLevelingRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0], // Set today's date as default
-    time: '',
+    time: '23:59',
     raid: '',
     runType: '',
     difficulty: '',
-    idTeam: import.meta.env.VITE_TEAM_MILHARAL, // Always set to Milharal
+    idTeam: import.meta.env.VITE_TEAM_LEVELING, // Always set to Leveling
     maxBuyers: '999',
     raidLeader: [] as string[],
     loot: '',
@@ -71,9 +71,9 @@ export function AddLevelingRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
-  // Busca as opções da API ao montar o componente do time Milharal
+  // Busca as opções da API ao montar o componente do time Leveling
   useEffect(() => {
-    const teamId = import.meta.env.VITE_TEAM_MILHARAL
+    const teamId = import.meta.env.VITE_TEAM_LEVELING
     fetchApiOptions(teamId, setError).then(setApiOptions)
   }, [])
 
@@ -195,7 +195,7 @@ export function AddLevelingRun({ onClose, onRunAddedReload }: AddRunProps) {
               type='text'
               id='idTeam'
               label='Team'
-              value='Milharal'
+              value='Leveling'
               variant='outlined'
               fullWidth
               disabled

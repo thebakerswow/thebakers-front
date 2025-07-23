@@ -373,28 +373,35 @@ export function HomePage() {
                         'Milharal',
                         'Raio',
                       ]
+                      // Filtra as runs dos times MPlus e Leveling
+                      const filteredRuns = (
+                        weekRuns[columnDateString] || []
+                      ).filter(
+                        (run) =>
+                          run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
+                          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING
+                      )
+
                       // Ordena as runs do dia pelo horário e prioridade do time
-                      const runsSorted = (weekRuns[columnDateString] || [])
-                        .slice()
-                        .sort((a, b) => {
-                          if (!a?.time || !b?.time) return 0
-                          const [ha, ma] = a.time.split(':').map(Number)
-                          const [hb, mb] = b.time.split(':').map(Number)
-                          if (ha !== hb) return ha - hb
-                          if (ma !== mb) return ma - mb
-                          // Se o horário for igual, ordena pela ordem dos times
-                          const pa = teamOrder.indexOf(a.team)
-                          const pb = teamOrder.indexOf(b.team)
-                          if (pa === -1 && pb === -1) return 0
-                          if (pa === -1) return 1
-                          if (pb === -1) return -1
-                          return pa - pb
-                        })
+                      const runsSorted = filteredRuns.slice().sort((a, b) => {
+                        if (!a?.time || !b?.time) return 0
+                        const [ha, ma] = a.time.split(':').map(Number)
+                        const [hb, mb] = b.time.split(':').map(Number)
+                        if (ha !== hb) return ha - hb
+                        if (ma !== mb) return ma - mb
+                        // Se o horário for igual, ordena pela ordem dos times
+                        const pa = teamOrder.indexOf(a.team)
+                        const pb = teamOrder.indexOf(b.team)
+                        if (pa === -1 && pb === -1) return 0
+                        if (pa === -1) return 1
+                        if (pb === -1) return -1
+                        return pa - pb
+                      })
                       const runsToShow = runsSorted.length ? runsSorted : []
                       return (
                         <div
                           key={daysEn[weekDayIdx] + monthNumber + dayNumber}
-                          className='flex h-[900px] min-w-[200px] max-w-md flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                          className='flex h-[900px] min-w-[300px] max-w-[400px] flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
                         >
                           <div className='mb-4 text-2xl font-semibold text-white'>
                             <span className='inline-flex items-center gap-2'>

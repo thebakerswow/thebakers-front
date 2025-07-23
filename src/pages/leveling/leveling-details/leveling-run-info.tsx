@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
+import { Lock, LockOpen, UserPlus } from '@phosphor-icons/react'
 import levelingLogo from '../../../assets/leveling.png'
 import { AddBuyer } from '../../../components/add-buyer'
-import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
 import {
@@ -28,11 +27,9 @@ interface LevelingRunInfoProps {
 export function LevelingRunInfo({
   run,
   onBuyerAddedReload,
-  onRunEdit,
   attendanceAccessDenied,
 }: LevelingRunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
 
@@ -42,13 +39,7 @@ export function LevelingRunInfo({
     )
   }
 
-  const handleOpenEditModal = () => {
-    setIsEditModalOpen(true)
-  }
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false)
-  }
 
   function handleOpenAddBuyer() {
     setIsAddBuyerOpen(true)
@@ -170,11 +161,11 @@ export function LevelingRunInfo({
             sx={{
               backgroundColor: isRunLocked
                 ? 'rgb(209, 213, 219)'
-                : 'rgb(239, 68, 68)', // Gray if disabled
+                : 'rgb(147, 51, 234)', // Gray if disabled
               '&:hover': {
                 backgroundColor: isRunLocked
                   ? 'rgb(209, 213, 219)'
-                  : 'rgb(248, 113, 113)', // Gray if disabled
+                  : 'rgb(168, 85, 247)', // Gray if disabled
               },
             }}
           >
@@ -187,25 +178,7 @@ export function LevelingRunInfo({
             import.meta.env.VITE_TEAM_STAFF,
           ]) ? (
             <>
-              <Button
-                variant='contained'
-                startIcon={<Pencil size={18} />}
-                fullWidth
-                onClick={handleOpenEditModal}
-                disabled={isRunLocked} // Disable button if run is locked
-                sx={{
-                  backgroundColor: isRunLocked
-                    ? 'rgb(209, 213, 219)'
-                    : 'rgb(239, 68, 68)', // Gray if disabled
-                  '&:hover': {
-                    backgroundColor: isRunLocked
-                      ? 'rgb(209, 213, 219)'
-                      : 'rgb(248, 113, 113)', // Gray if disabled
-                  },
-                }}
-              >
-                Edit Raid
-              </Button>
+             
               <Button
                 variant='contained'
                 startIcon={
@@ -214,19 +187,19 @@ export function LevelingRunInfo({
                 fullWidth
                 onClick={toggleRunLock}
                 sx={{
-                  backgroundColor: 'rgb(239, 68, 68)',
+                  backgroundColor: 'rgb(147, 51, 234)',
                   '&:hover': {
-                    backgroundColor: 'rgb(248, 113, 113)',
+                    backgroundColor: 'rgb(168, 85, 247)',
                   },
                 }}
               >
-                {isRunLocked ? 'Unlock Run' : 'Lock Run'}
+                {isRunLocked ? 'Unlock Day' : 'Lock Day'}
               </Button>
             </>
           ) : (
             isRunLocked && (
-              <p className='text-center font-semibold text-red-500'>
-                This run is currently locked. You do not have permission to
+              <p className='text-center font-semibold text-purple-500'>
+                This day is currently locked. You do not have permission to
                 unlock it.
               </p>
             )
@@ -239,14 +212,6 @@ export function LevelingRunInfo({
           run={run}
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
-        />
-      )}
-      {isEditModalOpen && (
-        <EditRun
-          key={run.id}
-          run={run}
-          onClose={handleCloseEditModal}
-          onRunEdit={onRunEdit}
         />
       )}
     </div>

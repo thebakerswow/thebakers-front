@@ -164,7 +164,9 @@ export function RunsDataGrid({
   const sortedData = useMemo(() => {
     // Filtra as runs do time MPlus
     const filteredRuns = runs.filter(
-      (run) => run.idTeam !== import.meta.env.VITE_TEAM_MPLUS
+      (run) =>
+        run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
+        run.idTeam !== import.meta.env.VITE_TEAM_LEVELING
     )
 
     const sorted = [...filteredRuns].sort((a, b) => {

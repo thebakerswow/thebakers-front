@@ -197,7 +197,7 @@ export function KeyRunInfo({
           ) : (
             isRunLocked && (
               <p className='text-center font-semibold text-purple-500'>
-                This run is currently locked. You do not have permission to
+                This day is currently locked. You do not have permission to
                 unlock it.
               </p>
             )

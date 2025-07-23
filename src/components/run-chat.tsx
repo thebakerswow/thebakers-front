@@ -128,7 +128,7 @@ export function RunChat({
           >
             {loading ? (
               <div className='flex h-full items-center justify-center'>
-                <CircularProgress color='error' />
+                <CircularProgress sx={{ color: '#8b5cf6' }} />
               </div>
             ) : (
               <>

@@ -1,8 +1,6 @@
 import {
   Eye,
   Trash,
-  Clipboard,
-  Pencil,
   Lock,
   LockOpen,
 } from '@phosphor-icons/react'
@@ -14,7 +12,6 @@ import { RunData } from '../../types/runs-interface'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
-import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
 import {
@@ -54,10 +51,6 @@ export function KeysDataGrid({
   } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
-  const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
-  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RunData | null>(
-    null
-  )
   const { userRoles } = useAuth()
   const [runs, setRuns] = useState<RunData[]>(data)
 
@@ -109,51 +102,9 @@ export function KeysDataGrid({
     setSelectedRunToDelete(null)
   }
 
-  // Abre o modal de edição de uma run
-  const handleOpenEditRunModal = (run: RunData) => {
-    setSelectedRunToEdit(run)
-    setIsEditRunModalOpen(true)
-  }
-
-  // Fecha o modal de edição de uma run
-  const handleCloseEditRunModal = () => {
-    setIsEditRunModalOpen(false)
-    setSelectedRunToEdit(null)
-  }
-
   // Redireciona para a página de detalhes da run
   const handleRedirect = (id: string) => {
     navigate(`/bookings-na/key/${id}`)
-  }
-
-  // Function to copy an individual run's data to the clipboard
-  const copyRunToClipboard = (run: RunData) => {
-    const formattedRun = {
-      date: run.date,
-      time: run.time,
-      raid: run.raid,
-      runType: run.runType,
-      difficulty: run.difficulty,
-      idTeam: run.idTeam,
-      maxBuyers: run.maxBuyers.toString(),
-      raidLeader:
-        run.raidLeaders?.map(
-          (leader) => `${leader.idDiscord};${leader.username}`
-        ) || [],
-      loot: run.loot,
-      note: run.note || '',
-      quantityBoss: run.quantityBoss, // adicionado para copiar também
-    }
-
-    navigator.clipboard
-      .writeText(JSON.stringify(formattedRun, null, 2))
-      .catch(() => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed to copy run.',
-          text: 'Please try again.',
-        })
-      })
   }
 
   // Function to toggle the lock status of a run
@@ -352,18 +303,11 @@ export function KeysDataGrid({
                 {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
                 {renderTableCell(run.note)}
                 {renderTableCell(
-                  hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
+                  hasRequiredRole([
+                    import.meta.env.VITE_TEAM_CHEFE,
+                    import.meta.env.VITE_TEAM_MPLUS,
+                  ]) ? (
                     <>
-                      <Tooltip title='Edit'>
-                        <IconButton onClick={() => handleOpenEditRunModal(run)}>
-                          <Pencil size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Copy'>
-                        <IconButton onClick={() => copyRunToClipboard(run)}>
-                          <Clipboard size={20} />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title='Delete'>
                         <IconButton
                           onClick={() => handleOpenDeleteRunModal(run)}
@@ -404,14 +348,6 @@ export function KeysDataGrid({
 
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
-      )}
-
-      {isEditRunModalOpen && selectedRunToEdit && (
-        <EditRun
-          run={selectedRunToEdit}
-          onClose={handleCloseEditRunModal}
-          onRunEdit={onDeleteSuccess}
-        />
       )}
     </TableContainer>
   )
