@@ -1,7 +1,14 @@
 import axios from 'axios'
-import { Dialog, DialogContent, DialogTitle, Button } from '@mui/material'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Button,
+  IconButton,
+} from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Check } from '@phosphor-icons/react'
+import CloseIcon from '@mui/icons-material/Close'
 import { getInviteBuyers } from '../services/api/buyers'
 import { ErrorComponent, ErrorDetails } from './error-display'
 import Swal from 'sweetalert2'
@@ -55,7 +62,16 @@ export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
 
   return (
     <Dialog open={true} onClose={onClose}>
-      <DialogTitle className='text-center'>Invite Buyers</DialogTitle>
+      <DialogTitle className='relative text-center'>
+        Invite Buyers
+        <IconButton
+          aria-label='close'
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 0, top: 13 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent className='flex flex-col items-center'>
         {loading ? (
           // Exibe mensagem de carregamento

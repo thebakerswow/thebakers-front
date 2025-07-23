@@ -21,6 +21,7 @@ import {
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 import {
   getServices,
@@ -465,7 +466,16 @@ export default function PriceTableManagement() {
 
       {/* Dialog for Add/Edit */}
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editing ? 'Edit Service' : 'Add Service'}</DialogTitle>
+        <DialogTitle className='relative'>
+          {editing ? 'Edit Service' : 'Add Service'}
+          <IconButton
+            aria-label='close'
+            onClick={handleClose}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent sx={{ minWidth: 350 }}>
           <TextField
             margin='dense'
@@ -618,8 +628,15 @@ export default function PriceTableManagement() {
           </TableContainer>
           {/* Dialog interno para Add/Edit Category */}
           <Dialog open={openCategoryDialog} onClose={handleCloseCategoryDialog}>
-            <DialogTitle>
+            <DialogTitle className='relative'>
               {editingCategory ? 'Edit Category' : 'Add Category'}
+              <IconButton
+                aria-label='close'
+                onClick={handleCloseCategoryDialog}
+                sx={{ position: 'absolute', right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
             </DialogTitle>
             <DialogContent sx={{ minWidth: 350 }}>
               <TextField

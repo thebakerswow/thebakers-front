@@ -12,7 +12,9 @@ import {
   FormControl,
   Box,
   Chip,
+  IconButton,
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import axios from 'axios'
 import { RunData } from '../types/runs-interface'
 import { updateRun } from '../services/api/runs'
@@ -127,7 +129,16 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   return (
     <Dialog open={true} onClose={onClose} fullWidth>
       {!isSuccess && (
-        <DialogTitle className='text-center'>Edit Run</DialogTitle>
+        <DialogTitle className='relative text-center'>
+          Edit Run
+          <IconButton
+            aria-label='close'
+            onClick={onClose}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
       )}
       <DialogContent>
         <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>

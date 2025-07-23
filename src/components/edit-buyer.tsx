@@ -2,7 +2,16 @@ import { useState } from 'react'
 import axios from 'axios'
 import { updateBuyer } from '../services/api/buyers'
 import { ErrorDetails, ErrorComponent } from './error-display'
-import { Button, TextField } from '@mui/material'
+import {
+  Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+} from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 
 interface EditBuyerProps {
@@ -123,55 +132,71 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
     }
   }
 
-  return error ? (
-    <ErrorComponent error={error} onClose={() => setError(null)} />
-  ) : (
-    <>
-      <h2 className='mb-4 text-center text-lg font-semibold'>Edit Buyer</h2>
-      <div className='flex flex-col gap-4'>
-        <TextField
-          label='Name-Realm'
-          variant='outlined'
-          fullWidth
-          value={formData.nameAndRealm}
-          onChange={handleChange('nameAndRealm')}
-          slotProps={{ input: { inputProps: { maxLength: 255 } } }}
-        />
-        <TextField
-          label='Pot'
-          variant='outlined'
-          fullWidth
-          value={formData.buyerPot}
-          onChange={handleChange('buyerPot')}
-        />
-        <TextField
-          label='Dolar Pot'
-          variant='outlined'
-          fullWidth
-          value={formData.buyerDolarPot}
-          onChange={handleChange('buyerDolarPot')}
-        />
-        <TextField
-          label='Note'
-          variant='outlined'
-          fullWidth
-          value={formData.buyerNote}
-          onChange={handleChange('buyerNote')}
-        />
-      </div>
-      <Button
-        variant='contained'
-        fullWidth
-        disabled={isSubmitting}
-        onClick={handleSubmit}
-        sx={{
-          backgroundColor: 'rgb(147, 51, 234)',
-          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-          mt: 2,
-        }}
-      >
-        {isSubmitting ? 'Saving...' : 'Save'}
-      </Button>
-    </>
+  return (
+    <Dialog open={true} onClose={onClose} maxWidth='sm' fullWidth>
+      <DialogTitle className='relative'>
+        Edit Buyer
+        <IconButton
+          aria-label='close'
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        {error ? (
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : (
+          <div className='flex flex-col gap-4 pt-2'>
+            <TextField
+              label='Name-Realm'
+              variant='outlined'
+              fullWidth
+              value={formData.nameAndRealm}
+              onChange={handleChange('nameAndRealm')}
+              slotProps={{ input: { inputProps: { maxLength: 255 } } }}
+            />
+            <TextField
+              label='Pot'
+              variant='outlined'
+              fullWidth
+              value={formData.buyerPot}
+              onChange={handleChange('buyerPot')}
+            />
+            <TextField
+              label='Dolar Pot'
+              variant='outlined'
+              fullWidth
+              value={formData.buyerDolarPot}
+              onChange={handleChange('buyerDolarPot')}
+            />
+            <TextField
+              label='Note'
+              variant='outlined'
+              fullWidth
+              value={formData.buyerNote}
+              onChange={handleChange('buyerNote')}
+            />
+          </div>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color='inherit'>
+          Cancel
+        </Button>
+        <Button
+          variant='contained'
+          disabled={isSubmitting}
+          onClick={handleSubmit}
+          sx={{
+            backgroundColor: 'rgb(147, 51, 234)',
+            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+          }}
+        >
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

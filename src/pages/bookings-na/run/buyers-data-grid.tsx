@@ -43,8 +43,6 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Dialog,
-  DialogContent,
   Tooltip,
 } from '@mui/material'
 import { Modal as MuiModal, Box } from '@mui/material'
@@ -1289,26 +1287,17 @@ export function BuyersDataGrid({
       {openModal &&
         editingBuyer &&
         (modalType === 'edit' ? (
-          <Dialog
-            open={openModal}
+          <EditBuyer
+            buyer={{
+              id: editingBuyer.id,
+              nameAndRealm: editingBuyer.nameAndRealm,
+              buyerPot: editingBuyer.buyerPot,
+              buyerDolarPot: editingBuyer.buyerDolarPot,
+              buyerNote: editingBuyer.buyerNote,
+            }}
             onClose={() => setOpenModal(false)}
-            fullWidth
-            maxWidth='sm'
-          >
-            <DialogContent>
-              <EditBuyer
-                buyer={{
-                  id: editingBuyer.id,
-                  nameAndRealm: editingBuyer.nameAndRealm,
-                  buyerPot: editingBuyer.buyerPot,
-                  buyerDolarPot: editingBuyer.buyerDolarPot,
-                  buyerNote: editingBuyer.buyerNote,
-                }}
-                onClose={() => setOpenModal(false)}
-                onEditSuccess={onBuyerNameNoteEdit}
-              />
-            </DialogContent>
-          </Dialog>
+            onEditSuccess={onBuyerNameNoteEdit}
+          />
         ) : (
           <MuiModal open={openModal} onClose={() => setOpenModal(false)}>
             <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform shadow-lg'>

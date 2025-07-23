@@ -14,6 +14,7 @@ import {
   Chip,
   Button,
   CircularProgress,
+  IconButton,
 } from '@mui/material'
 import axios from 'axios'
 import { getTeamMembers } from '../services/api/users'
@@ -23,6 +24,7 @@ import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import Swal from 'sweetalert2'
+import CloseIcon from '@mui/icons-material/Close'
 
 interface ApiOption {
   id: string
@@ -152,7 +154,15 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
         }}
       >
         {isSuccess ? 'Success' : 'Add Run'}
+        <IconButton
+          aria-label='close'
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
+
       <DialogContent
         sx={{
           display: 'flex',

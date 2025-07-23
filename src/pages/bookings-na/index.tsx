@@ -18,7 +18,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 
 export function FullRaidsNa() {
@@ -291,7 +293,16 @@ export function FullRaidsNa() {
             fullWidth
             maxWidth='md'
           >
-            <DialogTitle>Add Multiple Runs</DialogTitle>
+            <DialogTitle className='relative'>
+              Add Multiple Runs
+              <IconButton
+                aria-label='close'
+                onClick={handleCloseBulkAddDialog}
+                sx={{ position: 'absolute', right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
             <DialogContent>
               <TextareaAutosize
                 minRows={10}

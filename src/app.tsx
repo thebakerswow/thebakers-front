@@ -51,7 +51,7 @@ export function App() {
           <div className='flex flex-grow flex-col'>
             <Header />
             <main
-              className='relative flex flex-grow justify-center overflow-y-auto bg-cover bg-center'
+              className='relative flex flex-grow justify-center bg-cover bg-center'
               style={{ backgroundImage: `url(${backgroundTeste})` }}
             >
               <Routes>

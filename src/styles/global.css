@@ -23,3 +23,13 @@
 .swal2-popup {
   margin: auto !important;
 }
+
+/* Prevenir deslocamento da página quando SweetAlert abre */
+body.swal2-shown {
+  padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+body.swal2-height-auto {
+  height: auto !important;
+}
