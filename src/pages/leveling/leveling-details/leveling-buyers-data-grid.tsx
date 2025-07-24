@@ -160,7 +160,7 @@ export function LevelingBuyersDataGrid({
 
       return ''
     } catch (error) {
-      console.error('Erro ao decriptar idCommunication:', error)
+      console.error('Error decrypting idCommunication:', error)
       return ''
     }
   }

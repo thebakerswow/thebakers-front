@@ -241,7 +241,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                       name: newGBankName,
                       color: newGBankColor || '#FFFFFF',
                     }),
-                  'Erro ao adicionar G-Bank'
+                  'Error adding G-Bank'
                 ).then(() => {
                   setNewGBankName('')
                   setNewGBankColor('')

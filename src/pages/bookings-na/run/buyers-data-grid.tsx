@@ -162,12 +162,12 @@ export function BuyersDataGrid({
           return result
         }
       } catch (error) {
-        console.error('Erro na decriptação AES-128-CFB:', error)
+        console.error('Error in AES-128-CFB decryption:', error)
       }
 
       return ''
     } catch (error) {
-      console.error('Erro ao decriptar idCommunication:', error)
+      console.error('Error decrypting idCommunication:', error)
       return ''
     }
   }

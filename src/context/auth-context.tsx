@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIdDiscord(finalUserId)
         setIsAuthenticated(true)
       } catch (error) {
-        console.error('Erro ao decodificar token:', error)
+        console.error('Error decoding token:', error)
         logout()
       }
     } else {

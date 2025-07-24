@@ -107,7 +107,7 @@ export function HomePage() {
           message:
             err?.response?.data?.message ||
             err.message ||
-            'Erro ao buscar serviços ou categorias',
+            'Error fetching services or categories',
           response: err?.response?.data,
           status: err?.response?.status,
         })

@@ -68,7 +68,7 @@ export function KeysPage() {
             status: error.response?.status,
           }
         : { message: 'Unexpected error', response: error }
-      console.error('Erro:', errorDetails)
+      console.error('Error:', errorDetails)
       setError(errorDetails)
     } finally {
       if (isUserRequest) setIsLoading(false)

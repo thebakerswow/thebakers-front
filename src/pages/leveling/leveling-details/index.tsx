@@ -365,7 +365,7 @@ export function LevelingDetails() {
                 'Notification' in window &&
                 Notification.permission === 'granted'
               ) {
-                new Notification('Nova mensagem no Run Chat', {
+                new Notification('New message in Run Chat', {
                   body: `${newMsg.user_name}: ${newMsg.message}`,
                   icon: '/src/assets/logo.ico',
                 })
@@ -376,10 +376,10 @@ export function LevelingDetails() {
           case 'confirmation':
             break
           case 'error':
-            console.error('Erro do Servidor:', data.payload)
+            console.error('Error from server:', data.payload)
             break
           default:
-            console.warn('Tipo de mensagem desconhecido:', data.type)
+            console.warn('Unknown message type:', data.type)
         }
       }
     }
@@ -453,12 +453,12 @@ export function LevelingDetails() {
           return result
         }
       } catch (error) {
-        console.error('Erro na decriptação AES-128-CFB:', error)
+        console.error('Error in AES-128-CFB decryption:', error)
       }
 
       return ''
     } catch (error) {
-      console.error('Erro ao decriptar idCommunication:', error)
+      console.error('Error decrypting idCommunication:', error)
       return ''
     }
   }
