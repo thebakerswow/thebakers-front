@@ -159,7 +159,7 @@ export function HomePage() {
   // Renderize a homepage para todos os usuários
   return (
     <div
-      className='relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
+      className='home-page relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
       style={{ backgroundImage: `url(${manaforge})` }}
     >
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}

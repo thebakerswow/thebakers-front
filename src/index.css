@@ -110,21 +110,22 @@ button {
 }
 
 /* Permitir que os cards tenham espaço interno para expandir no hover */
-.swiper-slide > div {
+/* Aplicar apenas aos cards da página home */
+.home-page .swiper-slide > div {
   transition: transform 0.3s ease !important;
 }
 
-.swiper-slide:hover > div {
+.home-page .swiper-slide:hover > div {
   transform: scale(1.05) !important;
   z-index: 10 !important;
 }
 
-/* Aplicar o mesmo tratamento de hover para Hot Services */
-.grid > div {
+/* Aplicar o mesmo tratamento de hover para Hot Services apenas na página home */
+.home-page .grid > div {
   transition: transform 0.3s ease !important;
 }
 
-.grid > div:hover {
+.home-page .grid > div:hover {
   transform: scale(1.05) !important;
   z-index: 10 !important;
 }
