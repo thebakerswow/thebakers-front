@@ -30,16 +30,26 @@ api.interceptors.response.use(
   },
   (error) => {
     // Checks if it's an authentication error (401) or invalid token error
+    // Excludes invalid credentials errors (wrong password during login)
     if (error.response?.status === 401) {
-      // Remove o token do localStorage
-      localStorage.removeItem('jwt')
+      const errorData = error.response?.data?.errors?.[0]
+      const isInvalidCredentials =
+        errorData?.title === 'Invalid Password' ||
+        errorData?.title === 'Invalid password' ||
+        errorData?.detail === 'Invalid password'
 
-      // If not on login page, redirect to login
-      if (
-        window.location.pathname !== '/' &&
-        window.location.pathname !== '/login'
-      ) {
-        window.location.href = '/'
+      // Only logout and redirect if it's not an invalid credentials error
+      if (!isInvalidCredentials) {
+        // Remove o token do localStorage
+        localStorage.removeItem('jwt')
+
+        // If not on login page, redirect to login
+        if (
+          window.location.pathname !== '/' &&
+          window.location.pathname !== '/login'
+        ) {
+          window.location.href = '/'
+        }
       }
     }
 

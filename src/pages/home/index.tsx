@@ -398,7 +398,7 @@ export function HomePage() {
                                   {servicesInCategory.map((service) => (
                                     <SwiperSlide key={service.id}>
                                       <div
-                                        className={`m relative my-10 flex min-h-[180px] w-full flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
+                                        className={`relative my-10 flex min-h-[180px] w-full flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
                                       >
                                         <div className='relative z-10'>
                                           <div className='mb-2 text-lg font-bold text-white'>

@@ -19,10 +19,10 @@ export const loginWithCredentials = async (credentials: {
 }
 
 export const register = async (data: {
-  username: string
+  id_discord: string
   password: string
 }) => {
-  const response = await api.post('/auth/register', data)
+  const response = await api.post('/login/register', data)
   return response.data
 }
 

@@ -28,7 +28,7 @@ export function Register() {
     setIsConfirmModalOpen(true)
     try {
       await register({
-        username: discordId,
+        id_discord: discordId,
         password,
       })
       Swal.fire({

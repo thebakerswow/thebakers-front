@@ -21,9 +21,15 @@ export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
   const navigate = useNavigate()
   const isProcessingRef = useRef(false)
 
-  // Verifica se é um erro de autenticação
+  // Verifica se é um erro de autenticação (token expirado/inválido)
+  // Exclui erros de credenciais inválidas durante login
+  const isInvalidCredentials =
+    errorData?.title === 'Invalid Password' ||
+    errorData?.title === 'Invalid password' ||
+    errorData?.detail === 'Invalid password'
+
   const isAuthError =
-    status === 401 ||
+    (status === 401 && !isInvalidCredentials) ||
     errorData?.type === 'invalid-authentication' ||
     errorData?.title === 'User not authenticated'
 
