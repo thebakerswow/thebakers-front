@@ -24,7 +24,7 @@ export function ErrorComponent({ error, onClose }: ErrorComponentProps) {
   // Verifica se é um erro de autenticação
   const isAuthError =
     status === 401 ||
-    errorData?.type === 'autenticacao-invalida' ||
+    errorData?.type === 'invalid-authentication' ||
     errorData?.title === 'User not authenticated'
 
   // Memoiza a função onClose para evitar re-renderizações
