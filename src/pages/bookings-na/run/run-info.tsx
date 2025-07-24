@@ -275,7 +275,7 @@ export function RunInfo({
           >
             Add Buyer
           </Button>
-          {/* Permissoes prefeito, chefe de cozinha, staff */}
+          {/* Permissoes prefeito, chefe de cozinha */}
           {hasPrefeitoTeamAccess(run, userRoles) ||
           userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ? (
             <>

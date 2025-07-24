@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Lock, LockOpen, UserPlus } from '@phosphor-icons/react'
+import { Clock, Lock, LockOpen, UserPlus } from '@phosphor-icons/react'
 import keyLogo from '../../../assets/key.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
 import { ErrorDetails } from '../../../components/error-display'
+import { EditHistoryDialog } from '../../../components/edit-history-dialog'
 import {
   Button,
   Card,
@@ -36,11 +37,17 @@ export function KeyRunInfo({
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
+  const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
 
-  const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
+  function hasPrefeitoTeamAccess(run: RunData, userRoles: string[]): boolean {
+    const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+    if (!isPrefeito) return false
+
+    // Verifica se o usuário tem o cargo do time específico desta run
+    const hasTeamRoleForThisRun = userRoles.includes(run.idTeam)
+    if (!hasTeamRoleForThisRun) return false
+
+    return true
   }
 
   function handleOpenAddBuyer() {
@@ -182,12 +189,9 @@ export function KeyRunInfo({
           >
             Add Buyer
           </Button>
-          {/* Permissoes prefeito, chefe de cozinha, staff */}
-          {hasRequiredRole([
-            import.meta.env.VITE_TEAM_PREFEITO,
-            import.meta.env.VITE_TEAM_CHEFE,
-            import.meta.env.VITE_TEAM_STAFF,
-          ]) ? (
+          {/* Permissoes prefeito, chefe de cozinha */}
+          {hasPrefeitoTeamAccess(run, userRoles) ||
+          userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ? (
             <>
               <Button
                 variant='contained'
@@ -204,6 +208,21 @@ export function KeyRunInfo({
                 }}
               >
                 {isRunLocked ? 'Unlock Day' : 'Lock Day'}
+              </Button>
+              {/* Edit History Button */}
+              <Button
+                variant='contained'
+                startIcon={<Clock size={18} />}
+                fullWidth
+                onClick={() => setIsEditHistoryOpen(true)}
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': {
+                    backgroundColor: 'rgb(168, 85, 247)',
+                  },
+                }}
+              >
+                Edit History
               </Button>
             </>
           ) : (
@@ -223,6 +242,14 @@ export function KeyRunInfo({
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
           onError={onError}
+        />
+      )}
+
+      {isEditHistoryOpen && (
+        <EditHistoryDialog
+          open={isEditHistoryOpen}
+          onClose={() => setIsEditHistoryOpen(false)}
+          idRun={Number(run.id)}
         />
       )}
     </div>
