@@ -315,9 +315,6 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
                 },
               }}
             >
-              <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
-                Padeirinho
-              </MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
                 Garçom
               </MenuItem>
@@ -327,16 +324,13 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
                 Jackfruit
               </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
-                Milharal
+              <MenuItem value={import.meta.env.VITE_TEAM_INSANOS}>
+                Insanos
               </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>Raio</MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS}>Los Renegados</MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>Kffc</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
-                Sapoculeano
-              </MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>KFFC</MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
                 Greensky
               </MenuItem>
@@ -348,6 +342,12 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               </MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
                 Rocket
+              </MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+                Padeirinho
+              </MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+                Milharal
               </MenuItem>
             </Select>
           </FormControl>

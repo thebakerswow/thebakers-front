@@ -30,19 +30,71 @@ import Swal from 'sweetalert2'
 
 import { GBank } from '../../../types'
 
+// Função para ordenar times por prioridade baseada nos nomes
+const sortTeamsByPriority = (teams: GBank[]) => {
+  // Define a ordem de prioridade dos times
+  const priorityOrder = [
+    'Chefe de cozinha',
+    'M+',
+    'Leveling',
+    'Garçom',
+    'Confeiteiros',
+    'Jackfruit',
+    'Insanos',
+    'APAE',
+    'Los Renegados',
+    'DTM',
+    'KFFC',
+    'Greensky',
+    'Guild Azralon BR#1',
+    'Guild Azralon BR#2',
+    'Rocket',
+    'Padeirinho',
+    'Milharal',
+  ]
+
+  return teams.sort((a, b) => {
+    const aIndex = priorityOrder.indexOf(a.name)
+    const bIndex = priorityOrder.indexOf(b.name)
+
+    // Se ambos estão na lista de prioridade, ordena pela posição
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex
+    }
+
+    // Se apenas um está na lista de prioridade, ele vem primeiro
+    if (aIndex !== -1 && bIndex === -1) {
+      return -1
+    }
+    if (aIndex === -1 && bIndex !== -1) {
+      return 1
+    }
+
+    // Se nenhum está na lista de prioridade, ordena alfabeticamente
+    return a.name.localeCompare(b.name)
+  })
+}
+
 const colorOptions = [
-  { value: '#D97706', label: 'Padeirinho' },
-  { value: '#2563EB', label: 'Garçom' },
-  { value: '#F472B6', label: 'Confeiteiros' },
-  { value: '#16A34A', label: 'Jackfruit' },
-  { value: '#FEF08A', label: 'Milharal' },
-  { value: '#FACC15', label: 'Raio' },
-  { value: '#F87171', label: 'APAE' },
-  { value: '#A78BFA', label: 'DTM' },
-  { value: '#059669', label: 'Kffc' },
-  { value: '#1E3A8A', label: 'Sapoculeano' },
-  { value: '#F472B6', label: 'Greensky' },
-  { value: '#EF4444', label: 'Chefe de Cozinha' },
+  { value: '#DC2626', label: 'Chefe de cozinha' }, // Vermelho escuro
+  { value: '#7C3AED', label: 'M+' }, // Roxo
+  { value: '#059669', label: 'Leveling' }, // Verde esmeralda
+  { value: '#2563EB', label: 'Garçom' }, // Azul
+  { value: '#EC4899', label: 'Confeiteiros' }, // Rosa
+  { value: '#16A34A', label: 'Jackfruit' }, // Verde
+  { value: '#1E40AF', label: 'Insanos' }, // Azul escuro
+  { value: '#F87171', label: 'APAE' }, // Rosa claro
+  { value: '#F59E0B', label: 'Los Renegados' }, // Amarelo
+  { value: '#8B5CF6', label: 'DTM' }, // Violeta
+  { value: '#047857', label: 'KFFC' }, // Verde escuro
+  { value: '#BE185D', label: 'Greensky' }, // Rosa escuro
+  { value: '#0D9488', label: 'Guild Azralon BR#1' }, // Verde azulado
+  { value: '#1D4ED8', label: 'Guild Azralon BR#2' }, // Azul médio
+  { value: '#B91C1C', label: 'Rocket' }, // Vermelho
+  { value: '#EA580C', label: 'Padeirinho' }, // Laranja
+  { value: '#FEF08A', label: 'Milharal' }, // Amarelo claro
+  { value: '#9CA3AF', label: 'Advertiser' }, // Cinza
+  { value: '#86EFAC', label: 'Freelancer' }, // Verde claro
   { value: '#FFFFFF', label: 'Default (White)' },
 ]
 
@@ -85,7 +137,10 @@ export function GBanksTable({ onError }: GBanksTableProps) {
             ? formatCalculatorValue(gbank.calculatorValue.toString())
             : '',
         })) || []
-      setGbanks(formattedGBanks)
+
+      // Aplica a ordenação por prioridade
+      const sortedGBanks = sortTeamsByPriority(formattedGBanks)
+      setGbanks(sortedGBanks)
     } catch (error) {
       handleError(error, 'Error fetching GBanks')
     } finally {

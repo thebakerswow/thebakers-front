@@ -77,44 +77,44 @@ export function BalanceControlTable({
 
   const getTeamColor = (team: string) => {
     switch (team) {
-      case import.meta.env.VITE_TEAM_PADEIRINHO:
-        return '#D97706' // Padeirinho
-      case import.meta.env.VITE_TEAM_GARCOM:
-        return '#2563EB' // Garçom
-      case import.meta.env.VITE_TEAM_CONFEITEIROS:
-        return '#F472B6' // Confeiteiros
-      case import.meta.env.VITE_TEAM_JACKFRUIT:
-        return '#16A34A' // Jackfruit
-      case import.meta.env.VITE_TEAM_MILHARAL:
-        return '#FEF08A' // Milharal
-      case import.meta.env.VITE_TEAM_RAIO:
-        return '#FACC15' // Raio
-      case import.meta.env.VITE_TEAM_APAE:
-        return '#F87171' // APAE
-      case import.meta.env.VITE_TEAM_DTM:
-        return '#A78BFA' // DTM
-      case import.meta.env.VITE_TEAM_KFFC:
-        return '#059669' // DTM
-      case import.meta.env.VITE_TEAM_SAPOCULEANO:
-        return '#7DD3FC' // DTM
-      case import.meta.env.VITE_TEAM_GREENSKY:
-        return '#F472B6' // DTM
-      case import.meta.env.VITE_TEAM_GUILD_AZRALON_1:
-        return '#059669' // DTM
-      case import.meta.env.VITE_TEAM_GUILD_AZRALON_2:
-        return '#2563EB' // DTM
-      case import.meta.env.VITE_TEAM_ROCKET:
-        return '#F472B6' // DTM
-      case import.meta.env.VITE_TEAM_ADVERTISER:
-        return '#D1D5DB' // Advertiser
       case import.meta.env.VITE_TEAM_CHEFE:
-        return '#EF4444' // Chefe de Cozinha
-      case import.meta.env.VITE_TEAM_FREELANCER:
-        return '#86EFAC' // Freelancer
+        return '#DC2626' // Chefe de Cozinha - Vermelho escuro
       case import.meta.env.VITE_TEAM_MPLUS:
-        return '#8B5CF6' // MPLUS
+        return '#7C3AED' // M+ - Roxo
       case import.meta.env.VITE_TEAM_LEVELING:
-        return '#10B981' // LEVELING
+        return '#059669' // Leveling - Verde esmeralda
+      case import.meta.env.VITE_TEAM_GARCOM:
+        return '#2563EB' // Garçom - Azul
+      case import.meta.env.VITE_TEAM_CONFEITEIROS:
+        return '#EC4899' // Confeiteiros - Rosa
+      case import.meta.env.VITE_TEAM_JACKFRUIT:
+        return '#16A34A' // Jackfruit - Verde
+      case import.meta.env.VITE_TEAM_INSANOS:
+        return '#1E40AF' // Insanos - Azul escuro
+      case import.meta.env.VITE_TEAM_APAE:
+        return '#F87171' // APAE - Rosa claro
+      case import.meta.env.VITE_TEAM_LOSRENEGADOS:
+        return '#F59E0B' // Los Renegados - Amarelo
+      case import.meta.env.VITE_TEAM_DTM:
+        return '#8B5CF6' // DTM - Violeta
+      case import.meta.env.VITE_TEAM_KFFC:
+        return '#047857' // KFFC - Verde escuro
+      case import.meta.env.VITE_TEAM_GREENSKY:
+        return '#BE185D' // Greensky - Rosa escuro
+      case import.meta.env.VITE_TEAM_GUILD_AZRALON_1:
+        return '#0D9488' // Guild Azralon BR#1 - Verde azulado
+      case import.meta.env.VITE_TEAM_GUILD_AZRALON_2:
+        return '#1D4ED8' // Guild Azralon BR#2 - Azul médio
+      case import.meta.env.VITE_TEAM_ROCKET:
+        return '#B91C1C' // Rocket - Vermelho
+      case import.meta.env.VITE_TEAM_PADEIRINHO:
+        return '#EA580C' // Padeirinho - Laranja
+      case import.meta.env.VITE_TEAM_MILHARAL:
+        return '#FEF08A' // Milharal - Amarelo claro
+      case import.meta.env.VITE_TEAM_ADVERTISER:
+        return '#9CA3AF' // Advertiser - Cinza
+      case import.meta.env.VITE_TEAM_FREELANCER:
+        return '#86EFAC' // Freelancer - Verde claro
       default:
         return '#FFFFFF' // Default white
     }
@@ -357,118 +357,118 @@ export function BalanceControlTable({
                 All Teams
               </MenuItem>
               <MenuItem
-                value={import.meta.env.VITE_TEAM_PADEIRINHO}
-                style={{ backgroundColor: '#D97706', color: 'white' }}
-              >
-                Padeirinho
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_GARCOM}
-                style={{ backgroundColor: '#2563EB', color: 'white' }}
-              >
-                Garçom
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_CONFEITEIROS}
-                style={{ backgroundColor: '#F472B6', color: 'white' }}
-              >
-                Confeiteiros
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_JACKFRUIT}
-                style={{ backgroundColor: '#16A34A', color: 'white' }}
-              >
-                Jackfruit
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_MILHARAL}
-                style={{ backgroundColor: '#FEF08A', color: 'black' }}
-              >
-                Milharal
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_RAIO}
-                style={{ backgroundColor: '#FACC15', color: 'black' }}
-              >
-                Raio
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_APAE}
-                style={{ backgroundColor: '#F87171', color: 'white' }}
-              >
-                APAE
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_DTM}
-                style={{ backgroundColor: '#A78BFA', color: 'white' }}
-              >
-                DTM
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_KFFC}
-                style={{ backgroundColor: '#059669', color: 'white' }}
-              >
-                KFFC
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_SAPOCULEANO}
-                style={{ backgroundColor: '#1E3A8A', color: 'white' }}
-              >
-                Sapoculeano
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_GREENSKY}
-                style={{ backgroundColor: '#BE185D', color: 'white' }}
-              >
-                Greensky
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}
-                style={{ backgroundColor: '#059669', color: 'white' }}
-              >
-                Guild Azralon BR#1
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}
-                style={{ backgroundColor: '#1E3A8A', color: 'white' }}
-              >
-                Guild Azralon BR#2
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_ROCKET}
-                style={{ backgroundColor: '#BE124D', color: 'white' }} // Lighter green
-              >
-                Rocket
-              </MenuItem>
-              <MenuItem
-                value={import.meta.env.VITE_TEAM_ADVERTISER}
-                style={{ backgroundColor: '#D1D5DB', color: 'black' }}
-              >
-                Advertiser
-              </MenuItem>
-              <MenuItem
                 value={import.meta.env.VITE_TEAM_CHEFE}
-                style={{ backgroundColor: '#EF4444', color: 'white' }} // Error color
+                style={{ backgroundColor: '#DC2626', color: 'white' }} // Vermelho escuro
               >
                 Chefe de Cozinha
               </MenuItem>
               <MenuItem
-                value={import.meta.env.VITE_TEAM_FREELANCER}
-                style={{ backgroundColor: '#86EFAC', color: 'black' }} // Lighter green
-              >
-                Freelancer
-              </MenuItem>
-              <MenuItem
                 value={import.meta.env.VITE_TEAM_MPLUS}
-                style={{ backgroundColor: '#8B5CF6', color: 'white' }}
+                style={{ backgroundColor: '#7C3AED', color: 'white' }} // Roxo
               >
                 M+
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_LEVELING}
-                style={{ backgroundColor: '#10B981', color: 'white' }}
+                style={{ backgroundColor: '#059669', color: 'white' }} // Verde esmeralda
               >
                 Leveling
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GARCOM}
+                style={{ backgroundColor: '#2563EB', color: 'white' }} // Azul
+              >
+                Garçom
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_CONFEITEIROS}
+                style={{ backgroundColor: '#EC4899', color: 'white' }} // Rosa
+              >
+                Confeiteiros
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_JACKFRUIT}
+                style={{ backgroundColor: '#16A34A', color: 'white' }} // Verde
+              >
+                Jackfruit
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_INSANOS}
+                style={{ backgroundColor: '#1E40AF', color: 'white' }} // Azul escuro
+              >
+                Insanos
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_APAE}
+                style={{ backgroundColor: '#F87171', color: 'white' }} // Rosa claro
+              >
+                APAE
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_LOSRENEGADOS}
+                style={{ backgroundColor: '#F59E0B', color: 'black' }} // Amarelo
+              >
+                Los Renegados
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_DTM}
+                style={{ backgroundColor: '#8B5CF6', color: 'white' }} // Violeta
+              >
+                DTM
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_KFFC}
+                style={{ backgroundColor: '#047857', color: 'white' }} // Verde escuro
+              >
+                KFFC
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GREENSKY}
+                style={{ backgroundColor: '#BE185D', color: 'white' }} // Rosa escuro
+              >
+                Greensky
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}
+                style={{ backgroundColor: '#0D9488', color: 'white' }} // Verde azulado
+              >
+                Guild Azralon BR#1
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}
+                style={{ backgroundColor: '#1D4ED8', color: 'white' }} // Azul médio
+              >
+                Guild Azralon BR#2
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_ROCKET}
+                style={{ backgroundColor: '#B91C1C', color: 'white' }} // Vermelho
+              >
+                Rocket
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_PADEIRINHO}
+                style={{ backgroundColor: '#EA580C', color: 'white' }} // Laranja
+              >
+                Padeirinho
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_MILHARAL}
+                style={{ backgroundColor: '#FEF08A', color: 'black' }} // Amarelo claro
+              >
+                Milharal
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_ADVERTISER}
+                style={{ backgroundColor: '#9CA3AF', color: 'black' }} // Cinza
+              >
+                Advertiser
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_FREELANCER}
+                style={{ backgroundColor: '#86EFAC', color: 'black' }} // Verde claro
+              >
+                Freelancer
               </MenuItem>
             </Select>
           </FormControl>
@@ -603,7 +603,7 @@ export function BalanceControlTable({
                       color: [
                         'all',
                         import.meta.env.VITE_TEAM_MILHARAL,
-                        import.meta.env.VITE_TEAM_RAIO,
+                        import.meta.env.VITE_TEAM_LOSRENEGADOS,
                         import.meta.env.VITE_TEAM_ADVERTISER,
                         import.meta.env.VITE_TEAM_FREELANCER,
                       ].includes(selectedTeam)

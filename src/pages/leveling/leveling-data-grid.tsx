@@ -62,7 +62,25 @@ export function LevelingDataGrid({
   }
 
   const teamColors: { [key: string]: string } = {
-    Leveling: 'linear-gradient(90deg, #ccc8cc, #2d46fc)',
+    'Chefe de cozinha': '#DC2626', // Vermelho escuro
+    'M+': '#7C3AED', // Roxo
+    Leveling: '#059669', // Verde esmeralda
+    Garçom: '#2563EB', // Azul
+    Confeiteiros: '#EC4899', // Rosa
+    Jackfruit: '#16A34A', // Verde
+    Insanos: '#1E40AF', // Azul escuro
+    APAE: '#F87171', // Rosa claro
+    'Los Renegados': '#F59E0B', // Amarelo
+    DTM: '#8B5CF6', // Violeta
+    KFFC: '#047857', // Verde escuro
+    Greensky: '#BE185D', // Rosa escuro
+    'Guild Azralon BR#1': '#0D9488', // Verde azulado
+    'Guild Azralon BR#2': '#1D4ED8', // Azul médio
+    Rocket: '#B91C1C', // Vermelho
+    Padeirinho: '#EA580C', // Laranja
+    Milharal: '#FEF08A', // Amarelo claro
+    Advertiser: '#9CA3AF', // Cinza
+    Freelancer: '#86EFAC', // Verde claro
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -154,7 +172,7 @@ export function LevelingDataGrid({
     if (
       (team === 'DTM' ||
         team === 'KFFC' ||
-        team === 'Sapoculeano' ||
+        team === 'Insanos' ||
         team === 'Greensky') &&
       !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
     ) {

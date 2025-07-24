@@ -252,9 +252,6 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 onChange={(e) => handleChange('idTeam', e.target.value)}
                 label='Team'
               >
-                <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
-                  Padeirinho
-                </MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
                   Garçom
                 </MenuItem>
@@ -264,16 +261,15 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
                   Jackfruit
                 </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
-                  Milharal
+                <MenuItem value={import.meta.env.VITE_TEAM_INSANOS}>
+                  Insanos
                 </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_RAIO}>Raio</MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS}>
+                  Los Renegados
+                </MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>KFFC</MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_SAPOCULEANO}>
-                  Sapoculeano
-                </MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
                   Greensky
                 </MenuItem>
@@ -285,6 +281,12 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 </MenuItem>
                 <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
                   Rocket
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+                  Padeirinho
+                </MenuItem>
+                <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+                  Milharal
                 </MenuItem>
               </Select>
             </FormControl>

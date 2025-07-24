@@ -15,18 +15,24 @@ import {
 } from '@mui/material'
 
 const localTeamColors: Record<string, string> = {
-  Padeirinho: '#D97706',
+  'Chefe de cozinha': '#DC2626',
+  'M+': '#7C3AED',
+  Leveling: '#059669',
   Garçom: '#2563EB',
-  Confeiteiros: '#F472B6',
+  Confeiteiros: '#EC4899',
   Jackfruit: '#16A34A',
-  Milharal: '#FEF08A',
-  Raio: '#FACC15',
+  Insanos: '#1E40AF',
   APAE: '#F87171',
-  DTM: '#9CA3AF',
-  KFFC: '#059669',
-  Sapoculeano: '#7DD3FC',
-  Greensky: '#F472B6',
-  Advertiser: '#D1D5DB',
+  'Los Renegados': '#F59E0B',
+  DTM: '#8B5CF6',
+  KFFC: '#047857',
+  Greensky: '#BE185D',
+  'Guild Azralon BR#1': '#0D9488',
+  'Guild Azralon BR#2': '#1D4ED8',
+  Rocket: '#B91C1C',
+  Padeirinho: '#EA580C',
+  Milharal: '#FEF08A',
+  Advertiser: '#9CA3AF',
 }
 
 interface TeamsManagementProps {

@@ -76,31 +76,34 @@ export function RunsDataGrid({
     Garçom: 1,
     Confeiteiros: 2,
     Jackfruit: 3,
-    Raio: 4,
+    Insanos: 4,
     APAE: 5,
-    Milharal: 6,
+    'Los Renegados': 6,
     DTM: 7,
-    Kffc: 8,
-    Sapoculeano: 9,
-    Greensky: 10,
-    Padeirinho: 11,
+    KFFC: 8,
+    Greensky: 9,
+    'Guild Azralon BR#1': 10,
+    'Guild Azralon BR#2': 11,
+    Rocket: 12,
+    Padeirinho: 13,
+    Milharal: 14,
   }
 
   const teamColors: { [key: string]: string } = {
-    Padeirinho: 'linear-gradient(90deg, #FDE68A, #ca8a04)',
-    Garçom: 'linear-gradient(90deg, #60A5FA, #2563EB)',
-    Confeiteiros: 'linear-gradient(90deg, #A78BFA, #f472b6)',
-    Jackfruit: 'linear-gradient(90deg, #86EFAC, #16a34a)',
-    Milharal: 'linear-gradient(90deg, #FCD34D, #fef08a)',
-    Raio: 'linear-gradient(90deg, #fef08a, #facc15)',
-    APAE: 'linear-gradient(90deg, #F87171, #ef4444)',
-    DTM: 'linear-gradient(90deg, #D1D5DB, #9CA3AF)',
-    KFFC: 'linear-gradient(90deg, #065F46, #34D399)', // Atualizado
-    Sapoculeano: 'linear-gradient(90deg, #1E3A8A,#7DD3FC )', // Atualizado
-    Greensky: 'linear-gradient(90deg, #f472b6, #fde68a)', // Rosa para amarelo
-    'Guild Azralon BR#1': 'linear-gradient(90deg, #fbbf24, #16a34a)', // Nova cor adicionada
-    'Guild Azralon BR#2': 'linear-gradient(90deg, #16a34a, #ffff)',
-    Rocket: 'linear-gradient(90deg, #f472b6, #7DD3FC)',
+    Garçom: 'linear-gradient(90deg, #3B82F6, #2563EB)', // Azul claro para azul (esquerda para direita)
+    Confeiteiros: 'linear-gradient(90deg, #F472B6, #EC4899)', // Rosa claro para rosa
+    Jackfruit: 'linear-gradient(90deg, #22C55E, #16A34A)', // Verde claro para verde
+    Insanos: 'linear-gradient(270deg, #3B82F6, #1E40AF)', // Azul claro para azul escuro (direita para esquerda)
+    APAE: 'linear-gradient(90deg, #FCA5A5, #F87171)', // Rosa muito claro para rosa claro
+    'Los Renegados': 'linear-gradient(90deg, #FCD34D, #F59E0B)', // Amarelo claro para amarelo
+    DTM: 'linear-gradient(90deg, #A78BFA, #8B5CF6)', // Violeta claro para violeta
+    KFFC: 'linear-gradient(90deg, #34D399, #047857)', // Verde claro para verde escuro
+    Greensky: 'linear-gradient(90deg, #F472B6, #BE185D)', // Rosa claro para rosa escuro
+    'Guild Azralon BR#1': 'linear-gradient(270deg, #2DD4BF, #0D9488)', // Verde azulado claro para verde azulado (direita para esquerda)
+    'Guild Azralon BR#2': 'linear-gradient(270deg, #60A5FA, #1D4ED8)', // Azul claro para azul médio (direita para esquerda)
+    Rocket: 'linear-gradient(90deg, #F87171, #B91C1C)', // Rosa claro para vermelho
+    Padeirinho: 'linear-gradient(90deg, #FB923C, #EA580C)', // Laranja claro para laranja
+    Milharal: 'linear-gradient(90deg, #FEF3C7, #FEF08A)', // Amarelo muito claro para amarelo claro
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -286,7 +289,7 @@ export function RunsDataGrid({
     if (
       (team === 'DTM' ||
         team === 'KFFC' ||
-        team === 'Sapoculeano' ||
+        team === 'Insanos' ||
         team === 'Greensky') &&
       !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
     ) {

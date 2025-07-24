@@ -11,6 +11,53 @@ interface BalanceTeamFilterProps {
   onError: (error: ErrorDetails | null) => void
 }
 
+// Função para ordenar times por prioridade baseada nos nomes
+const sortTeamsByPriority = (
+  teams: Array<{ id_discord: string; team_name: string }>
+) => {
+  // Define a ordem de prioridade dos times
+  const priorityOrder = [
+    'Chefe de cozinha',
+    'M+',
+    'Leveling',
+    'Garçom',
+    'Confeiteiros',
+    'Jackfruit',
+    'Insanos',
+    'APAE',
+    'Los Renegados',
+    'DTM',
+    'KFFC',
+    'Greensky',
+    'Guild Azralon BR#1',
+    'Guild Azralon BR#2',
+    'Rocket',
+    'Padeirinho',
+    'Milharal',
+  ]
+
+  return teams.sort((a, b) => {
+    const aIndex = priorityOrder.indexOf(a.team_name)
+    const bIndex = priorityOrder.indexOf(b.team_name)
+
+    // Se ambos estão na lista de prioridade, ordena pela posição
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex
+    }
+
+    // Se apenas um está na lista de prioridade, ele vem primeiro
+    if (aIndex !== -1 && bIndex === -1) {
+      return -1
+    }
+    if (aIndex === -1 && bIndex !== -1) {
+      return 1
+    }
+
+    // Se nenhum está na lista de prioridade, ordena alfabeticamente
+    return a.team_name.localeCompare(b.team_name)
+  })
+}
+
 export function BalanceTeamFilter({
   selectedTeam,
   onChange,
@@ -42,7 +89,10 @@ export function BalanceTeamFilter({
             : [...acc, team],
         []
       )
-      setTeams(uniqueTeams)
+
+      // Aplica a ordenação por prioridade
+      const sortedTeams = sortTeamsByPriority(uniqueTeams)
+      setTeams(sortedTeams)
       onError(null) // Clear any previous errors
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
