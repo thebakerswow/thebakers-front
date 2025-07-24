@@ -14,12 +14,14 @@ import {
   Chip,
   Button,
   CircularProgress,
+  IconButton,
 } from '@mui/material'
 import axios from 'axios'
 import { createRun } from '../services/api/runs'
 import { getTeamMembers } from '../services/api/users'
 import { ErrorDetails } from './error-display'
 import Swal from 'sweetalert2'
+import CloseIcon from '@mui/icons-material/Close'
 
 interface ApiOption {
   id: string
@@ -153,6 +155,13 @@ export function AddKeyRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
         }}
       >
         {isSuccess ? 'Success' : 'Add Run'}
+        <IconButton
+          aria-label='close'
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent
         sx={{
