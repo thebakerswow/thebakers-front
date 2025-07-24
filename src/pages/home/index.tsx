@@ -349,18 +349,18 @@ export function HomePage() {
                       const teamOrder = [
                         'Garçom',
                         'Confeiteiros',
-                        'Insanos',
                         'Jackfruit',
+                        'Insanos',
                         'APAE',
                         'Los Renegados',
-                        'KFFC',
                         'DTM',
+                        'KFFC',
                         'Greensky',
                         'Guild Azralon BR#1',
                         'Guild Azralon BR#2',
-                        'Advertiser',
-                        'Milharal',
+                        'Rocket',
                         'Padeirinho',
+                        'Milharal',
                       ]
                       // Filtra as runs dos times MPlus e Leveling
                       const filteredRuns = (
@@ -456,20 +456,20 @@ export function HomePage() {
 }
 
 const teamColors: { [key: string]: string } = {
-  Padeirinho: '#ca8a04',
   Garçom: '#2563EB',
-  Confeiteiros: '#f472b6',
-  Jackfruit: '#16a34a',
-  Milharal: '#fef08a',
-  'Los Renegados': '#facc15',
-  APAE: '#ef4444',
-  DTM: '#9CA3AF',
-  KFFC: '#34D399',
-  Insanos: '#7DD3FC',
-  Greensky: '#fde68a',
-  Rocket: '#a78bfa',
-  'Guild Azralon BR#1': '#16a34a',
-  'Guild Azralon BR#2': '#16a34a',
+  Confeiteiros: '#EC4899',
+  Jackfruit: '#16A34A',
+  Insanos: '#1E40AF',
+  APAE: '#F87171',
+  'Los Renegados': '#F59E0B',
+  DTM: '#8B5CF6',
+  KFFC: '#047857',
+  Greensky: '#BE185D',
+  'Guild Azralon BR#1': '#0D9488',
+  'Guild Azralon BR#2': '#1D4ED8',
+  Rocket: '#B91C1C',
+  Padeirinho: '#EA580C',
+  Milharal: '#FEF08A',
 }
 
 // Função utilitária para converter "HH:mm" para 12h com AM/PM
