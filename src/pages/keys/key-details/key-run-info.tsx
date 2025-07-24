@@ -222,6 +222,7 @@ export function KeyRunInfo({
           run={run}
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
+          onError={onError}
         />
       )}
     </div>
