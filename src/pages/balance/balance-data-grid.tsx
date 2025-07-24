@@ -51,6 +51,7 @@ export function BalanceDataGrid({
     balance_total: [],
   })
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
+  const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false)
   const [playerStyles, setPlayerStyles] = useState<{
     [key: string]: { background: string; text: string }
   }>({})
@@ -119,10 +120,12 @@ export function BalanceDataGrid({
         selectedTeam === undefined ||
         (selectedTeam === '' && !isRestrictedUser) // Só impede se não for usuário restrito
       ) {
+        setHasInitialDataLoaded(false)
         return
       }
 
       setIsLoadingBalance(true)
+      setHasInitialDataLoaded(false)
       try {
         let response
 
@@ -174,6 +177,7 @@ export function BalanceDataGrid({
         }
 
         setBalanceData(response || { player_balance: {}, balance_total: [] })
+        setHasInitialDataLoaded(true)
         onError(null) // Clear any previous errors
       } catch (error) {
         const errorDetails = axios.isAxiosError(error)
@@ -184,6 +188,7 @@ export function BalanceDataGrid({
             }
           : { message: 'Unexpected error', response: error }
         onError(errorDetails)
+        setHasInitialDataLoaded(true)
       } finally {
         setIsLoadingBalance(false)
       }
@@ -240,7 +245,7 @@ export function BalanceDataGrid({
 
   return (
     <div className='px-4 py-8'>
-      {isLoadingBalance ? (
+      {isLoadingBalance || !hasInitialDataLoaded ? (
         <div className='flex min-h-[400px] items-center justify-center'>
           <CircularProgress />
         </div>
