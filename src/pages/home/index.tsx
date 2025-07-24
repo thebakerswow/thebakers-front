@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { format, addDays } from 'date-fns'
 import { getRuns } from '../../services/api/runs'
@@ -10,6 +10,12 @@ import schedule from '../../assets/schedule_new.png'
 import fireImg from '../../assets/fire.png'
 import manaforge from '../../assets/manaforge.png'
 import { Service, ServiceCategory } from '../../types'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Pagination, Autoplay } from 'swiper/modules'
+import { Swiper as SwiperType } from 'swiper'
+import { CaretLeft, CaretRight } from '@phosphor-icons/react'
+import 'swiper/css'
+import 'swiper/css/pagination'
 
 export function HomePage() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -17,6 +23,24 @@ export function HomePage() {
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [categories, setCategories] = useState<ServiceCategory[]>([])
+
+  // Refs para os Swipers
+  const swiperRefs = useRef<{ [key: string]: SwiperType | null }>({})
+
+  // Funções de navegação para as setas
+  const handlePrevSlide = (categoryId: string | number) => {
+    const swiper = swiperRefs.current[String(categoryId)]
+    if (swiper) {
+      swiper.slidePrev()
+    }
+  }
+
+  const handleNextSlide = (categoryId: string | number) => {
+    const swiper = swiperRefs.current[String(categoryId)]
+    if (swiper) {
+      swiper.slideNext()
+    }
+  }
 
   // Pegue as roles do .env
   const TEAM_FREELANCER = import.meta.env.VITE_TEAM_FREELANCER
@@ -185,7 +209,7 @@ export function HomePage() {
             </div>
             {/* Seção de serviços - apenas para usuários que não são freelancer */}
             {!isOnlyFreelancer() && (
-              <div className='relative z-10 mx-auto max-w-[80%]'>
+              <div className='relative z-10 mx-auto max-w-[90%]'>
                 <div className='flex w-full flex-col items-center'>
                   <img
                     src={services}
@@ -212,35 +236,101 @@ export function HomePage() {
                               🔥 HOT SERVICES
                             </span>
                           </div>
-                          <div className='flex w-full justify-center'>
-                            <div className='grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5'>
+                          <div className='relative px-8 py-12'>
+                            <Swiper
+                              modules={[Pagination, Autoplay]}
+                              spaceBetween={24}
+                              slidesPerView={1}
+                              breakpoints={{
+                                640: {
+                                  slidesPerView: 2,
+                                },
+                                768: {
+                                  slidesPerView: 3,
+                                },
+                                1024: {
+                                  slidesPerView: 4,
+                                },
+                                1280: {
+                                  slidesPerView: 5,
+                                },
+                              }}
+                              pagination={{
+                                clickable: true,
+                                dynamicBullets: true,
+                              }}
+                              autoplay={{
+                                delay: 5000,
+                                disableOnInteraction: false,
+                                pauseOnMouseEnter: true,
+                              }}
+                              speed={800}
+                              loop={
+                                servicesList.filter((s) => s.hotItem).length > 5
+                              }
+                              className='w-full'
+                              onSwiper={(swiper) => {
+                                swiperRefs.current['hot-services'] = swiper
+                              }}
+                            >
                               {servicesList
                                 .filter((s) => s.hotItem)
                                 .map((service) => (
-                                  <div
-                                    key={service.id}
-                                    className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-purple-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105`}
-                                    style={{
-                                      backgroundImage: `url(${fireImg})`,
-                                      backgroundRepeat: 'no-repeat',
-                                      backgroundPosition: 'right bottom',
-                                      backgroundSize: '160px auto',
-                                    }}
-                                  >
-                                    <div className='relative z-10'>
-                                      <div className='mb-2 text-lg font-bold text-white'>
-                                        {service.name}
+                                  <SwiperSlide key={service.id}>
+                                    <div
+                                      className={`relative flex min-h-[180px] w-full flex-col justify-between overflow-hidden rounded-xl border border-purple-500 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105`}
+                                      style={{
+                                        backgroundImage: `url(${fireImg})`,
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundPosition: 'right bottom',
+                                        backgroundSize: '160px auto',
+                                      }}
+                                    >
+                                      <div className='relative z-10'>
+                                        <div className='mb-2 text-lg font-bold text-white'>
+                                          {service.name}
+                                        </div>
+                                        <div className='mb-4 text-sm text-gray-300'>
+                                          {service.description}
+                                        </div>
                                       </div>
-                                      <div className='mb-4 text-sm text-gray-300'>
-                                        {service.description}
+                                      <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
+                                        {service.price.toLocaleString('en-US')}g
                                       </div>
                                     </div>
-                                    <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
-                                      {service.price.toLocaleString('en-US')}g
-                                    </div>
-                                  </div>
+                                  </SwiperSlide>
                                 ))}
-                            </div>
+                            </Swiper>
+
+                            {/* Setas de navegação para Hot Services - apenas se houver paginação (mais de 5 cards) */}
+                            {servicesList.filter((s) => s.hotItem).length >
+                              5 && (
+                              <>
+                                <div className='absolute left-0 top-1/2 z-30 flex -translate-x-16 -translate-y-1/2'>
+                                  <button
+                                    onClick={() =>
+                                      handlePrevSlide('hot-services')
+                                    }
+                                    className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
+                                    aria-label='Previous slide for Hot Services'
+                                  >
+                                    <CaretLeft size={24} />
+                                  </button>
+                                </div>
+
+                                <div className='absolute right-0 top-1/2 z-30 flex -translate-y-1/2 translate-x-16'>
+                                  <button
+                                    onClick={() =>
+                                      handleNextSlide('hot-services')
+                                    }
+                                    className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
+                                    aria-label='Next slide for Hot Services'
+                                  >
+                                    <CaretRight size={24} />
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
@@ -264,30 +354,99 @@ export function HomePage() {
                           return (
                             <div
                               key={category.id}
-                              className='flex flex-col gap-4'
+                              className='relative flex flex-col gap-4'
                             >
                               <div className='mb-2 mt-4 rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
                                 {category.name}
                               </div>
-                              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5'>
-                                {servicesInCategory.map((service) => (
-                                  <div
-                                    key={service.id}
-                                    className={`relative flex min-h-[180px] max-w-[350px] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
-                                  >
-                                    <div className='relative z-10'>
-                                      <div className='mb-2 text-lg font-bold text-white'>
-                                        {service.name}
+                              <div className='relative px-8 py-12'>
+                                <Swiper
+                                  modules={[Pagination, Autoplay]}
+                                  spaceBetween={24}
+                                  slidesPerView={1}
+                                  breakpoints={{
+                                    640: {
+                                      slidesPerView: 2,
+                                    },
+                                    768: {
+                                      slidesPerView: 3,
+                                    },
+                                    1024: {
+                                      slidesPerView: 4,
+                                    },
+                                    1280: {
+                                      slidesPerView: 5,
+                                    },
+                                  }}
+                                  pagination={{
+                                    clickable: true,
+                                    dynamicBullets: true,
+                                  }}
+                                  autoplay={{
+                                    delay: 5000 + category.id * 500,
+                                    disableOnInteraction: false,
+                                    pauseOnMouseEnter: true,
+                                  }}
+                                  speed={800}
+                                  loop={servicesInCategory.length > 5}
+                                  className='w-full'
+                                  onSwiper={(swiper) => {
+                                    swiperRefs.current[String(category.id)] =
+                                      swiper
+                                  }}
+                                >
+                                  {servicesInCategory.map((service) => (
+                                    <SwiperSlide key={service.id}>
+                                      <div
+                                        className={`m relative my-10 flex min-h-[180px] w-full flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
+                                      >
+                                        <div className='relative z-10'>
+                                          <div className='mb-2 text-lg font-bold text-white'>
+                                            {service.name}
+                                          </div>
+                                          <div className='mb-4 text-sm text-gray-300'>
+                                            {service.description}
+                                          </div>
+                                        </div>
+                                        <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
+                                          {service.price.toLocaleString(
+                                            'en-US'
+                                          )}
+                                          g
+                                        </div>
                                       </div>
-                                      <div className='mb-4 text-sm text-gray-300'>
-                                        {service.description}
-                                      </div>
+                                    </SwiperSlide>
+                                  ))}
+                                </Swiper>
+
+                                {/* Setas de navegação ao lado da seção - apenas se houver paginação (mais de 5 cards) */}
+                                {servicesInCategory.length > 5 && (
+                                  <>
+                                    <div className='absolute left-0 top-1/2 z-30 flex -translate-x-16 -translate-y-1/2'>
+                                      <button
+                                        onClick={() =>
+                                          handlePrevSlide(category.id)
+                                        }
+                                        className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
+                                        aria-label={`Previous slide for ${category.name}`}
+                                      >
+                                        <CaretLeft size={24} />
+                                      </button>
                                     </div>
-                                    <div className='relative z-10 mt-auto text-lg font-bold text-purple-500'>
-                                      {service.price.toLocaleString('en-US')}g
+
+                                    <div className='absolute right-0 top-1/2 z-30 flex -translate-y-1/2 translate-x-16'>
+                                      <button
+                                        onClick={() =>
+                                          handleNextSlide(category.id)
+                                        }
+                                        className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
+                                        aria-label={`Next slide for ${category.name}`}
+                                      >
+                                        <CaretRight size={24} />
+                                      </button>
                                     </div>
-                                  </div>
-                                ))}
+                                  </>
+                                )}
                               </div>
                             </div>
                           )

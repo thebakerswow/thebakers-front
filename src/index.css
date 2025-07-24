@@ -87,3 +87,44 @@ button {
 .swal2-popup.swal2-icon-error .swal2-timer-progress-bar {
   background-color: #ef4444 !important;
 }
+
+/* Estilos personalizados para o Swiper */
+.swiper-pagination-bullet {
+  background-color: #9f7aea !important;
+  opacity: 0.5 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #9f7aea !important;
+  opacity: 1 !important;
+}
+
+.swiper-pagination {
+  position: relative !important;
+  margin-top: 1rem !important;
+}
+
+.swiper-slide {
+  height: auto !important;
+  padding: 10px !important;
+}
+
+/* Permitir que os cards tenham espaço interno para expandir no hover */
+.swiper-slide > div {
+  transition: transform 0.3s ease !important;
+}
+
+.swiper-slide:hover > div {
+  transform: scale(1.05) !important;
+  z-index: 10 !important;
+}
+
+/* Aplicar o mesmo tratamento de hover para Hot Services */
+.grid > div {
+  transition: transform 0.3s ease !important;
+}
+
+.grid > div:hover {
+  transform: scale(1.05) !important;
+  z-index: 10 !important;
+}
