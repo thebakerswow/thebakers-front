@@ -1,4 +1,4 @@
-// Re-exportações de todos os tipos para facilitar imports
+// Re-exports of all types to facilitate imports
 export * from './player-interface'
 export * from './runs-interface'
 export * from './buyer-interface'

@@ -1,4 +1,4 @@
-// Re-exportações para facilitar imports
+// Re-exports to facilitate imports
 export * from './auth'
 export * from './balance'
 export * from './buyers'

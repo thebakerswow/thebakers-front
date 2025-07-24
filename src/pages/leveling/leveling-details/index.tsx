@@ -103,7 +103,7 @@ export function LevelingDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -130,7 +130,7 @@ export function LevelingDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -235,7 +235,7 @@ export function LevelingDetails() {
         }
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }

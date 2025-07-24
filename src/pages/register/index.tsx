@@ -33,8 +33,8 @@ export function Register() {
       })
       Swal.fire({
         icon: 'info',
-        title: 'Confirme o cadastro no Discord',
-        text: 'Digite o código enviado no Discord para finalizar o cadastro.',
+        title: 'Confirm registration on Discord',
+        text: 'Enter the code sent on Discord to complete the registration.',
         confirmButtonText: 'OK',
       }).then(() => {
         setIsConfirmModalOpen(false)
@@ -47,7 +47,7 @@ export function Register() {
           status: error.response?.status,
         })
       } else {
-        setError({ message: 'Erro inesperado', response: error })
+        setError({ message: 'Unexpected error', response: error })
       }
     }
   }
@@ -104,7 +104,7 @@ export function Register() {
           </div>
         </div>
 
-        {/* Modal de confirmação */}
+        {/* Confirmation modal */}
         {isConfirmModalOpen && null}
       </div>
 

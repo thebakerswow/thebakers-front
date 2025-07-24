@@ -148,7 +148,7 @@ export function BalanceControlTable({
               response: error.response?.data,
               status: error.response?.status,
             }
-          : { message: 'Erro inesperado', response: error }
+          : { message: 'Unexpected error', response: error }
 
         if (onError) {
           onError(errorDetails)
@@ -232,7 +232,7 @@ export function BalanceControlTable({
             response: error.response?.data,
             status: error.response?.status,
           }
-        : { message: 'Erro inesperado', response: error }
+        : { message: 'Unexpected error', response: error }
 
       if (onError) {
         onError(errorDetails)
@@ -269,7 +269,7 @@ export function BalanceControlTable({
             response: error.response?.data,
             status: error.response?.status,
           }
-        : { message: 'Erro inesperado', response: error }
+        : { message: 'Unexpected error', response: error }
 
       if (onError) {
         onError(errorDetails)
@@ -306,7 +306,7 @@ export function BalanceControlTable({
             response: error.response?.data,
             status: error.response?.status,
           }
-        : { message: 'Erro inesperado', response: error }
+        : { message: 'Unexpected error', response: error }
 
       if (onError) {
         onError(errorDetails)

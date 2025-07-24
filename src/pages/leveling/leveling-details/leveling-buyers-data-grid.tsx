@@ -130,7 +130,7 @@ export function LevelingBuyersDataGrid({
       const secretKey = import.meta.env.VITE_DECRYPTION_KEY
 
       if (!secretKey) {
-        console.error('VITE_DECRYPTION_KEY não está definida')
+        console.error('VITE_DECRYPTION_KEY is not defined')
         return ''
       }
 
@@ -155,7 +155,7 @@ export function LevelingBuyersDataGrid({
           return result
         }
       } catch (error) {
-        console.error('Erro na decriptação AES-128-CFB:', error)
+        console.error('Error in AES-128-CFB decryption:', error)
       }
 
       return ''

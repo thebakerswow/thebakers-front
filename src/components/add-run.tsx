@@ -56,7 +56,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
 
-  // Função para buscar membros do time
+  // Function to fetch team members
   const fetchTeamMembers = useCallback(async () => {
     try {
       const teamId = import.meta.env.VITE_TEAM_PREFEITO
@@ -79,12 +79,12 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     }
   }, [onError])
 
-  // Busca as opções da API ao montar o componente do time Prefeito
+  // Fetches API options when mounting the Prefeito team component
   useEffect(() => {
     fetchTeamMembers()
   }, [fetchTeamMembers])
 
-  // Atualiza os valores do formulário
+  // Updates form values
   const handleChange = (
     e:
       | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -112,7 +112,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     }
   }
 
-  // Envia os dados do formulário para a API
+  // Sends form data to API
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -127,7 +127,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
       setIsSuccess(true)
       onClose() // Close the modal before showing Swal
 
-      // Mostra alerta de confirmação após fechar o dialog
+      // Shows confirmation alert after closing dialog
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',

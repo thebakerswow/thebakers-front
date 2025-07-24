@@ -65,7 +65,7 @@ export function KeyDetails() {
     setShowDetails((prev) => !prev)
   }
 
-  // Função para recarregar TODOS os dados (run e buyers)
+  // Function to reload ALL data (run and buyers)
   const reloadAllData = async () => {
     await fetchRunData() // Atualiza dados da run
     await fetchBuyersData() // Atualiza lista de buyers
@@ -81,7 +81,7 @@ export function KeyDetails() {
     setError(null)
   }
 
-  // Função para buscar os dados da run
+  // Function to fetch run data
   async function fetchRunData() {
     try {
       const response = await api.get(`/run/${id}`)
@@ -102,7 +102,7 @@ export function KeyDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -111,7 +111,7 @@ export function KeyDetails() {
     }
   }
 
-  // Função para buscar os dados dos buyers
+  // Function to fetch buyers data
   async function fetchBuyersData() {
     try {
       setIsLoadingBuyers(false)
@@ -129,7 +129,7 @@ export function KeyDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -138,7 +138,7 @@ export function KeyDetails() {
     }
   }
 
-  // Função para verificar acesso à run
+  // Function to verify run access
   async function checkRunAccess() {
     try {
       const response = await api.get(`/access/run/${id}`)
@@ -159,7 +159,7 @@ export function KeyDetails() {
       fetchRunData()
     })
 
-    // Função para resetar o temporizador
+    // Function to reset timer
     const resetActivityTimer = () => {
       setIsActive(true)
       clearTimeout(inactivityTimeout)
@@ -168,7 +168,7 @@ export function KeyDetails() {
       }, 5000)
     }
 
-    // Função para monitorar a visibilidade da página
+    // Function to monitor page visibility
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setIsActive(false)
@@ -177,7 +177,7 @@ export function KeyDetails() {
       }
     }
 
-    // Configuração de eventos para detectar atividade do usuário
+    // Event configuration to detect user activity
     let inactivityTimeout: ReturnType<typeof setTimeout>
 
     const handleMouseOrKeyActivity = () => {
@@ -210,9 +210,9 @@ export function KeyDetails() {
       window.removeEventListener('keydown', handleMouseOrKeyActivity)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [id, isActive]) // Adicione isActive às dependências
+  }, [id, isActive]) // Add isActive to dependencies
 
-  // Função para buscar os dados de atendimento
+  // Function to fetch attendance data
   async function fetchAttendanceData() {
     try {
       const response = await api.get(`/run/${id}/attendance`)
@@ -235,14 +235,14 @@ export function KeyDetails() {
         }
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
     }
   }
 
-  // Função para marcar todos como 100% (apenas visualização)
+  // Function to mark all as 100% (view only)
   const markAllAsFull = () => {
     setAttendance((prevAttendance) => ({
       info: prevAttendance.info.map((player) => ({
@@ -252,7 +252,7 @@ export function KeyDetails() {
     }))
   }
 
-  // Função para alterar o percentual (apenas visualização)
+  // Function to change percentage (view only)
   const handleAttendanceClick = (playerId: string, value: number) => {
     setAttendance((prevAttendance) => ({
       info: prevAttendance.info.map((player) =>
@@ -288,7 +288,7 @@ export function KeyDetails() {
           setChatMessages(messages || [])
         })
         .catch((error) => {
-          console.error('Falha ao buscar mensagens anteriores:', error)
+          console.error('Failed to fetch previous messages:', error)
         })
         .finally(() => setChatLoading(false))
 
@@ -350,13 +350,13 @@ export function KeyDetails() {
               user_name:
                 data.payload.user_name ||
                 data.payload.username ||
-                'Usuário desconhecido',
+                'Unknown user',
             }
             setChatMessages((prev) => {
               const updated = [...prev, newMsg]
               return updated
             })
-            // Notificação e contador se não for do usuário logado
+            // Notification and counter if not from logged user
             if (String(newMsg.id_discord) !== String(idDiscord)) {
               if (!isChatOpen) {
                 setChatUnreadCount((prev) => prev + 1)
@@ -376,7 +376,7 @@ export function KeyDetails() {
           case 'confirmation':
             break
           case 'error':
-            console.error('Erro do Servidor:', data.payload)
+            console.error('Server Error:', data.payload)
             break
           default:
             console.warn('Tipo de mensagem desconhecido:', data.type)
@@ -387,7 +387,7 @@ export function KeyDetails() {
     // Initial connection
     connectWebSocket()
 
-    // Solicita permissão para notificações ao montar
+    // Request notification permission when mounting
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
@@ -400,7 +400,7 @@ export function KeyDetails() {
     }
   }, [id, idDiscord])
 
-  // Função para enviar mensagem
+  // Function to send message
   const handleSendChatMessage = (msg: string) => {
     if (!msg.trim()) {
       return
@@ -422,17 +422,17 @@ export function KeyDetails() {
     chatWs.current.send(JSON.stringify(messageData))
   }
 
-  // Função para decriptar idCommunication
+  // Function to decrypt idCommunication
   const decryptIdCommunication = (encryptedId: string): string => {
     try {
       const secretKey = import.meta.env.VITE_DECRYPTION_KEY
 
       if (!secretKey) {
-        console.error('VITE_DECRYPTION_KEY não está definida')
+        console.error('VITE_DECRYPTION_KEY is not defined')
         return ''
       }
 
-      // Implementação compatível com Go AES-128-CFB
+      // Implementation compatible with Go AES-128-CFB
       try {
         // 1. Criar hash MD5 da chave (igual ao Go)
         const keyHash = CryptoJS.MD5(secretKey)
@@ -453,34 +453,31 @@ export function KeyDetails() {
           return result
         }
       } catch (error) {
-        console.error('Erro na decriptação AES-128-CFB:', error)
+        console.error('Error in AES-128-CFB decryption:', error)
       }
 
       return ''
     } catch (error) {
-      console.error('Erro ao decriptar idCommunication:', error)
+      console.error('Error decrypting idCommunication:', error)
       return ''
     }
   }
 
-  // Função para obter o ID do Discord do raid leader
+  // Function to get Discord ID of raid leader
   const getRaidLeaderDiscordId = (raidLeader: RaidLeader): string => {
     if (raidLeader.idDiscord === 'Encrypted') {
       const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
       if (!decryptedId) {
-        console.error(
-          'Falha ao decriptar ID do raid leader:',
-          raidLeader.username
-        )
+        console.error('Failed to decrypt raid leader ID:', raidLeader.username)
       }
       return decryptedId
     }
     return raidLeader.idDiscord
   }
 
-  // Função para taggear raid leader
+  // Function to tag raid leader
   const handleTagRaidLeader = async (message?: ChatMessage) => {
-    // Se não foi passada uma mensagem específica, usar a última mensagem do usuário
+    // If no specific message was passed, use the last user message
     let msg = message
     if (!msg) {
       const userMessages = chatMessages.filter(
@@ -560,7 +557,7 @@ export function KeyDetails() {
     }
   }
 
-  // Zerar contador de não lidas ao abrir o chat
+  // Reset unread counter when opening chat
   useEffect(() => {
     if (isChatOpen) {
       setChatUnreadCount(0)

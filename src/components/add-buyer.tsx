@@ -43,7 +43,7 @@ export function AddBuyer({
   onBuyerAddedReload,
   onError,
 }: AddBuyerProps) {
-  // Estado para armazenar os dados do formulário
+  // State to store form data
   const [formData, setFormData] = useState({
     nameAndRealm: '',
     playerClass: '',
@@ -58,7 +58,7 @@ export function AddBuyer({
   const [isSuccess] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  // Função para lidar com mudanças nos inputs do formulário
+  // Function to handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type, checked } = e.target
     setFormData((prev) => ({
@@ -77,21 +77,21 @@ export function AddBuyer({
     }))
   }
 
-  // Função para formatar o valor do campo "buyerPot"
+  // Function to format the "buyerPot" field value
   const formatBuyerPot = (value: string) => {
     const rawValue = value.replace(/\D/g, '')
     return rawValue ? Number(rawValue).toLocaleString('en-US') : ''
   }
 
-  // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
+  // Function to format the "buyerDolarPot" field value equal to the dollar input of the balance-control-table calculator
   const formatBuyerDolarPot = (value: string) => {
-    // Permite números, hífen e ponto (apenas um ponto)
+    // Allows numbers, hyphen and dot (only one dot)
     let rawValue = value
       .replace(/[^0-9.-]/g, '')
-      .replace(/(?!^)-/g, '') // apenas um hífen no início
-      .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // apenas um ponto
+      .replace(/(?!^)-/g, '') // only one hyphen at the beginning
+      .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // only one dot
 
-    // Se houver ponto decimal, separa parte inteira e decimal
+    // If there's a decimal point, separates integer and decimal parts
     const parts = rawValue.split('.')
     let formattedValue = parts[0]
       ? Number(parts[0].replace(/,/g, '')).toLocaleString('en-US')
@@ -105,13 +105,13 @@ export function AddBuyer({
     return rawValue === '0' ? '' : formattedValue
   }
 
-  // Função para lidar com o envio do formulário
+  // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setFormError(null)
 
-    // Validação: apenas um dos campos deve estar preenchido
+    // Validation: only one field should be filled
     const buyerPotFilled =
       !!formData.buyerPot && Number(formData.buyerPot.replace(/,/g, '')) > 0
     const buyerDolarPotFilled =
@@ -121,12 +121,12 @@ export function AddBuyer({
       (buyerPotFilled && buyerDolarPotFilled) ||
       (!buyerPotFilled && !buyerDolarPotFilled)
     ) {
-      setFormError('Preencha apenas um dos campos: Pot OU Pot (USD).')
+      setFormError('Fill only one of the fields: Pot OR Pot (USD).')
       setIsSubmitting(false)
       return
     }
 
-    // Garantir que todos os campos obrigatórios estão preenchidos
+    // Ensure all required fields are filled
     const data = {
       id_run: run.id,
       nameAndRealm: formData.nameAndRealm || '',
@@ -139,14 +139,14 @@ export function AddBuyer({
     }
 
     try {
-      // Envia os dados do comprador para a API
+      // Sends buyer data to API
       await createBuyer(data)
       await onBuyerAddedReload()
 
-      // Fecha o dialog imediatamente após o sucesso
+      // Closes dialog immediately after success
       onClose()
 
-      // Mostra alerta de confirmação após fechar o dialog
+      // Shows confirmation alert after closing dialog
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',
@@ -179,7 +179,7 @@ export function AddBuyer({
     }
   }
 
-  // Função para buscar a lista de anunciantes
+  // Function to fetch advertiser list
   const fetchAdvertisers = useCallback(async () => {
     try {
       const response = await getGhostUsers()
@@ -205,7 +205,7 @@ export function AddBuyer({
   }, [onError])
 
   useEffect(() => {
-    fetchAdvertisers() // Busca anunciantes ao carregar o componente
+    fetchAdvertisers() // Fetches advertisers when component loads
   }, [fetchAdvertisers])
 
   return (

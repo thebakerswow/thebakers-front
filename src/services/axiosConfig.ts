@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// Instância para chamadas autenticadas (requisições que precisam de token)
+// Instance for authenticated calls (requests that need token)
 export const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/v1`,
   headers: {
@@ -9,10 +9,10 @@ export const api = axios.create({
   },
 })
 
-// Interceptor para adicionar automaticamente o token nas requisições autenticadas
+// Interceptor to automatically add token to authenticated requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('jwt') // Obtém o token da sessão
+    const token = localStorage.getItem('jwt') // Gets token from session
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -23,18 +23,18 @@ api.interceptors.request.use(
   }
 )
 
-// Interceptor para tratar erros de resposta, especialmente erros de autenticação
+// Interceptor to handle response errors, especially authentication errors
 api.interceptors.response.use(
   (response) => {
     return response
   },
   (error) => {
-    // Verifica se é um erro de autenticação (401) ou erro de token inválido
+    // Checks if it's an authentication error (401) or invalid token error
     if (error.response?.status === 401) {
       // Remove o token do localStorage
       localStorage.removeItem('jwt')
 
-      // Se não estiver na página de login, redireciona para login
+      // If not on login page, redirect to login
       if (
         window.location.pathname !== '/' &&
         window.location.pathname !== '/login'

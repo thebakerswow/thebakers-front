@@ -27,7 +27,7 @@ export function Login() {
         status: error.response?.status,
       })
     } else {
-      setError({ message: 'Erro inesperado', response: error })
+      setError({ message: 'Unexpected error', response: error })
     }
   }
 

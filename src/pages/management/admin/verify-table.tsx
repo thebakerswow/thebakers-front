@@ -45,7 +45,7 @@ export function VerifyTable({ onError }: VerifyTableProps) {
             response: err.response?.data,
             status: err.response?.status,
           }
-        : { message: 'Erro inesperado', response: err }
+        : { message: 'Unexpected error', response: err }
 
       if (onError) {
         onError(errorDetails)

@@ -87,7 +87,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
         })) || []
       setGbanks(formattedGBanks)
     } catch (error) {
-      handleError(error, 'Erro ao buscar GBanks')
+      handleError(error, 'Error fetching GBanks')
     } finally {
       setIsLoading(false)
     }
@@ -321,7 +321,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
               <TableRow>
                 <TableCell colSpan={4} align='center'>
                   <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-                  <p>Carregando...</p>
+                  <p>Loading...</p>
                 </TableCell>
               </TableRow>
             ) : (
@@ -400,7 +400,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                                   e.currentTarget.value.replace(/,/g, '')
                                 ),
                               }),
-                            'Erro ao atualizar calculadora do G-Bank'
+                            'Error updating G-Bank calculator'
                           )
                         }
                       }}
@@ -416,7 +416,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
       {editGBank && (
         <Dialog open={!!editGBank} onClose={() => setEditGBank(null)}>
           <DialogTitle className='relative text-center'>
-            Editar G-Bank
+            Edit G-Bank
             <IconButton
               aria-label='close'
               onClick={() => setEditGBank(null)}
@@ -469,7 +469,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                       name: editGBank.name,
                       color: editGBank.color || '#FFFFFF',
                     }),
-                  'Erro ao atualizar G-Bank'
+                  'Error updating G-Bank'
                 ).then(() => setEditGBank(null))
               }
               disabled={isSubmitting}

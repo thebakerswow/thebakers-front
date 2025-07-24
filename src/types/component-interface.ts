@@ -1,4 +1,4 @@
-// Props de componentes reutilizáveis
+// Props for reusable components
 export interface ErrorComponentProps {
   error: {
     message: string

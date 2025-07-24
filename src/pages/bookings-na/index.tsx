@@ -190,7 +190,7 @@ export function FullRaidsNa() {
             response: error.response?.data,
             status: error.response?.status,
           }
-        : { message: 'Erro inesperado', response: error }
+        : { message: 'Unexpected error', response: error }
       console.error('Erro:', errorDetails)
       setError(errorDetails)
     } finally {

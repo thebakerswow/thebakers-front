@@ -114,7 +114,7 @@ export function RunDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -140,7 +140,7 @@ export function RunDetails() {
         setError(errorDetails)
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
@@ -244,7 +244,7 @@ export function RunDetails() {
         }
       } else {
         setError({
-          message: 'Erro inesperado',
+          message: 'Unexpected error',
           response: error,
         })
       }
