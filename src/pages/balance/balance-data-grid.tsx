@@ -114,12 +114,8 @@ export function BalanceDataGrid({
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
     const fetchBalanceData = async () => {
-      if (
-        !dateRange ||
-        selectedTeam === null ||
-        selectedTeam === undefined ||
-        (selectedTeam === '' && !isRestrictedUser) // Só impede se não for usuário restrito
-      ) {
+      // Validação mais simples: se não tem dados essenciais, não faz nada
+      if (!dateRange || !selectedTeam) {
         setHasInitialDataLoaded(false)
         return
       }

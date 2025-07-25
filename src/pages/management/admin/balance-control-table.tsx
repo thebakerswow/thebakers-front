@@ -672,7 +672,7 @@ export function BalanceControlTable({
           <IconButton
             aria-label='close'
             onClick={handleCloseDialog}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ position: 'absolute', right: 8, top: 12 }}
           >
             <CloseIcon />
           </IconButton>
@@ -699,6 +699,11 @@ export function BalanceControlTable({
       <Dialog
         open={isFreelancerDialogOpen}
         onClose={handleCloseFreelancerDialog}
+        sx={{
+          '& .MuiDialog-paper': {
+            padding: '20px',
+          },
+        }}
       >
         <DialogTitle className='relative text-center'>
           {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER
@@ -707,7 +712,7 @@ export function BalanceControlTable({
           <IconButton
             aria-label='close'
             onClick={handleCloseFreelancerDialog}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ position: 'absolute', right: -14, top: 12 }}
           >
             <CloseIcon />
           </IconButton>

@@ -63,7 +63,7 @@ export function BalanceTeamFilter({
   onChange,
   onError,
 }: BalanceTeamFilterProps) {
-  const { userRoles, idDiscord } = useAuth()
+  const { userRoles } = useAuth()
   const restrictedRoles = [
     import.meta.env.VITE_TEAM_FREELANCER,
     import.meta.env.VITE_TEAM_ADVERTISER,
@@ -109,15 +109,14 @@ export function BalanceTeamFilter({
   }
 
   useEffect(() => {
-    fetchTeams()
-  }, [])
+    // Só busca teams se não for usuário restrito
+    if (!isRestrictedUser) {
+      fetchTeams()
+    }
+  }, [isRestrictedUser])
 
   // Para usuários restritos, define automaticamente o próprio ID como time selecionado
-  useEffect(() => {
-    if (isRestrictedUser && idDiscord && !selectedTeam) {
-      onChange(idDiscord)
-    }
-  }, [isRestrictedUser, idDiscord, selectedTeam, onChange])
+  // REMOVIDO: Agora isso é feito no componente pai para evitar conflitos
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
@@ -130,13 +129,18 @@ export function BalanceTeamFilter({
     [teams]
   )
 
-  // Remove o useMemo e usa useEffect para definir o time inicial apenas para usuários não restritos
+  // Define o time inicial apenas para usuários não restritos quando teams são carregados
   useEffect(() => {
-    if (!isRestrictedUser && !selectedTeam && teams.length > 0) {
+    if (
+      !isRestrictedUser &&
+      !selectedTeam &&
+      teams.length > 0 &&
+      !isLoadingTeams
+    ) {
       const initialTeam = teams[0].id_discord
       onChange(initialTeam)
     }
-  }, [selectedTeam, teams, onChange, isRestrictedUser])
+  }, [selectedTeam, teams, onChange, isRestrictedUser, isLoadingTeams])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value

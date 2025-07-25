@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BalanceDataGrid } from './balance-data-grid'
 import { BalanceTeamFilter } from '../../components/balance-team-filter'
 import { WeekRangeFilter } from '../../components/week-range-filter'
-import { Button } from '@mui/material'
+import { Button, CircularProgress } from '@mui/material'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 
@@ -13,13 +13,38 @@ export function BalancePage() {
   >(undefined)
   const [isDolar, setIsDolar] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const { userRoles = [] } = useAuth()
+  const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
   const freelancerRole = import.meta.env.VITE_TEAM_FREELANCER
   const isOnlyFreelancer =
     userRoles.length === 1 && userRoles[0] === freelancerRole
 
+  // Simplificado: Inicializa selectedTeam uma única vez quando auth estiver pronto
+  useEffect(() => {
+    if (authLoading || selectedTeam) return // Se já tem selectedTeam, não faz nada
+
+    if (isOnlyFreelancer && idDiscord) {
+      setSelectedTeam(idDiscord)
+    }
+    // Para não-freelancer, aguarda o BalanceTeamFilter definir via handleTeamChange
+  }, [authLoading, isOnlyFreelancer, idDiscord, selectedTeam])
+
   const handleError = (error: ErrorDetails | null) => {
     setError(error)
+  }
+
+  const handleTeamChange = (team: string | null) => {
+    setSelectedTeam(team)
+  }
+
+  // Loading mais simples: só mostra se auth está carregando OU se freelancer ainda não tem selectedTeam
+  const isLoading = authLoading || (isOnlyFreelancer && !selectedTeam)
+
+  if (isLoading) {
+    return (
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <CircularProgress />
+      </div>
+    )
   }
 
   return (
@@ -29,7 +54,7 @@ export function BalancePage() {
         <div className='flex items-center gap-2'>
           <BalanceTeamFilter
             selectedTeam={selectedTeam}
-            onChange={setSelectedTeam}
+            onChange={handleTeamChange}
             onError={handleError}
           />
           {!isOnlyFreelancer && (
@@ -39,7 +64,7 @@ export function BalancePage() {
                 height: '40px',
                 minWidth: '80px',
                 marginTop: '16px',
-                backgroundColor: isDolar ? '#ef4444' : '#FFD700', // vermelho para dólar, dourado para gold
+                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
                 color: isDolar ? '#fff' : '#000',
                 '&:hover': {
                   backgroundColor: isDolar ? '#dc2626' : '#FFC300',
