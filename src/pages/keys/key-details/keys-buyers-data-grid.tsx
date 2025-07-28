@@ -86,10 +86,11 @@ export function KeysBuyersDataGrid({
   onBuyerNameNoteEdit,
   onDeleteSuccess,
   runIsLocked, // Destructure runIsLocked
+  runIdTeam, // Added for team-based column visibility
   raidLeaders, // Added raid leaders prop
   onError,
 }: BuyersGridProps) {
-  const { idDiscord } = useAuth()
+  const { idDiscord, userRoles } = useAuth()
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
@@ -122,6 +123,18 @@ export function KeysBuyersDataGrid({
   // Function to check if current user is the advertiser of a buyer
   const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
     return idDiscord === buyer.idOwnerBuyer
+  }
+
+  // Function to check if user can see deposit value column
+  const canSeeDepositValue = (): boolean => {
+    const isRaidLeaderUser = isRaidLeader()
+    const isChefeDeCozinha = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+    return isRaidLeaderUser || isChefeDeCozinha
+  }
+
+  // Function to check if Dolar Pot column should be hidden for M+ team runs
+  const shouldHideDolarPot = (): boolean => {
+    return runIdTeam === import.meta.env.VITE_TEAM_MPLUS
   }
 
   // Function to decrypt idCommunication
@@ -843,16 +856,18 @@ export function KeysBuyersDataGrid({
             >
               Paid Full
             </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Dolar Pot
-            </TableCell>
+            {!shouldHideDolarPot() && (
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Dolar Pot
+              </TableCell>
+            )}
             <TableCell
               sx={{ textAlign: 'center' }}
               style={{
@@ -871,8 +886,20 @@ export function KeysBuyersDataGrid({
                 backgroundColor: '#ECEBEE',
               }}
             >
-              Run Pot
+              Buyer Pot
             </TableCell>
+            {canSeeDepositValue() && (
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Deposit Value
+              </TableCell>
+            )}
             <TableCell
               sx={{ textAlign: 'center' }}
               style={{
@@ -900,7 +927,11 @@ export function KeysBuyersDataGrid({
             <TableRow sx={{ height: '32px', minHeight: '32px' }}>
               {/* Increased height */}
               <TableCell
-                colSpan={11}
+                colSpan={
+                  (canSeeDepositValue() ? 1 : 0) +
+                  (shouldHideDolarPot() ? 0 : 1) +
+                  11
+                }
                 align='center'
                 sx={{ padding: '20px', textAlign: 'center' }} // Adjusted padding
               >
@@ -964,23 +995,25 @@ export function KeysBuyersDataGrid({
                     })
                   )}
                 </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Dolar Pot */}
-                  {buyer.buyerDolarPot == null ? (
-                    buyer.buyerPot == null ? (
-                      <i>Encrypted</i>
+                {!shouldHideDolarPot() && (
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {/* Dolar Pot */}
+                    {buyer.buyerDolarPot == null ? (
+                      buyer.buyerPot == null ? (
+                        <i>Encrypted</i>
+                      ) : (
+                        '-'
+                      )
+                    ) : buyer.buyerDolarPot > 0 ? (
+                      Number(buyer.buyerDolarPot).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
                     ) : (
                       '-'
-                    )
-                  ) : buyer.buyerDolarPot > 0 ? (
-                    Number(buyer.buyerDolarPot).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {/* Gold Pot (antes era Total Pot) */}
                   {buyer.buyerPot == null ? (
@@ -1005,6 +1038,29 @@ export function KeysBuyersDataGrid({
                     )
                   )}
                 </TableCell>
+                {canSeeDepositValue() && (
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.buyerPot != null && buyer.buyerActualPot != null ? (
+                      buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                        Number(
+                          buyer.buyerPot - buyer.buyerActualPot
+                        ).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      ) : (
+                        Math.round(
+                          Number(buyer.buyerPot - buyer.buyerActualPot)
+                        ).toLocaleString('en-US')
+                      )
+                    ) : buyer.buyerPot == null ||
+                      buyer.buyerActualPot == null ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                )}
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   <div className='flex items-center justify-center gap-2'>
                     {buyer.playerClass === 'Encrypted' ? (

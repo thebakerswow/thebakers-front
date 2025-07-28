@@ -58,6 +58,11 @@ export function AddBuyer({
   const [isSuccess] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  // Function to check if Dolar field should be hidden for M+ team runs
+  const shouldHideDolarField = (): boolean => {
+    return run.idTeam === import.meta.env.VITE_TEAM_MPLUS
+  }
+
   // Function to handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type, checked } = e.target
@@ -111,19 +116,30 @@ export function AddBuyer({
     setIsSubmitting(true)
     setFormError(null)
 
-    // Validation: only one field should be filled
+    // Validation: only one field should be filled (unless Dolar field is hidden)
     const buyerPotFilled =
       !!formData.buyerPot && Number(formData.buyerPot.replace(/,/g, '')) > 0
     const buyerDolarPotFilled =
       !!formData.buyerDolarPot &&
       Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
-    if (
-      (buyerPotFilled && buyerDolarPotFilled) ||
-      (!buyerPotFilled && !buyerDolarPotFilled)
-    ) {
-      setFormError('Fill only one of the fields: Pot OR Pot (USD).')
-      setIsSubmitting(false)
-      return
+
+    // If Dolar field is hidden, only validate that Pot is filled
+    if (shouldHideDolarField()) {
+      if (!buyerPotFilled) {
+        setFormError('Pot field is required.')
+        setIsSubmitting(false)
+        return
+      }
+    } else {
+      // Normal validation: only one field should be filled
+      if (
+        (buyerPotFilled && buyerDolarPotFilled) ||
+        (!buyerPotFilled && !buyerDolarPotFilled)
+      ) {
+        setFormError('Fill only one of the fields: Pot OR Pot (USD).')
+        setIsSubmitting(false)
+        return
+      }
     }
 
     // Ensure all required fields are filled
@@ -287,28 +303,31 @@ export function AddBuyer({
               variant='outlined'
               fullWidth
               disabled={
+                !shouldHideDolarField() &&
                 !!formData.buyerDolarPot &&
                 Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
               }
             />
-            <TextField
-              id='buyerDolarPot'
-              label='Pot (USD)'
-              required
-              value={formData.buyerDolarPot}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  buyerDolarPot: formatBuyerDolarPot(e.target.value),
-                }))
-              }
-              variant='outlined'
-              fullWidth
-              disabled={
-                !!formData.buyerPot &&
-                Number(formData.buyerPot.replace(/,/g, '')) > 0
-              }
-            />
+            {!shouldHideDolarField() && (
+              <TextField
+                id='buyerDolarPot'
+                label='Pot (USD)'
+                required
+                value={formData.buyerDolarPot}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    buyerDolarPot: formatBuyerDolarPot(e.target.value),
+                  }))
+                }
+                variant='outlined'
+                fullWidth
+                disabled={
+                  !!formData.buyerPot &&
+                  Number(formData.buyerPot.replace(/,/g, '')) > 0
+                }
+              />
+            )}
             {formError && (
               <div className='col-span-2 text-center font-semibold text-red-600'>
                 {formError}
