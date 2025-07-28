@@ -1418,6 +1418,7 @@ export function KeysBuyersDataGrid({
               }}
               onClose={() => setOpenModal(false)}
               onEditSuccess={onBuyerNameNoteEdit}
+              runIdTeam={runIdTeam}
             />
           </DialogContent>
         </Dialog>

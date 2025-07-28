@@ -1333,6 +1333,7 @@ export function BuyersDataGrid({
           }}
           onClose={() => setOpenModal(false)}
           onEditSuccess={onBuyerNameNoteEdit}
+          runIdTeam={runIdTeam}
         />
       )}
     </TableContainer>

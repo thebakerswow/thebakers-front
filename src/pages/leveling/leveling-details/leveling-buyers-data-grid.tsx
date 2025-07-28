@@ -1406,6 +1406,7 @@ export function LevelingBuyersDataGrid({
               }}
               onClose={() => setOpenModal(false)}
               onEditSuccess={onBuyerNameNoteEdit}
+              runIdTeam={runIdTeam}
             />
           </DialogContent>
         </Dialog>

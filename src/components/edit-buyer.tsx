@@ -24,9 +24,15 @@ interface EditBuyerProps {
   }
   onClose: () => void
   onEditSuccess: () => void
+  runIdTeam?: string // Added for team-based field visibility
 }
 
-export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
+export function EditBuyer({
+  buyer,
+  onClose,
+  onEditSuccess,
+  runIdTeam,
+}: EditBuyerProps) {
   const [formData, setFormData] = useState({
     nameAndRealm: buyer.nameAndRealm,
     buyerPot:
@@ -41,6 +47,14 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
+
+  // Function to determine if the dollar field should be hidden
+  const shouldHideDolarField = (): boolean => {
+    return (
+      runIdTeam === import.meta.env.VITE_TEAM_MPLUS ||
+      runIdTeam === import.meta.env.VITE_TEAM_LEVELING
+    )
+  }
 
   // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
   const formatBuyerDolarPot = (value: string) => {
@@ -164,13 +178,15 @@ export function EditBuyer({ buyer, onClose, onEditSuccess }: EditBuyerProps) {
               value={formData.buyerPot}
               onChange={handleChange('buyerPot')}
             />
-            <TextField
-              label='Dolar Pot'
-              variant='outlined'
-              fullWidth
-              value={formData.buyerDolarPot}
-              onChange={handleChange('buyerDolarPot')}
-            />
+            {!shouldHideDolarField() && (
+              <TextField
+                label='Dolar Pot'
+                variant='outlined'
+                fullWidth
+                value={formData.buyerDolarPot}
+                onChange={handleChange('buyerDolarPot')}
+              />
+            )}
             <TextField
               label='Note'
               variant='outlined'
