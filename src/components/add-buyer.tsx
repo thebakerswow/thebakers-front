@@ -58,9 +58,12 @@ export function AddBuyer({
   const [isSuccess] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  // Function to check if Dolar field should be hidden for M+ team runs
+  // Function to check if Dolar field should be hidden for M+ team runs ou Leveling
   const shouldHideDolarField = (): boolean => {
-    return run.idTeam === import.meta.env.VITE_TEAM_MPLUS
+    return (
+      run.idTeam === import.meta.env.VITE_TEAM_MPLUS ||
+      run.idTeam === import.meta.env.VITE_TEAM_LEVELING
+    )
   }
 
   // Function to handle form input changes
@@ -291,7 +294,7 @@ export function AddBuyer({
             </FormControl>
             <TextField
               id='buyerPot'
-              label='Pot'
+              label='Gold Pot'
               required
               value={formData.buyerPot}
               onChange={(e) =>

@@ -137,6 +137,38 @@ export function KeysBuyersDataGrid({
     return runIdTeam === import.meta.env.VITE_TEAM_MPLUS
   }
 
+  // Calculate total deposit value
+  const calculateTotalDepositValue = (): number => {
+    return data.reduce((total, buyer) => {
+      if (
+        buyer.buyerPot != null &&
+        buyer.buyerActualPot != null &&
+        (buyer.status === 'group' || buyer.status === 'done') &&
+        buyer.isPaid === true
+      ) {
+        return total + (buyer.buyerPot - buyer.buyerActualPot)
+      }
+      return total
+    }, 0)
+  }
+
+  // Format total deposit value
+  const formatTotalDepositValue = (): string => {
+    const total = calculateTotalDepositValue()
+    const hasDollarValues = data.some(
+      (buyer) => buyer.buyerDolarPot && buyer.buyerDolarPot > 0
+    )
+
+    if (hasDollarValues) {
+      return Number(total).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    } else {
+      return Math.round(total).toLocaleString('en-US')
+    }
+  }
+
   // Function to decrypt idCommunication
   const decryptIdCommunication = (encryptedId: string): string => {
     try {
@@ -1223,6 +1255,148 @@ export function KeysBuyersDataGrid({
                 </TableCell>
               </TableRow>
             ))
+          )}
+          {/* Total row - only show if Deposit Value column is visible */}
+          {canSeeDepositValue() && sortedData.length > 0 && (
+            <TableRow
+              sx={{
+                height: '40px',
+                backgroundColor: '#ECEBEE',
+              }}
+            >
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              {!shouldHideDolarPot() && (
+                <TableCell
+                  sx={{ textAlign: 'center' }}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: '#ECEBEE',
+                  }}
+                >
+                  -
+                </TableCell>
+              )}
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Total: {formatTotalDepositValue()}
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                -
+              </TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>

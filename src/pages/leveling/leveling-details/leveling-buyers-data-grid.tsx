@@ -86,102 +86,59 @@ export function LevelingBuyersDataGrid({
   onBuyerNameNoteEdit,
   onDeleteSuccess,
   runIsLocked, // Destructure runIsLocked
+  runIdTeam, // Added for team-based column visibility
   raidLeaders, // Added raid leaders prop
   onError,
 }: BuyersGridProps) {
-  const { idDiscord } = useAuth()
-  const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
-  const [openModal, setOpenModal] = useState(false)
-  const [editingBuyer, setEditingBuyer] = useState<{
-    id: string
-    nameAndRealm: string
-    buyerPot: number
-    buyerDolarPot: number
-    buyerNote: string
-  } | null>(null)
-  const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
-  const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
-  const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
-  const [cooldownBuyerReady, setCooldownBuyerReady] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Buyer Ready button
-  const [cooldownBuyerLogging, setCooldownBuyerLogging] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Buyer Logging button
-  const [cooldownAttention, setCooldownAttention] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Attention button
-  const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
-    {}
-  ) // Track button clicks
-  const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
-  const [cooldownPaid, setCooldownPaid] = useState<{ [key: string]: boolean }>(
-    {}
-  ) // Cooldown for Paid Full button
+  const { userRoles, idDiscord } = useAuth()
+
+  // Function to check if user can see deposit value column
+  const canSeeDepositValue = (): boolean => {
+    const isRaidLeaderUser = isRaidLeader()
+    const isChefeDeCozinha = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+    return isRaidLeaderUser || isChefeDeCozinha
+  }
+
+  // Function to check if Dolar Pot column should be hidden for Leveling team runs
+  const shouldHideDolarPot = (): boolean => {
+    return runIdTeam === import.meta.env.VITE_TEAM_LEVELING
+  }
+
+  // Calculate total deposit value
+  const calculateTotalDepositValue = (): number => {
+    return data.reduce((total, buyer) => {
+      if (
+        buyer.buyerPot != null &&
+        buyer.buyerActualPot != null &&
+        (buyer.status === 'group' || buyer.status === 'done') &&
+        buyer.isPaid === true
+      ) {
+        return total + (buyer.buyerPot - buyer.buyerActualPot)
+      }
+      return total
+    }, 0)
+  }
+
+  // Format total deposit value
+  const formatTotalDepositValue = (): string => {
+    const total = calculateTotalDepositValue()
+    const hasDollarValues = data.some(
+      (buyer) => buyer.buyerDolarPot && buyer.buyerDolarPot > 0
+    )
+
+    if (hasDollarValues) {
+      return Number(total).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    } else {
+      return Math.round(total).toLocaleString('en-US')
+    }
+  }
 
   // Function to check if current user is the advertiser of a buyer
   const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
     return idDiscord === buyer.idOwnerBuyer
-  }
-
-  // Function to decrypt idCommunication
-  const decryptIdCommunication = (encryptedId: string): string => {
-    try {
-      const secretKey = import.meta.env.VITE_DECRYPTION_KEY
-
-      if (!secretKey) {
-        console.error('VITE_DECRYPTION_KEY is not defined')
-        return ''
-      }
-
-      // Implementação compatível com Go AES-128-CFB
-      try {
-        // 1. Criar hash MD5 da chave (igual ao Go)
-        const keyHash = CryptoJS.MD5(secretKey)
-
-        // 2. Usar os primeiros 16 bytes como IV (igual ao Go)
-        const iv = CryptoJS.lib.WordArray.create(keyHash.words.slice(0, 4))
-
-        // 3. Decriptar usando AES-128-CFB
-        const decrypted = CryptoJS.AES.decrypt(encryptedId, keyHash, {
-          mode: CryptoJS.mode.CFB,
-          padding: CryptoJS.pad.NoPadding,
-          iv: iv,
-        })
-
-        const result = decrypted.toString(CryptoJS.enc.Utf8)
-
-        if (result) {
-          return result
-        }
-      } catch (error) {
-        console.error('Error in AES-128-CFB decryption:', error)
-      }
-
-      return ''
-    } catch (error) {
-      console.error('Error decrypting idCommunication:', error)
-      return ''
-    }
-  }
-
-  // Function to get Discord ID from raid leader
-  const getRaidLeaderDiscordId = (raidLeader: {
-    idCommunication: string
-    idDiscord: string
-    username: string
-  }): string => {
-    if (raidLeader.idDiscord === 'Encrypted') {
-      const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
-      if (!decryptedId) {
-        console.error(
-          'Falha ao decriptar ID do raid leader:',
-          raidLeader.username
-        )
-      }
-      return decryptedId
-    }
-    return raidLeader.idDiscord
   }
 
   // Function to check if current user is a raid leader
@@ -762,6 +719,95 @@ export function LevelingBuyersDataGrid({
     }
   }
 
+  const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
+  const [openModal, setOpenModal] = useState(false)
+  const [editingBuyer, setEditingBuyer] = useState<{
+    id: string
+    nameAndRealm: string
+    buyerPot: number
+    buyerDolarPot: number
+    buyerNote: string
+  } | null>(null)
+  const [modalType, setModalType] = useState<'edit' | 'delete' | null>(null)
+  const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
+  const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
+  const [cooldownBuyerReady, setCooldownBuyerReady] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Buyer Ready button
+  const [cooldownBuyerLogging, setCooldownBuyerLogging] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Buyer Logging button
+  const [cooldownAttention, setCooldownAttention] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Attention button
+  const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
+    {}
+  ) // Track button clicks
+  const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
+  const [cooldownPaid, setCooldownPaid] = useState<{ [key: string]: boolean }>(
+    {}
+  ) // Cooldown for Paid Full button
+
+  // Function to decrypt idCommunication
+  const decryptIdCommunication = (encryptedId: string): string => {
+    try {
+      const secretKey = import.meta.env.VITE_DECRYPTION_KEY
+
+      if (!secretKey) {
+        console.error('VITE_DECRYPTION_KEY is not defined')
+        return ''
+      }
+
+      // Implementação compatível com Go AES-128-CFB
+      try {
+        // 1. Criar hash MD5 da chave (igual ao Go)
+        const keyHash = CryptoJS.MD5(secretKey)
+
+        // 2. Usar os primeiros 16 bytes como IV (igual ao Go)
+        const iv = CryptoJS.lib.WordArray.create(keyHash.words.slice(0, 4))
+
+        // 3. Decriptar usando AES-128-CFB
+        const decrypted = CryptoJS.AES.decrypt(encryptedId, keyHash, {
+          mode: CryptoJS.mode.CFB,
+          padding: CryptoJS.pad.NoPadding,
+          iv: iv,
+        })
+
+        const result = decrypted.toString(CryptoJS.enc.Utf8)
+
+        if (result) {
+          return result
+        }
+      } catch (error) {
+        console.error('Error in AES-128-CFB decryption:', error)
+      }
+
+      return ''
+    } catch (error) {
+      console.error('Error decrypting idCommunication:', error)
+      return ''
+    }
+  }
+
+  // Function to get Discord ID from raid leader
+  const getRaidLeaderDiscordId = (raidLeader: {
+    idCommunication: string
+    idDiscord: string
+    username: string
+  }): string => {
+    if (raidLeader.idDiscord === 'Encrypted') {
+      const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
+      if (!decryptedId) {
+        console.error(
+          'Falha ao decriptar ID do raid leader:',
+          raidLeader.username
+        )
+      }
+      return decryptedId
+    }
+    return raidLeader.idDiscord
+  }
+
   return (
     <TableContainer
       component={Paper}
@@ -778,7 +824,7 @@ export function LevelingBuyersDataGrid({
               style={{
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                backgroundColor: '#ECEBEE', // Added background color
+                backgroundColor: '#ECEBEE',
               }}
             >
               Slot
@@ -843,16 +889,19 @@ export function LevelingBuyersDataGrid({
             >
               Paid Full
             </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Dolar Pot
-            </TableCell>
+            {/* Coluna Dolar Pot oculta para leveling */}
+            {!shouldHideDolarPot() && (
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Dolar Pot
+              </TableCell>
+            )}
             <TableCell
               sx={{ textAlign: 'center' }}
               style={{
@@ -873,6 +922,18 @@ export function LevelingBuyersDataGrid({
             >
               Run Pot
             </TableCell>
+            {canSeeDepositValue() && (
+              <TableCell
+                sx={{ textAlign: 'center' }}
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#ECEBEE',
+                }}
+              >
+                Deposit Value
+              </TableCell>
+            )}
             <TableCell
               sx={{ textAlign: 'center' }}
               style={{
@@ -898,275 +959,432 @@ export function LevelingBuyersDataGrid({
         <TableBody>
           {sortedData.length === 0 ? (
             <TableRow sx={{ height: '32px', minHeight: '32px' }}>
-              {/* Increased height */}
               <TableCell
-                colSpan={11}
+                colSpan={
+                  (canSeeDepositValue() ? 1 : 0) +
+                  (shouldHideDolarPot() ? 0 : 1) +
+                  12
+                }
                 align='center'
-                sx={{ padding: '20px', textAlign: 'center' }} // Adjusted padding
+                sx={{ padding: '20px', textAlign: 'center' }}
               >
                 No Buyers
               </TableCell>
             </TableRow>
           ) : (
-            sortedData.map((buyer, index) => (
-              <TableRow
-                key={buyer.id}
-                className={getBuyerColor(buyer.status)}
-                sx={{ height: '40px' }} // Set minimum height
-              >
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {index + 1}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.fieldIsBlocked === true ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    renderStatusSelect(buyer)
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm === 'Encrypted' ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    buyer.nameAndRealm
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerNote === 'Encrypted' ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    buyer.buyerNote
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameOwnerBuyer === 'Encrypted' ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    buyer.nameOwnerBuyer
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameCollector == null ||
-                  buyer.nameCollector === 'Encrypted' ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    buyer.nameCollector
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Paid Full */}
-                  {buyer.isEncrypted === true ? (
-                    <i>Encrypted</i>
-                  ) : (
-                    renderPaidIcon({
-                      ...buyer,
-                      isPaid: buyer.isPaid == null ? false : buyer.isPaid,
-                    })
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Dolar Pot */}
-                  {buyer.buyerDolarPot == null ? (
-                    buyer.buyerPot == null ? (
+            <>
+              {sortedData.map((buyer, index) => (
+                <TableRow
+                  key={buyer.id}
+                  className={getBuyerColor(buyer.status)}
+                  sx={{ height: '40px' }}
+                >
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {index + 1}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.fieldIsBlocked === true ? (
                       <i>Encrypted</i>
+                    ) : (
+                      renderStatusSelect(buyer)
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.nameAndRealm === 'Encrypted' ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      buyer.nameAndRealm
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.buyerNote === 'Encrypted' ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      buyer.buyerNote
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.nameOwnerBuyer === 'Encrypted' ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      buyer.nameOwnerBuyer
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.nameCollector == null ||
+                    buyer.nameCollector === 'Encrypted' ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      buyer.nameCollector
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.isEncrypted === true ? (
+                      <i>Encrypted</i>
+                    ) : (
+                      renderPaidIcon({
+                        ...buyer,
+                        isPaid: buyer.isPaid == null ? false : buyer.isPaid,
+                      })
+                    )}
+                  </TableCell>
+                  {/* Coluna Dolar Pot oculta para leveling */}
+                  {!shouldHideDolarPot() && (
+                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                      {buyer.buyerDolarPot == null ? (
+                        buyer.buyerPot == null ? (
+                          <i>Encrypted</i>
+                        ) : (
+                          '-'
+                        )
+                      ) : buyer.buyerDolarPot > 0 ? (
+                        Number(buyer.buyerDolarPot).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                  )}
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.buyerPot == null ? (
+                      <i>Encrypted</i>
+                    ) : buyer.buyerPot > 0 ? (
+                      Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')
                     ) : (
                       '-'
-                    )
-                  ) : buyer.buyerDolarPot > 0 ? (
-                    Number(buyer.buyerDolarPot).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Gold Pot (antes era Total Pot) */}
-                  {buyer.buyerPot == null ? (
-                    <i>Encrypted</i>
-                  ) : buyer.buyerPot > 0 ? (
-                    Math.round(Number(buyer.buyerPot)).toLocaleString('en-US')
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.buyerActualPot == null ? (
-                    <i>Encrypted</i>
-                  ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
-                    Number(buyer.buyerActualPot).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  ) : (
-                    Math.round(Number(buyer.buyerActualPot)).toLocaleString(
-                      'en-US'
-                    )
-                  )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  <div className='flex items-center justify-center gap-2'>
-                    {buyer.playerClass === 'Encrypted' ? (
-                      <i>Encrypted</i>
-                    ) : (
-                      <>
-                        {buyer.playerClass}
-                        {renderClassImage(buyer.playerClass)}
-                      </>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {buyer.nameAndRealm === 'Encrypted' ? null : (
-                    <div className='flex justify-center gap-1'>
-                      {isRaidLeader() && (
-                        <>
-                          <Tooltip title='AFK'>
-                            <IconButton
-                              onClick={() =>
-                                !runIsLocked && handleSendAFKMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldownAFK[buyer.id] ||
-                                globalCooldown
-                              }
-                              sx={{
-                                opacity:
-                                  cooldownAFK[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
-                              <RiZzzFill size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Offline'>
-                            <IconButton
-                              onClick={() =>
-                                !runIsLocked &&
-                                handleSendOfflineMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldown[buyer.id] ||
-                                globalCooldown
-                              }
-                              sx={{
-                                opacity:
-                                  cooldown[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
-                              <RiWifiOffLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      {isBuyerAdvertiser(buyer) && (
-                        <>
-                          <Tooltip title='Buyer Ready'>
-                            <IconButton
-                              onClick={() =>
-                                !runIsLocked &&
-                                handleSendBuyerReadyMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldownBuyerReady[buyer.id] ||
-                                globalCooldown
-                              }
-                              sx={{
-                                opacity:
-                                  cooldownBuyerReady[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
-                              <RiUserHeartLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Buyer Logging'>
-                            <IconButton
-                              onClick={() =>
-                                !runIsLocked &&
-                                handleSendBuyerLoggingMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldownBuyerLogging[buyer.id] ||
-                                globalCooldown
-                              }
-                              sx={{
-                                opacity:
-                                  cooldownBuyerLogging[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
-                              <RiLoginCircleLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Attention! Check Note'>
-                            <IconButton
-                              onClick={() =>
-                                !runIsLocked &&
-                                handleSendAttentionMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldownAttention[buyer.id] ||
-                                globalCooldown
-                              }
-                              sx={{
-                                opacity:
-                                  cooldownAttention[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
-                              <RiAlertLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      <Tooltip title='Edit'>
-                        <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleOpenModal(buyer, 'edit')
-                          }
-                          disabled={runIsLocked}
-                        >
-                          <Pencil size={18} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Delete'>
-                        <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleDeleteBuyer(buyer)
-                          }
-                          disabled={runIsLocked}
-                        >
-                          <Trash size={18} />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.buyerActualPot == null ? (
+                      <i>Encrypted</i>
+                    ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                      Number(buyer.buyerActualPot).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    ) : (
+                      Math.round(Number(buyer.buyerActualPot)).toLocaleString(
+                        'en-US'
+                      )
+                    )}
+                  </TableCell>
+                  {/* Coluna Deposit Value */}
+                  {canSeeDepositValue() && (
+                    <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                      {buyer.buyerPot != null && buyer.buyerActualPot != null
+                        ? (
+                            buyer.buyerPot - buyer.buyerActualPot
+                          ).toLocaleString('en-US')
+                        : '-'}
+                    </TableCell>
                   )}
-                </TableCell>
-              </TableRow>
-            ))
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    <div className='flex items-center justify-center gap-2'>
+                      {buyer.playerClass === 'Encrypted' ? (
+                        <i>Encrypted</i>
+                      ) : (
+                        <>
+                          {buyer.playerClass}
+                          {renderClassImage(buyer.playerClass)}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                    {buyer.nameAndRealm === 'Encrypted' ? null : (
+                      <div className='flex justify-center gap-1'>
+                        {isRaidLeader() && (
+                          <>
+                            <Tooltip title='AFK'>
+                              <IconButton
+                                onClick={() =>
+                                  !runIsLocked && handleSendAFKMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldownAFK[buyer.id] ||
+                                  globalCooldown
+                                }
+                                sx={{
+                                  opacity:
+                                    cooldownAFK[buyer.id] ||
+                                    runIsLocked ||
+                                    globalCooldown
+                                      ? 0.5
+                                      : 1,
+                                }}
+                              >
+                                <RiZzzFill size={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Offline'>
+                              <IconButton
+                                onClick={() =>
+                                  !runIsLocked &&
+                                  handleSendOfflineMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldown[buyer.id] ||
+                                  globalCooldown
+                                }
+                                sx={{
+                                  opacity:
+                                    cooldown[buyer.id] ||
+                                    runIsLocked ||
+                                    globalCooldown
+                                      ? 0.5
+                                      : 1,
+                                }}
+                              >
+                                <RiWifiOffLine size={18} />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        {isBuyerAdvertiser(buyer) && (
+                          <>
+                            <Tooltip title='Buyer Ready'>
+                              <IconButton
+                                onClick={() =>
+                                  !runIsLocked &&
+                                  handleSendBuyerReadyMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldownBuyerReady[buyer.id] ||
+                                  globalCooldown
+                                }
+                                sx={{
+                                  opacity:
+                                    cooldownBuyerReady[buyer.id] ||
+                                    runIsLocked ||
+                                    globalCooldown
+                                      ? 0.5
+                                      : 1,
+                                }}
+                              >
+                                <RiUserHeartLine size={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Buyer Logging'>
+                              <IconButton
+                                onClick={() =>
+                                  !runIsLocked &&
+                                  handleSendBuyerLoggingMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldownBuyerLogging[buyer.id] ||
+                                  globalCooldown
+                                }
+                                sx={{
+                                  opacity:
+                                    cooldownBuyerLogging[buyer.id] ||
+                                    runIsLocked ||
+                                    globalCooldown
+                                      ? 0.5
+                                      : 1,
+                                }}
+                              >
+                                <RiLoginCircleLine size={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Attention! Check Note'>
+                              <IconButton
+                                onClick={() =>
+                                  !runIsLocked &&
+                                  handleSendAttentionMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldownAttention[buyer.id] ||
+                                  globalCooldown
+                                }
+                                sx={{
+                                  opacity:
+                                    cooldownAttention[buyer.id] ||
+                                    runIsLocked ||
+                                    globalCooldown
+                                      ? 0.5
+                                      : 1,
+                                }}
+                              >
+                                <RiAlertLine size={18} />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        <Tooltip title='Edit'>
+                          <IconButton
+                            onClick={() =>
+                              !runIsLocked && handleOpenModal(buyer, 'edit')
+                            }
+                            disabled={runIsLocked}
+                          >
+                            <Pencil size={18} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Delete'>
+                          <IconButton
+                            onClick={() =>
+                              !runIsLocked && handleDeleteBuyer(buyer)
+                            }
+                            disabled={runIsLocked}
+                          >
+                            <Trash size={18} />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {/* Total row - only show if Deposit Value column is visible */}
+              {canSeeDepositValue() && sortedData.length > 0 && (
+                <TableRow
+                  sx={{
+                    height: '40px',
+                    backgroundColor: '#ECEBEE',
+                  }}
+                >
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  {!shouldHideDolarPot() && (
+                    <TableCell
+                      sx={{ textAlign: 'center' }}
+                      style={{
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        backgroundColor: '#ECEBEE',
+                      }}
+                    >
+                      -
+                    </TableCell>
+                  )}
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    Total: {formatTotalDepositValue()}
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                  <TableCell
+                    sx={{ textAlign: 'center' }}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      backgroundColor: '#ECEBEE',
+                    }}
+                  >
+                    -
+                  </TableCell>
+                </TableRow>
+              )}
+            </>
           )}
         </TableBody>
       </Table>
