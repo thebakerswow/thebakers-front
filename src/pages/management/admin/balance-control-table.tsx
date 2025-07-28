@@ -18,6 +18,8 @@ import {
   DialogActions,
   TextField,
   IconButton,
+  Box,
+  Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
@@ -636,13 +638,17 @@ export function BalanceControlTable({
                   </td>
                   <td className='p-2 text-center'>
                     {isDolar
-                      ? Number(user.balance_total).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                      : Math.round(Number(user.balance_total)).toLocaleString(
-                          'en-US'
-                        )}
+                      ? Math.abs(Number(user.balance_total)) === 0
+                        ? '0.00'
+                        : Number(user.balance_total).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                      : Math.abs(Math.round(Number(user.balance_total))) === 0
+                        ? '0'
+                        : Math.round(Number(user.balance_total)).toLocaleString(
+                            'en-US'
+                          )}
                   </td>
 
                   <td className='p-2 text-center'>
@@ -699,11 +705,8 @@ export function BalanceControlTable({
       <Dialog
         open={isFreelancerDialogOpen}
         onClose={handleCloseFreelancerDialog}
-        sx={{
-          '& .MuiDialog-paper': {
-            padding: '20px',
-          },
-        }}
+        maxWidth='xs'
+        fullWidth
       >
         <DialogTitle className='relative text-center'>
           {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER
@@ -712,44 +715,58 @@ export function BalanceControlTable({
           <IconButton
             aria-label='close'
             onClick={handleCloseFreelancerDialog}
-            sx={{ position: 'absolute', right: -14, top: 12 }}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent className='flex flex-col items-center gap-4'>
-          {sortedUsers.filter((user) => Number(user.balance_total) > 0).length >
-          0 ? (
-            <div className='flex flex-col items-center gap-2'>
-              <div className='mb-4 text-center'>
-                {sortedUsers
-                  .filter((user) => Number(user.balance_total) > 0)
-                  .map((user) => (
-                    <p key={user.idDiscord} className='font-normal'>
-                      {user.nick}, {Math.round(Number(user.balance_total))}.0
-                    </p>
-                  ))}
-              </div>
-              <Button
-                variant='contained'
-                color='primary'
-                onClick={() => {
-                  const payoutData = sortedUsers
-                    .filter((user) => Number(user.balance_total) > 0)
-                    .map(
-                      (user) =>
-                        `${user.nick}, ${Math.round(Number(user.balance_total))}.0`
-                    )
-                    .join('\n')
-                  navigator.clipboard.writeText(payoutData)
-                }}
-              >
-                Copy
-              </Button>
-            </div>
-          ) : (
-            <p className='text-center'>No data found.</p>
-          )}
+        <DialogContent>
+          <Box className='flex flex-col gap-4'>
+            {sortedUsers.filter((user) => Number(user.balance_total) > 0)
+              .length > 0 ? (
+              <>
+                <Box className='max-h-96 overflow-y-auto rounded border p-4'>
+                  <Typography
+                    component='pre'
+                    className='whitespace-pre-wrap text-sm'
+                  >
+                    {sortedUsers
+                      .filter((user) => Number(user.balance_total) > 0)
+                      .map(
+                        (user) =>
+                          `${user.nick}, ${Math.abs(Math.round(Number(user.balance_total))) === 0 ? '0' : Math.round(Number(user.balance_total))}`
+                      )
+                      .join('\n')}
+                  </Typography>
+                </Box>
+                <Box className='flex justify-center'>
+                  <Button
+                    variant='contained'
+                    onClick={() => {
+                      const payoutData = sortedUsers
+                        .filter((user) => Number(user.balance_total) > 0)
+                        .map(
+                          (user) =>
+                            `${user.nick}, ${Math.abs(Math.round(Number(user.balance_total))) === 0 ? '0' : Math.round(Number(user.balance_total))}`
+                        )
+                        .join('\n')
+                      navigator.clipboard.writeText(payoutData)
+                    }}
+                    sx={{
+                      backgroundColor: 'rgb(147, 51, 234)',
+                      '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <Box className='flex justify-center'>
+                <Typography>No data found.</Typography>
+              </Box>
+            )}
+          </Box>
         </DialogContent>
       </Dialog>
     </>

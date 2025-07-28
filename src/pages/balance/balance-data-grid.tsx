@@ -211,9 +211,9 @@ export function BalanceDataGrid({
               dailyValues: {},
             })
           }
-          playersMap.get(player.id_discord)!.dailyValues[date] = Math.round(
-            player.value
-          )
+          const roundedValue = Math.round(player.value)
+          playersMap.get(player.id_discord)!.dailyValues[date] =
+            roundedValue === 0 ? 0 : roundedValue
         })
       }
     )
@@ -221,15 +221,17 @@ export function BalanceDataGrid({
     // Update balance_total and username in playersMap using balance_total
     balanceTotals.forEach((total) => {
       if (!playersMap.has(total.id_discord)) {
+        const balanceValue = total.balance_total
         playersMap.set(total.id_discord, {
           id: total.id_discord,
           username: total.username, // Use username from balance_total
-          balance_total: total.balance_total,
+          balance_total: Math.abs(balanceValue) === 0 ? 0 : balanceValue,
           dailyValues: {}, // No daily values if not in player_balance
         })
       } else {
         const player = playersMap.get(total.id_discord)!
-        player.balance_total = total.balance_total
+        const balanceValue = total.balance_total
+        player.balance_total = Math.abs(balanceValue) === 0 ? 0 : balanceValue
         player.username = total.username // Update username from balance_total
       }
     })
@@ -352,32 +354,44 @@ export function BalanceDataGrid({
                     </TableCell>
                     <TableCell align='center'>
                       {is_dolar
-                        ? Number(player.balance_total).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })
-                        : Math.round(
-                            Number(player.balance_total)
-                          ).toLocaleString('en-US')}
+                        ? Math.abs(Number(player.balance_total)) === 0
+                          ? '0.00'
+                          : Number(player.balance_total).toLocaleString(
+                              'en-US',
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )
+                        : Math.abs(Math.round(Number(player.balance_total))) ===
+                            0
+                          ? '0'
+                          : Math.round(
+                              Number(player.balance_total)
+                            ).toLocaleString('en-US')}
                     </TableCell>
                     {getSortedDates().map((date) => (
                       <TableCell key={`${player.id}-${date}`} align='center'>
                         {player.dailyValues[date] !== undefined
                           ? is_dolar
-                            ? Number(player.dailyValues[date]).toLocaleString(
-                                'en-US',
-                                {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                }
-                              )
-                            : Number(player.dailyValues[date]).toLocaleString(
-                                'en-US',
-                                {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 0,
-                                }
-                              )
+                            ? Math.abs(Number(player.dailyValues[date])) === 0
+                              ? '0.00'
+                              : Number(player.dailyValues[date]).toLocaleString(
+                                  'en-US',
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )
+                            : Math.abs(player.dailyValues[date]) === 0
+                              ? '0'
+                              : Number(player.dailyValues[date]).toLocaleString(
+                                  'en-US',
+                                  {
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0,
+                                  }
+                                )
                           : '-'}
                       </TableCell>
                     ))}
