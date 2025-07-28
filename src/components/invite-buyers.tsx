@@ -50,12 +50,58 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
 
   function handleCopy() {
     if (inviteData) {
-      navigator.clipboard.writeText(inviteData)
+      let formattedData = ''
+
+      try {
+        const parsedData =
+          typeof inviteData === 'string' ? JSON.parse(inviteData) : inviteData
+
+        // Se o parsedData for diretamente um array
+        if (Array.isArray(parsedData)) {
+          formattedData = parsedData
+            .map((name: any) => {
+              if (typeof name === 'string') {
+                return name.trim()
+              }
+              return String(name).trim()
+            })
+            .filter((name: string) => name.length > 0)
+            .join('\n\n')
+        } else if (parsedData.info && Array.isArray(parsedData.info)) {
+          formattedData = parsedData.info
+            .map((name: any) => {
+              if (typeof name === 'string') {
+                return name.trim()
+              }
+              return String(name).trim()
+            })
+            .filter((name: string) => name.length > 0)
+            .join('\n\n')
+        } else {
+          formattedData =
+            typeof inviteData === 'string'
+              ? inviteData
+              : JSON.stringify(inviteData)
+        }
+      } catch {
+        // Se não conseguir fazer parse, tenta limpar a string diretamente
+        formattedData =
+          typeof inviteData === 'string'
+            ? inviteData
+                .replace(/[\[\]{}",]/g, '')
+                .replace(/info:/g, '')
+                .split(/\s+/)
+                .filter((item: string) => item.length > 0)
+                .join('\n\n')
+            : JSON.stringify(inviteData)
+      }
+
+      navigator.clipboard.writeText(formattedData)
     }
   }
 
   return (
-    <Dialog open={true} onClose={onClose} maxWidth='md' fullWidth>
+    <Dialog open={true} onClose={onClose} maxWidth='xs' fullWidth>
       <DialogTitle className='relative text-center'>
         Invite Buyers
         <IconButton
@@ -68,9 +114,6 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
       </DialogTitle>
       <DialogContent>
         <Box className='flex flex-col gap-4'>
-          <Typography variant='h6' className='text-center'>
-            Copy the message below and send it to invite buyers:
-          </Typography>
           {loading ? (
             <Box className='flex justify-center'>
               <Typography>Loading...</Typography>
@@ -82,7 +125,55 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
                   component='pre'
                   className='whitespace-pre-wrap text-sm'
                 >
-                  {inviteData}
+                  {(() => {
+                    try {
+                      const parsedData =
+                        typeof inviteData === 'string'
+                          ? JSON.parse(inviteData)
+                          : inviteData
+
+                      // Se o parsedData for diretamente um array
+                      if (Array.isArray(parsedData)) {
+                        return parsedData
+                          .map((name: any) => {
+                            if (typeof name === 'string') {
+                              return name.trim()
+                            }
+                            return String(name).trim()
+                          })
+                          .filter((name: string) => name.length > 0)
+                          .join('\n')
+                      }
+
+                      if (parsedData.info && Array.isArray(parsedData.info)) {
+                        return parsedData.info
+                          .map((name: any) => {
+                            if (typeof name === 'string') {
+                              return name.trim()
+                            }
+                            return String(name).trim()
+                          })
+                          .filter((name: string) => name.length > 0)
+                          .join('\n')
+                      }
+
+                      return typeof inviteData === 'string'
+                        ? inviteData
+                        : JSON.stringify(inviteData, null, 2)
+                    } catch {
+                      // Se não conseguir fazer parse, tenta limpar a string diretamente
+                      const cleanData =
+                        typeof inviteData === 'string'
+                          ? inviteData
+                              .replace(/[\[\]{}",]/g, '')
+                              .replace(/info:/g, '')
+                              .split(/\s+/)
+                              .filter((item: string) => item.length > 0)
+                              .join('\n')
+                          : JSON.stringify(inviteData, null, 2)
+                      return cleanData
+                    }
+                  })()}
                 </Typography>
               </Box>
               <Box className='flex justify-center'>
@@ -95,7 +186,7 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
                     '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
                   }}
                 >
-                  Copy to Clipboard
+                  Copy
                 </Button>
               </Box>
             </>
