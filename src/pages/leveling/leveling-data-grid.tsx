@@ -1,4 +1,4 @@
-import { Eye, Trash, Lock, LockOpen } from '@phosphor-icons/react'
+import { Eye, Trash, Lock, LockOpen, Pencil } from '@phosphor-icons/react'
 import { Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
@@ -6,6 +6,7 @@ import { RunData } from '../../types/runs-interface'
 import { ErrorDetails } from '../../components/error-display'
 import { DeleteRun } from '../../components/delete-run'
 import { BuyersPreview } from '../../components/buyers-preview'
+import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
 import {
@@ -47,6 +48,10 @@ export function LevelingDataGrid({
   } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
+  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RunData | null>(
+    null
+  )
   const { userRoles } = useAuth()
   const [runs, setRuns] = useState<RunData[]>(data)
 
@@ -114,6 +119,18 @@ export function LevelingDataGrid({
   const handleCloseDeleteRunModal = () => {
     setIsDeleteRunModalOpen(false)
     setSelectedRunToDelete(null)
+  }
+
+  // Abre o modal de edição de uma run
+  const handleOpenEditRunModal = (run: RunData) => {
+    setSelectedRunToEdit(run)
+    setIsEditRunModalOpen(true)
+  }
+
+  // Fecha o modal de edição de uma run
+  const handleCloseEditRunModal = () => {
+    setIsEditRunModalOpen(false)
+    setSelectedRunToEdit(null)
   }
 
   // Redireciona para a página de detalhes da run
@@ -316,6 +333,11 @@ export function LevelingDataGrid({
                     import.meta.env.VITE_TEAM_LEVELING,
                   ]) ? (
                     <>
+                      <Tooltip title='Edit'>
+                        <IconButton onClick={() => handleOpenEditRunModal(run)}>
+                          <Pencil size={20} />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title='Delete'>
                         <IconButton
                           onClick={() => handleOpenDeleteRunModal(run)}
@@ -356,6 +378,14 @@ export function LevelingDataGrid({
 
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />
+      )}
+
+      {isEditRunModalOpen && selectedRunToEdit && (
+        <EditRun
+          run={selectedRunToEdit}
+          onClose={handleCloseEditRunModal}
+          onRunEdit={onDeleteSuccess}
+        />
       )}
     </TableContainer>
   )

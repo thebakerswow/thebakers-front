@@ -40,6 +40,11 @@ export interface EditRunProps {
 
 export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
+  // Detecta se é uma run de Keys ou Leveling baseado no runType ou idTeam
+  const isKeysRun = run.idTeam === import.meta.env.VITE_TEAM_MPLUS
+  const isLevelingRun = run.idTeam === import.meta.env.VITE_TEAM_LEVELING
+  const isSpecialRun = isKeysRun || isLevelingRun
+
   const [formData, setFormData] = useState({
     date: run.date,
     time: run.time, // Preencher o campo time com o valor vindo do run
@@ -65,7 +70,15 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const teamId = import.meta.env.VITE_TEAM_PREFEITO
+        // Se for uma run de Keys, busca membros do time M+, se for Leveling busca do time Leveling, senão busca do time Prefeito
+        let teamId
+        if (isKeysRun) {
+          teamId = import.meta.env.VITE_TEAM_MPLUS
+        } else if (isLevelingRun) {
+          teamId = import.meta.env.VITE_TEAM_LEVELING
+        } else {
+          teamId = import.meta.env.VITE_TEAM_PREFEITO
+        }
         const response = await getTeamMembers(teamId)
         if (response) setApiOptions(response)
       } catch (err) {
@@ -83,7 +96,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
       }
     }
     fetchOptions()
-  }, [onError])
+  }, [onError, isKeysRun, isLevelingRun])
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -92,7 +105,8 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!formData.time) {
+    // Só valida o horário se não for uma run de Keys ou Leveling
+    if (!isSpecialRun && !formData.time) {
       if (onError) {
         onError({ message: 'Time is required', response: null })
       }
@@ -170,134 +184,156 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
               required
               margin='dense'
             />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <TimePicker
-                value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    time:
-                      value && dayjs(value).isValid()
-                        ? dayjs(value).format('HH:mm') // Ensure correct 24-hour format
-                        : '',
-                  }))
-                }
-                ampm={true} // Display in 12-hour format
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    margin: 'dense', // Align with other fields
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <TextField
-              label='Raid'
-              value={formData.raid}
-              onChange={(e) => handleChange('raid', e.target.value)}
-              fullWidth
-              required
-            />
-            <FormControl fullWidth required>
-              <InputLabel>Run Type</InputLabel>
-              <Select
-                value={formData.runType}
-                onChange={(e) => handleChange('runType', e.target.value)}
-                label='Run Type'
-              >
-                <MenuItem value='Full Raid'>Full Raid</MenuItem>
-                <MenuItem value='AOTC'>AOTC</MenuItem>
-                <MenuItem value='Legacy'>Legacy</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth required>
-              <InputLabel>Difficulty</InputLabel>
-              <Select
-                value={formData.difficulty}
-                onChange={(e) => handleChange('difficulty', e.target.value)}
-                label='Difficulty'
-              >
-                <MenuItem value='Normal'>Normal</MenuItem>
-                <MenuItem value='Heroic'>Heroic</MenuItem>
-                <MenuItem value='Mythic'>Mythic</MenuItem>
-              </Select>
-            </FormControl>
-            {formData.difficulty === 'Mythic' && (
-              <FormControl fullWidth variant='outlined' required>
-                <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
-                <Select
-                  id='quantityBoss'
-                  name='quantityBoss'
-                  value={formData.quantityBoss.String}
-                  onChange={(e) =>
+            {!isSpecialRun && (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <TimePicker
+                  value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
+                  onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      quantityBoss: { String: e.target.value, Valid: true },
+                      time:
+                        value && dayjs(value).isValid()
+                          ? dayjs(value).format('HH:mm') // Ensure correct 24-hour format
+                          : '',
                     }))
                   }
-                  label='Mythic Option'
+                  ampm={true} // Display in 12-hour format
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      margin: 'dense', // Align with other fields
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            )}
+            {!isSpecialRun && (
+              <TextField
+                label='Raid'
+                value={formData.raid}
+                onChange={(e) => handleChange('raid', e.target.value)}
+                fullWidth
+                required
+              />
+            )}
+            {!isSpecialRun && (
+              <FormControl fullWidth required>
+                <InputLabel>Run Type</InputLabel>
+                <Select
+                  value={formData.runType}
+                  onChange={(e) => handleChange('runType', e.target.value)}
+                  label='Run Type'
                 >
-                  <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
-                  <MenuItem value='7/8, 8/8 & Last Boss'>
-                    7/8, 8/8 & Last Boss
+                  <MenuItem value='Full Raid'>Full Raid</MenuItem>
+                  <MenuItem value='AOTC'>AOTC</MenuItem>
+                  <MenuItem value='Legacy'>Legacy</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+            {!isSpecialRun && (
+              <>
+                <FormControl fullWidth required>
+                  <InputLabel>Difficulty</InputLabel>
+                  <Select
+                    value={formData.difficulty}
+                    onChange={(e) => handleChange('difficulty', e.target.value)}
+                    label='Difficulty'
+                  >
+                    <MenuItem value='Normal'>Normal</MenuItem>
+                    <MenuItem value='Heroic'>Heroic</MenuItem>
+                    <MenuItem value='Mythic'>Mythic</MenuItem>
+                  </Select>
+                </FormControl>
+                {formData.difficulty === 'Mythic' && (
+                  <FormControl fullWidth variant='outlined' required>
+                    <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
+                    <Select
+                      id='quantityBoss'
+                      name='quantityBoss'
+                      value={formData.quantityBoss.String}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          quantityBoss: { String: e.target.value, Valid: true },
+                        }))
+                      }
+                      label='Mythic Option'
+                    >
+                      <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
+                      <MenuItem value='7/8, 8/8 & Last Boss'>
+                        7/8, 8/8 & Last Boss
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              </>
+            )}
+            {!isSpecialRun && (
+              <FormControl fullWidth required>
+                <InputLabel>Team</InputLabel>
+                <Select
+                  value={formData.idTeam}
+                  onChange={(e) => handleChange('idTeam', e.target.value)}
+                  label='Team'
+                >
+                  <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
+                    Garçom
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
+                    Confeiteiros
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
+                    Jackfruit
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_INSANOS}>
+                    Insanos
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_APAE}>
+                    APAE
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS}>
+                    Los Renegados
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>
+                    KFFC
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
+                    Greensky
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
+                    Guild Azralon BR#1
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
+                    Guild Azralon BR#2
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
+                    Rocket
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
+                    Padeirinho
+                  </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
+                    Milharal
                   </MenuItem>
                 </Select>
               </FormControl>
             )}
-            <FormControl fullWidth required>
-              <InputLabel>Team</InputLabel>
-              <Select
-                value={formData.idTeam}
-                onChange={(e) => handleChange('idTeam', e.target.value)}
-                label='Team'
-              >
-                <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
-                  Garçom
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
-                  Confeiteiros
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
-                  Jackfruit
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_INSANOS}>
-                  Insanos
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS}>
-                  Los Renegados
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>KFFC</MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
-                  Greensky
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
-                  Guild Azralon BR#1
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
-                  Guild Azralon BR#2
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
-                  Rocket
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
-                  Padeirinho
-                </MenuItem>
-                <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
-                  Milharal
-                </MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label='Max Buyers'
-              value={formData.maxBuyers}
-              onChange={(e) => handleChange('maxBuyers', e.target.value)}
+            {!isSpecialRun && (
+              <TextField
+                label='Max Buyers'
+                value={formData.maxBuyers}
+                onChange={(e) => handleChange('maxBuyers', e.target.value)}
+                fullWidth
+                required
+              />
+            )}
+            <FormControl
               fullWidth
               required
-            />
-            <FormControl fullWidth required>
+              sx={{ marginTop: isSpecialRun ? 1 : 0 }}
+            >
               <InputLabel>Raid Leader</InputLabel>
               <Select
                 multiple
@@ -335,17 +371,19 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 ))}
               </Select>
             </FormControl>
-            <FormControl fullWidth required>
-              <InputLabel>Loot</InputLabel>
-              <Select
-                value={formData.loot}
-                onChange={(e) => handleChange('loot', e.target.value)}
-                label='Loot'
-              >
-                <MenuItem value='Saved'>Saved</MenuItem>
-                <MenuItem value='Unsaved'>Unsaved</MenuItem>
-              </Select>
-            </FormControl>
+            {!isSpecialRun && (
+              <FormControl fullWidth required>
+                <InputLabel>Loot</InputLabel>
+                <Select
+                  value={formData.loot}
+                  onChange={(e) => handleChange('loot', e.target.value)}
+                  label='Loot'
+                >
+                  <MenuItem value='Saved'>Saved</MenuItem>
+                  <MenuItem value='Unsaved'>Unsaved</MenuItem>
+                </Select>
+              </FormControl>
+            )}
             <TextField
               label='Note'
               value={formData.note}

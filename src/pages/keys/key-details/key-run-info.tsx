@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Clock, Lock, LockOpen, UserPlus } from '@phosphor-icons/react'
+import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import keyLogo from '../../../assets/key.png'
 import { AddBuyer } from '../../../components/add-buyer'
+import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
 import { ErrorDetails } from '../../../components/error-display'
@@ -31,13 +32,23 @@ interface KeyRunInfoProps {
 export function KeyRunInfo({
   run,
   onBuyerAddedReload,
+  onRunEdit,
   attendanceAccessDenied,
   onError,
 }: KeyRunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
   const { userRoles } = useAuth() // Obtenha as roles do contexto
   const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
+
+  const handleOpenEditModal = () => {
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+  }
 
   function hasPrefeitoTeamAccess(run: RunData, userRoles: string[]): boolean {
     const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
@@ -195,19 +206,22 @@ export function KeyRunInfo({
             <>
               <Button
                 variant='contained'
-                startIcon={
-                  isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
-                }
+                startIcon={<Pencil size={18} />}
                 fullWidth
-                onClick={toggleRunLock}
+                onClick={handleOpenEditModal}
+                disabled={isRunLocked} // Disable button if run is locked
                 sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
+                  backgroundColor: isRunLocked
+                    ? 'rgb(209, 213, 219)'
+                    : 'rgb(147, 51, 234)', // Gray if disabled
                   '&:hover': {
-                    backgroundColor: 'rgb(168, 85, 247)',
+                    backgroundColor: isRunLocked
+                      ? 'rgb(209, 213, 219)'
+                      : 'rgb(168, 85, 247)', // Gray if disabled
                   },
                 }}
               >
-                {isRunLocked ? 'Unlock Day' : 'Lock Day'}
+                Edit
               </Button>
               {/* Edit History Button */}
               <Button
@@ -222,7 +236,23 @@ export function KeyRunInfo({
                   },
                 }}
               >
-                Edit History
+                History
+              </Button>
+              <Button
+                variant='contained'
+                startIcon={
+                  isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
+                }
+                fullWidth
+                onClick={toggleRunLock}
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': {
+                    backgroundColor: 'rgb(168, 85, 247)',
+                  },
+                }}
+              >
+                {isRunLocked ? 'Unlock Day' : 'Lock Day'}
               </Button>
             </>
           ) : (
@@ -245,6 +275,15 @@ export function KeyRunInfo({
         />
       )}
 
+      {isEditModalOpen && (
+        <EditRun
+          key={run.id}
+          run={run}
+          onClose={handleCloseEditModal}
+          onRunEdit={onRunEdit}
+          onError={onError}
+        />
+      )}
       {isEditHistoryOpen && (
         <EditHistoryDialog
           open={isEditHistoryOpen}

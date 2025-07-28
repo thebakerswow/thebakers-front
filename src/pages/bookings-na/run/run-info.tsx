@@ -311,7 +311,7 @@ export function RunInfo({
                   },
                 }}
               >
-                Edit History
+                History
               </Button>
               <Button
                 variant='contained'
