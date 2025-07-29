@@ -23,7 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 import axios from 'axios'
-import { ErrorDetails } from '../../../components/error-display'
+import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import {
   getServices,
   createService,
@@ -49,13 +49,7 @@ const emptyForm: ServiceForm = {
   hotItem: false, // novo campo
 }
 
-interface ManagementServicesProps {
-  onError?: (error: ErrorDetails) => void
-}
-
-export default function PriceTableManagement({
-  onError,
-}: ManagementServicesProps) {
+export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [open, setOpen] = useState(false)
@@ -63,6 +57,7 @@ export default function PriceTableManagement({
   const [form, setForm] = useState<ServiceForm>(emptyForm)
   const [_, setLoading] = useState(false)
   const [openCategories, setOpenCategories] = useState(false)
+  const [error, setError] = useState<ErrorDetails | null>(null)
 
   // --- CATEGORIAS ---
   const emptyCategoryForm: CategoryForm = { name: '' }
@@ -76,6 +71,15 @@ export default function PriceTableManagement({
   type OrderBy = 'name' | 'price' | 'category'
   const [orderBy, setOrderBy] = useState<OrderBy>('name')
   const [order, setOrder] = useState<'asc' | 'desc'>('asc')
+
+  // Handle errors
+  const handleError = (errorDetails: ErrorDetails) => {
+    setError(errorDetails)
+  }
+
+  const clearError = () => {
+    setError(null)
+  }
 
   // Buscar serviços e categorias ao montar
   useEffect(() => {
@@ -97,9 +101,7 @@ export default function PriceTableManagement({
           }
         : { message: 'Failed to fetch services', response: error }
 
-      if (onError) {
-        onError(errorDetails)
-      }
+      handleError(errorDetails)
     } finally {
       setLoading(false)
     }
@@ -118,9 +120,7 @@ export default function PriceTableManagement({
           }
         : { message: 'Failed to fetch categories', response: error }
 
-      if (onError) {
-        onError(errorDetails)
-      }
+      handleError(errorDetails)
     }
   }
 
@@ -172,11 +172,12 @@ export default function PriceTableManagement({
 
   const handleSave = async () => {
     const { name, description, price, serviceCategoryId, hotItem } = form
-    if (!name || !description || !price || !serviceCategoryId) {
-      const errorDetails = { message: 'Please fill all fields', response: null }
-      if (onError) {
-        onError(errorDetails)
+    if (!name || !price || !serviceCategoryId) {
+      const errorDetails = {
+        message: 'Please fill all required fields',
+        response: null,
       }
+      handleError(errorDetails)
       return
     }
     try {
@@ -213,9 +214,7 @@ export default function PriceTableManagement({
           }
         : { message: 'Unexpected error', response: error }
 
-      if (onError) {
-        onError(errorDetails)
-      }
+      handleError(errorDetails)
     }
   }
 
@@ -243,9 +242,7 @@ export default function PriceTableManagement({
               }
             : { message: 'Unexpected error', response: error }
 
-          if (onError) {
-            onError(errorDetails)
-          }
+          handleError(errorDetails)
         }
       }
     })
@@ -278,9 +275,7 @@ export default function PriceTableManagement({
     const { name } = categoryForm
     if (!name) {
       const errorDetails = { message: 'Please fill the name', response: null }
-      if (onError) {
-        onError(errorDetails)
-      }
+      handleError(errorDetails)
       return
     }
     try {
@@ -307,9 +302,7 @@ export default function PriceTableManagement({
           }
         : { message: 'Unexpected error', response: error }
 
-      if (onError) {
-        onError(errorDetails)
-      }
+      handleError(errorDetails)
     }
   }
 
@@ -337,9 +330,7 @@ export default function PriceTableManagement({
               }
             : { message: 'Unexpected error', response: error }
 
-          if (onError) {
-            onError(errorDetails)
-          }
+          handleError(errorDetails)
         }
       }
     })
@@ -388,6 +379,7 @@ export default function PriceTableManagement({
 
   return (
     <div className='w-full overflow-auto overflow-x-hidden pr-20'>
+      {error && <ErrorComponent error={error} onClose={clearError} />}
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
         <div className='mb-6 flex justify-between'>
           <Typography variant='h4' fontWeight='bold'>
