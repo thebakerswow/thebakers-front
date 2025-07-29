@@ -378,11 +378,10 @@ export function HomePage() {
                         </div>
                       ) : categories.length > 0 ? (
                         categories.map((category) => {
-                          // Filtrar serviços da categoria, excluindo os hotItem
+                          // Filtrar serviços da categoria, incluindo os hotItem
                           const servicesInCategory = servicesList.filter(
                             (service) =>
-                              service.serviceCategoryId === category.id &&
-                              !service.hotItem
+                              service.serviceCategoryId === category.id
                           )
                           if (servicesInCategory.length === 0) return null
                           return (
@@ -433,9 +432,7 @@ export function HomePage() {
                                 >
                                   {servicesInCategory.map((service) => (
                                     <SwiperSlide key={service.id}>
-                                      <div
-                                        className={`relative my-10 flex min-h-[180px] w-full flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105 ${service.hotItem ? 'hot-flames' : ''}`}
-                                      >
+                                      <div className='relative my-10 flex min-h-[180px] w-full flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-lg transition-transform hover:z-10 hover:scale-105'>
                                         <div className='relative z-10'>
                                           <div className='mb-2 text-lg font-bold text-white'>
                                             {service.name}
