@@ -184,30 +184,75 @@ export function BalanceControlTable({
         .replace(/(?!^)-/g, '') // apenas um hífen no início
         .replace(/^(-?\d*)\.(.*)\./, '$1.$2') // apenas um ponto
 
+      // Se o valor for apenas um hífen, mantém como está
+      if (rawValue === '-') {
+        setCalculatorValues((prev) => ({ ...prev, [userId]: '-' }))
+        return
+      }
+
       // Se houver ponto decimal, separa parte inteira e decimal
       const parts = rawValue.split('.')
-      let formattedValue = parts[0]
-        ? Number(parts[0].replace(/,/g, '')).toLocaleString('en-US')
-        : ''
-      if (rawValue.startsWith('-') && !formattedValue.startsWith('-')) {
+      const isNegative = rawValue.startsWith('-')
+      let numericPart = parts[0].replace(/^-/, '') // Remove o hífen para processar
+
+      let formattedValue = ''
+
+      // Trata a parte inteira
+      if (numericPart !== '') {
+        formattedValue = Number(numericPart).toLocaleString('en-US')
+      }
+
+      // Adiciona o sinal negativo se necessário
+      if (isNegative) {
         formattedValue = '-' + formattedValue
       }
+
+      // Adiciona a parte decimal se existir
       if (parts.length > 1) {
         formattedValue += '.' + parts[1].replace(/[^0-9]/g, '')
       }
+
+      // Se o valor final for "-0" ou "0", limpa o campo
+      if (formattedValue === '-0' || formattedValue === '0') {
+        formattedValue = ''
+      }
+
       setCalculatorValues((prev) => ({
         ...prev,
-        [userId]: rawValue === '0' ? '' : formattedValue,
+        [userId]: formattedValue,
       }))
       return
     } else {
       // Apenas números e hífen
       rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-      const formattedValue =
-        rawValue === '-' ? '-' : Number(rawValue).toLocaleString('en-US')
+
+      // Se o valor for apenas um hífen, mantém como está
+      if (rawValue === '-') {
+        setCalculatorValues((prev) => ({ ...prev, [userId]: '-' }))
+        return
+      }
+
+      const isNegative = rawValue.startsWith('-')
+      const numericPart = rawValue.replace(/^-/, '') // Remove o hífen para processar
+
+      let formattedValue = ''
+      if (numericPart !== '') {
+        formattedValue = Number(numericPart).toLocaleString('en-US')
+      }
+
+      // Adiciona o sinal negativo se necessário
+      if (isNegative) {
+        formattedValue = '-' + formattedValue
+      }
+
+      // Se o valor final for "-0" ou "0", limpa o campo
+      if (formattedValue === '-0' || formattedValue === '0') {
+        formattedValue = ''
+      }
+
       setCalculatorValues((prev) => ({
         ...prev,
-        [userId]: rawValue === '0' ? '' : formattedValue,
+        [userId]: formattedValue,
       }))
       return
     }
