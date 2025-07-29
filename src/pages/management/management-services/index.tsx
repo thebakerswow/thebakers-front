@@ -379,7 +379,6 @@ export default function PriceTableManagement() {
 
   return (
     <div className='w-full overflow-auto overflow-x-hidden pr-20'>
-      {error && <ErrorComponent error={error} onClose={clearError} />}
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
         <div className='mb-6 flex justify-between'>
           <Typography variant='h4' fontWeight='bold'>
@@ -521,72 +520,85 @@ export default function PriceTableManagement() {
             </IconButton>
           </DialogTitle>
           <DialogContent sx={{ minWidth: 350 }}>
-            <TextField
-              margin='dense'
-              label='Service Name'
-              name='name'
-              fullWidth
-              value={form.name}
-              onChange={handleChange}
-            />
-            <TextField
-              margin='dense'
-              label='Description'
-              name='description'
-              fullWidth
-              value={form.description}
-              onChange={handleChange}
-            />
-            <TextField
-              margin='dense'
-              label='Price'
-              name='price'
-              type='text'
-              fullWidth
-              value={form.price}
-              onChange={handleChange}
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
-            />
-            <div>
-              <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
-                Category
-              </Typography>
-              <Select
-                name='serviceCategoryId'
-                value={form.serviceCategoryId}
-                onChange={(event) => {
-                  const { name, value } = event.target as {
-                    name: string
-                    value: string
-                  }
-                  setForm({ ...form, [name]: value })
-                }}
-                style={{
-                  width: '100%',
-                }}
-              >
-                <MenuItem value='' disabled>
-                  Select a category
-                </MenuItem>
-                {categories.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>
-                    {cat.name}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSave()
+              }}
+            >
+              <TextField
+                margin='dense'
+                label='Service Name'
+                name='name'
+                required
+                fullWidth
+                value={form.name}
+                onChange={handleChange}
+              />
+              <TextField
+                margin='dense'
+                label='Description'
+                name='description'
+                fullWidth
+                value={form.description}
+                onChange={handleChange}
+              />
+              <TextField
+                margin='dense'
+                label='Price'
+                name='price'
+                type='text'
+                required
+                fullWidth
+                value={form.price}
+                onChange={handleChange}
+                inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
+              />
+              <div>
+                <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
+                  Category *
+                </Typography>
+                <Select
+                  name='serviceCategoryId'
+                  value={form.serviceCategoryId}
+                  required
+                  onChange={(event) => {
+                    const { name, value } = event.target as {
+                      name: string
+                      value: string
+                    }
+                    setForm({ ...form, [name]: value })
+                  }}
+                  style={{
+                    width: '100%',
+                  }}
+                >
+                  <MenuItem value='' disabled>
+                    Select a category
                   </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type='checkbox'
-                  name='hotItem'
-                  checked={form.hotItem}
-                  onChange={handleChange}
-                  style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
-                />
-                <span>Hot Item</span>
-              </label>
-            </div>
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
+              <div style={{ marginTop: '16px' }}>
+                <label
+                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                >
+                  <input
+                    type='checkbox'
+                    name='hotItem'
+                    checked={form.hotItem}
+                    onChange={handleChange}
+                    style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
+                  />
+                  <span>Hot Item</span>
+                </label>
+              </div>
+              {error && <ErrorComponent error={error} onClose={clearError} />}
+            </form>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose} color='inherit'>
@@ -692,14 +704,25 @@ export default function PriceTableManagement() {
                 </IconButton>
               </DialogTitle>
               <DialogContent sx={{ minWidth: 350 }}>
-                <TextField
-                  margin='dense'
-                  label='Category Name'
-                  name='name'
-                  fullWidth
-                  value={categoryForm.name}
-                  onChange={handleChangeCategory}
-                />
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSaveCategory()
+                  }}
+                >
+                  <TextField
+                    margin='dense'
+                    label='Category Name'
+                    name='name'
+                    required
+                    fullWidth
+                    value={categoryForm.name}
+                    onChange={handleChangeCategory}
+                  />
+                  {error && (
+                    <ErrorComponent error={error} onClose={clearError} />
+                  )}
+                </form>
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCloseCategoryDialog} color='inherit'>
