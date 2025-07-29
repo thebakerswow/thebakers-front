@@ -55,7 +55,7 @@ export default function PriceTableManagement() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
   const [form, setForm] = useState<ServiceForm>(emptyForm)
-  const [_, setLoading] = useState(false)
+  const [loadingServices, setLoadingServices] = useState(true)
   const [openCategories, setOpenCategories] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
@@ -88,7 +88,7 @@ export default function PriceTableManagement() {
   }, [])
 
   const fetchServices = async () => {
-    setLoading(true)
+    setLoadingServices(true)
     try {
       const res = await getServices()
       setServices(res)
@@ -99,11 +99,10 @@ export default function PriceTableManagement() {
             response: error.response?.data,
             status: error.response?.status,
           }
-        : { message: 'Failed to fetch services', response: error }
-
+        : { message: 'Unexpected error', response: null }
       handleError(errorDetails)
     } finally {
-      setLoading(false)
+      setLoadingServices(false)
     }
   }
 
@@ -452,7 +451,22 @@ export default function PriceTableManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {Array.isArray(services) &&
+              {loadingServices ? (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
+                    <div className='flex flex-col items-center gap-2'>
+                      <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
+                      <span className='text-gray-400'>Loading services...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : Array.isArray(services) && services.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
+                    <span className='text-gray-400'>No services found</span>
+                  </TableCell>
+                </TableRow>
+              ) : (
                 getSortedServices().map((service) => (
                   <TableRow key={service.id} hover>
                     <TableCell sx={{ color: '#b0b0b0' }}>
@@ -502,7 +516,8 @@ export default function PriceTableManagement() {
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
