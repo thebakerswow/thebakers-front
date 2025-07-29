@@ -2,15 +2,27 @@ import { useEffect, useState, useRef } from 'react'
 import { KeysDataGrid } from './keys-data-grid'
 import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
-import { UserPlus, CaretLeft, CaretRight, Pencil } from '@phosphor-icons/react'
+import {
+  UserPlus,
+  CaretLeft,
+  CaretRight,
+  Pencil,
+  Plus,
+  Trash,
+} from '@phosphor-icons/react'
 import { AddKeyRun } from '../../components/add-key-run'
+import { AddService } from '../../components/add-service'
 import { useAuth } from '../../context/auth-context'
 import { api } from '../../services/axiosConfig'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
 import { Service, ServiceCategory } from '../../types'
-import { getServices, getServiceCategories } from '../../services/api/services'
+import {
+  getServices,
+  getServiceCategories,
+  deleteService,
+} from '../../services/api/services'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination, Autoplay } from 'swiper/modules'
 import { Swiper as SwiperType } from 'swiper'
@@ -18,7 +30,6 @@ import Button from '@mui/material/Button'
 import Swal from 'sweetalert2'
 import 'swiper/css'
 import 'swiper/css/pagination'
-import { useNavigate } from 'react-router-dom'
 import fireImg from '../../assets/fire.png'
 
 export function KeysPage() {
@@ -26,12 +37,13 @@ export function KeysPage() {
   const [rows, setRows] = useState<RunData[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [, setLoadingServices] = useState(false)
   const { userRoles } = useAuth()
-  const navigate = useNavigate()
 
   // Refs para os Swipers
   const swiperRefs = useRef<{ [key: string]: SwiperType | null }>({})
@@ -170,6 +182,51 @@ export function KeysPage() {
     })
   }
 
+  // Handle service operations
+  const handleServiceAdded = () => {
+    fetchServicesAndCategories()
+  }
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service)
+    setIsAddServiceOpen(true)
+  }
+
+  const handleAddService = () => {
+    setEditingService(null)
+    setIsAddServiceOpen(true)
+  }
+
+  const handleDeleteService = (service: Service) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This service will be deleted!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#888',
+      confirmButtonText: 'Yes, delete it!',
+    }).then(async (result: any) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteService(service.id)
+          setServicesList((prev) => prev.filter((s) => s.id !== service.id))
+          Swal.fire('Deleted!', 'Service has been deleted.', 'success')
+        } catch (error) {
+          const errorDetails = axios.isAxiosError(error)
+            ? {
+                message: error.response?.data?.message || error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+              }
+            : { message: 'Unexpected error', response: error }
+
+          handleError(errorDetails)
+        }
+      }
+    })
+  }
+
   // Busca inicial e configuração de polling
   useEffect(() => {
     fetchRuns(true)
@@ -245,11 +302,11 @@ export function KeysPage() {
                   import.meta.env.VITE_TEAM_MPLUS,
                 ]) && (
                   <button
-                    onClick={() => navigate('/services')}
+                    onClick={handleAddService}
                     className='flex h-8 w-8 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
-                    aria-label='Edit KEYS services'
+                    aria-label='Add new KEYS service'
                   >
-                    <Pencil size={16} />
+                    <Plus size={16} />
                   </button>
                 )}
               </div>
@@ -308,6 +365,29 @@ export function KeysPage() {
                           : {}
                       }
                     >
+                      {/* Edit and Delete buttons */}
+                      {hasRequiredRole([
+                        import.meta.env.VITE_TEAM_CHEFE,
+                        import.meta.env.VITE_TEAM_MPLUS,
+                      ]) && (
+                        <div className='absolute right-2 top-2 z-20 flex gap-1'>
+                          <button
+                            onClick={() => handleEditService(service)}
+                            className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
+                            aria-label='Edit service'
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteService(service)}
+                            className='flex h-6 w-6 items-center justify-center rounded-full bg-red-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400'
+                            aria-label='Delete service'
+                          >
+                            <Trash size={12} />
+                          </button>
+                        </div>
+                      )}
+
                       <div className='relative z-10'>
                         <div className='mb-2 text-lg font-bold text-white'>
                           {service.name}
@@ -362,6 +442,20 @@ export function KeysPage() {
             onClose={() => setIsAddRunOpen(false)}
             onRunAddedReload={() => fetchRuns(true)}
             onError={handleError}
+          />
+        )}
+
+        {isAddServiceOpen && (
+          <AddService
+            open={isAddServiceOpen}
+            onClose={() => {
+              setIsAddServiceOpen(false)
+              setEditingService(null)
+            }}
+            onServiceAdded={handleServiceAdded}
+            onError={handleError}
+            editingService={editingService}
+            categoryId={keysCategory?.id}
           />
         )}
       </div>

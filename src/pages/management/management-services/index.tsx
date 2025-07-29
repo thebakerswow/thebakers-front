@@ -15,8 +15,6 @@ import {
   Typography,
   IconButton,
   Paper,
-  Select,
-  MenuItem,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -24,40 +22,25 @@ import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
+import { AddService } from '../../../components/add-service'
 import {
   getServices,
-  createService,
-  updateService,
   deleteService,
   getServiceCategories,
   createServiceCategory,
   updateServiceCategory,
   deleteServiceCategory,
 } from '../../../services/api/services'
-import {
-  Service,
-  ServiceForm,
-  ServiceCategory,
-  CategoryForm,
-} from '../../../types'
-
-const emptyForm: ServiceForm = {
-  name: '',
-  description: '',
-  price: '',
-  serviceCategoryId: '',
-  hotItem: false, // novo campo
-}
+import { Service, ServiceCategory, CategoryForm } from '../../../types'
 
 export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState<Service | null>(null)
-  const [form, setForm] = useState<ServiceForm>(emptyForm)
   const [loadingServices, setLoadingServices] = useState(true)
   const [openCategories, setOpenCategories] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
 
   // --- CATEGORIAS ---
   const emptyCategoryForm: CategoryForm = { name: '' }
@@ -123,98 +106,19 @@ export default function PriceTableManagement() {
     }
   }
 
-  const handleOpen = (service: Service | null = null) => {
-    setEditing(service)
-    if (service) {
-      setForm({
-        name: service.name,
-        description: service.description,
-        price: formatPriceInput(String(service.price)),
-        serviceCategoryId: String(service.serviceCategoryId),
-        hotItem: !!service.hotItem, // novo campo
-      })
-    } else {
-      setForm(emptyForm)
-    }
-    setOpen(true)
+  // Handle service operations with new component
+  const handleServiceAdded = () => {
+    fetchServices()
   }
 
-  const handleClose = () => {
-    setOpen(false)
-    setEditing(null)
-    setForm(emptyForm)
+  const handleEditService = (service: Service) => {
+    setEditingService(service)
+    setIsAddServiceOpen(true)
   }
 
-  // Formata o valor inserido com vírgula como separador de milhar (ex: 111111 => 111,111)
-  function formatPriceInput(value: string) {
-    if (!value) return ''
-    // Remove tudo que não for número
-    let clean = value.replace(/\D/g, '')
-    if (!clean) return ''
-    // Adiciona vírgula a cada 3 dígitos da direita para a esquerda
-    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  }
-
-  // Novo handleChange para o campo price
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
-  ) => {
-    const { name, value, checked } = e.target as any
-    if (name === 'price') {
-      setForm({ ...form, [name]: formatPriceInput(value as string) })
-    } else if (name === 'hotItem') {
-      setForm({ ...form, hotItem: checked })
-    } else {
-      setForm({ ...form, [name as string]: value as string })
-    }
-  }
-
-  const handleSave = async () => {
-    const { name, description, price, serviceCategoryId, hotItem } = form
-    if (!name || !price || !serviceCategoryId) {
-      const errorDetails = {
-        message: 'Please fill all required fields',
-        response: null,
-      }
-      handleError(errorDetails)
-      return
-    }
-    try {
-      if (editing) {
-        // Editar serviço
-        await updateService({
-          id: editing.id,
-          name,
-          description,
-          price: Number(price.replace(/,/g, '')),
-          serviceCategoryId: Number(serviceCategoryId),
-          hotItem, // novo campo
-        })
-        Swal.fire('Success', 'Service updated!', 'success')
-      } else {
-        // Adicionar serviço
-        await createService({
-          name,
-          description,
-          price: Number(price.replace(/,/g, '')),
-          serviceCategoryId: Number(serviceCategoryId),
-          hotItem, // novo campo
-        })
-        Swal.fire('Success', 'Service added!', 'success')
-      }
-      handleClose()
-      fetchServices()
-    } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.response?.data?.message || error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error', response: error }
-
-      handleError(errorDetails)
-    }
+  const handleAddService = () => {
+    setEditingService(null)
+    setIsAddServiceOpen(true)
   }
 
   const handleDelete = (id: number) => {
@@ -399,7 +303,7 @@ export default function PriceTableManagement() {
             <Button
               variant='contained'
               color='error'
-              onClick={() => handleOpen()}
+              onClick={handleAddService}
               sx={{
                 backgroundColor: 'rgb(147, 51, 234)',
                 '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
@@ -496,7 +400,7 @@ export default function PriceTableManagement() {
                     <TableCell>
                       <IconButton
                         color='error'
-                        onClick={() => handleOpen(service)}
+                        onClick={() => handleEditService(service)}
                         sx={{
                           color: 'rgb(147, 51, 234)',
                           '&:hover': { color: 'rgb(168, 85, 247)' },
@@ -521,117 +425,6 @@ export default function PriceTableManagement() {
             </TableBody>
           </Table>
         </TableContainer>
-
-        {/* Dialog for Add/Edit */}
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle className='relative'>
-            {editing ? 'Edit Service' : 'Add Service'}
-            <IconButton
-              aria-label='close'
-              onClick={handleClose}
-              sx={{ position: 'absolute', right: 8, top: 8 }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ minWidth: 350 }}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleSave()
-              }}
-            >
-              <TextField
-                margin='dense'
-                label='Service Name'
-                name='name'
-                required
-                fullWidth
-                value={form.name}
-                onChange={handleChange}
-              />
-              <TextField
-                margin='dense'
-                label='Description'
-                name='description'
-                fullWidth
-                value={form.description}
-                onChange={handleChange}
-              />
-              <TextField
-                margin='dense'
-                label='Price'
-                name='price'
-                type='text'
-                required
-                fullWidth
-                value={form.price}
-                onChange={handleChange}
-                inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
-              />
-              <div>
-                <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
-                  Category *
-                </Typography>
-                <Select
-                  name='serviceCategoryId'
-                  value={form.serviceCategoryId}
-                  required
-                  onChange={(event) => {
-                    const { name, value } = event.target as {
-                      name: string
-                      value: string
-                    }
-                    setForm({ ...form, [name]: value })
-                  }}
-                  style={{
-                    width: '100%',
-                  }}
-                >
-                  <MenuItem value='' disabled>
-                    Select a category
-                  </MenuItem>
-                  {categories.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </div>
-              <div style={{ marginTop: '16px' }}>
-                <label
-                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                >
-                  <input
-                    type='checkbox'
-                    name='hotItem'
-                    checked={form.hotItem}
-                    onChange={handleChange}
-                    style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
-                  />
-                  <span>Hot Item</span>
-                </label>
-              </div>
-              {error && <ErrorComponent error={error} onClose={clearError} />}
-            </form>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} color='inherit'>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              color='error'
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-            >
-              {editing ? 'Save' : 'Add'}
-            </Button>
-          </DialogActions>
-        </Dialog>
 
         {/* Dialog for Categories CRUD */}
         <Dialog
@@ -763,6 +556,20 @@ export default function PriceTableManagement() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* AddService Component */}
+        {isAddServiceOpen && (
+          <AddService
+            open={isAddServiceOpen}
+            onClose={() => {
+              setIsAddServiceOpen(false)
+              setEditingService(null)
+            }}
+            onServiceAdded={handleServiceAdded}
+            onError={handleError}
+            editingService={editingService}
+          />
+        )}
       </div>
     </div>
   )
