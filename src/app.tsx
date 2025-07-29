@@ -26,6 +26,7 @@ import { KeysPage } from './pages/keys'
 import { KeyDetails } from './pages/keys/key-details'
 import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
+import { SchedulePage } from './pages/schedule'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -114,6 +115,10 @@ export function App() {
                 <Route
                   path='/leveling'
                   element={<PrivateRoute element={<LevelingPage />} />}
+                />
+                <Route
+                  path='/schedule'
+                  element={<PrivateRoute element={<SchedulePage />} />}
                 />
 
                 {/* Rota catch-all */}

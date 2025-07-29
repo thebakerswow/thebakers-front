@@ -15,6 +15,7 @@ import {
   List,
   Key,
   ArrowFatUp,
+  CalendarDots,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
@@ -151,6 +152,16 @@ export function Header() {
         >
           Balance
         </Button>
+
+        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
+          <Button
+            color='inherit'
+            onClick={() => navigate('/schedule')}
+            startIcon={<CalendarDots size={20} />}
+          >
+            Schedule
+          </Button>
+        )}
 
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <>
