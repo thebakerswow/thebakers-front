@@ -27,6 +27,9 @@ import { KeyDetails } from './pages/keys/key-details'
 import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
 import { SchedulePage } from './pages/schedule'
+import { ExternalHomePage } from './pages/external/home'
+import { ExternalSchedulePage } from './pages/external/schedule'
+import { DomainRouter } from './components/domain-router'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -59,71 +62,80 @@ export function App() {
               className='relative flex h-screen w-screen justify-center overflow-hidden bg-cover'
               style={{ backgroundImage: `url(${backgroundTeste})` }}
             >
-              <Routes>
-                {/* Rotas públicas */}
-                <Route path='/' element={<Login />} />
-                <Route path='/login/callback' element={<AuthCallback />} />
-                <Route path='/login/error' element={<LoginErro />} />
-                <Route path='/access-denied' element={<AccessDenied />} />
-                <Route path='/register' element={<Register />} />
+              <DomainRouter>
+                <Routes>
+                  {/* Rotas públicas */}
+                  <Route path='/' element={<Login />} />
+                  <Route path='/login/callback' element={<AuthCallback />} />
+                  <Route path='/login/error' element={<LoginErro />} />
+                  <Route path='/access-denied' element={<AccessDenied />} />
+                  <Route path='/register' element={<Register />} />
 
-                {/* Rotas privadas */}
-                <Route
-                  path='/home'
-                  element={<PrivateRoute element={<HomePage />} />}
-                />
-                <Route
-                  path='/balance'
-                  element={<PrivateRoute element={<BalancePage />} />}
-                />
-                <Route
-                  path='/management-teams'
-                  element={<PrivateRoute element={<TeamsManagement />} />}
-                />
-                <Route
-                  path='/bookings-na'
-                  element={<PrivateRoute element={<FullRaidsNa />} />}
-                />
-                <Route
-                  path='/bookings-na/run/:id'
-                  element={<PrivateRoute element={<RunDetails />} />}
-                />
-                <Route
-                  path='/bookings-na/key/:id'
-                  element={<PrivateRoute element={<KeyDetails />} />}
-                />
-                <Route
-                  path='/bookings-na/leveling/:id'
-                  element={<PrivateRoute element={<LevelingDetails />} />}
-                />
-                <Route
-                  path='/admin'
-                  element={<PrivateRoute element={<AdminPage />} />}
-                />
-                <Route
-                  path='/check-access'
-                  element={<PrivateRoute element={<CheckAccess />} />}
-                />
-                <Route
-                  path='/services'
-                  element={<PrivateRoute element={<ManagementServices />} />}
-                />
-                <Route
-                  path='/keys'
-                  element={<PrivateRoute element={<KeysPage />} />}
-                />
-                <Route
-                  path='/leveling'
-                  element={<PrivateRoute element={<LevelingPage />} />}
-                />
-                <Route
-                  path='/schedule'
-                  element={<PrivateRoute element={<SchedulePage />} />}
-                />
+                  {/* Rotas externas (sem autenticação) */}
+                  <Route path='/external' element={<ExternalHomePage />} />
+                  <Route
+                    path='/external/schedule'
+                    element={<ExternalSchedulePage />}
+                  />
 
-                {/* Rota catch-all */}
-                <Route path='*' element={<ErrorPage />} />
-              </Routes>
+                  {/* Rotas privadas */}
+                  <Route
+                    path='/home'
+                    element={<PrivateRoute element={<HomePage />} />}
+                  />
+                  <Route
+                    path='/balance'
+                    element={<PrivateRoute element={<BalancePage />} />}
+                  />
+                  <Route
+                    path='/management-teams'
+                    element={<PrivateRoute element={<TeamsManagement />} />}
+                  />
+                  <Route
+                    path='/bookings-na'
+                    element={<PrivateRoute element={<FullRaidsNa />} />}
+                  />
+                  <Route
+                    path='/bookings-na/run/:id'
+                    element={<PrivateRoute element={<RunDetails />} />}
+                  />
+                  <Route
+                    path='/bookings-na/key/:id'
+                    element={<PrivateRoute element={<KeyDetails />} />}
+                  />
+                  <Route
+                    path='/bookings-na/leveling/:id'
+                    element={<PrivateRoute element={<LevelingDetails />} />}
+                  />
+                  <Route
+                    path='/admin'
+                    element={<PrivateRoute element={<AdminPage />} />}
+                  />
+                  <Route
+                    path='/check-access'
+                    element={<PrivateRoute element={<CheckAccess />} />}
+                  />
+                  <Route
+                    path='/services'
+                    element={<PrivateRoute element={<ManagementServices />} />}
+                  />
+                  <Route
+                    path='/keys'
+                    element={<PrivateRoute element={<KeysPage />} />}
+                  />
+                  <Route
+                    path='/leveling'
+                    element={<PrivateRoute element={<LevelingPage />} />}
+                  />
+                  <Route
+                    path='/schedule'
+                    element={<PrivateRoute element={<SchedulePage />} />}
+                  />
+
+                  {/* Rota catch-all */}
+                  <Route path='*' element={<ErrorPage />} />
+                </Routes>
+              </DomainRouter>
             </main>
           </div>
         </AuthProvider>

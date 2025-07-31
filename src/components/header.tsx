@@ -17,7 +17,7 @@ import {
   ArrowFatUp,
   CalendarDots,
 } from '@phosphor-icons/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/auth-context'
 
@@ -56,11 +56,33 @@ function EstClock() {
 
 export function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [bookingsAnchorEl, setBookingsAnchorEl] = useState<null | HTMLElement>(
     null
   )
+
+  // Verifica se está no domínio externo (vitrine)
+  const isExternalDomain = () => {
+    // Se estiver em rotas /external, é página externa
+    if (location.pathname.startsWith('/external')) return true
+
+    // Se o hostname for diferente do domínio principal, é domínio externo
+    const currentHost = window.location.hostname
+    const mainDomain = import.meta.env.VITE_MAIN_DOMAIN || 'localhost'
+
+    // Remove 'www.' de ambos os hostnames para comparação
+    const normalizedCurrentHost = currentHost.replace(/^www\./, '')
+    const normalizedMainDomain = mainDomain.replace(/^www\./, '')
+
+    return (
+      normalizedCurrentHost !== normalizedMainDomain &&
+      normalizedCurrentHost !== 'localhost'
+    )
+  }
+
+  const isExternalPage = isExternalDomain()
 
   const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
     if (exactMatch) {
@@ -93,7 +115,8 @@ export function Header() {
     setBookingsAnchorEl(null)
   }
 
-  if (!isAuthenticated) {
+  // Se não está autenticado e não é página externa, mostra header de login
+  if (!isAuthenticated && !isExternalPage) {
     return (
       <AppBar
         position='static'
@@ -120,6 +143,40 @@ export function Header() {
             TheBakers{' '}
             <span className='font-extrabold text-purple-500'>Hub</span>
           </Typography>
+        </Toolbar>
+      </AppBar>
+    )
+  }
+
+  // Se é página externa, mostra header simplificado
+  if (isExternalPage) {
+    return (
+      <AppBar
+        position='static'
+        sx={{
+          background: 'linear-gradient(to right, black, #333)',
+          zIndex: 1000,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-around' }}>
+          {/* EST Clock na esquerda */}
+          <EstClock />
+          <Typography
+            variant='h6'
+            component='div'
+            sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
+            onClick={() => navigate('/')}
+          >
+            Corn<span className='font-extrabold text-purple-500'>Field</span>
+          </Typography>
+
+          <Button color='inherit' onClick={() => navigate('/')}>
+            Home
+          </Button>
+
+          <Button color='inherit' onClick={() => navigate('/schedule')}>
+            Schedule
+          </Button>
         </Toolbar>
       </AppBar>
     )
