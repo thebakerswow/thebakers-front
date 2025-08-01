@@ -15,44 +15,10 @@ import {
   List,
   Key,
   ArrowFatUp,
-  CalendarDots,
 } from '@phosphor-icons/react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../context/auth-context'
-
-// Componente para mostrar o horário EST em tempo real
-function EstClock() {
-  const [time, setTime] = useState<string>('')
-
-  // Atualiza o horário a cada segundo
-  useEffect(() => {
-    const update = () => {
-      const now = new Date()
-      // Converte para o fuso horário EST (America/New_York)
-      const estTime = now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'America/New_York',
-      })
-      setTime(estTime)
-    }
-    update()
-    const interval = setInterval(update, 1000)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <Typography
-      variant='body2'
-      sx={{ fontWeight: 500, fontSize: '1.1rem', minWidth: '180px' }}
-    >
-      EST Timezone: {time}
-    </Typography>
-  )
-}
 
 export function Header() {
   const navigate = useNavigate()
@@ -126,8 +92,6 @@ export function Header() {
         }}
       >
         <Toolbar>
-          {/* EST Clock na esquerda */}
-          <EstClock />
           <Typography
             variant='h6'
             component='div'
@@ -136,11 +100,10 @@ export function Header() {
               textAlign: 'center',
               flexGrow: 1,
               cursor: 'pointer',
-              marginRight: '200px',
             }}
             onClick={() => navigate('/')}
           >
-            TheBakers{' '}
+            TheBakers
             <span className='font-extrabold text-purple-500'>Hub</span>
           </Typography>
         </Toolbar>
@@ -158,25 +121,19 @@ export function Header() {
           zIndex: 1000,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-around' }}>
-          {/* EST Clock na esquerda */}
-          <EstClock />
+        <Toolbar sx={{ justifyContent: 'center' }}>
           <Typography
             variant='h6'
             component='div'
-            sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
+            sx={{
+              cursor: 'pointer',
+              fontSize: '1.8rem',
+              textAlign: 'center',
+            }}
             onClick={() => navigate('/')}
           >
             Corn<span className='font-extrabold text-purple-500'>Field</span>
           </Typography>
-
-          <Button color='inherit' onClick={() => navigate('/')}>
-            Home
-          </Button>
-
-          <Button color='inherit' onClick={() => navigate('/schedule')}>
-            Schedule
-          </Button>
         </Toolbar>
       </AppBar>
     )
@@ -191,15 +148,13 @@ export function Header() {
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-around' }}>
-        {/* EST Clock na esquerda */}
-        <EstClock />
         <Typography
           variant='h6'
           component='div'
           sx={{ cursor: 'pointer', fontSize: '1.8rem' }}
           onClick={() => navigate('/home')}
         >
-          TheBakers <span className='font-extrabold text-purple-500'>Hub</span>
+          TheBakers<span className='font-extrabold text-purple-500'>Hub</span>
         </Typography>
 
         <Button
@@ -209,16 +164,6 @@ export function Header() {
         >
           Balance
         </Button>
-
-        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
-          <Button
-            color='inherit'
-            onClick={() => navigate('/schedule')}
-            startIcon={<CalendarDots size={20} />}
-          >
-            Schedule
-          </Button>
-        )}
 
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <>

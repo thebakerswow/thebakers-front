@@ -26,10 +26,9 @@ import { KeysPage } from './pages/keys'
 import { KeyDetails } from './pages/keys/key-details'
 import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
-import { SchedulePage } from './pages/schedule'
 import { ExternalHomePage } from './pages/external/home'
-import { ExternalSchedulePage } from './pages/external/schedule'
 import { DomainRouter } from './components/domain-router'
+import './styles/global.css'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -73,10 +72,6 @@ export function App() {
 
                   {/* Rotas externas (sem autenticação) */}
                   <Route path='/external' element={<ExternalHomePage />} />
-                  <Route
-                    path='/external/schedule'
-                    element={<ExternalSchedulePage />}
-                  />
 
                   {/* Rotas privadas */}
                   <Route
@@ -126,10 +121,6 @@ export function App() {
                   <Route
                     path='/leveling'
                     element={<PrivateRoute element={<LevelingPage />} />}
-                  />
-                  <Route
-                    path='/schedule'
-                    element={<PrivateRoute element={<SchedulePage />} />}
                   />
 
                   {/* Rota catch-all */}
