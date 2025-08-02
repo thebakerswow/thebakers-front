@@ -298,16 +298,19 @@ export default function PriceTableManagement() {
               return (
                                  <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
                    <Card
-                     className='cursor-pointer transition-all hover:scale-105 hover:shadow-lg'
+                     className='cursor-pointer transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg'
                      sx={{
                        bgcolor: '#1a1a1a',
                        border: '1px solid #333',
                        height: 200, // Altura fixa para todos os cards
                        display: 'flex',
                        flexDirection: 'column',
+                       transition: 'all 0.3s ease-in-out',
                        '&:hover': {
                          borderColor: 'rgb(147, 51, 234)',
                          bgcolor: '#2a2a2a',
+                         transform: 'translateY(-2px)',
+                         boxShadow: '0 8px 25px rgba(147, 51, 234, 0.15)',
                        },
                      }}
                      onClick={() => handleCategoryClick(category)}
@@ -451,9 +454,12 @@ export default function PriceTableManagement() {
                             display: 'flex',
                             flexDirection: 'column',
                             position: 'relative',
+                            transition: 'all 0.3s ease-in-out',
                             '&:hover': {
                               borderColor: 'rgb(147, 51, 234)',
                               bgcolor: '#3a3a3a',
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 6px 20px rgba(147, 51, 234, 0.1)',
                             },
                           }}
                         >
@@ -523,9 +529,11 @@ export default function PriceTableManagement() {
                                 onClick={() => handleEditService(service)}
                                 sx={{
                                   color: 'rgb(147, 51, 234)',
+                                  transition: 'all 0.2s ease-in-out',
                                   '&:hover': { 
                                     color: 'rgb(168, 85, 247)',
                                     bgcolor: 'rgba(147, 51, 234, 0.1)',
+                                    transform: 'scale(1.1)',
                                   },
                                 }}
                               >
@@ -536,9 +544,11 @@ export default function PriceTableManagement() {
                                 onClick={() => handleDelete(service.id)}
                                 sx={{
                                   color: '#ef4444',
+                                  transition: 'all 0.2s ease-in-out',
                                   '&:hover': { 
                                     color: '#dc2626',
                                     bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                    transform: 'scale(1.1)',
                                   },
                                 }}
                               >
@@ -605,7 +615,11 @@ export default function PriceTableManagement() {
                             onClick={() => handleOpenCategoryDialog(category)}
                             sx={{
                               color: 'rgb(147, 51, 234)',
-                              '&:hover': { color: 'rgb(168, 85, 247)' },
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': { 
+                                color: 'rgb(168, 85, 247)',
+                                transform: 'scale(1.1)',
+                              },
                             }}
                           >
                             <EditIcon />
@@ -615,7 +629,11 @@ export default function PriceTableManagement() {
                             onClick={() => handleDeleteCategory(category.id)}
                             sx={{
                               color: 'rgb(147, 51, 234)',
-                              '&:hover': { color: 'rgb(168, 85, 247)' },
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': { 
+                                color: 'rgb(168, 85, 247)',
+                                transform: 'scale(1.1)',
+                              },
                             }}
                           >
                             <DeleteIcon />
