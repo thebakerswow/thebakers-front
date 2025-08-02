@@ -11,6 +11,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Bakers</title>
     <link rel="icon" href="./src/assets/logo.ico" type="imagex/png" />
+    <script>
+      // Function to update favicon based on title
+      function updateFavicon() {
+        const title = document.title;
+        const favicon = document.querySelector('link[rel="icon"]');
+        
+        if (title === "CornField") {
+          favicon.href = "./src/assets/cornfield.png";
+        } else {
+          favicon.href = "./src/assets/logo.ico";
+        }
+      }
+      
+      // Update favicon when page loads
+      document.addEventListener('DOMContentLoaded', updateFavicon);
+      
+      // Watch for title changes
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.type === 'childList' && mutation.target.nodeName === 'TITLE') {
+            updateFavicon();
+          }
+        });
+      });
+      
+      // Start observing when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        const titleElement = document.querySelector('title');
+        if (titleElement) {
+          observer.observe(titleElement, { childList: true });
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

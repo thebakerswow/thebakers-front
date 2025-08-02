@@ -116,6 +116,11 @@ export function ExternalHomePage() {
     }
   }
 
+  // Set document title for external site
+  useEffect(() => {
+    document.title = 'CornField'
+  }, [])
+
   // Buscar serviços e categorias para exibir nos cards
   useEffect(() => {
     const fetchServicesAndCategories = async () => {
@@ -167,9 +172,8 @@ export function ExternalHomePage() {
               <span className='font-extrabold text-purple-500'>Field</span>
             </h1>
             <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
-              At CornField, we strive to bring you the best experience in
-              managing your schedules and pricing. Explore our offerings and see
-              how we can help you achieve more.
+            We are a singular boosting team of premade friends who formed this guild after leaving our previous one together. 
+            We've been offering boost services since the end of Shadowlands, always operating with 100% Terms of Service compliance. We only accept gold as payment.
             </p>
           </div>
         </div>
