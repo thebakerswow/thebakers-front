@@ -28,7 +28,6 @@ import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
 import { ExternalHomePage } from './pages/external/home'
 import { DomainRouter } from './components/domain-router'
-import { FloatingClockManager } from './components/floating-clock-manager'
 import './styles/global.css'
 
 // Componente para proteger rotas privadas
@@ -129,7 +128,7 @@ export function App() {
                 </Routes>
               </DomainRouter>
             </main>
-            <FloatingClockManager />
+
           </div>
         </AuthProvider>
       </Router>
