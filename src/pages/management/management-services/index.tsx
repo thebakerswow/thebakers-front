@@ -15,10 +15,15 @@ import {
   Typography,
   IconButton,
   Paper,
+  Card,
+  CardContent,
+  Grid,
+  Chip,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CloseIcon from '@mui/icons-material/Close'
+import CategoryIcon from '@mui/icons-material/Category'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
@@ -37,7 +42,6 @@ export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loadingServices, setLoadingServices] = useState(true)
-  const [openCategories, setOpenCategories] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
@@ -50,10 +54,10 @@ export default function PriceTableManagement() {
     useState<ServiceCategory | null>(null)
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
 
-  // Ordenação
-  type OrderBy = 'name' | 'price' | 'category'
-  const [orderBy, setOrderBy] = useState<OrderBy>('name')
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc')
+  // --- DIALOGS ---
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null)
+  const [isCategoryServicesDialogOpen, setIsCategoryServicesDialogOpen] = useState(false)
+  const [openCategories, setOpenCategories] = useState(false)
 
   // Handle errors
   const handleError = (errorDetails: ErrorDetails) => {
@@ -151,6 +155,18 @@ export default function PriceTableManagement() {
     })
   }
 
+  // Handle category card click
+  const handleCategoryClick = (category: ServiceCategory) => {
+    setSelectedCategory(category)
+    setIsCategoryServicesDialogOpen(true)
+  }
+
+  // Handle close category services dialog
+  const handleCloseCategoryServicesDialog = () => {
+    setIsCategoryServicesDialogOpen(false)
+    setSelectedCategory(null)
+  }
+
   const handleOpenCategoryDialog = (
     category: ServiceCategory | null = null
   ) => {
@@ -239,192 +255,306 @@ export default function PriceTableManagement() {
     })
   }
 
-  // Função para ordenar os serviços
-  function getSortedServices() {
-    const sorted = [...services]
-    sorted.sort((a, b) => {
-      let aValue: string | number = ''
-      let bValue: string | number = ''
-      if (orderBy === 'name') {
-        aValue = a.name.toLowerCase()
-        bValue = b.name.toLowerCase()
-      } else if (orderBy === 'price') {
-        aValue = a.price
-        bValue = b.price
-      } else if (orderBy === 'category') {
-        aValue =
-          a.category?.name ||
-          categories.find((c) => c.id === a.serviceCategoryId)?.name ||
-          ''
-        bValue =
-          b.category?.name ||
-          categories.find((c) => c.id === b.serviceCategoryId)?.name ||
-          ''
-        aValue = (aValue as string).toLowerCase()
-        bValue = (bValue as string).toLowerCase()
-      }
-      if (aValue < bValue) return order === 'asc' ? -1 : 1
-      if (aValue > bValue) return order === 'asc' ? 1 : -1
-      return 0
-    })
-    return sorted
-  }
-
-  // Handler para clicar no cabeçalho
-  function handleSort(col: OrderBy) {
-    if (orderBy === col) {
-      setOrder(order === 'asc' ? 'desc' : 'asc')
-    } else {
-      setOrderBy(col)
-      setOrder('asc')
-    }
+  // Get services for a specific category
+  const getServicesForCategory = (categoryId: number) => {
+    return services.filter(service => service.serviceCategoryId === categoryId)
   }
 
   return (
     <div className='w-full overflow-auto overflow-x-hidden pr-20'>
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
-        <div className='mb-6 flex justify-between'>
-          <Typography variant='h4' fontWeight='bold'>
-            Price Table Management
-          </Typography>
-          <div>
-            <Button
-              variant='contained'
-              color='error'
-              onClick={() => setOpenCategories(true)}
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                mr: 2,
-              }}
-            >
-              Manage Categories
-            </Button>
-            <Button
-              variant='contained'
-              color='error'
-              onClick={handleAddService}
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-            >
-              Add Service
-            </Button>
+                 <div className='mb-6 flex justify-between'>
+           <Typography variant='h4' fontWeight='bold'>
+             Price Table Management
+           </Typography>
+           <Button
+             variant='contained'
+             color='error'
+             onClick={() => setOpenCategories(true)}
+             sx={{
+               backgroundColor: 'rgb(147, 51, 234)',
+               '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+             }}
+           >
+             Manage Categories
+           </Button>
+         </div>
+
+        {/* Categories Grid */}
+        {loadingServices ? (
+          <div className='flex h-40 items-center justify-center'>
+            <div className='flex flex-col items-center gap-2'>
+              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
+              <span className='text-gray-400'>Loading services...</span>
+            </div>
           </div>
-        </div>
-        <TableContainer
-          component={Paper}
-          sx={{
-            bgcolor: '#111', // background escuro agora acompanha a tabela
-            color: '#fff',
-            p: 4, // padding interno para a tabela
-          }}
+        ) : (
+          <Grid container spacing={3}>
+            {categories.map((category) => {
+              const servicesInCategory = getServicesForCategory(category.id)
+              const serviceCount = servicesInCategory.length
+              const hotServicesCount = servicesInCategory.filter(s => s.hotItem).length
+
+              return (
+                                 <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
+                   <Card
+                     className='cursor-pointer transition-all hover:scale-105 hover:shadow-lg'
+                     sx={{
+                       bgcolor: '#1a1a1a',
+                       border: '1px solid #333',
+                       height: 200, // Altura fixa para todos os cards
+                       display: 'flex',
+                       flexDirection: 'column',
+                       '&:hover': {
+                         borderColor: 'rgb(147, 51, 234)',
+                         bgcolor: '#2a2a2a',
+                       },
+                     }}
+                     onClick={() => handleCategoryClick(category)}
+                   >
+                     <CardContent 
+                       className='text-center'
+                       sx={{ 
+                         flexGrow: 1,
+                         display: 'flex',
+                         flexDirection: 'column',
+                         justifyContent: 'space-between',
+                         p: 2
+                       }}
+                     >
+                       <div>
+                         <div className='mb-3 flex justify-center'>
+                           <CategoryIcon 
+                             sx={{ 
+                               fontSize: 40, 
+                               color: 'rgb(147, 51, 234)' 
+                             }} 
+                           />
+                         </div>
+                         <Typography 
+                           variant='h6' 
+                           component='h3'
+                           sx={{ 
+                             color: '#fff',
+                             fontWeight: 'bold',
+                             mb: 1,
+                             fontSize: '1.1rem',
+                             lineHeight: 1.2
+                           }}
+                         >
+                           {category.name}
+                         </Typography>
+                         <Typography 
+                           variant='body2' 
+                           sx={{ 
+                             color: '#b0b0b0',
+                             mb: 1,
+                             fontSize: '0.875rem'
+                           }}
+                         >
+                           {serviceCount} service{serviceCount !== 1 ? 's' : ''} available
+                         </Typography>
+                       </div>
+                       
+                       <div className='flex flex-col gap-1'>
+                         {hotServicesCount > 0 && (
+                           <Chip
+                             label={`${hotServicesCount} 🔥 Hot`}
+                             size='small'
+                             sx={{
+                               bgcolor: 'rgba(147, 51, 234, 0.2)',
+                               color: 'rgb(147, 51, 234)',
+                               border: '1px solid rgb(147, 51, 234)',
+                               alignSelf: 'center',
+                               fontSize: '0.7rem',
+                               height: 20,
+                               '& .MuiChip-label': {
+                                 px: 1,
+                               }
+                             }}
+                           />
+                         )}
+                         <Typography 
+                           variant='caption' 
+                           sx={{ 
+                             color: 'rgb(147, 51, 234)',
+                             fontSize: '0.75rem',
+                             textAlign: 'center'
+                           }}
+                         >
+                           Click to view services
+                         </Typography>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 </Grid>
+              )
+            })}
+          </Grid>
+        )}
+
+        {/* Dialog for Category Services */}
+        <Dialog
+          open={isCategoryServicesDialogOpen}
+          onClose={handleCloseCategoryServicesDialog}
+          maxWidth='lg'
+          fullWidth
         >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                  onClick={() => handleSort('name')}
-                >
-                  Service
-                  {orderBy === 'name' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
-                </TableCell>
-                <TableCell sx={{ color: '#b0b0b0' }}>Description</TableCell>
-                <TableCell
-                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                  onClick={() => handleSort('price')}
-                >
-                  Price
-                  {orderBy === 'price' ? (order === 'asc' ? ' ▲' : ' ▼') : ''}
-                </TableCell>
-                <TableCell
-                  sx={{ color: '#b0b0b0', cursor: 'pointer' }}
-                  onClick={() => handleSort('category')}
-                >
-                  Category
-                  {orderBy === 'category'
-                    ? order === 'asc'
-                      ? ' ▲'
-                      : ' ▼'
-                    : ''}
-                </TableCell>
-                <TableCell sx={{ color: '#b0b0b0' }}>Hot</TableCell>
-                <TableCell sx={{ color: '#b0b0b0' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loadingServices ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
-                    <div className='flex flex-col items-center gap-2'>
-                      <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
-                      <span className='text-gray-400'>Loading services...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : Array.isArray(services) && services.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
-                    <span className='text-gray-400'>No services found</span>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                getSortedServices().map((service) => (
-                  <TableRow key={service.id} hover>
-                    <TableCell sx={{ color: '#b0b0b0' }}>
-                      {service.name}
-                    </TableCell>
-                    <TableCell sx={{ color: '#b0b0b0' }}>
-                      {service.description}
-                    </TableCell>
-                    <TableCell sx={{ color: '#b0b0b0' }}>
-                      {(() => {
-                        // Exibe separador de milhar como vírgula, sem casas decimais
-                        return service.price
-                          .toLocaleString('en-US', { maximumFractionDigits: 0 })
-                          .replace(/,/g, ',')
-                      })()}
-                    </TableCell>
-                    <TableCell sx={{ color: '#b0b0b0' }}>
-                      {service.category?.name ||
-                        categories.find(
-                          (c) => c.id === service.serviceCategoryId
-                        )?.name ||
-                        '-'}
-                    </TableCell>
-                    <TableCell sx={{ color: '#b0b0b0', textAlign: 'center' }}>
-                      {service.hotItem ? '🔥' : ''}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color='error'
-                        onClick={() => handleEditService(service)}
-                        sx={{
-                          color: 'rgb(147, 51, 234)',
-                          '&:hover': { color: 'rgb(168, 85, 247)' },
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color='error'
-                        onClick={() => handleDelete(service.id)}
-                        sx={{
-                          color: 'rgb(147, 51, 234)',
-                          '&:hover': { color: 'rgb(168, 85, 247)' },
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+          <DialogContent sx={{ bgcolor: '#1a1a1a', color: '#fff' }}>
+            {selectedCategory && (
+              <>
+                                 <div className='mb-6 flex items-center justify-between border-b border-zinc-700 pb-4'>
+                   <div className='flex items-center gap-3'>
+                     <CategoryIcon sx={{ color: 'rgb(147, 51, 234)' }} />
+                     <Typography variant='h5' fontWeight='bold'>
+                       {selectedCategory.name} Services
+                     </Typography>
+                   </div>
+                   <div className='flex items-center gap-2'>
+                     <Button
+                       variant='contained'
+                       size='small'
+                       onClick={handleAddService}
+                       sx={{
+                         backgroundColor: 'rgb(147, 51, 234)',
+                         '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                         fontSize: '0.875rem',
+                         px: 2,
+                         py: 0.5,
+                       }}
+                     >
+                       Add Service
+                     </Button>
+                     <IconButton
+                       onClick={handleCloseCategoryServicesDialog}
+                       sx={{ color: '#fff' }}
+                     >
+                       <CloseIcon />
+                     </IconButton>
+                   </div>
+                 </div>
+
+                {/* Services Grid */}
+                {getServicesForCategory(selectedCategory.id).length === 0 ? (
+                  <div className='flex h-40 items-center justify-center'>
+                    <span className='text-gray-400'>No services in this category</span>
+                  </div>
+                ) : (
+                  <Grid container spacing={3}>
+                    {getServicesForCategory(selectedCategory.id).map((service) => (
+                      <Grid item xs={12} sm={6} md={4} key={service.id}>
+                        <Card
+                          sx={{
+                            bgcolor: '#2a2a2a',
+                            border: '1px solid #333',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            position: 'relative',
+                            '&:hover': {
+                              borderColor: 'rgb(147, 51, 234)',
+                              bgcolor: '#3a3a3a',
+                            },
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                            {/* Hot Badge */}
+                            {service.hotItem && (
+                              <Chip
+                                label='🔥 HOT'
+                                size='small'
+                                sx={{
+                                  position: 'absolute',
+                                  top: 8,
+                                  right: 8,
+                                  bgcolor: 'rgba(147, 51, 234, 0.2)',
+                                  color: 'rgb(147, 51, 234)',
+                                  border: '1px solid rgb(147, 51, 234)',
+                                  fontSize: '0.75rem',
+                                }}
+                              />
+                            )}
+
+                            {/* Service Name */}
+                            <Typography 
+                              variant='h6' 
+                              component='h3'
+                              sx={{ 
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                mb: 2,
+                                pr: service.hotItem ? 6 : 0,
+                              }}
+                            >
+                              {service.name}
+                            </Typography>
+
+                            {/* Service Description */}
+                            <Typography 
+                              variant='body2' 
+                              sx={{ 
+                                color: '#b0b0b0',
+                                mb: 3,
+                                flexGrow: 1,
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {service.description}
+                            </Typography>
+
+                            {/* Price */}
+                            <Typography 
+                              variant='h5' 
+                              sx={{ 
+                                color: 'rgb(147, 51, 234)',
+                                fontWeight: 'bold',
+                                mb: 2,
+                              }}
+                            >
+                              {service.price
+                                .toLocaleString('en-US', { maximumFractionDigits: 0 })
+                                .replace(/,/g, ',')}g
+                            </Typography>
+
+                            {/* Actions */}
+                            <div className='flex justify-end gap-1'>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleEditService(service)}
+                                sx={{
+                                  color: 'rgb(147, 51, 234)',
+                                  '&:hover': { 
+                                    color: 'rgb(168, 85, 247)',
+                                    bgcolor: 'rgba(147, 51, 234, 0.1)',
+                                  },
+                                }}
+                              >
+                                <EditIcon fontSize='small' />
+                              </IconButton>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleDelete(service.id)}
+                                sx={{
+                                  color: '#ef4444',
+                                  '&:hover': { 
+                                    color: '#dc2626',
+                                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                  },
+                                }}
+                              >
+                                <DeleteIcon fontSize='small' />
+                              </IconButton>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog for Categories CRUD */}
         <Dialog

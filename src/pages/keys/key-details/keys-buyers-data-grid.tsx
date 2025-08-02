@@ -60,6 +60,12 @@ interface BuyersGridProps {
     username: string
   }[] // Added raid leaders prop
   onError?: (error: ErrorDetails) => void
+  sumPot?: {
+    idDiscord: string
+    username: string
+    sumPot: number
+    type: 'gold' | 'dolar'
+  }[] // Added sumPot prop for collector information
 }
 
 const statusOptions = [
@@ -88,6 +94,7 @@ export function KeysBuyersDataGrid({
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Added for team-based column visibility
   raidLeaders, // Added raid leaders prop
+  sumPot, // Added sumPot prop
   onError,
 }: BuyersGridProps) {
   const { idDiscord, userRoles } = useAuth()
@@ -144,7 +151,8 @@ export function KeysBuyersDataGrid({
         buyer.buyerPot != null &&
         buyer.buyerActualPot != null &&
         (buyer.status === 'group' || buyer.status === 'done') &&
-        buyer.isPaid === true
+        buyer.isPaid === true &&
+        !isCollectorDifferentFromRaidLeader(buyer) // Only include if collector is not different from raid leader
       ) {
         return total + (buyer.buyerPot - buyer.buyerActualPot)
       }
@@ -235,6 +243,21 @@ export function KeysBuyersDataGrid({
     return raidLeaders.some((leader) => {
       const leaderDiscordId = getRaidLeaderDiscordId(leader)
       return leaderDiscordId === idDiscord
+    })
+  }
+
+  // Function to check if the collector is different from the raid leader
+  const isCollectorDifferentFromRaidLeader = (buyer: BuyerData): boolean => {
+    if (!buyer.nameCollector || !sumPot || !raidLeaders) return false
+    
+    // Find the collector's Discord ID from sumPot array
+    const collector = sumPot.find(item => item.username === buyer.nameCollector)
+    if (!collector) return false
+    
+    // Check if the collector's Discord ID matches any raid leader's Discord ID
+    return !raidLeaders.some(leader => {
+      const leaderDiscordId = getRaidLeaderDiscordId(leader)
+      return leaderDiscordId === collector.idDiscord
     })
   }
 
@@ -1073,7 +1096,9 @@ export function KeysBuyersDataGrid({
                 {canSeeDepositValue() && (
                   <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                     {buyer.buyerPot != null && buyer.buyerActualPot != null ? (
-                      buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                      isCollectorDifferentFromRaidLeader(buyer) ? (
+                        '-'
+                      ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
                         Number(
                           buyer.buyerPot - buyer.buyerActualPot
                         ).toLocaleString('en-US', {

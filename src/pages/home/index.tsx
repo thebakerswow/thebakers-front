@@ -11,7 +11,7 @@ import { Service, ServiceCategory } from '../../types'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination, Autoplay } from 'swiper/modules'
 import { Swiper as SwiperType } from 'swiper'
-import { CaretLeft, CaretRight, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, X, CastleTurret, Key } from '@phosphor-icons/react'
 import { format, addDays } from 'date-fns'
 import 'swiper/css'
 import 'swiper/css/pagination'
@@ -383,7 +383,7 @@ export function HomePage() {
                       <div className='mb-8 flex flex-col gap-4'>
                         <div className='flex items-center gap-2'>
                           <span className='mb-2 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
-                            SERVICES CATEGORIES
+                            CATEGORIES
                           </span>
                         </div>
                         <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
@@ -401,8 +401,12 @@ export function HomePage() {
                                 onClick={() => handleCategoryClick(category)}
                               >
                                 <div className='text-center'>
-                                  <div className='mb-2 text-xl sm:text-2xl'>
-                                    📁
+                                  <div className='mb-2 flex justify-center'>
+                                    {category.name.toLowerCase() === 'keys' ? (
+                                      <Key size={32} className='text-purple-500' />
+                                    ) : (
+                                      <CastleTurret size={32} className='text-purple-500' />
+                                    )}
                                   </div>
                                   <h3 className='line-clamp-2 text-base font-bold text-white sm:text-lg'>
                                     {category.name}
@@ -588,7 +592,11 @@ export function HomePage() {
             {/* Header do Dialog */}
             <div className='mb-6 flex items-center justify-between border-b border-zinc-700 pb-4'>
               <div className='flex items-center gap-3'>
-                <span className='text-2xl'>📁</span>
+                {selectedCategory.name.toLowerCase() === 'keys' ? (
+                  <Key size={28} className='text-purple-500' />
+                ) : (
+                  <CastleTurret size={28} className='text-purple-500' />
+                )}
                 <h2 className='text-2xl font-bold text-white'>
                   {selectedCategory.name}
                 </h2>

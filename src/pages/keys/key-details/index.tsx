@@ -644,6 +644,7 @@ export function KeyDetails() {
                   onDeleteSuccess={reloadAllData}
                   runIsLocked={runData?.runIsLocked ?? false}
                   raidLeaders={chatRaidLeaders}
+                  sumPot={runData?.sumPot}
                   runIdTeam={runData?.idTeam}
                   onError={handleError}
                 />

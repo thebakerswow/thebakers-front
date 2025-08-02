@@ -647,6 +647,7 @@ export function LevelingDetails() {
                   onDeleteSuccess={reloadAllData}
                   runIsLocked={runData?.runIsLocked ?? false}
                   raidLeaders={chatRaidLeaders}
+                  sumPot={runData?.sumPot} // Added this line
                   runIdTeam={runData?.idTeam}
                   onError={handleError}
                 />

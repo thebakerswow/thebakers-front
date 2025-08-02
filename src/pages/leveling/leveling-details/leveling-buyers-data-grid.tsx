@@ -60,6 +60,12 @@ interface BuyersGridProps {
     username: string
   }[] // Added raid leaders prop
   onError?: (error: ErrorDetails) => void
+  sumPot?: {
+    idDiscord: string
+    username: string
+    sumPot: number
+    type: 'gold' | 'dolar'
+  }[] // Added sumPot prop for collector information
 }
 
 const statusOptions = [
@@ -89,6 +95,7 @@ export function LevelingBuyersDataGrid({
   runIdTeam, // Added for team-based column visibility
   raidLeaders, // Added raid leaders prop
   onError,
+  sumPot, // Added sumPot prop
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
 
@@ -97,6 +104,21 @@ export function LevelingBuyersDataGrid({
     const isRaidLeaderUser = isRaidLeader()
     const isChefeDeCozinha = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
     return isRaidLeaderUser || isChefeDeCozinha
+  }
+
+  // Function to check if collector is different from raid leader
+  const isCollectorDifferentFromRaidLeader = (buyer: BuyerData): boolean => {
+    if (!buyer.nameCollector || !sumPot || !raidLeaders) return false
+    
+    // Find the collector's Discord ID from sumPot array
+    const collector = sumPot.find(item => item.username === buyer.nameCollector)
+    if (!collector) return false
+    
+    // Check if the collector's Discord ID matches any raid leader's Discord ID
+    return !raidLeaders.some(leader => {
+      const leaderDiscordId = getRaidLeaderDiscordId(leader)
+      return leaderDiscordId === collector.idDiscord
+    })
   }
 
   // Function to check if Dolar Pot column should be hidden for Leveling team runs
@@ -111,7 +133,8 @@ export function LevelingBuyersDataGrid({
         buyer.buyerPot != null &&
         buyer.buyerActualPot != null &&
         (buyer.status === 'group' || buyer.status === 'done') &&
-        buyer.isPaid === true
+        buyer.isPaid === true &&
+        !isCollectorDifferentFromRaidLeader(buyer) // Only include if collector is not different from raid leader
       ) {
         return total + (buyer.buyerPot - buyer.buyerActualPot)
       }
@@ -1073,11 +1096,27 @@ export function LevelingBuyersDataGrid({
                   {/* Coluna Deposit Value */}
                   {canSeeDepositValue() && (
                     <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                      {buyer.buyerPot != null && buyer.buyerActualPot != null
-                        ? (
+                      {buyer.buyerPot != null && buyer.buyerActualPot != null ? (
+                        isCollectorDifferentFromRaidLeader(buyer) ? (
+                          '-'
+                        ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                          Number(
                             buyer.buyerPot - buyer.buyerActualPot
+                          ).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                        ) : (
+                          Math.round(
+                            Number(buyer.buyerPot - buyer.buyerActualPot)
                           ).toLocaleString('en-US')
-                        : '-'}
+                        )
+                      ) : buyer.buyerPot == null ||
+                        buyer.buyerActualPot == null ? (
+                        <i>Encrypted</i>
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                   )}
                   <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
