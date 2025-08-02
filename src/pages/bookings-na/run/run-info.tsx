@@ -57,21 +57,7 @@ export function RunInfo({
     setIsAddBuyerOpen(false)
   }
 
-  function convertFromEST(timeStr: string) {
-    const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = hours + 1 // Ajuste para BRT
 
-    // Ajustar caso a conversão ultrapasse 24h
-    if (adjustedHours === 24) {
-      adjustedHours = 0 // Meia-noite
-    }
-
-    // Formatar para 12 horas
-    const period = adjustedHours >= 12 ? 'PM' : 'AM'
-    const formattedHours = adjustedHours % 12 || 12 // Converte 0 para 12 no formato 12h
-
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
-  }
 
   function formatTo12HourEST(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
@@ -181,17 +167,13 @@ export function RunInfo({
       >
         <CardContent className='col-span-3 mb-6 ml-10 flex flex-col'>
           <h1 className='text-center text-lg font-semibold'>
-            {run.raid} {run.difficulty}{' '}
-            {run.quantityBoss?.String ?? run.quantityBoss} @{' '}
-            {run.time ? (
-              <>
-                {formatTo12HourEST(run.time)} EST{' '}
-                {/* Exibe o horário original recebido do backend */}
-                || {convertFromEST(run.time)} BRT
-              </>
-            ) : (
-              <span>-</span>
-            )}
+            {run.raid} {run.difficulty} @ {run.time ? (
+               <>
+                 {formatTo12HourEST(run.time)} EST
+               </>
+             ) : (
+               <span>-</span>
+             )}
           </h1>
 
           <div className='mt-8 grid grid-cols-3 gap-4 text-left'>

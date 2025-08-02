@@ -195,17 +195,6 @@ export function RunsDataGrid({
     setIsTimeSortedAsc((prev) => !prev)
   }, [])
 
-  // Converte o horário de EST para BRT
-  const convertFromEST = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number)
-    let adjustedHours = (hours + 1) % 24 // Ajusta para o fuso horário BRT (UTC-3)
-
-    const period = adjustedHours >= 12 ? 'PM' : 'AM'
-    const formattedHours = adjustedHours % 12 || 12
-
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
-  }
-
   // Formata o horário para o formato de 12 horas EST
   const formatTo12HourEST = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number)
@@ -301,13 +290,11 @@ export function RunsDataGrid({
       : '-'
   }
 
-  // Renderiza o horário em ambos os formatos EST e BRT
+  // Renderiza o horário em formato 12 horas EST
   const renderTime = (time: string | undefined, date: string | undefined) =>
     time && date ? (
       <>
-        {formatTo12HourEST(time)} EST
-        <br />
-        {convertFromEST(time)} BRT
+        {formatTo12HourEST(time)}
       </>
     ) : (
       '-'
@@ -353,7 +340,7 @@ export function RunsDataGrid({
                 onClick={handleSortByTime}
                 style={{ cursor: 'pointer' }}
               >
-                Time
+                Time (EST)
               </TableSortLabel>
             </TableCell>
             <TableCell
