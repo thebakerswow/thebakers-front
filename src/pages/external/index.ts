@@ -1,1 +1,0 @@
-export { ExternalHomePage } from './home'

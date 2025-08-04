@@ -357,7 +357,7 @@ export function ExternalHomePage() {
           <img src={schedule} alt='Schedule' className='w-96 drop-shadow-lg' />
         </div>
         <div className='relative z-10 -mt-20 w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
-          <div className='flex w-full flex-wrap justify-center gap-4'>
+          <div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7'>
             {(() => {
               // Dias em inglês
               const daysEn = [
@@ -436,7 +436,7 @@ export function ExternalHomePage() {
                 return (
                   <div
                     key={daysEn[weekDayIdx] + monthNumber + dayNumber}
-                    className='flex h-[900px] min-w-[300px] max-w-[400px] flex-1 flex-col rounded-2xl bg-zinc-900 p-6 shadow-lg'
+                    className='flex h-[900px] w-full flex-col rounded-2xl bg-zinc-900 p-4 shadow-lg sm:p-6'
                   >
                     <div className='mb-4 text-2xl font-semibold text-white'>
                       <span className='inline-flex items-center gap-2'>
@@ -467,7 +467,7 @@ export function ExternalHomePage() {
                         runsToShow.map((run, index) => (
                           <div
                             key={`${run.teamId}-${run.raid}-${index}`}
-                            className='flex cursor-pointer flex-col rounded-xl bg-zinc-800 p-4 shadow transition hover:bg-zinc-700'
+                            className='flex cursor-pointer flex-col rounded-xl bg-zinc-800 p-4 shadow'
                             style={{
                               background: teamColors[run.teamName] || undefined,
                             }}
