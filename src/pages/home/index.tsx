@@ -443,7 +443,7 @@ export function HomePage() {
                 />
               </div>
               <div className='relative z-10 -mt-20 w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
-                <div className='flex w-full flex-wrap justify-center gap-4'>
+                <div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7'>
                   {(() => {
                     // Dias em inglês
                     const daysEn = [
@@ -483,6 +483,7 @@ export function HomePage() {
                         'Guild Azralon BR#1',
                         'Guild Azralon BR#2',
                         'Rocket',
+                        'Fuck Bear',
                         'Padeirinho',
                         'Milharal',
                       ]
@@ -514,7 +515,7 @@ export function HomePage() {
                       return (
                         <div
                           key={daysEn[weekDayIdx] + monthNumber + dayNumber}
-                          className='flex h-[900px] min-w-[300px] max-w-[400px] flex-1 flex-col rounded-2xl bg-zinc-900 p-4 shadow-lg sm:p-6'
+                          className='flex h-[900px] w-full flex-col rounded-2xl bg-zinc-900 p-4 shadow-lg sm:p-6'
                         >
                           <div className='mb-4 text-2xl font-semibold text-white'>
                             <span className='inline-flex items-center gap-2'>
@@ -652,6 +653,7 @@ const teamColors: { [key: string]: string } = {
   'Guild Azralon BR#1': '#0D9488',
   'Guild Azralon BR#2': '#1D4ED8',
   Rocket: '#B91C1C',
+  'Fuck Bear': '#4C1D95',
   Padeirinho: '#EA580C',
   Milharal: '#FEF08A',
 }

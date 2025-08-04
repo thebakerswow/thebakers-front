@@ -49,6 +49,7 @@ const sortTeamsByPriority = (teams: GBank[]) => {
     'Guild Azralon BR#1',
     'Guild Azralon BR#2',
     'Rocket',
+    'Fuck Bear',
     'Padeirinho',
     'Milharal',
   ]
@@ -91,6 +92,7 @@ const colorOptions = [
   { value: '#0D9488', label: 'Guild Azralon BR#1' }, // Verde azulado
   { value: '#1D4ED8', label: 'Guild Azralon BR#2' }, // Azul médio
   { value: '#B91C1C', label: 'Rocket' }, // Vermelho
+  { value: '#4C1D95', label: 'Fuck Bear' }, // Violeta
   { value: '#EA580C', label: 'Padeirinho' }, // Laranja
   { value: '#FEF08A', label: 'Milharal' }, // Amarelo claro
   { value: '#9CA3AF', label: 'Advertiser' }, // Cinza
@@ -109,13 +111,38 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   const [editGBank, setEditGBank] = useState<GBank | null>(null)
   const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
   // Alterna o menu de ações para a linha selecionada
-  const toggleActionsDropdown = (index: number) => {
-    setOpenRowIndex((prevIndex) => (prevIndex === index ? null : index))
+  const toggleActionsDropdown = (index: number, event: React.MouseEvent) => {
+    if (openRowIndex === index) {
+      setOpenRowIndex(null)
+    } else {
+      const button = event.currentTarget as HTMLElement
+      const rect = button.getBoundingClientRect()
+      const menuWidth = 120 // Largura estimada do menu
+      const menuHeight = 80 // Altura estimada do menu
+      
+      // Verifica se o menu cabe na tela
+      let x = rect.left
+      let y = rect.bottom + 8
+      
+      // Se o menu sair pela direita, posiciona à esquerda do botão
+      if (x + menuWidth > window.innerWidth) {
+        x = rect.right - menuWidth
+      }
+      
+      // Se o menu sair pela baixo, posiciona acima do botão
+      if (y + menuHeight > window.innerHeight) {
+        y = rect.top - menuHeight - 8
+      }
+      
+      setMenuPosition({ x, y })
+      setOpenRowIndex(index)
+    }
   }
 
   // Formata o valor da calculadora para exibir números corretamente
@@ -222,8 +249,19 @@ export function GBanksTable({ onError }: GBanksTableProps) {
         setOpenRowIndex(null)
       }
     }
+    
+    // Fecha o menu quando a janela é redimensionada
+    const handleResize = () => {
+      setOpenRowIndex(null)
+    }
+    
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   return (
@@ -387,7 +425,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                       <IconButton
                         onClick={(e) => {
                           e.stopPropagation()
-                          toggleActionsDropdown(index)
+                          toggleActionsDropdown(index, e)
                         }}
                       >
                         <DotsThreeVertical size={20} />
@@ -395,7 +433,11 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                       {openRowIndex === index && (
                         <div
                           ref={menuRef}
-                          className='absolute left-0 z-50 mt-2 flex flex-col gap-2 rounded border bg-white p-2 shadow-md'
+                          className='fixed z-[9999] flex flex-col gap-2 rounded border bg-white p-2 shadow-lg'
+                          style={{
+                            left: menuPosition.x,
+                            top: menuPosition.y
+                          }}
                         >
                           <Button
                             variant='text'

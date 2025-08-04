@@ -311,6 +311,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                   <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
                     Rocket
                   </MenuItem>
+                  <MenuItem value={import.meta.env.VITE_TEAM_FUCKBEAR}>
+                    Fuck Bear
+                  </MenuItem>
                   <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
                     Padeirinho
                   </MenuItem>

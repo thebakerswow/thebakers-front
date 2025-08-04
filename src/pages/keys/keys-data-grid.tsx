@@ -82,6 +82,7 @@ export function KeysDataGrid({
     'Guild Azralon BR#1': '#0D9488', // Verde azulado
     'Guild Azralon BR#2': '#1D4ED8', // Azul médio
     Rocket: '#B91C1C', // Vermelho
+    'Fuck Bear': '#4C1D95', // Violeta
     Padeirinho: '#EA580C', // Laranja
     Milharal: '#FEF08A', // Amarelo claro
     Advertiser: '#9CA3AF', // Cinza
@@ -190,7 +191,11 @@ export function KeysDataGrid({
       (team === 'DTM' ||
         team === 'KFFC' ||
         team === 'Insanos' ||
-        team === 'Greensky') &&
+        team === 'Greensky' ||
+        team === 'Fuck Bear' ||
+        team === 'Guild Azralon BR#1' ||
+        team === 'Guild Azralon BR#2' ||
+        team === 'Rocket' ) &&
       !hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
     ) {
       return '-'

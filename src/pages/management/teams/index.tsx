@@ -30,6 +30,7 @@ const localTeamColors: Record<string, string> = {
   'Guild Azralon BR#1': '#0D9488',
   'Guild Azralon BR#2': '#1D4ED8',
   Rocket: '#B91C1C',
+  'Fuck Bear': '#4C1D95',
   Padeirinho: '#EA580C',
   Milharal: '#FEF08A',
   Advertiser: '#9CA3AF',

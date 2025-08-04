@@ -128,7 +128,7 @@ export function Header() {
       <AppBar
         position='static'
         sx={{
-          background: 'linear-gradient(to right, black, #333)',
+          background: 'black',
           zIndex: 1000,
         }}
       >
@@ -158,7 +158,7 @@ export function Header() {
       <AppBar
         position='static'
         sx={{
-          background: 'linear-gradient(to right, black, #333)',
+          background: 'black',
           zIndex: 1000,
         }}
       >
@@ -185,7 +185,7 @@ export function Header() {
       <AppBar
         position='static'
         sx={{
-          background: 'linear-gradient(to right, black, #333)',
+          background: 'black',
           zIndex: 1000,
         }}
       >
@@ -379,7 +379,7 @@ export function Header() {
         }}
         sx={{
           '& .MuiPaper-root': {
-            background: 'linear-gradient(to bottom, black, #333)',
+            background: 'black',
             color: 'white',
             width: 250,
             mt: 1,
@@ -447,7 +447,7 @@ export function Header() {
         }}
         sx={{
           '& .MuiPaper-root': {
-            background: 'linear-gradient(to bottom, black, #333)',
+            background: 'black',
             color: 'white',
             width: 200,
           },
@@ -492,7 +492,7 @@ export function Header() {
         }}
         sx={{
           '& .MuiPaper-root': {
-            background: 'linear-gradient(to bottom, black, #333)',
+            background: 'black',
             color: 'white',
             width: 200,
           },
