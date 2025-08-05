@@ -109,8 +109,8 @@ export function BalanceControlTable({
         return '#1D4ED8' // Guild Azralon BR#2 - Azul médio
       case import.meta.env.VITE_TEAM_ROCKET:
         return '#B91C1C' // Rocket - Vermelho
-      case import.meta.env.VITE_TEAM_FUCKBEAR:
-        return '#4C1D95' // Fuck Bear - Violeta
+      case import.meta.env.VITE_TEAM_BOOTY_REAPER:
+        return '#4C1D95' // Booty Reaper - Violeta
       case import.meta.env.VITE_TEAM_PADEIRINHO:
         return '#EA580C' // Padeirinho - Laranja
       case import.meta.env.VITE_TEAM_MILHARAL:
@@ -496,10 +496,10 @@ export function BalanceControlTable({
                 Rocket
               </MenuItem>
               <MenuItem
-                value={import.meta.env.VITE_TEAM_FUCKBEAR}
-                style={{ backgroundColor: '#4C1D95', color: 'white' }} // Fuck Bear - Violeta
+                value={import.meta.env.VITE_TEAM_BOOTY_REAPER}
+                style={{ backgroundColor: '#4C1D95', color: 'white' }} // Booty Reaper - Violeta
               >
-                Fuck Bear
+                Booty Reaper
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_PADEIRINHO}

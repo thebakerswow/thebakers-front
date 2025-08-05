@@ -49,7 +49,7 @@ const sortTeamsByPriority = (teams: GBank[]) => {
     'Guild Azralon BR#1',
     'Guild Azralon BR#2',
     'Rocket',
-    'Fuck Bear',
+    'Booty Reaper',
     'Padeirinho',
     'Milharal',
   ]
@@ -92,7 +92,7 @@ const colorOptions = [
   { value: '#0D9488', label: 'Guild Azralon BR#1' }, // Verde azulado
   { value: '#1D4ED8', label: 'Guild Azralon BR#2' }, // Azul médio
   { value: '#B91C1C', label: 'Rocket' }, // Vermelho
-  { value: '#4C1D95', label: 'Fuck Bear' }, // Violeta
+  { value: '#4C1D95', label: 'Booty Reaper' }, // Violeta
   { value: '#EA580C', label: 'Padeirinho' }, // Laranja
   { value: '#FEF08A', label: 'Milharal' }, // Amarelo claro
   { value: '#9CA3AF', label: 'Advertiser' }, // Cinza

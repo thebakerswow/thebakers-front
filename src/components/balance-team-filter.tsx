@@ -32,7 +32,7 @@ const sortTeamsByPriority = (
     'Guild Azralon BR#1',
     'Guild Azralon BR#2',
     'Rocket',
-    'Fuck Bear',
+    'Booty Reaper',
     'Padeirinho',
     'Milharal',
   ]

@@ -85,7 +85,7 @@ export function RunsDataGrid({
     'Guild Azralon BR#1': 10,
     'Guild Azralon BR#2': 11,
     Rocket: 12,
-    'Fuck Bear': 13,
+    'Booty Reaper': 13,
     Padeirinho: 14,
     Milharal: 15,
   }
@@ -103,7 +103,7 @@ export function RunsDataGrid({
     'Guild Azralon BR#1': 'linear-gradient(270deg, #2DD4BF, #0D9488)', // Verde azulado claro para verde azulado (direita para esquerda)
     'Guild Azralon BR#2': 'linear-gradient(270deg, #60A5FA, #1D4ED8)', // Azul claro para azul médio (direita para esquerda)
     Rocket: 'linear-gradient(90deg, #F87171, #B91C1C)', // Rosa claro para vermelho
-    'Fuck Bear': 'linear-gradient(90deg, #8B5CF6, #4C1D95)', // Violeta para violeta escuro
+    'Booty Reaper': 'linear-gradient(90deg, #8B5CF6, #4C1D95)', // Violeta para violeta escuro
     Padeirinho: 'linear-gradient(90deg, #FB923C, #EA580C)', // Laranja claro para laranja
     Milharal: 'linear-gradient(90deg, #FEF3C7, #FEF08A)', // Amarelo muito claro para amarelo claro
   }
@@ -282,7 +282,7 @@ export function RunsDataGrid({
         team === 'KFFC' ||
         team === 'Insanos' ||
         team === 'Greensky' ||
-        team === 'Fuck Bear' ||
+        team === 'Booty Reaper' ||
         team === 'Guild Azralon BR#1' ||
         team === 'Guild Azralon BR#2' ||
         team === 'Rocket' 

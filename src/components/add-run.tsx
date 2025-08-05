@@ -343,8 +343,8 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
                 Rocket
               </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_FUCKBEAR}>
-                Fuck Bear
+              <MenuItem value={import.meta.env.VITE_TEAM_BOOTY_REAPER}>
+                Booty Reaper
               </MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
                 Padeirinho
