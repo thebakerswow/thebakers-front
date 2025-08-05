@@ -61,7 +61,20 @@ export function EditHistoryDialog({
   }, [filter, history])
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='lg' fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth='lg' 
+      fullWidth
+      slotProps={{
+        paper: {
+          sx: {
+            maxHeight: '90vh', // Limita a altura máxima a 90% da altura da viewport
+            height: 'auto',
+          }
+        }
+      }}
+    >
       <DialogTitle>
         Edit History
         <IconButton
@@ -72,7 +85,7 @@ export function EditHistoryDialog({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ p: 2 }}>
         {!idRun ? (
           <Box color='error.main' mb={2}>
             No run id provided
@@ -88,8 +101,14 @@ export function EditHistoryDialog({
           onChange={(e) => setFilter(e.target.value)}
         />
         <Box mt={2}>
-          <TableContainer component={Paper}>
-            <Table size='small'>
+          <TableContainer 
+            component={Paper}
+            sx={{
+              maxHeight: '60vh', // Limita a altura da tabela a 60% da viewport
+              overflow: 'auto', // Adiciona scroll interno
+            }}
+          >
+            <Table size='small' stickyHeader>
               <TableHead>
                 <TableRow>
                   <TableCell>Id Buyer</TableCell>

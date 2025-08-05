@@ -217,7 +217,7 @@ export function RunInfo({
             <p className='text-left'>
               {run.actualPot != null && (
                 <span className='font-bold'>
-                  Gold Pot:{' '}
+                  Run Gold Pot:{' '}
                   <span className='font-normal'>
                     {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
                   </span>
@@ -226,7 +226,7 @@ export function RunInfo({
               {run.actualPot != null && run.actualPotDolar != null && <br />}
               {run.actualPotDolar != null && (
                 <span className='font-bold'>
-                  Dolar Pot:{' '}
+                  Run Dolar Pot:{' '}
                   <span className='font-normal'>
                     {Math.round(Number(run.actualPotDolar)).toLocaleString(
                       'en-US'
