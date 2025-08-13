@@ -94,15 +94,15 @@ export function LevelingPage() {
   }, [selectedDate])
 
   return (
-    <div className='flex min-h-screen w-full flex-col items-center justify-center'>
+    <div className='flex w-full flex-col items-center overflow-y-auto'>
       {error && <ErrorComponent error={error} onClose={clearError} />}
 
       <DateFilter onDaySelect={setSelectedDate} />
       <div
-        className='mx-auto mt-6 flex w-[90%] flex-col p-4'
+        className='mx-auto mt-6 flex w-[90%] flex-col p-4 pb-20'
         style={{
           minHeight: '500px',
-          height: 'calc(100vh - 200px)', // Ajusta a altura para ocupar o espaço disponível
+          paddingBottom: '5rem',
         }}
       >
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
