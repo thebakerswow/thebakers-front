@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
@@ -23,6 +23,7 @@ import {
   ProcessedPlayer,
   BalanceDataGridProps,
 } from '../../types'
+import { hasOnlyRestrictedRoles } from '../../utils/role-utils'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
@@ -31,14 +32,9 @@ export function BalanceDataGrid({
   onError,
 }: BalanceDataGridProps) {
   const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
-  const restrictedFreelancerRole = import.meta.env.VITE_TEAM_FREELANCER
-  const restrictedAdvertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
 
-  const isRestrictedUser =
-    userRoles.some((role) => 
-      [restrictedFreelancerRole, restrictedAdvertiserRole].includes(role)
-    ) &&
-    userRoles.length > 0
+  // Determina se o usuário é restrito (tem apenas cargos de freelancer e/ou advertiser)
+  const isRestrictedUser = useMemo(() => hasOnlyRestrictedRoles(userRoles), [userRoles])
 
   // Para usuários restritos, usa o ID do próprio usuário como selectedTeam
   const selectedTeam = isRestrictedUser ? idDiscord : initialSelectedTeam

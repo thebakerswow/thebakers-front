@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { BalanceDataGrid } from './balance-data-grid'
 import { BalanceTeamFilter } from '../../components/balance-team-filter'
 import { WeekRangeFilter } from '../../components/week-range-filter'
 import { Button, CircularProgress } from '@mui/material'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/role-utils'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
@@ -14,23 +15,23 @@ export function BalancePage() {
   const [isDolar, setIsDolar] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
-  const restrictedRoles = [
-    import.meta.env.VITE_TEAM_FREELANCER,
-    import.meta.env.VITE_TEAM_ADVERTISER,
-  ]
-  const isRestrictedUser =
-    userRoles.some((role) => restrictedRoles.includes(role)) &&
-    userRoles.length > 0
 
-  // Simplificado: Inicializa selectedTeam uma única vez quando auth estiver pronto
+  // Determina se deve mostrar o filtro baseado nas regras especificadas
+  const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
+
+  // Determina se deve mostrar o botão US/Gold
+  const shouldShowUsGoldButtonValue = useMemo(() => shouldShowUsGoldButton(userRoles), [userRoles])
+
+  // Inicializa selectedTeam baseado nas regras
   useEffect(() => {
     if (authLoading || selectedTeam) return // Se já tem selectedTeam, não faz nada
 
-    if (isRestrictedUser && idDiscord) {
+    if (!shouldShowFilter && idDiscord) {
+      // Para usuários que não devem ver o filtro, usa o próprio ID como time selecionado
       setSelectedTeam(idDiscord)
     }
-    // Para não-restrito, aguarda o BalanceTeamFilter definir via handleTeamChange
-  }, [authLoading, isRestrictedUser, idDiscord, selectedTeam])
+    // Para usuários que devem ver o filtro, aguarda o BalanceTeamFilter definir via handleTeamChange
+  }, [authLoading, shouldShowFilter, idDiscord, selectedTeam])
 
   const handleError = (error: ErrorDetails | null) => {
     setError(error)
@@ -40,8 +41,8 @@ export function BalancePage() {
     setSelectedTeam(team)
   }
 
-  // Loading mais simples: só mostra se auth está carregando OU se usuário restrito ainda não tem selectedTeam
-  const isLoading = authLoading || (isRestrictedUser && !selectedTeam)
+  // Loading mais simples: só mostra se auth está carregando OU se usuário que não deve ver filtro ainda não tem selectedTeam
+  const isLoading = authLoading || (!shouldShowFilter && !selectedTeam)
 
   if (isLoading) {
     return (
@@ -61,22 +62,24 @@ export function BalancePage() {
             onChange={handleTeamChange}
             onError={handleError}
           />
-          <Button
-            variant='contained'
-            sx={{
-              height: '40px',
-              minWidth: '80px',
-              marginTop: '16px',
-              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-              color: isDolar ? '#fff' : '#000',
-              '&:hover': {
-                backgroundColor: isDolar ? '#dc2626' : '#FFC300',
-              },
-            }}
-            onClick={() => setIsDolar((prev) => !prev)}
-          >
-            {isDolar ? 'U$' : 'Gold'}
-          </Button>
+          {shouldShowUsGoldButtonValue && (
+            <Button
+              variant='contained'
+              sx={{
+                height: '40px',
+                minWidth: '80px',
+                marginTop: '16px',
+                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
+                color: isDolar ? '#fff' : '#000',
+                '&:hover': {
+                  backgroundColor: isDolar ? '#dc2626' : '#FFC300',
+                },
+              }}
+              onClick={() => setIsDolar((prev) => !prev)}
+            >
+              {isDolar ? 'U$' : 'Gold'}
+            </Button>
+          )}
         </div>
         <WeekRangeFilter onChange={setDateRange} />
       </div>

@@ -4,6 +4,7 @@ import axios from 'axios'
 import { getBalanceTeams } from '../services/api/teams'
 import { ErrorDetails } from './error-display'
 import { useAuth } from '../context/auth-context'
+import { shouldShowBalanceFilter } from '../utils/role-utils'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
@@ -65,15 +66,9 @@ export function BalanceTeamFilter({
   onError,
 }: BalanceTeamFilterProps) {
   const { userRoles } = useAuth()
-  const restrictedRoles = [
-    import.meta.env.VITE_TEAM_FREELANCER,
-    import.meta.env.VITE_TEAM_ADVERTISER,
-  ]
-  const isRestrictedUser = useMemo(() => 
-    userRoles.some((role) => restrictedRoles.includes(role)) &&
-    userRoles.length > 0,
-    [userRoles]
-  )
+  
+  // Determina se deve mostrar o filtro baseado nas regras especificadas
+  const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
 
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [teams, setTeams] = useState<
@@ -114,14 +109,11 @@ export function BalanceTeamFilter({
   }, [onError, isLoadingTeams])
 
   useEffect(() => {
-    // Só busca teams se não for usuário restrito e se ainda não carregou
-    if (!isRestrictedUser && teams.length === 0 && !isLoadingTeams) {
+    // Só busca teams se deve mostrar o filtro e se ainda não carregou
+    if (shouldShowFilter && teams.length === 0 && !isLoadingTeams) {
       fetchTeams()
     }
-  }, [isRestrictedUser, teams.length, isLoadingTeams, fetchTeams])
-
-  // Para usuários restritos, define automaticamente o próprio ID como time selecionado
-  // REMOVIDO: Agora isso é feito no componente pai para evitar conflitos
+  }, [shouldShowFilter, teams.length, isLoadingTeams, fetchTeams])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
@@ -134,10 +126,10 @@ export function BalanceTeamFilter({
     [teams]
   )
 
-  // Define o time inicial apenas para usuários não restritos quando teams são carregados
+  // Define o time inicial apenas para usuários que devem ver o filtro quando teams são carregados
   useEffect(() => {
     if (
-      !isRestrictedUser &&
+      shouldShowFilter &&
       !selectedTeam &&
       teams.length > 0 &&
       !isLoadingTeams
@@ -145,15 +137,15 @@ export function BalanceTeamFilter({
       const initialTeam = teams[0].id_discord
       onChange(initialTeam)
     }
-  }, [selectedTeam, teams.length, onChange, isRestrictedUser, isLoadingTeams])
+  }, [selectedTeam, teams.length, onChange, shouldShowFilter, isLoadingTeams])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value
     onChange(value || null)
   }
 
-  // Para usuários restritos, não mostra o filtro de times
-  if (isRestrictedUser) {
+  // Para usuários que não devem ver o filtro, não mostra o componente
+  if (!shouldShowFilter) {
     return null
   }
 
