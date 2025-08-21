@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material'
 import axios from 'axios'
 import { getBalanceTeams } from '../services/api/teams'
@@ -69,16 +69,20 @@ export function BalanceTeamFilter({
     import.meta.env.VITE_TEAM_FREELANCER,
     import.meta.env.VITE_TEAM_ADVERTISER,
   ]
-  const isRestrictedUser =
-    userRoles.every((role) => restrictedRoles.includes(role)) &&
-    userRoles.length <= restrictedRoles.length
+  const isRestrictedUser = useMemo(() => 
+    userRoles.some((role) => restrictedRoles.includes(role)) &&
+    userRoles.length > 0,
+    [userRoles]
+  )
 
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [teams, setTeams] = useState<
     Array<{ id_discord: string; team_name: string }>
   >([])
 
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
+    if (isLoadingTeams) return // Evita chamadas duplicadas
+    
     setIsLoadingTeams(true)
     try {
       const response = await getBalanceTeams()
@@ -107,14 +111,14 @@ export function BalanceTeamFilter({
     } finally {
       setIsLoadingTeams(false)
     }
-  }
+  }, [onError, isLoadingTeams])
 
   useEffect(() => {
-    // Só busca teams se não for usuário restrito
-    if (!isRestrictedUser) {
+    // Só busca teams se não for usuário restrito e se ainda não carregou
+    if (!isRestrictedUser && teams.length === 0 && !isLoadingTeams) {
       fetchTeams()
     }
-  }, [isRestrictedUser])
+  }, [isRestrictedUser, teams.length, isLoadingTeams, fetchTeams])
 
   // Para usuários restritos, define automaticamente o próprio ID como time selecionado
   // REMOVIDO: Agora isso é feito no componente pai para evitar conflitos
@@ -141,7 +145,7 @@ export function BalanceTeamFilter({
       const initialTeam = teams[0].id_discord
       onChange(initialTeam)
     }
-  }, [selectedTeam, teams, onChange, isRestrictedUser, isLoadingTeams])
+  }, [selectedTeam, teams.length, onChange, isRestrictedUser, isLoadingTeams])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value
@@ -149,7 +153,9 @@ export function BalanceTeamFilter({
   }
 
   // Para usuários restritos, não mostra o filtro de times
-  if (isRestrictedUser) return null
+  if (isRestrictedUser) {
+    return null
+  }
 
   return (
     <FormControl className='relative'>

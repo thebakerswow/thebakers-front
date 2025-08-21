@@ -35,12 +35,10 @@ export function BalanceDataGrid({
   const restrictedAdvertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
 
   const isRestrictedUser =
-    (userRoles.includes(restrictedFreelancerRole) ||
-      userRoles.includes(restrictedAdvertiserRole)) &&
-    userRoles.length <= 2 &&
-    userRoles.every((role) =>
+    userRoles.some((role) => 
       [restrictedFreelancerRole, restrictedAdvertiserRole].includes(role)
-    )
+    ) &&
+    userRoles.length > 0
 
   // Para usuários restritos, usa o ID do próprio usuário como selectedTeam
   const selectedTeam = isRestrictedUser ? idDiscord : initialSelectedTeam

@@ -14,19 +14,23 @@ export function BalancePage() {
   const [isDolar, setIsDolar] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
-  const freelancerRole = import.meta.env.VITE_TEAM_FREELANCER
-  const isOnlyFreelancer =
-    userRoles.length === 1 && userRoles[0] === freelancerRole
+  const restrictedRoles = [
+    import.meta.env.VITE_TEAM_FREELANCER,
+    import.meta.env.VITE_TEAM_ADVERTISER,
+  ]
+  const isRestrictedUser =
+    userRoles.some((role) => restrictedRoles.includes(role)) &&
+    userRoles.length > 0
 
   // Simplificado: Inicializa selectedTeam uma única vez quando auth estiver pronto
   useEffect(() => {
     if (authLoading || selectedTeam) return // Se já tem selectedTeam, não faz nada
 
-    if (isOnlyFreelancer && idDiscord) {
+    if (isRestrictedUser && idDiscord) {
       setSelectedTeam(idDiscord)
     }
-    // Para não-freelancer, aguarda o BalanceTeamFilter definir via handleTeamChange
-  }, [authLoading, isOnlyFreelancer, idDiscord, selectedTeam])
+    // Para não-restrito, aguarda o BalanceTeamFilter definir via handleTeamChange
+  }, [authLoading, isRestrictedUser, idDiscord, selectedTeam])
 
   const handleError = (error: ErrorDetails | null) => {
     setError(error)
@@ -36,8 +40,8 @@ export function BalancePage() {
     setSelectedTeam(team)
   }
 
-  // Loading mais simples: só mostra se auth está carregando OU se freelancer ainda não tem selectedTeam
-  const isLoading = authLoading || (isOnlyFreelancer && !selectedTeam)
+  // Loading mais simples: só mostra se auth está carregando OU se usuário restrito ainda não tem selectedTeam
+  const isLoading = authLoading || (isRestrictedUser && !selectedTeam)
 
   if (isLoading) {
     return (
@@ -57,24 +61,22 @@ export function BalancePage() {
             onChange={handleTeamChange}
             onError={handleError}
           />
-          {!isOnlyFreelancer && (
-            <Button
-              variant='contained'
-              sx={{
-                height: '40px',
-                minWidth: '80px',
-                marginTop: '16px',
-                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-                color: isDolar ? '#fff' : '#000',
-                '&:hover': {
-                  backgroundColor: isDolar ? '#dc2626' : '#FFC300',
-                },
-              }}
-              onClick={() => setIsDolar((prev) => !prev)}
-            >
-              {isDolar ? 'U$' : 'Gold'}
-            </Button>
-          )}
+          <Button
+            variant='contained'
+            sx={{
+              height: '40px',
+              minWidth: '80px',
+              marginTop: '16px',
+              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
+              color: isDolar ? '#fff' : '#000',
+              '&:hover': {
+                backgroundColor: isDolar ? '#dc2626' : '#FFC300',
+              },
+            }}
+            onClick={() => setIsDolar((prev) => !prev)}
+          >
+            {isDolar ? 'U$' : 'Gold'}
+          </Button>
         </div>
         <WeekRangeFilter onChange={setDateRange} />
       </div>
