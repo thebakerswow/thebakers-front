@@ -4,7 +4,7 @@ import axios from 'axios'
 import { getBalanceTeams } from '../services/api/teams'
 import { ErrorDetails } from './error-display'
 import { useAuth } from '../context/auth-context'
-import { shouldShowBalanceFilter } from '../utils/role-utils'
+import { shouldShowBalanceFilter, getUserTeamsForFilter } from '../utils/role-utils'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
@@ -69,6 +69,9 @@ export function BalanceTeamFilter({
   
   // Determina se deve mostrar o filtro baseado nas regras especificadas
   const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
+  
+  // Obtém os times que o usuário deve ver no filtro
+  const userTeams = useMemo(() => getUserTeamsForFilter(userRoles), [userRoles])
 
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [teams, setTeams] = useState<
@@ -82,7 +85,19 @@ export function BalanceTeamFilter({
     try {
       const response = await getBalanceTeams()
 
-      const uniqueTeams = response.reduce(
+      // Se o usuário tem cargo de Chefe de cozinha, mostra todos os times
+      // Caso contrário, filtra apenas os times que o usuário deve ver
+      const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+      let filteredTeams = response
+
+      if (!isChefe) {
+        const userTeamsSet = new Set(userTeams)
+        filteredTeams = response.filter((team: any) => 
+          userTeamsSet.has(team.id_discord)
+        )
+      }
+
+      const uniqueTeams = filteredTeams.reduce(
         (acc: any[], team: any) =>
           acc.some((t) => t.team_name === team.team_name)
             ? acc
@@ -106,14 +121,19 @@ export function BalanceTeamFilter({
     } finally {
       setIsLoadingTeams(false)
     }
-  }, [onError, isLoadingTeams])
+  }, [onError, isLoadingTeams, userTeams, userRoles])
 
   useEffect(() => {
     // Só busca teams se deve mostrar o filtro e se ainda não carregou
-    if (shouldShowFilter && teams.length === 0 && !isLoadingTeams) {
+    // Para Chefe de cozinha, sempre busca (não depende de userTeams.length)
+    const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+    const shouldFetch = shouldShowFilter && teams.length === 0 && !isLoadingTeams && 
+      (isChefe || userTeams.length > 0)
+    
+    if (shouldFetch) {
       fetchTeams()
     }
-  }, [shouldShowFilter, teams.length, isLoadingTeams, fetchTeams])
+  }, [shouldShowFilter, teams.length, isLoadingTeams, fetchTeams, userTeams.length, userRoles])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
@@ -137,7 +157,7 @@ export function BalanceTeamFilter({
       const initialTeam = teams[0].id_discord
       onChange(initialTeam)
     }
-  }, [selectedTeam, teams.length, onChange, shouldShowFilter, isLoadingTeams])
+  }, [shouldShowFilter, selectedTeam, teams.length, isLoadingTeams, onChange])
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value

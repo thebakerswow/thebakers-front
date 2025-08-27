@@ -4,7 +4,7 @@ import { getServices, getServiceCategories } from '../../services/api/services'
 import { getRuns } from '../../services/api/runs'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
-import { hasOnlyRestrictedRoles } from '../../utils/role-utils'
+import { shouldShowRestrictedHome } from '../../utils/role-utils'
 import services from '../../assets/services_new.png'
 import manaforge from '../../assets/manaforge.png'
 import schedule from '../../assets/schedule_new.png'
@@ -135,9 +135,9 @@ export function HomePage() {
     }
   }, [])
 
-  // Função utilitária para verificar se o usuário tem apenas cargos restritos (freelancer + cargos não rastreados)
+  // Função utilitária para verificar se o usuário deve ver a home restrita
   const isRestrictedUser = () => {
-    return hasOnlyRestrictedRoles(userRoles)
+    return shouldShowRestrictedHome(userRoles)
   }
 
   // Verifica se o usuário está autenticado

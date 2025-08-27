@@ -9,6 +9,7 @@ import { RunData } from '../../../types/runs-interface'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
+import { canViewAttendanceButton } from '../../../utils/role-utils'
 import { getChatMessages } from '../../../services/api/chat'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { RunChat } from '../../../components/run-chat'
@@ -57,9 +58,7 @@ export function KeyDetails() {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
 
-  const canViewAttendanceButton =
-    userRoles.length !== 1 ||
-    !userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
+  const canViewAttendance = canViewAttendanceButton(userRoles)
 
   const toggleDetailsVisibility = () => {
     setShowDetails((prev) => !prev)
@@ -625,7 +624,7 @@ export function KeyDetails() {
                     }}
                     style={{
                       display:
-                        canViewAttendanceButton && hasAttendanceAccess
+                        canViewAttendance && hasAttendanceAccess
                           ? 'inline-flex'
                           : 'none',
                     }}

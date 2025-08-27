@@ -18,6 +18,7 @@ import { RunData } from '../../../types/runs-interface'
 import { BuyerData } from '../../../types/buyer-interface'
 import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
+import { canViewAttendanceButton } from '../../../utils/role-utils'
 import { Freelancers } from '../../../components/freelancers'
 import { Button, CircularProgress } from '@mui/material'
 import { RunChat } from '../../../components/run-chat'
@@ -73,9 +74,7 @@ export function RunDetails() {
   const canViewInviteButton = userRoles.some((role) =>
     allowedRoles.includes(role)
   )
-  const canViewAttendanceButton =
-    userRoles.length !== 1 ||
-    !userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
+  const canViewAttendance = canViewAttendanceButton(userRoles)
 
   const toggleDetailsVisibility = () => {
     setShowDetails((prev) => !prev)
@@ -667,7 +666,7 @@ export function RunDetails() {
                       }}
                       style={{
                         display:
-                          canViewAttendanceButton && hasAttendanceAccess
+                          canViewAttendance && hasAttendanceAccess
                             ? 'inline-flex'
                             : 'none',
                       }}

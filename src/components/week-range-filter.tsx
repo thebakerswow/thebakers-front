@@ -71,7 +71,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
         end: endDate,
       })
     }
-  }, [selectedWeek, weeksInMonth, onChange])
+  }, [selectedWeek, weeksInMonth])
 
   // Função corrigida com tipagem adequada
   const handleMonthChange = (date: Date | null) => {

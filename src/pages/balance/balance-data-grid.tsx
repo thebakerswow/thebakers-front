@@ -23,7 +23,7 @@ import {
   ProcessedPlayer,
   BalanceDataGridProps,
 } from '../../types'
-import { hasOnlyRestrictedRoles } from '../../utils/role-utils'
+import { shouldShowRestrictedHome } from '../../utils/role-utils'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
@@ -31,10 +31,10 @@ export function BalanceDataGrid({
   is_dolar, // Destructure is_dolar
   onError,
 }: BalanceDataGridProps) {
-  const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
+  const { userRoles = [], idDiscord, username } = useAuth() // Garante que userRoles seja um array
 
-  // Determina se o usuário é restrito (tem apenas cargos de freelancer e/ou advertiser)
-  const isRestrictedUser = useMemo(() => hasOnlyRestrictedRoles(userRoles), [userRoles])
+  // Determina se o usuário deve ver a home restrita
+  const isRestrictedUser = useMemo(() => shouldShowRestrictedHome(userRoles), [userRoles])
 
   // Para usuários restritos, usa o ID do próprio usuário como selectedTeam
   const selectedTeam = isRestrictedUser ? idDiscord : initialSelectedTeam
@@ -154,6 +154,16 @@ export function BalanceDataGrid({
               }
             )
 
+            // Se não encontrou dados do usuário, cria um registro vazio com o ID do usuário
+            if (filteredResponse.balance_total.length === 0) {
+              filteredResponse.balance_total = [{
+                id_discord: selectedTeam,
+                username: username || 'Your Balance', // Usa o username do contexto ou fallback
+                balance_total: 0,
+                color_balance: '#FFFFFF'
+              }]
+            }
+
             response = filteredResponse
           }
         } else {
@@ -185,7 +195,7 @@ export function BalanceDataGrid({
       }
     }
     fetchBalanceData()
-  }, [dateRange, selectedTeam, isRestrictedUser, is_dolar, onError])
+  }, [dateRange, selectedTeam, isRestrictedUser, is_dolar])
 
   // Processa os dados de balanceamento para exibição na tabela
   const processBalanceData = () => {

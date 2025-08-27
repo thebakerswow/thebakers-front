@@ -16,6 +16,7 @@ interface JwtPayload {
   userId?: string
   id?: string
   sub?: string
+  username?: string
 }
 
 type AuthContextType = {
@@ -26,6 +27,7 @@ type AuthContextType = {
   userRoles: string[]
   isPermissionAuthenticated: boolean
   idDiscord: string | null
+  username: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true)
   const [userRoles, setUserRoles] = useState<string[]>([])
   const [idDiscord, setIdDiscord] = useState<string | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
 
   const checkAuth = () => {
     const token = localStorage.getItem('jwt')
@@ -55,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const roles = decoded.roles || decoded.role || decoded.roles_array
         const userId =
           decoded.user_id || decoded.userId || decoded.id || decoded.sub
+        const userUsername = decoded.username
 
         const finalRoles = roles
           ? Array.isArray(roles)
@@ -62,9 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : [roles.toString()]
           : ['user']
         const finalUserId = userId ? userId.toString() : 'unknown'
+        const finalUsername = userUsername ? userUsername.toString() : null
 
         setUserRoles(finalRoles)
         setIdDiscord(finalUserId)
+        setUsername(finalUsername)
         setIsAuthenticated(true)
       } catch (error) {
         console.error('Error decoding token:', error)
@@ -92,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('jwt')
     setUserRoles([])
     setIdDiscord(null)
+    setUsername(null)
     setIsAuthenticated(false)
   }
 
@@ -105,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userRoles,
         isPermissionAuthenticated: userRoles.length > 0,
         idDiscord,
+        username,
       }}
     >
       {children}

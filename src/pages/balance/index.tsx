@@ -24,9 +24,9 @@ export function BalancePage() {
 
   // Inicializa selectedTeam baseado nas regras
   useEffect(() => {
-    if (authLoading || selectedTeam) return // Se já tem selectedTeam, não faz nada
+    if (authLoading) return // Aguarda o auth carregar
 
-    if (!shouldShowFilter && idDiscord) {
+    if (!shouldShowFilter && idDiscord && !selectedTeam) {
       // Para usuários que não devem ver o filtro, usa o próprio ID como time selecionado
       setSelectedTeam(idDiscord)
     }
