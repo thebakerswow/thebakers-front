@@ -74,3 +74,14 @@ export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
   // Outros usuários podem ver o botão
   return true
 }
+
+// Função para determinar se deve mostrar a aba de bookings no header
+export const shouldShowBookingsTab = (userRoles: string[]): boolean => {
+  // Usuários com cargos restritos (freelancer + cargos não rastreados) não devem ver a aba de bookings
+  if (hasOnlyRestrictedRoles(userRoles)) {
+    return false
+  }
+  
+  // Outros usuários podem ver a aba de bookings
+  return true
+}

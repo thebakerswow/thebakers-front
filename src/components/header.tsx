@@ -22,6 +22,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/auth-context'
+import { shouldShowBookingsTab } from '../utils/role-utils'
 
 export function Header() {
   const navigate = useNavigate()
@@ -289,7 +290,7 @@ export function Header() {
               )}
 
               {/* Bookings (NA) Dropdown */}
-              {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
+              {shouldShowBookingsTab(userRoles) && (
                 <Button
                   color='inherit'
                   onClick={handleBookingsMenuOpen}
@@ -413,7 +414,7 @@ export function Header() {
           </MenuItem>
         )}
 
-        {!hasAccess([import.meta.env.VITE_TEAM_FREELANCER], true) && (
+        {shouldShowBookingsTab(userRoles) && (
           <MenuItem
             onClick={handleMobileBookingsMenuOpen}
             sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}

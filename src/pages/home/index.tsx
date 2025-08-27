@@ -4,6 +4,7 @@ import { getServices, getServiceCategories } from '../../services/api/services'
 import { getRuns } from '../../services/api/runs'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
+import { hasOnlyRestrictedRoles } from '../../utils/role-utils'
 import services from '../../assets/services_new.png'
 import manaforge from '../../assets/manaforge.png'
 import schedule from '../../assets/schedule_new.png'
@@ -115,8 +116,6 @@ export function HomePage() {
     }
   }
 
-  // Pegue as roles do .env
-  const TEAM_FREELANCER = import.meta.env.VITE_TEAM_FREELANCER
   const navigate = useNavigate()
   const { isAuthenticated, loading, userRoles, idDiscord } = useAuth()
   // Novo: username extraído do token
@@ -136,9 +135,9 @@ export function HomePage() {
     }
   }, [])
 
-  // Função utilitária para verificar se o usuário tem apenas o cargo freelancer (usando env)
-  const isOnlyFreelancer = () => {
-    return userRoles.length === 1 && userRoles[0] === TEAM_FREELANCER
+  // Função utilitária para verificar se o usuário tem apenas cargos restritos (freelancer + cargos não rastreados)
+  const isRestrictedUser = () => {
+    return hasOnlyRestrictedRoles(userRoles)
   }
 
   // Verifica se o usuário está autenticado
@@ -148,10 +147,10 @@ export function HomePage() {
     }
   }, [isAuthenticated, loading, navigate])
 
-  // Buscar serviços e categorias para exibir nos cards - apenas para usuários que não são freelancer
+  // Buscar serviços e categorias para exibir nos cards - apenas para usuários que não são restritos
   useEffect(() => {
-    // Se o usuário é apenas freelancer, não busca serviços
-    if (isOnlyFreelancer()) {
+    // Se o usuário é restrito (freelancer + cargos não rastreados), não busca serviços
+    if (isRestrictedUser()) {
       return
     }
 
@@ -205,8 +204,8 @@ export function HomePage() {
       style={{ backgroundImage: `url(${manaforge})` }}
     >
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      {isOnlyFreelancer() ? (
-        // Layout simples para freelancers - sem scroll, similar à página admin
+      {isRestrictedUser() ? (
+        // Layout simples para usuários restritos - sem scroll, similar à página admin
         <div className='flex h-full w-full items-center justify-center'>
           <div className='relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center'>
             <div className='absolute inset-0 z-10 rounded-2xl bg-black/60 backdrop-blur-md' />
@@ -249,8 +248,8 @@ export function HomePage() {
                 </p>
               </div>
             </div>
-            {/* Seção de serviços - apenas para usuários que não são freelancer */}
-            {!isOnlyFreelancer() && (
+            {/* Seção de serviços - apenas para usuários que não são restritos */}
+            {!isRestrictedUser() && (
               <div className='relative z-10 mx-auto max-w-[90%]'>
                 <div className='flex w-full flex-col items-center'>
                   <img
