@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { BalanceDataGrid } from './balance-data-grid'
 import { BalanceTeamFilter } from '../../components/balance-team-filter'
 import { WeekRangeFilter } from '../../components/week-range-filter'
@@ -26,23 +26,27 @@ export function BalancePage() {
   useEffect(() => {
     if (authLoading) return // Aguarda o auth carregar
 
-    if (!shouldShowFilter && idDiscord && !selectedTeam) {
+    if (!shouldShowFilter && idDiscord) {
       // Para usuários que não devem ver o filtro, usa o próprio ID como time selecionado
       setSelectedTeam(idDiscord)
     }
     // Para usuários que devem ver o filtro, aguarda o BalanceTeamFilter definir via handleTeamChange
-  }, [authLoading, shouldShowFilter, idDiscord, selectedTeam])
+  }, [authLoading, shouldShowFilter, idDiscord])
 
   const handleError = (error: ErrorDetails | null) => {
     setError(error)
   }
 
-  const handleTeamChange = (team: string | null) => {
+  const handleTeamChange = useCallback((team: string | null) => {
     setSelectedTeam(team)
-  }
+  }, [])
 
-  // Loading mais simples: só mostra se auth está carregando OU se usuário que não deve ver filtro ainda não tem selectedTeam
-  const isLoading = authLoading || (!shouldShowFilter && !selectedTeam)
+  const handleDateRangeChange = useCallback((range: { start: string; end: string }) => {
+    setDateRange(range)
+  }, [])
+
+  // Loading mais simples: só mostra se auth está carregando
+  const isLoading = authLoading
 
   if (isLoading) {
     return (
@@ -81,7 +85,7 @@ export function BalancePage() {
             </Button>
           )}
         </div>
-        <WeekRangeFilter onChange={setDateRange} />
+        <WeekRangeFilter onChange={handleDateRangeChange} />
       </div>
       <BalanceDataGrid
         selectedTeam={selectedTeam}

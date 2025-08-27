@@ -68,15 +68,15 @@ export const isOnlyAdvertiser = (userRoles: string[]): boolean => {
   return userRoles.length === 1 && userRoles.includes(advertiserRole)
 }
 
-// Função para verificar se o usuário deve ver a home restrita (apenas freelancer)
+// Função para verificar se o usuário deve ver a home restrita (apenas freelancer e advertiser)
 export const shouldShowRestrictedHome = (userRoles: string[]): boolean => {
-  // Se o usuário tem cargo de advertiser, não deve ver a home restrita
-  if (hasAdvertiserRole(userRoles)) {
-    return false
-  }
-  
   // Se o usuário tem apenas cargo de freelancer, deve ver a home restrita
   if (isOnlyFreelancer(userRoles)) {
+    return true
+  }
+  
+  // Se o usuário tem apenas cargo de advertiser, deve ver a home restrita
+  if (isOnlyAdvertiser(userRoles)) {
     return true
   }
   

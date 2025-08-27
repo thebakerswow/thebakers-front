@@ -19,7 +19,7 @@ interface WeekRangeFilterProps {
 
 export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
-  const [selectedWeek, setSelectedWeek] = useState<number>(-1) // Inicializa com -1 para indicar "não selecionado"
+  const [selectedWeek, setSelectedWeek] = useState<number>(0) // Inicializa com 0 para garantir que sempre tenha um valor
   const [weeksInMonth, setWeeksInMonth] = useState<Date[][]>([])
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
@@ -51,17 +51,19 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
       )
     })
 
-    // Se encontrou uma semana atual, configura
-    if (currentWeekIndex !== -1) {
-      setSelectedWeek(currentWeekIndex)
-    } else if (weeks.length > 0) {
-      // Se não encontrou a semana atual, seleciona a primeira semana
-      setSelectedWeek(0)
+    // Sempre configura uma semana válida
+    if (weeks.length > 0) {
+      if (currentWeekIndex !== -1) {
+        setSelectedWeek(currentWeekIndex)
+      } else {
+        // Se não encontrou a semana atual, seleciona a primeira semana
+        setSelectedWeek(0)
+      }
     }
   }, [selectedMonth])
 
   useEffect(() => {
-    if (weeksInMonth.length > 0 && selectedWeek >= 0) {
+    if (weeksInMonth.length > 0 && selectedWeek >= 0 && selectedWeek < weeksInMonth.length) {
       const [start, end] = weeksInMonth[selectedWeek]
       const startDate = format(start, 'yyyy-MM-dd')
       const endDate = format(end, 'yyyy-MM-dd')
@@ -77,7 +79,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const handleMonthChange = (date: Date | null) => {
     if (date) {
       setSelectedMonth(date)
-      setSelectedWeek(-1) // Reset to -1 when changing month
+      setSelectedWeek(0) // Reset to 0 when changing month
       setIsCalendarOpen(false)
     }
   }
@@ -126,7 +128,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
         <label className='mb-1 text-sm text-white'>Week</label>
         <div className='relative'>
           <Select
-            value={selectedWeek >= 0 ? selectedWeek : ''}
+            value={selectedWeek}
             onChange={(e) => setSelectedWeek(Number(e.target.value))}
             displayEmpty
             className='bg-white text-zinc-900'
@@ -154,7 +156,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
             }}
           >
             {weeksInMonth.length === 0 && (
-              <MenuItem value='' disabled>
+              <MenuItem value={0} disabled>
                 No weeks available
               </MenuItem>
             )}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
@@ -31,7 +31,7 @@ export function BalanceDataGrid({
   is_dolar, // Destructure is_dolar
   onError,
 }: BalanceDataGridProps) {
-  const { userRoles = [], idDiscord, username } = useAuth() // Garante que userRoles seja um array
+  const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
 
   // Determina se o usuário deve ver a home restrita
   const isRestrictedUser = useMemo(() => shouldShowRestrictedHome(userRoles), [userRoles])
@@ -158,7 +158,7 @@ export function BalanceDataGrid({
             if (filteredResponse.balance_total.length === 0) {
               filteredResponse.balance_total = [{
                 id_discord: selectedTeam,
-                username: username || 'Your Balance', // Usa o username do contexto ou fallback
+                username: 'Your Balance', // Fallback simples
                 balance_total: 0,
                 color_balance: '#FFFFFF'
               }]
