@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
