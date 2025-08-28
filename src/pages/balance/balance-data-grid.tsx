@@ -23,7 +23,7 @@ import {
   ProcessedPlayer,
   BalanceDataGridProps,
 } from '../../types'
-import { shouldShowRestrictedHome } from '../../utils/role-utils'
+import { shouldShowOwnBalanceOnly } from '../../utils/role-utils'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
@@ -33,8 +33,8 @@ export function BalanceDataGrid({
 }: BalanceDataGridProps) {
   const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
 
-  // Determina se o usuário deve ver a home restrita
-  const isRestrictedUser = useMemo(() => shouldShowRestrictedHome(userRoles), [userRoles])
+  // Determina se o usuário deve ver apenas seu próprio balance
+  const isRestrictedUser = useMemo(() => shouldShowOwnBalanceOnly(userRoles), [userRoles])
 
   // Para usuários restritos, usa o ID do próprio usuário como selectedTeam
   const selectedTeam = isRestrictedUser ? idDiscord : initialSelectedTeam

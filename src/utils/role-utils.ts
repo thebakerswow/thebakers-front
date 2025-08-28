@@ -24,6 +24,32 @@ export const hasTeamRoles = (userRoles: string[]): boolean => {
   return userRoles.some(role => teamRoles.includes(role))
 }
 
+// Função para obter cargos de times rastreados do usuário
+export const getTrackedTeamRoles = (userRoles: string[]): string[] => {
+  const teamRoles = [
+    import.meta.env.VITE_TEAM_CHEFE,
+    import.meta.env.VITE_TEAM_MPLUS,
+    import.meta.env.VITE_TEAM_LEVELING,
+    import.meta.env.VITE_TEAM_GARCOM,
+    import.meta.env.VITE_TEAM_CONFEITEIROS,
+    import.meta.env.VITE_TEAM_JACKFRUIT,
+    import.meta.env.VITE_TEAM_INSANOS,
+    import.meta.env.VITE_TEAM_APAE,
+    import.meta.env.VITE_TEAM_LOSRENEGADOS,
+    import.meta.env.VITE_TEAM_DTM,
+    import.meta.env.VITE_TEAM_KFFC,
+    import.meta.env.VITE_TEAM_GREENSKY,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
+    import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
+    import.meta.env.VITE_TEAM_ROCKET,
+    import.meta.env.VITE_TEAM_BOOTY_REAPER,
+    import.meta.env.VITE_TEAM_PADEIRINHO,
+    import.meta.env.VITE_TEAM_MILHARAL,
+  ]
+
+  return userRoles.filter(role => teamRoles.includes(role))
+}
+
 // Função para verificar se o usuário tem apenas cargos restritos
 export const hasOnlyRestrictedRoles = (userRoles: string[]): boolean => {
   const restrictedRoles = [
@@ -68,16 +94,41 @@ export const isOnlyAdvertiser = (userRoles: string[]): boolean => {
   return userRoles.length === 1 && userRoles.includes(advertiserRole)
 }
 
-// Função para verificar se o usuário deve ver a home restrita (apenas freelancer e advertiser)
+// Função para verificar se o usuário tem advertiser + freelancer (sem times rastreados)
+export const hasAdvertiserAndFreelancerOnly = (userRoles: string[]): boolean => {
+  const hasAdvertiser = hasAdvertiserRole(userRoles)
+  const hasFreelancer = hasFreelancerRole(userRoles)
+  const hasTrackedTeams = hasTeamRoles(userRoles)
+  
+  // Deve ter advertiser E freelancer, mas NÃO ter times rastreados
+  return hasAdvertiser && hasFreelancer && !hasTrackedTeams
+}
+
+// Função para verificar se o usuário tem advertiser + freelancer + times rastreados
+export const hasAdvertiserFreelancerAndTeams = (userRoles: string[]): boolean => {
+  const hasAdvertiser = hasAdvertiserRole(userRoles)
+  const hasFreelancer = hasFreelancerRole(userRoles)
+  const hasTrackedTeams = hasTeamRoles(userRoles)
+  
+  // Deve ter advertiser E freelancer E times rastreados
+  return hasAdvertiser && hasFreelancer && hasTrackedTeams
+}
+
+// Função para verificar se o usuário deve ver a home restrita
 export const shouldShowRestrictedHome = (userRoles: string[]): boolean => {
   // Se o usuário tem apenas cargo de freelancer, deve ver a home restrita
   if (isOnlyFreelancer(userRoles)) {
     return true
   }
   
-  // Se o usuário tem apenas cargo de advertiser, deve ver a home restrita
+  // Se o usuário tem apenas cargo de advertiser, NÃO deve ver a home restrita
   if (isOnlyAdvertiser(userRoles)) {
-    return true
+    return false
+  }
+  
+  // Se o usuário tem advertiser + freelancer (sem times), deve ver a home completa
+  if (hasAdvertiserAndFreelancerOnly(userRoles)) {
+    return false
   }
   
   // Se o usuário tem cargos de times rastreados, não deve ver a home restrita
@@ -98,6 +149,11 @@ export const shouldShowBalanceFilter = (userRoles: string[]): boolean => {
   
   // Se o usuário tem apenas cargo de advertiser, não mostra o filtro
   if (isOnlyAdvertiser(userRoles)) {
+    return false
+  }
+  
+  // Se o usuário tem advertiser + freelancer (sem times), não mostra o filtro
+  if (hasAdvertiserAndFreelancerOnly(userRoles)) {
     return false
   }
   
@@ -149,7 +205,7 @@ export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
     return false
   }
   
-  // Outros usuários podem ver o botão
+  // Outros usuários podem ver o botão (incluindo advertiser + freelancer)
   return true
 }
 
@@ -158,6 +214,11 @@ export const shouldShowBookingsTab = (userRoles: string[]): boolean => {
   // Usuários com apenas cargo de freelancer não devem ver a aba de bookings
   if (isOnlyFreelancer(userRoles)) {
     return false
+  }
+  
+  // Usuários com advertiser + freelancer (sem times) devem ver a aba de bookings
+  if (hasAdvertiserAndFreelancerOnly(userRoles)) {
+    return true
   }
   
   // Usuários com freelancer + cargos de times podem ver a aba de bookings
@@ -172,6 +233,32 @@ export const shouldShowBookingsTab = (userRoles: string[]): boolean => {
   
   // Outros usuários podem ver a aba de bookings
   return true
+}
+
+// Função para determinar se o usuário deve ver apenas seu próprio balance
+export const shouldShowOwnBalanceOnly = (userRoles: string[]): boolean => {
+  // Se o usuário tem apenas cargo de freelancer, deve ver apenas seu próprio balance
+  if (isOnlyFreelancer(userRoles)) {
+    return true
+  }
+  
+  // Se o usuário tem apenas cargo de advertiser, deve ver apenas seu próprio balance
+  if (isOnlyAdvertiser(userRoles)) {
+    return true
+  }
+  
+  // Se o usuário tem advertiser + freelancer (sem times), deve ver apenas seu próprio balance
+  if (hasAdvertiserAndFreelancerOnly(userRoles)) {
+    return true
+  }
+  
+  // Se o usuário tem cargos de times rastreados, pode ver balance de times
+  if (hasTeamRoles(userRoles)) {
+    return false
+  }
+  
+  // Para outros casos, segue a lógica original
+  return hasOnlyRestrictedRoles(userRoles)
 }
 
 // Função para determinar se o usuário pode ver o botão de attendance
