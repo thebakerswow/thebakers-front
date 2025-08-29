@@ -40,6 +40,33 @@ function computeWeeksAndDays(date: Date) {
     })
     currentStartOfWeek = addDays(currentEndOfWeek, 1)
   }
+  
+  // Adiciona uma semana adicional se o último dia do mês não completar a semana
+  if (tempWeeks.length > 0) {
+    const lastWeek = tempWeeks[tempWeeks.length - 1]
+    const lastWeekEnd = endOfWeek(lastWeek.start, { weekStartsOn: 0 })
+    
+    // Se o último dia do mês não é o final da semana, adiciona uma semana extra
+    if (lastDayOfMonth > lastWeekEnd) {
+      const nextWeekStart = addDays(lastWeekEnd, 1)
+      const nextWeekEnd = endOfWeek(nextWeekStart, { weekStartsOn: 0 })
+      
+      // Inclui apenas os dias que pertencem ao mês atual
+      const daysInNextWeek = []
+      let currentDay = nextWeekStart
+      while (currentDay <= nextWeekEnd && currentDay.getMonth() === month) {
+        daysInNextWeek.push(currentDay)
+        currentDay = addDays(currentDay, 1)
+      }
+      
+      if (daysInNextWeek.length > 0) {
+        tempWeeks.push({
+          start: nextWeekStart,
+          end: daysInNextWeek[daysInNextWeek.length - 1],
+        })
+      }
+    }
+  }
 
   const today = startOfDay(new Date())
   let targetWeekIndex = 0
