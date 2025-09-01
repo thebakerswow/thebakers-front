@@ -131,6 +131,11 @@ export const shouldShowRestrictedHome = (userRoles: string[]): boolean => {
     return false
   }
   
+  // Se o usuário tem cargo de advertiser + outros cargos não rastreados, deve ver a home completa
+  if (hasAdvertiserRole(userRoles) && !hasTeamRoles(userRoles)) {
+    return false
+  }
+  
   // Se o usuário tem cargos de times rastreados, não deve ver a home restrita
   if (hasTeamRoles(userRoles)) {
     return false
