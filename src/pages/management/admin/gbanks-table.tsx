@@ -1,5 +1,6 @@
 import { DotsThreeVertical } from '@phosphor-icons/react'
 import { useEffect, useRef, useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import axios from 'axios'
 import { ErrorDetails } from '../../../components/error-display'
 import {
@@ -119,14 +120,14 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   const [newGBankColor, setNewGBankColor] = useState('')
   const [editGBank, setEditGBank] = useState<GBank | null>(null)
   const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
-  const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
+  const [openRowIndex, setOpenRowIndex] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedColorFilter, setSelectedColorFilter] = useState<string>('all')
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const menuRef = useRef<HTMLDivElement | null>(null)
+  const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   // Filtra e agrupa os gbanks baseado na busca e cor selecionada
   const filteredAndGroupedGBanks = useMemo(() => {
@@ -170,33 +171,22 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   }, [gbanks, searchTerm, selectedColorFilter])
 
   // Alterna o menu de ações para a linha selecionada
-  const toggleActionsDropdown = (index: number, event: React.MouseEvent) => {
-    if (openRowIndex === index) {
+  const toggleActionsDropdown = (gbankId: string, groupColor: string, event: React.MouseEvent) => {
+    const rowId = `${groupColor}-${gbankId}`
+    if (openRowIndex === rowId) {
       setOpenRowIndex(null)
+      setMenuPosition(null)
     } else {
-      const button = event.currentTarget as HTMLElement
-      const rect = button.getBoundingClientRect()
-      const menuWidth = 120 // Largura estimada do menu
-      const menuHeight = 80 // Altura estimada do menu
-      
-      // Verifica se o menu cabe na tela
-      let x = rect.left
-      let y = rect.bottom + 8
-      
-      // Se o menu sair pela direita, posiciona à esquerda do botão
-      if (x + menuWidth > window.innerWidth) {
-        x = rect.right - menuWidth
-      }
-      
-      // Se o menu sair pela baixo, posiciona acima do botão
-      if (y + menuHeight > window.innerHeight) {
-        y = rect.top - menuHeight - 8
-      }
-      
-      setMenuPosition({ x, y })
-      setOpenRowIndex(index)
+      const rect = event.currentTarget.getBoundingClientRect()
+      setMenuPosition({
+        x: rect.right + 8,
+        y: rect.top + rect.height / 2
+      })
+      setOpenRowIndex(rowId)
     }
   }
+
+
 
   // Alterna a expansão de um grupo
   const toggleGroupExpansion = (color: string) => {
@@ -220,8 +210,10 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   }
 
   // Busca os GBanks da API e formata os dados recebidos
-  const fetchGBanks = async () => {
-    setIsLoading(true)
+  const fetchGBanks = async (showLoading = false) => {
+    if (showLoading) {
+      setIsLoading(true)
+    }
     try {
       const response = await getGbanks()
       const formattedGBanks =
@@ -238,7 +230,9 @@ export function GBanksTable({ onError }: GBanksTableProps) {
     } catch (error) {
       handleError(error, 'Error fetching GBanks')
     } finally {
-      setIsLoading(false)
+      if (showLoading) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -250,7 +244,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
     setIsSubmitting(true)
     try {
       await action()
-      await fetchGBanks()
+      await fetchGBanks(false) // Atualiza sem mostrar loading
     } catch (error) {
       handleError(error, errorMessage)
     } finally {
@@ -304,22 +298,37 @@ export function GBanksTable({ onError }: GBanksTableProps) {
 
   useEffect(() => {
     // Busca os GBanks ao montar o componente e atualiza periodicamente
-    fetchGBanks()
-    const interval = setInterval(fetchGBanks, 10000)
+    fetchGBanks(true) // Mostra loading apenas na primeira vez
+    const interval = setInterval(() => fetchGBanks(false), 10000) // Atualiza sem mostrar loading
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
     // Fecha o menu de ações ao clicar fora dele
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      let clickedOutside = true
+      
+      menuRefs.current.forEach((menuRef) => {
+        if (menuRef && menuRef.contains(target)) {
+          clickedOutside = false
+        }
+      })
+      
+      if (clickedOutside) {
         setOpenRowIndex(null)
+        setMenuPosition(null)
+        // Limpa as refs quando o menu é fechado
+        menuRefs.current.clear()
       }
     }
     
     // Fecha o menu quando a janela é redimensionada
     const handleResize = () => {
       setOpenRowIndex(null)
+      setMenuPosition(null)
+      // Limpa as refs quando a janela é redimensionada
+      menuRefs.current.clear()
     }
     
     document.addEventListener('mousedown', handleClickOutside)
@@ -564,51 +573,66 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {group.items.map((gbank, index) => (
+                      {group.items.map((gbank) => (
                         <TableRow key={gbank.id}>
                           <TableCell>
-                            <div className='relative'>
+                            <div className='relative' style={{ position: 'relative' }}>
                               <IconButton
                                 size='small'
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  toggleActionsDropdown(index, e)
+                                  toggleActionsDropdown(gbank.id, group.color, e)
                                 }}
                               >
                                 <DotsThreeVertical size={16} />
                               </IconButton>
-                              {openRowIndex === index && (
-                                <div
-                                  ref={menuRef}
-                                  className='fixed z-[9999] flex flex-col gap-2 rounded border bg-white p-2 shadow-lg'
-                                  style={{
-                                    left: menuPosition.x,
-                                    top: menuPosition.y
-                                  }}
-                                >
-                                  <Button
-                                    variant='text'
-                                    size='small'
-                                    onClick={() => {
-                                      setEditGBank(gbank)
-                                      setOpenRowIndex(null)
-                                    }}
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    variant='text'
-                                    color='error'
-                                    size='small'
-                                    onClick={() => {
-                                      handleDeleteGBank(gbank)
-                                      setOpenRowIndex(null)
-                                    }}
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              )}
+                                                             {openRowIndex === `${group.color}-${gbank.id}` && createPortal(
+                                 <div
+                                   ref={(el) => {
+                                     if (el) {
+                                       menuRefs.current.set(`${group.color}-${gbank.id}`, el)
+                                     } else {
+                                       menuRefs.current.delete(`${group.color}-${gbank.id}`)
+                                     }
+                                   }}
+                                   className='fixed z-[99999] flex flex-col gap-2 rounded border bg-white p-2 shadow-lg min-w-[120px]'
+                                   style={{
+                                     position: 'fixed',
+                                     left: menuPosition?.x || 0,
+                                     top: menuPosition?.y ? menuPosition.y - 20 : 0,
+                                     zIndex: 99999
+                                   }}
+                                   onMouseLeave={() => {
+                                     setOpenRowIndex(null)
+                                     setMenuPosition(null)
+                                   }}
+                                 >
+                                   <Button
+                                     variant='text'
+                                     size='small'
+                                     onClick={() => {
+                                       setEditGBank(gbank)
+                                       setOpenRowIndex(null)
+                                       setMenuPosition(null)
+                                     }}
+                                   >
+                                     Edit
+                                   </Button>
+                                   <Button
+                                     variant='text'
+                                     color='error'
+                                     size='small'
+                                     onClick={() => {
+                                       handleDeleteGBank(gbank)
+                                       setOpenRowIndex(null)
+                                       setMenuPosition(null)
+                                     }}
+                                   >
+                                     Delete
+                                   </Button>
+                                 </div>,
+                                 document.body
+                               )}
                             </div>
                           </TableCell>
                           <TableCell align='center'>
