@@ -545,43 +545,43 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                   <Table size='small'>
                     <TableHead>
                       <TableRow>
-                        <TableCell
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem',
-                            backgroundColor: '#f5f5f5',
-                          }}
-                        />
-                        <TableCell
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem',
-                            backgroundColor: '#f5f5f5',
-                          }}
-                          align='center'
-                        >
-                          Nome
-                        </TableCell>
-                        <TableCell
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem',
-                            backgroundColor: '#f5f5f5',
-                          }}
-                          align='center'
-                        >
-                          Balance
-                        </TableCell>
-                        <TableCell
-                          style={{
-                            fontWeight: 'bold',
-                            fontSize: '0.875rem',
-                            backgroundColor: '#f5f5f5',
-                          }}
-                          align='center'
-                        >
-                          Calculator
-                        </TableCell>
+                                                                                                                                                                                                       <TableCell
+                             style={{
+                               fontWeight: 'bold',
+                               fontSize: '1rem',
+                               backgroundColor: '#f5f5f5',
+                             }}
+                           />
+                           <TableCell
+                             style={{
+                               fontWeight: 'bold',
+                               fontSize: '1rem',
+                               backgroundColor: '#f5f5f5',
+                             }}
+                             align='center'
+                           >
+                             Name
+                           </TableCell>
+                           <TableCell
+                             style={{
+                               fontWeight: 'bold',
+                               fontSize: '1rem',
+                               backgroundColor: '#f5f5f5',
+                             }}
+                             align='center'
+                           >
+                             Balance
+                           </TableCell>
+                           <TableCell
+                             style={{
+                               fontWeight: 'bold',
+                               fontSize: '1rem',
+                               backgroundColor: '#f5f5f5',
+                             }}
+                             align='center'
+                           >
+                             Calculator
+                           </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -647,17 +647,18 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                                )}
                             </div>
                           </TableCell>
+                                                     <TableCell align='center' style={{ fontSize: '1.25rem' }}>
+                             {gbank.name}
+                           </TableCell>
+                           <TableCell align='center' style={{ fontSize: '1.25rem' }}>
+                             {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
+                           </TableCell>
                           <TableCell align='center'>
-                            {gbank.name}
-                          </TableCell>
-                          <TableCell align='center'>
-                            {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
-                          </TableCell>
-                          <TableCell align='center'>
-                            <input
-                              className='rounded-sm bg-zinc-100 p-1 text-sm'
-                              type='text'
-                              value={gbank.calculatorValue}
+                                                                                                                                                                                                                                       <input
+                                 className='rounded-sm bg-zinc-100 p-1'
+                                 style={{ fontSize: '1rem' }}
+                                 type='text'
+                                 value={gbank.calculatorValue}
                               onChange={(e) => {
                                 const formatted = formatCalculatorValue(e.target.value)
                                 setGbanks((prev) =>
