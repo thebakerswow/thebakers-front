@@ -121,7 +121,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
   const [openRowIndex, setOpenRowIndex] = useState<number | null>(null)
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedColorFilter, setSelectedColorFilter] = useState<string>('all')
@@ -221,6 +221,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
 
   // Busca os GBanks da API e formata os dados recebidos
   const fetchGBanks = async () => {
+    setIsLoading(true)
     try {
       const response = await getGbanks()
       const formattedGBanks =
@@ -472,22 +473,22 @@ export function GBanksTable({ onError }: GBanksTableProps) {
 
       {/* Tabela agrupada por cor */}
       <div className='flex-1 overflow-y-auto'>
-        {isLoading ? (
-          <Box display='flex' justifyContent='center' alignItems='center' height='200px'>
-            <Box textAlign='center'>
-              <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-              <Typography>Loading...</Typography>
-            </Box>
-          </Box>
-        ) : filteredAndGroupedGBanks.length === 0 ? (
-          <Box display='flex' justifyContent='center' alignItems='center' height='200px'>
-            <Typography variant='body1' color='textSecondary'>
-              {searchTerm || selectedColorFilter !== 'all' 
-                ? 'Nenhum resultado encontrado para os filtros aplicados'
-                : 'Nenhum G-Bank encontrado'
-              }
-            </Typography>
-          </Box>
+                 {isLoading ? (
+           <div className='bg-white p-4 text-center border border-gray-200 rounded-md'>
+             <div className='flex flex-col items-center gap-2'>
+               <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
+               <Typography>Loading...</Typography>
+             </div>
+           </div>
+                 ) : filteredAndGroupedGBanks.length === 0 ? (
+           <div className='bg-white p-4 text-center border border-gray-200 rounded-md'>
+             <Typography variant='body1' color='textSecondary'>
+               {searchTerm || selectedColorFilter !== 'all' 
+                 ? 'No results found for the applied filters'
+                 : 'No G-Bank found'
+               }
+             </Typography>
+           </div>
         ) : (
           filteredAndGroupedGBanks.map((group) => (
             <Accordion
