@@ -119,6 +119,10 @@ export function BalanceControlTable({
         return '#9CA3AF' // Advertiser - Cinza
       case import.meta.env.VITE_TEAM_FREELANCER:
         return '#86EFAC' // Freelancer - Verde claro
+      case import.meta.env.VITE_TEAM_BASTARD:
+        return '#D97706' // Bastard München - Âmbar
+      case import.meta.env.VITE_TEAM_KIWI:
+        return '#84CC16' // Kiwi - Verde lima
       default:
         return '#FFFFFF' // Default white
     }
@@ -524,6 +528,18 @@ export function BalanceControlTable({
                 style={{ backgroundColor: '#86EFAC', color: 'black' }} // Verde claro
               >
                 Freelancer
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_BASTARD}
+                style={{ backgroundColor: '#D97706', color: 'white' }} // Âmbar
+              >
+                Bastard München
+              </MenuItem>
+              <MenuItem
+                value={import.meta.env.VITE_TEAM_KIWI}
+                style={{ backgroundColor: '#84CC16', color: 'white' }} // Verde lima
+              >
+                Kiwi
               </MenuItem>
             </Select>
           </FormControl>

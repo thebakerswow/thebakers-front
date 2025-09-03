@@ -19,6 +19,8 @@ export const hasTeamRoles = (userRoles: string[]): boolean => {
     import.meta.env.VITE_TEAM_BOOTY_REAPER,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
+    import.meta.env.VITE_TEAM_BASTARD,
+    import.meta.env.VITE_TEAM_KIWI,
   ]
 
   return userRoles.some(role => teamRoles.includes(role))
@@ -45,6 +47,8 @@ export const getTrackedTeamRoles = (userRoles: string[]): string[] => {
     import.meta.env.VITE_TEAM_BOOTY_REAPER,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
+    import.meta.env.VITE_TEAM_BASTARD,
+    import.meta.env.VITE_TEAM_KIWI,
   ]
 
   return userRoles.filter(role => teamRoles.includes(role))
@@ -192,6 +196,8 @@ export const getUserTeamsForFilter = (userRoles: string[]): string[] => {
     import.meta.env.VITE_TEAM_BOOTY_REAPER,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
+    import.meta.env.VITE_TEAM_BASTARD,
+    import.meta.env.VITE_TEAM_KIWI,
   ]
 
   // Se o usuário tem cargo de Chefe de cozinha, retorna todos os times

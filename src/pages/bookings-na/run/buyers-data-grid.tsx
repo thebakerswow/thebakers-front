@@ -98,6 +98,8 @@ const TEAM_ROLE_IDS = [
   import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
   import.meta.env.VITE_TEAM_ROCKET,
   import.meta.env.VITE_TEAM_BOOTY_REAPER,
+  import.meta.env.VITE_TEAM_BASTARD,
+  import.meta.env.VITE_TEAM_KIWI,
 ]
 function hasPrefeitoTeamAccess(
   runIdTeam: string,

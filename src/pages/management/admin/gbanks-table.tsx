@@ -1,5 +1,5 @@
 import { DotsThreeVertical } from '@phosphor-icons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import axios from 'axios'
 import { ErrorDetails } from '../../../components/error-display'
 import {
@@ -24,56 +24,63 @@ import {
   TableContainer,
   Paper,
   IconButton,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import SearchIcon from '@mui/icons-material/Search'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Swal from 'sweetalert2'
 
 import { GBank } from '../../../types'
 
+// Ordem de prioridade dos times/grupos
+const priorityOrder = [
+  'Chefe de cozinha',
+  'M+',
+  'Leveling',
+  'Garçom',
+  'Confeiteiros',
+  'Jackfruit',
+  'Insanos',
+  'APAE',
+  'Los Renegados',
+  'DTM',
+  'KFFC',
+  'Greensky',
+  'Guild Azralon BR#1',
+  'Guild Azralon BR#2',
+  'Rocket',
+  'Booty Reaper',
+  'Padeirinho',
+  'Milharal',
+  'Bastard München',
+  'Kiwi',
+  'Default',
+]
+
+// Comparador que respeita a priorityOrder e cai para ordem alfabética
+const compareByPriority = (aLabel: string, bLabel: string) => {
+  const aIndex = priorityOrder.indexOf(aLabel)
+  const bIndex = priorityOrder.indexOf(bLabel)
+
+  if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+  if (aIndex !== -1 && bIndex === -1) return -1
+  if (aIndex === -1 && bIndex !== -1) return 1
+  return aLabel.localeCompare(bLabel)
+}
+
 // Função para ordenar times por prioridade baseada nos nomes
 const sortTeamsByPriority = (teams: GBank[]) => {
-  // Define a ordem de prioridade dos times
-  const priorityOrder = [
-    'Chefe de cozinha',
-    'M+',
-    'Leveling',
-    'Garçom',
-    'Confeiteiros',
-    'Jackfruit',
-    'Insanos',
-    'APAE',
-    'Los Renegados',
-    'DTM',
-    'KFFC',
-    'Greensky',
-    'Guild Azralon BR#1',
-    'Guild Azralon BR#2',
-    'Rocket',
-    'Booty Reaper',
-    'Padeirinho',
-    'Milharal',
-  ]
-
-  return teams.sort((a, b) => {
-    const aIndex = priorityOrder.indexOf(a.name)
-    const bIndex = priorityOrder.indexOf(b.name)
-
-    // Se ambos estão na lista de prioridade, ordena pela posição
-    if (aIndex !== -1 && bIndex !== -1) {
-      return aIndex - bIndex
-    }
-
-    // Se apenas um está na lista de prioridade, ele vem primeiro
-    if (aIndex !== -1 && bIndex === -1) {
-      return -1
-    }
-    if (aIndex === -1 && bIndex !== -1) {
-      return 1
-    }
-
-    // Se nenhum está na lista de prioridade, ordena alfabeticamente
-    return a.name.localeCompare(b.name)
-  })
+  return teams.sort((a, b) => compareByPriority(a.name, b.name))
 }
 
 const colorOptions = [
@@ -97,7 +104,9 @@ const colorOptions = [
   { value: '#FEF08A', label: 'Milharal' }, // Amarelo claro
   { value: '#9CA3AF', label: 'Advertiser' }, // Cinza
   { value: '#86EFAC', label: 'Freelancer' }, // Verde claro
-  { value: '#FFFFFF', label: 'Default (White)' },
+  { value: '#D97706', label: 'Bastard München' }, // Âmbar
+  { value: '#84CC16', label: 'Kiwi' }, // Verde lima
+  { value: '#FFFFFF', label: 'Default' },
 ]
 
 interface GBanksTableProps {
@@ -114,7 +123,51 @@ export function GBanksTable({ onError }: GBanksTableProps) {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedColorFilter, setSelectedColorFilter] = useState<string>('all')
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const menuRef = useRef<HTMLDivElement | null>(null)
+
+  // Filtra e agrupa os gbanks baseado na busca e cor selecionada
+  const filteredAndGroupedGBanks = useMemo(() => {
+    let filtered = gbanks
+
+    // Filtra por termo de busca
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(gbank =>
+        gbank.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filtra por cor selecionada
+    if (selectedColorFilter !== 'all') {
+      filtered = filtered.filter(gbank => gbank.color === selectedColorFilter)
+    }
+
+    // Agrupa por cor
+    const grouped = filtered.reduce((acc, gbank) => {
+      const color = gbank.color || '#FFFFFF'
+      const colorLabel = colorOptions.find(opt => opt.value === color)?.label || 'Default'
+      
+      if (!acc[color]) {
+        acc[color] = {
+          color,
+          label: colorLabel,
+          items: []
+        }
+      }
+      acc[color].items.push(gbank)
+      return acc
+    }, {} as Record<string, { color: string; label: string; items: GBank[] }>)
+
+    // Ordena os grupos e itens dentro de cada grupo
+    return Object.values(grouped)
+      .sort((a, b) => compareByPriority(a.label, b.label))
+      .map(group => ({
+        ...group,
+        items: sortTeamsByPriority(group.items)
+      }))
+  }, [gbanks, searchTerm, selectedColorFilter])
 
   // Alterna o menu de ações para a linha selecionada
   const toggleActionsDropdown = (index: number, event: React.MouseEvent) => {
@@ -143,6 +196,19 @@ export function GBanksTable({ onError }: GBanksTableProps) {
       setMenuPosition({ x, y })
       setOpenRowIndex(index)
     }
+  }
+
+  // Alterna a expansão de um grupo
+  const toggleGroupExpansion = (color: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(color)) {
+        newSet.delete(color)
+      } else {
+        newSet.add(color)
+      }
+      return newSet
+    })
   }
 
   // Formata o valor da calculadora para exibir números corretamente
@@ -266,7 +332,52 @@ export function GBanksTable({ onError }: GBanksTableProps) {
 
   return (
     <div className='flex h-[90%] w-[30%] flex-col overflow-y-auto rounded-md'>
-      <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
+      <div className='top-0 flex flex-col gap-4 bg-white p-2'>
+        {/* Campo de busca */}
+        <TextField
+          fullWidth
+          variant='outlined'
+          placeholder='Search...'
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          size='small'
+        />
+        
+        {/* Filtro por cor */}
+        <FormControl fullWidth size='small'>
+          <InputLabel>Filter by team</InputLabel>
+          <Select
+            value={selectedColorFilter}
+            onChange={(e) => setSelectedColorFilter(e.target.value)}
+            label='Filtrar por cor'
+          >
+            <MenuItem value='all'>All Teams</MenuItem>
+            {colorOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                <Box display='flex' alignItems='center' gap={1}>
+                  <div
+                    style={{
+                      width: 16,
+                      height: 16,
+                      backgroundColor: option.value,
+                      border: '1px solid #ccc',
+                      borderRadius: 2
+                    }}
+                  />
+                  {option.label}
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Button
           variant='contained'
           color='error'
@@ -359,156 +470,194 @@ export function GBanksTable({ onError }: GBanksTableProps) {
         </Dialog>
       )}
 
-      <TableContainer
-        component={Paper}
-        sx={{
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          minHeight: '300px',
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  backgroundColor: '#ECEBEE',
+      {/* Tabela agrupada por cor */}
+      <div className='flex-1 overflow-y-auto'>
+        {isLoading ? (
+          <Box display='flex' justifyContent='center' alignItems='center' height='200px'>
+            <Box textAlign='center'>
+              <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
+              <Typography>Loading...</Typography>
+            </Box>
+          </Box>
+        ) : filteredAndGroupedGBanks.length === 0 ? (
+          <Box display='flex' justifyContent='center' alignItems='center' height='200px'>
+            <Typography variant='body1' color='textSecondary'>
+              {searchTerm || selectedColorFilter !== 'all' 
+                ? 'Nenhum resultado encontrado para os filtros aplicados'
+                : 'Nenhum G-Bank encontrado'
+              }
+            </Typography>
+          </Box>
+        ) : (
+          filteredAndGroupedGBanks.map((group) => (
+            <Accordion
+              key={group.color}
+              expanded={expandedGroups.has(group.color)}
+              onChange={() => toggleGroupExpansion(group.color)}
+              sx={{
+                '&:before': { display: 'none' },
+                boxShadow: 'none',
+                border: '1px solid #e0e0e0',
+                marginBottom: 1,
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  backgroundColor: group.color,
+                  color: group.label === 'Milharal' ? '#000' : (group.color === '#FFFFFF' ? '#000' : '#fff'),
+                  '&:hover': { backgroundColor: group.color, opacity: 0.9 },
                 }}
-              />
-              <TableCell
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  backgroundColor: '#ECEBEE',
-                }}
-                align='center'
               >
-                G-Banks
-              </TableCell>
-              <TableCell
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  backgroundColor: '#ECEBEE',
-                }}
-                align='center'
-              >
-                Balance
-              </TableCell>
-              <TableCell
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  backgroundColor: '#ECEBEE',
-                }}
-                align='center'
-              >
-                Calculator
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4} align='center'>
-                  <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-                  <p>Loading...</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              gbanks.map((gbank, index) => (
-                <TableRow key={gbank.id}>
-                  <TableCell>
-                    <div className='relative'>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleActionsDropdown(index, e)
-                        }}
-                      >
-                        <DotsThreeVertical size={20} />
-                      </IconButton>
-                      {openRowIndex === index && (
-                        <div
-                          ref={menuRef}
-                          className='fixed z-[9999] flex flex-col gap-2 rounded border bg-white p-2 shadow-lg'
+                <Box display='flex' alignItems='center' gap={2} width='100%'>
+                  <Typography variant='subtitle1' fontWeight='bold'>
+                    {group.label}
+                  </Typography>
+                  <Typography variant='body2'>
+                    ({group.items.length} item{group.items.length !== 1 ? 's' : ''})
+                  </Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails sx={{ padding: 0 }}>
+                <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
+                  <Table size='small'>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell
                           style={{
-                            left: menuPosition.x,
-                            top: menuPosition.y
+                            fontWeight: 'bold',
+                            fontSize: '0.875rem',
+                            backgroundColor: '#f5f5f5',
                           }}
+                        />
+                        <TableCell
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: '0.875rem',
+                            backgroundColor: '#f5f5f5',
+                          }}
+                          align='center'
                         >
-                          <Button
-                            variant='text'
-                            onClick={() => {
-                              setEditGBank(gbank)
-                              setOpenRowIndex(null)
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant='text'
-                            color='error'
-                            onClick={() => {
-                              handleDeleteGBank(gbank)
-                              setOpenRowIndex(null)
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    align='center'
-                    style={{ backgroundColor: gbank.color || 'transparent' }}
-                  >
-                    {gbank.name}
-                  </TableCell>
-                  <TableCell align='center'>
-                    {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
-                  </TableCell>
-                  <TableCell align='center'>
-                    <input
-                      className='rounded-sm bg-zinc-100 p-2'
-                      type='text'
-                      value={gbank.calculatorValue}
-                      onChange={(e) => {
-                        const formatted = formatCalculatorValue(e.target.value)
-                        setGbanks((prev) =>
-                          prev.map((g) =>
-                            g.id === gbank.id
-                              ? { ...g, calculatorValue: formatted }
-                              : g
-                          )
-                        )
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleAction(
-                            () =>
-                              updateGBankValue({
-                                id: gbank.id,
-                                balance: Number(
-                                  e.currentTarget.value.replace(/,/g, '')
-                                ),
-                              }),
-                            'Error updating G-Bank calculator'
-                          )
-                        }
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                          Nome
+                        </TableCell>
+                        <TableCell
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: '0.875rem',
+                            backgroundColor: '#f5f5f5',
+                          }}
+                          align='center'
+                        >
+                          Balance
+                        </TableCell>
+                        <TableCell
+                          style={{
+                            fontWeight: 'bold',
+                            fontSize: '0.875rem',
+                            backgroundColor: '#f5f5f5',
+                          }}
+                          align='center'
+                        >
+                          Calculator
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {group.items.map((gbank, index) => (
+                        <TableRow key={gbank.id}>
+                          <TableCell>
+                            <div className='relative'>
+                              <IconButton
+                                size='small'
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleActionsDropdown(index, e)
+                                }}
+                              >
+                                <DotsThreeVertical size={16} />
+                              </IconButton>
+                              {openRowIndex === index && (
+                                <div
+                                  ref={menuRef}
+                                  className='fixed z-[9999] flex flex-col gap-2 rounded border bg-white p-2 shadow-lg'
+                                  style={{
+                                    left: menuPosition.x,
+                                    top: menuPosition.y
+                                  }}
+                                >
+                                  <Button
+                                    variant='text'
+                                    size='small'
+                                    onClick={() => {
+                                      setEditGBank(gbank)
+                                      setOpenRowIndex(null)
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant='text'
+                                    color='error'
+                                    size='small'
+                                    onClick={() => {
+                                      handleDeleteGBank(gbank)
+                                      setOpenRowIndex(null)
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell align='center'>
+                            {gbank.name}
+                          </TableCell>
+                          <TableCell align='center'>
+                            {Math.round(Number(gbank.balance)).toLocaleString('en-US')}
+                          </TableCell>
+                          <TableCell align='center'>
+                            <input
+                              className='rounded-sm bg-zinc-100 p-1 text-sm'
+                              type='text'
+                              value={gbank.calculatorValue}
+                              onChange={(e) => {
+                                const formatted = formatCalculatorValue(e.target.value)
+                                setGbanks((prev) =>
+                                  prev.map((g) =>
+                                    g.id === gbank.id
+                                      ? { ...g, calculatorValue: formatted }
+                                      : g
+                                  )
+                                )
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleAction(
+                                    () =>
+                                      updateGBankValue({
+                                        id: gbank.id,
+                                        balance: Number(
+                                          e.currentTarget.value.replace(/,/g, '')
+                                        ),
+                                      }),
+                                    'Error updating G-Bank calculator'
+                                  )
+                                }
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </AccordionDetails>
+            </Accordion>
+          ))
+        )}
+      </div>
 
       {editGBank && (
         <Dialog open={!!editGBank} onClose={() => setEditGBank(null)}>

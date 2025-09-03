@@ -352,6 +352,13 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
                 Milharal
               </MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_BASTARD}>
+                Bastard München
+              </MenuItem>
+              <MenuItem value={import.meta.env.VITE_TEAM_KIWI}>
+                Kiwi
+              </MenuItem>
+
             </Select>
           </FormControl>
           <TextField

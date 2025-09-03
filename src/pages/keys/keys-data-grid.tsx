@@ -87,6 +87,8 @@ export function KeysDataGrid({
     Milharal: '#FEF08A', // Amarelo claro
     Advertiser: '#9CA3AF', // Cinza
     Freelancer: '#86EFAC', // Verde claro
+    'Bastard München': '#D97706', // Âmbar
+    'Kiwi': '#84CC16', // Verde lima
   }
 
   // Retorna o estilo de fundo associado a um time
