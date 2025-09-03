@@ -45,6 +45,7 @@ import { GBank } from '../../../types'
 
 // Ordem de prioridade dos times/grupos
 const priorityOrder = [
+  'Default',
   'Chefe de cozinha',
   'M+',
   'Leveling',
@@ -65,7 +66,7 @@ const priorityOrder = [
   'Milharal',
   'Bastard München',
   'Kiwi',
-  'Default',
+  
 ]
 
 // Comparador que respeita a priorityOrder e cai para ordem alfabética
@@ -79,12 +80,23 @@ const compareByPriority = (aLabel: string, bLabel: string) => {
   return aLabel.localeCompare(bLabel)
 }
 
-// Função para ordenar times por prioridade baseada nos nomes
+// Função para ordenar times por prioridade baseada nos nomes e balance
 const sortTeamsByPriority = (teams: GBank[]) => {
-  return teams.sort((a, b) => compareByPriority(a.name, b.name))
+  return teams.sort((a, b) => {
+    // Primeiro ordena por prioridade do nome
+    const priorityComparison = compareByPriority(a.name, b.name)
+    
+    // Se a prioridade for igual, ordena por balance (maior para menor)
+    if (priorityComparison === 0) {
+      return b.balance - a.balance
+    }
+    
+    return priorityComparison
+  })
 }
 
 const colorOptions = [
+  { value: '#FFFFFF', label: 'Default' },
   { value: '#DC2626', label: 'Chefe de cozinha' }, // Vermelho escuro
   { value: '#7C3AED', label: 'M+' }, // Roxo
   { value: '#059669', label: 'Leveling' }, // Verde esmeralda
@@ -107,7 +119,7 @@ const colorOptions = [
   { value: '#86EFAC', label: 'Freelancer' }, // Verde claro
   { value: '#D97706', label: 'Bastard München' }, // Âmbar
   { value: '#84CC16', label: 'Kiwi' }, // Verde lima
-  { value: '#FFFFFF', label: 'Default' },
+ 
 ]
 
 interface GBanksTableProps {
@@ -166,7 +178,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
       .sort((a, b) => compareByPriority(a.label, b.label))
       .map(group => ({
         ...group,
-        items: sortTeamsByPriority(group.items)
+        items: group.items.sort((a, b) => b.balance - a.balance) // Ordena por balance (maior para menor)
       }))
   }, [gbanks, searchTerm, selectedColorFilter])
 
