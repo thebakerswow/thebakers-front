@@ -483,7 +483,7 @@ export function HomePage() {
                         'Padeirinho',
                         'Milharal',
                         'Kiwi',
-                        'Bastard München',
+                        'Bastard Munchen',
                       ]
                       // Filtra as runs dos times MPlus e Leveling
                       const filteredRuns = (
@@ -655,7 +655,7 @@ const teamColors: { [key: string]: string } = {
   Padeirinho: '#EA580C',
   Milharal: '#FEF08A',
   Kiwi: '#84CC16',
-  'Bastard München': '#D97706',
+  'Bastard Munchen': '#D97706',
 }
 
 // Função utilitária para converter "HH:mm" para 12h com AM/PM

@@ -64,7 +64,7 @@ const priorityOrder = [
   'Booty Reaper',
   'Padeirinho',
   'Milharal',
-  'Bastard München',
+  'Bastard Munchen',
   'Kiwi',
   
 ]
@@ -117,7 +117,7 @@ const colorOptions = [
   { value: '#FEF08A', label: 'Milharal' }, // Amarelo claro
   { value: '#9CA3AF', label: 'Advertiser' }, // Cinza
   { value: '#86EFAC', label: 'Freelancer' }, // Verde claro
-  { value: '#D97706', label: 'Bastard München' }, // Âmbar
+  { value: '#D97706', label: 'Bastard Munchen' }, // Âmbar
   { value: '#84CC16', label: 'Kiwi' }, // Verde lima
  
 ]

@@ -121,7 +121,7 @@ export function BalanceControlTable({
       case import.meta.env.VITE_TEAM_FREELANCER:
         return '#86EFAC' // Freelancer - Verde claro
       case import.meta.env.VITE_TEAM_BASTARD:
-        return '#D97706' // Bastard München - Âmbar
+        return '#D97706' // Bastard Munchen - Âmbar
       case import.meta.env.VITE_TEAM_KIWI:
         return '#84CC16' // Kiwi - Verde lima
       default:
@@ -534,7 +534,7 @@ export function BalanceControlTable({
                 value={import.meta.env.VITE_TEAM_BASTARD}
                 style={{ backgroundColor: '#D97706', color: 'white' }} // Âmbar
               >
-                Bastard München
+                Bastard Munchen
               </MenuItem>
               <MenuItem
                 value={import.meta.env.VITE_TEAM_KIWI}

@@ -34,7 +34,7 @@ const localTeamColors: Record<string, string> = {
   Padeirinho: '#EA580C',
   Milharal: '#FEF08A',
   Advertiser: '#9CA3AF',
-  'Bastard München': '#D97706',
+  'Bastard Munchen': '#D97706',
   'Kiwi': '#84CC16',
 }
 

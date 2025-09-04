@@ -353,7 +353,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
                 Milharal
               </MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_BASTARD}>
-                Bastard München
+                Bastard Munchen
               </MenuItem>
               <MenuItem value={import.meta.env.VITE_TEAM_KIWI}>
                 Kiwi

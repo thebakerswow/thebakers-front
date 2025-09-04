@@ -106,7 +106,7 @@ export function RunsDataGrid({
     'Booty Reaper': 'linear-gradient(90deg, #8B5CF6, #4C1D95)', // Violeta para violeta escuro
     Padeirinho: 'linear-gradient(90deg, #FB923C, #EA580C)', // Laranja claro para laranja
     Milharal: 'linear-gradient(90deg, #FEF3C7, #FEF08A)', // Amarelo muito claro para amarelo claro
-    'Bastard München': 'linear-gradient(90deg, #F59E0B, #D97706)', // Âmbar claro para âmbar
+    'Bastard Munchen': 'linear-gradient(90deg, #F59E0B, #D97706)', // Âmbar claro para âmbar
     'Kiwi': 'linear-gradient(90deg, #A3E635, #84CC16)', // Verde lima claro para verde lima
   }
 

@@ -397,7 +397,7 @@ export function ExternalHomePage() {
                   'Booty Reaper',
                   'Padeirinho',
                   'Milharal',
-                  'Bastard München',
+                  'Bastard Munchen',
                   'Kiwi',
                 ]
                 // Filtra as runs dos times MPlus e Leveling
@@ -569,7 +569,7 @@ const teamColors: { [key: string]: string } = {
   'Booty Reaper': '#4C1D95',
   Padeirinho: '#EA580C',
   Milharal: '#FEF08A',
-  'Bastard München': '#D97706',
+  'Bastard Munchen': '#D97706',
   'Kiwi': '#84CC16',
 }
 
