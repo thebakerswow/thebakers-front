@@ -14,6 +14,7 @@ import { Pagination, Autoplay } from 'swiper/modules'
 import { Swiper as SwiperType } from 'swiper'
 import { CaretLeft, CaretRight, X, CastleTurret, Key } from '@phosphor-icons/react'
 import { format, addDays } from 'date-fns'
+import { getWeekDatesEST, getCurrentESTDate } from '../../../utils/timezone-utils'
 import 'swiper/css'
 import 'swiper/css/pagination'
 
@@ -87,11 +88,8 @@ export function ExternalHomePage() {
   // Buscar runs da semana atual
   const fetchWeekRuns = async () => {
     setLoadingRuns(true)
-    const today = new Date()
-    const days: string[] = []
-    for (let i = 0; i < 7; i++) {
-      days.push(format(addDays(today, i), 'yyyy-MM-dd'))
-    }
+    // Usa EST como referência para o schedule (independente do fuso do usuário)
+    const days = getWeekDatesEST()
     try {
       const results = await Promise.allSettled(
         days.map((date) =>
@@ -369,11 +367,10 @@ export function ExternalHomePage() {
                 'Friday',
                 'Saturday',
               ]
-              const todayDate = new Date()
+              const todayDate = getCurrentESTDate()
               return Array.from({ length: 7 }, (_, colIdx) => {
-                // Calcula a data do dia da coluna (hoje + colIdx)
-                const columnDate = new Date(todayDate)
-                columnDate.setDate(todayDate.getDate() + colIdx)
+                // Calcula a data do dia da coluna (hoje + colIdx) em EST
+                const columnDate = addDays(todayDate, colIdx)
                 const dayNumber = columnDate
                   .getDate()
                   .toString()

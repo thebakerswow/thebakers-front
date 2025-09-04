@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, useEffect, useCallback } from 'react'
 import { ErrorDetails } from '../../../components/error-display'
+import { getCurrentUserDate } from '../../../utils/timezone-utils'
 import {
   getBalanceAdmin,
   createTransaction,
@@ -128,11 +129,11 @@ export function BalanceControlTable({
     }
   }
 
-  // Define a data atual como padrão caso nenhuma data seja selecionada
+  // Define a data atual no timezone local do usuário como padrão
   useEffect(() => {
     if (!selectedDate) {
-      const today = new Date().toISOString().split('T')[0]
-      setSelectedDate(today)
+      const todayLocal = getCurrentUserDate().toISOString().split('T')[0]
+      setSelectedDate(todayLocal)
     }
   }, [selectedDate, setSelectedDate])
 
