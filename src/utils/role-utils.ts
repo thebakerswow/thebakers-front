@@ -293,7 +293,7 @@ export const canViewAttendanceButton = (userRoles: string[]): boolean => {
 // INSANOS, APAE, LOSRENEGADOS, PADEIRINHO, MILHARAL
 export const shouldUseNewBalance = (userRoles: string[]): boolean => {
   const rolesWithNewBalance = [
-    // import.meta.env.VITE_TEAM_MPLUS,
+     import.meta.env.VITE_TEAM_MPLUS,
     // import.meta.env.VITE_TEAM_LEVELING,
     import.meta.env.VITE_TEAM_GARCOM,
     // import.meta.env.VITE_TEAM_CONFEITEIROS,
