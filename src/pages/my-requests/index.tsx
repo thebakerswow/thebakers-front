@@ -482,7 +482,7 @@ export function MyRequestsPage() {
                             fontSize: '1.4rem'
                           }}
                         >
-                          ${request.value.toLocaleString()}
+                          {request.value.toLocaleString()}
                         </Typography>
                         {request.status === 'pending' && (
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -663,7 +663,7 @@ export function MyRequestsPage() {
               </TransformWrapper>
               <Box mt={2}>
                 <Typography variant="body2" color="textSecondary">
-                  Value: <strong>${selectedRequest.value.toLocaleString()}</strong>
+                  Value: <strong>{selectedRequest.value.toLocaleString()}</strong>
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Status: <strong>{selectedRequest.status}</strong>
