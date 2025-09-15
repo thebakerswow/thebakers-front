@@ -449,7 +449,7 @@ export function GBankListNew({ onError }: GBankListNewProps) {
                           <TableCell align='center' sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>{Math.round(Number(g.balance)).toLocaleString('en-US')}</TableCell>
                           <TableCell align='center' sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>
                             <input
-                              className='rounded-sm bg-zinc-100 p-2'
+                              className='rounded-sm bg-zinc-100 p-2 border border-gray-400 focus:border-black focus:outline-none'
                               style={{ fontSize: '1rem', height: '40px', minWidth: '120px' }}
                               type='text'
                               value={g.calculatorValue}
