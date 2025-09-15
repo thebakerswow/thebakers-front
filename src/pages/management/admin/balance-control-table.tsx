@@ -125,7 +125,7 @@ export function BalanceControlTable({
       case import.meta.env.VITE_TEAM_KIWI:
         return '#84CC16' // Kiwi - Verde lima
       default:
-        return '#FFFFFF' // Default white
+        return '#DC2626' // Chefe de cozinha
     }
   }
 

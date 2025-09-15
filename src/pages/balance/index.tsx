@@ -5,7 +5,8 @@ import { WeekRangeFilter } from '../../components/week-range-filter'
 import { Button, CircularProgress } from '@mui/material'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/role-utils'
+import { shouldShowBalanceFilter, shouldShowUsGoldButton, shouldUseNewBalance } from '../../utils/role-utils'
+import { NewBalancePage } from '../balance-new'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
@@ -95,4 +96,11 @@ export function BalancePage() {
       />
     </div>
   )
+}
+
+// Wrapper que decide entre balance antigo e novo com base nos cargos
+export function BalancePageRouter() {
+  const { userRoles = [] } = useAuth()
+  const useNew = useMemo(() => shouldUseNewBalance(userRoles), [userRoles])
+  return useNew ? <NewBalancePage /> : <BalancePage />
 }

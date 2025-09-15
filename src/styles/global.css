@@ -144,6 +144,17 @@ header,
   pointer-events: auto !important;
 }
 
+/* Hide spinner arrows from number inputs in SweetAlert2 */
+.swal-no-spinner::-webkit-outer-spin-button,
+.swal-no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.swal-no-spinner {
+  -moz-appearance: textfield;
+}
+
 /* Line clamp utilities for text truncation */
 .line-clamp-1 {
   overflow: hidden;

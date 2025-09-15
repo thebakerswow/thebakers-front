@@ -3,5 +3,5 @@ export interface GBank {
   name: string
   balance: number
   calculatorValue: string
-  color?: string
+  idTeam: string
 }

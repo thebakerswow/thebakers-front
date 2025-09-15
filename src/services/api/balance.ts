@@ -19,6 +19,15 @@ export const getBalanceAdmin = async (params: {
   return response.data.info
 }
 
+export const getBalanceDaily = async (params: {
+  id_team?: string | number
+  date: string
+  is_dolar: boolean
+}) => {
+  const response = await api.get('/balance/daily', { params })
+  return response.data.info
+}
+
 export const getTransactionLogs = async (params: {
   initial_date: string
   end_date: string

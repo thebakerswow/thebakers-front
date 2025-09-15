@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom'
 import { Header } from './components/header'
 import { HomePage } from './pages/home'
-import { BalancePage } from './pages/balance'
+import { BalancePageRouter } from './pages/balance'
 import TeamsManagement from './pages/management/teams'
 import { FullRaidsNa } from './pages/bookings-na'
 import { RunDetails } from './pages/bookings-na/run'
@@ -28,6 +28,8 @@ import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
 import { ExternalHomePage } from './pages/external/home'
 import { DomainRouter } from './components/domain-router'
+import { RequestsPage } from './pages/requests'
+import { MyRequestsPage } from './pages/my-requests'
 import './styles/global.css'
 
 // Componente para proteger rotas privadas
@@ -80,7 +82,7 @@ export function App() {
                   />
                   <Route
                     path='/balance'
-                    element={<PrivateRoute element={<BalancePage />} />}
+                    element={<PrivateRoute element={<BalancePageRouter />} />}
                   />
                   <Route
                     path='/management-teams'
@@ -121,6 +123,14 @@ export function App() {
                   <Route
                     path='/leveling'
                     element={<PrivateRoute element={<LevelingPage />} />}
+                  />
+                  <Route
+                    path='/requests'
+                    element={<PrivateRoute element={<RequestsPage />} />}
+                  />
+                  <Route
+                    path='/my-requests'
+                    element={<PrivateRoute element={<MyRequestsPage />} />}
                   />
 
                   {/* Rota catch-all */}

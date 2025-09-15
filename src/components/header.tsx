@@ -18,11 +18,13 @@ import {
   List as ListIcon,
   Key,
   ArrowFatUp,
+  ClipboardText,
+  User,
 } from '@phosphor-icons/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/auth-context'
-import { shouldShowBookingsTab } from '../utils/role-utils'
+import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/role-utils'
 
 export function Header() {
   const navigate = useNavigate()
@@ -222,6 +224,16 @@ export function Header() {
                 Balance
               </Button>
 
+              {shouldUseNewBalance(userRoles) && (
+                <Button
+                  color='inherit'
+                  onClick={() => navigate('/my-requests')}
+                  startIcon={<User size={20} />}
+                >
+                  My Requests
+                </Button>
+              )}
+
               {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
                 <>
                   <Button
@@ -284,6 +296,16 @@ export function Header() {
                     >
                       <CalendarBlank size={20} />
                       Services
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        navigate('/requests')
+                        handleMenuClose()
+                      }}
+                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <ClipboardText size={20} />
+                      Requests
                     </MenuItem>
                   </Menu>
                 </>
@@ -404,6 +426,16 @@ export function Header() {
           Balance
         </MenuItem>
 
+        {shouldUseNewBalance(userRoles) && (
+          <MenuItem
+            onClick={() => handleMobileNavigation('/my-requests')}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
+          >
+            <User size={20} />
+            My Requests
+          </MenuItem>
+        )}
+
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <MenuItem
             onClick={handleMobileManagementMenuOpen}
@@ -475,6 +507,13 @@ export function Header() {
         >
           <CalendarBlank size={20} />
           Services
+        </MenuItem>
+        <MenuItem
+          onClick={() => handleMobileNavigation('/requests')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <ClipboardText size={20} />
+          Requests
         </MenuItem>
       </Menu>
 

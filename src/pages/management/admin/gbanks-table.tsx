@@ -43,9 +43,56 @@ import Swal from 'sweetalert2'
 
 import { GBank } from '../../../types'
 
+// Mapeamento de IDs dos times para cores
+const teamIdToColorMap: Record<string, string> = {
+  [import.meta.env.VITE_TEAM_CHEFE]: '#DC2626', // Chefe de cozinha
+  [import.meta.env.VITE_TEAM_MPLUS]: '#7C3AED', // M+
+  [import.meta.env.VITE_TEAM_LEVELING]: '#059669', // Leveling
+  [import.meta.env.VITE_TEAM_GARCOM]: '#2563EB', // Garçom
+  [import.meta.env.VITE_TEAM_CONFEITEIROS]: '#EC4899', // Confeiteiros
+  [import.meta.env.VITE_TEAM_JACKFRUIT]: '#16A34A', // Jackfruit
+  [import.meta.env.VITE_TEAM_INSANOS]: '#1E40AF', // Insanos
+  [import.meta.env.VITE_TEAM_APAE]: '#F87171', // APAE
+  [import.meta.env.VITE_TEAM_LOSRENEGADOS]: '#F59E0B', // Los Renegados
+  [import.meta.env.VITE_TEAM_DTM]: '#8B5CF6', // DTM
+  [import.meta.env.VITE_TEAM_KFFC]: '#06B6D4', // KFFC
+  [import.meta.env.VITE_TEAM_GREENSKY]: '#10B981', // Greensky
+  [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: '#F97316', // Guild Azralon BR#1
+  [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: '#EF4444', // Guild Azralon BR#2
+  [import.meta.env.VITE_TEAM_ROCKET]: '#8B5A2B', // Rocket
+  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: '#6B7280', // Booty Reaper
+  [import.meta.env.VITE_TEAM_PADEIRINHO]: '#EA580C', // Padeirinho
+  [import.meta.env.VITE_TEAM_MILHARAL]: '#FEF08A', // Milharal
+  [import.meta.env.VITE_TEAM_BASTARD]: '#D97706', // Bastard Munchen
+  [import.meta.env.VITE_TEAM_KIWI]: '#84CC16', // Kiwi
+}
+
+// Mapeamento de cores para IDs dos times (para o formulário)
+const colorToTeamIdMap: Record<string, string> = {
+  '#DC2626': import.meta.env.VITE_TEAM_CHEFE, // Chefe de cozinha
+  '#7C3AED': import.meta.env.VITE_TEAM_MPLUS, // M+
+  '#059669': import.meta.env.VITE_TEAM_LEVELING, // Leveling
+  '#2563EB': import.meta.env.VITE_TEAM_GARCOM, // Garçom
+  '#EC4899': import.meta.env.VITE_TEAM_CONFEITEIROS, // Confeiteiros
+  '#16A34A': import.meta.env.VITE_TEAM_JACKFRUIT, // Jackfruit
+  '#1E40AF': import.meta.env.VITE_TEAM_INSANOS, // Insanos
+  '#F87171': import.meta.env.VITE_TEAM_APAE, // APAE
+  '#F59E0B': import.meta.env.VITE_TEAM_LOSRENEGADOS, // Los Renegados
+  '#8B5CF6': import.meta.env.VITE_TEAM_DTM, // DTM
+  '#06B6D4': import.meta.env.VITE_TEAM_KFFC, // KFFC
+  '#10B981': import.meta.env.VITE_TEAM_GREENSKY, // Greensky
+  '#F97316': import.meta.env.VITE_TEAM_GUILD_AZRALON_1, // Guild Azralon BR#1
+  '#EF4444': import.meta.env.VITE_TEAM_GUILD_AZRALON_2, // Guild Azralon BR#2
+  '#8B5A2B': import.meta.env.VITE_TEAM_ROCKET, // Rocket
+  '#6B7280': import.meta.env.VITE_TEAM_BOOTY_REAPER, // Booty Reaper
+  '#EA580C': import.meta.env.VITE_TEAM_PADEIRINHO, // Padeirinho
+  '#FEF08A': import.meta.env.VITE_TEAM_MILHARAL, // Milharal
+  '#D97706': import.meta.env.VITE_TEAM_BASTARD, // Bastard Munchen
+  '#84CC16': import.meta.env.VITE_TEAM_KIWI, // Kiwi
+}
+
 // Ordem de prioridade dos times/grupos
 const priorityOrder = [
-  'Default',
   'Chefe de cozinha',
   'M+',
   'Leveling',
@@ -96,7 +143,6 @@ const sortTeamsByPriority = (teams: GBank[]) => {
 }
 
 const colorOptions = [
-  { value: '#FFFFFF', label: 'Default' },
   { value: '#DC2626', label: 'Chefe de cozinha' }, // Vermelho escuro
   { value: '#7C3AED', label: 'M+' }, // Roxo
   { value: '#059669', label: 'Leveling' }, // Verde esmeralda
@@ -154,13 +200,16 @@ export function GBanksTable({ onError }: GBanksTableProps) {
 
     // Filtra por cor selecionada
     if (selectedColorFilter !== 'all') {
-      filtered = filtered.filter(gbank => gbank.color === selectedColorFilter)
+      filtered = filtered.filter(gbank => {
+        const gbankColor = teamIdToColorMap[gbank.idTeam] || '#DC2626'
+        return gbankColor === selectedColorFilter
+      })
     }
 
-    // Agrupa por cor
+    // Agrupa por idTeam (convertido para cor para exibição)
     const grouped = filtered.reduce((acc, gbank) => {
-      const color = gbank.color || '#FFFFFF'
-      const colorLabel = colorOptions.find(opt => opt.value === color)?.label || 'Default'
+      const color = teamIdToColorMap[gbank.idTeam] || '#DC2626'
+      const colorLabel = colorOptions.find(opt => opt.value === color)?.label || 'Chefe de cozinha'
       
       if (!acc[color]) {
         acc[color] = {
@@ -443,8 +492,8 @@ export function GBanksTable({ onError }: GBanksTableProps) {
               fullWidth
               margin='dense'
               variant='outlined'
-              label='Color'
-              value={newGBankColor || '#FFFFFF'}
+              label='Team'
+              value={newGBankColor || '#DC2626'}
               onChange={(e) => setNewGBankColor(e.target.value)}
               SelectProps={{
                 native: true,
@@ -465,7 +514,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                   () =>
                     createGBank({
                       name: newGBankName,
-                      color: newGBankColor || '#FFFFFF',
+                      idTeam: colorToTeamIdMap[newGBankColor || '#DC2626'] || import.meta.env.VITE_TEAM_CHEFE,
                     }),
                   'Error adding G-Bank'
                 ).then(() => {
@@ -527,7 +576,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                 expandIcon={<ExpandMoreIcon />}
                 sx={{
                   backgroundColor: group.color,
-                  color: group.label === 'Milharal' ? '#000' : (group.color === '#FFFFFF' ? '#000' : '#fff'),
+                  color: group.label === 'Milharal' ? '#000' : (group.color === '#DC2626' ? '#fff' : '#fff'),
                   '&:hover': { backgroundColor: group.color, opacity: 0.9 },
                 }}
               >
@@ -726,10 +775,12 @@ export function GBanksTable({ onError }: GBanksTableProps) {
               margin='dense'
               variant='outlined'
               label='Color'
-              value={editGBank.color || '#FFFFFF'}
-              onChange={(e) =>
-                setEditGBank({ ...editGBank, color: e.target.value })
-              }
+              value={teamIdToColorMap[editGBank.idTeam] || '#DC2626'}
+              onChange={(e) => {
+                const selectedColor = e.target.value
+                const selectedTeamId = colorToTeamIdMap[selectedColor] || import.meta.env.VITE_TEAM_CHEFE
+                setEditGBank({ ...editGBank, idTeam: selectedTeamId })
+              }}
               SelectProps={{
                 native: true,
               }}
@@ -751,7 +802,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                     updateGBank({
                       id: editGBank.id,
                       name: editGBank.name,
-                      color: editGBank.color || '#FFFFFF',
+                      idTeam: editGBank.idTeam,
                     }),
                   'Error updating G-Bank'
                 ).then(() => setEditGBank(null))
