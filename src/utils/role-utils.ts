@@ -293,15 +293,14 @@ export const canViewAttendanceButton = (userRoles: string[]): boolean => {
 // INSANOS, APAE, LOSRENEGADOS, PADEIRINHO, MILHARAL
 export const shouldUseNewBalance = (userRoles: string[]): boolean => {
   const rolesWithNewBalance = [
-     import.meta.env.VITE_TEAM_MPLUS,
-    // import.meta.env.VITE_TEAM_LEVELING,
+    import.meta.env.VITE_TEAM_MPLUS,
     import.meta.env.VITE_TEAM_GARCOM,
-    // import.meta.env.VITE_TEAM_CONFEITEIROS,
-    // import.meta.env.VITE_TEAM_JACKFRUIT,
-    // import.meta.env.VITE_TEAM_INSANOS,
-    // import.meta.env.VITE_TEAM_APAE,
-    // import.meta.env.VITE_TEAM_LOSRENEGADOS,
-    // import.meta.env.VITE_TEAM_BOOTY_REAPER
+    import.meta.env.VITE_TEAM_CONFEITEIROS,
+    import.meta.env.VITE_TEAM_JACKFRUIT,
+    import.meta.env.VITE_TEAM_INSANOS,
+    import.meta.env.VITE_TEAM_APAE,
+    import.meta.env.VITE_TEAM_LOSRENEGADOS,
+    import.meta.env.VITE_TEAM_BOOTY_REAPER
   ]
 
   return userRoles.some((role) => rolesWithNewBalance.includes(role))
