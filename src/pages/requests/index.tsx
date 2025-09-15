@@ -639,7 +639,7 @@ export function RequestsPage() {
                                 label={`Daily Balance: ${request.sumDay.toLocaleString()}g`}
                                 size="small"
                                 sx={{
-                                  fontSize: '0.8rem',
+                                  fontSize: '1rem',
                                   height: 22,
                                   backgroundColor: 'rgba(59, 130, 246, 0.2)',
                                   color: '#3b82f6',
@@ -655,7 +655,7 @@ export function RequestsPage() {
                                 label={`Balance Total: ${request.balanceTotal.toLocaleString()}g`}
                                 size="small"
                                 sx={{
-                                  fontSize: '0.8rem',
+                                  fontSize: '1rem',
                                   height: 22,
                                   backgroundColor: 'rgba(16, 185, 129, 0.2)',
                                   color: '#10b981',
