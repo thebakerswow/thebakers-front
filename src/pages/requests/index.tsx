@@ -75,17 +75,17 @@ export function RequestsPage() {
   const [maxValueFilter, setMaxValueFilter] = useState('')
 
   // Função para ordenar requisições por data e hora
-  const sortRequestsByDate = (requests: TransactionRequest[]) => {
+  const sortRequestsByDate = (requests: TransactionRequest[], currentStatus: string = statusFilter) => {
     return [...requests].sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime()
       const dateB = new Date(b.createdAt).getTime()
       
       // Para requests pending, ordenar por data de criação (mais antigas primeiro)
-      if (statusFilter === 'pending') {
+      if (currentStatus === 'pending') {
         return dateA - dateB // Ordem crescente (mais antigas primeiro)
       }
       
-      // Para outros status, manter ordem decrescente (mais recentes primeiro)
+      // Para all, accepted e denied, manter ordem decrescente (mais recentes primeiro)
       return dateB - dateA
     })
   }
@@ -122,7 +122,12 @@ export function RequestsPage() {
 
   // Função para filtrar requests por valor
   const filterRequestsByValue = (requests: TransactionRequest[], minValue: string, maxValue: string) => {
-    const min = minValue ? parseFloat(minValue) : 0
+    // Se ambos os filtros estão vazios, não filtrar nada
+    if (!minValue && !maxValue) {
+      return requests
+    }
+    
+    const min = minValue ? parseFloat(minValue) : -Infinity
     const max = maxValue ? parseFloat(maxValue) : Infinity
     
     return requests.filter(request => {
@@ -135,11 +140,19 @@ export function RequestsPage() {
   const applyAllFilters = (requests: TransactionRequest[]) => {
     let filtered = requests
     
-    // Aplicar filtros em sequência
+    // Aplicar filtro de status primeiro
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(request => request.status === statusFilter)
+    }
+    
+    // Aplicar outros filtros em sequência
     filtered = filterRequestsByTeam(filtered, teamFilter)
     filtered = filterRequestsByPlayer(filtered, playerFilter)
     filtered = filterRequestsByDate(filtered, dateFilter)
     filtered = filterRequestsByValue(filtered, minValueFilter, maxValueFilter)
+    
+    // Aplicar ordenação baseada no status atual
+    filtered = sortRequestsByDate(filtered, statusFilter)
     
     return filtered
   }
@@ -160,11 +173,19 @@ export function RequestsPage() {
     }
   }
 
-  const fetchRequests = async (status: string = statusFilter) => {
+  const fetchRequests = async () => {
     setIsLoading(true)
     try {
-      const response = await getTransactionRequests(status)
-      const sortedRequests = sortRequestsByDate(response || [])
+      // Sempre buscar todas as requests
+      const response = await getTransactionRequests('all')
+      
+      // Verificar se response é um array
+      if (!Array.isArray(response)) {
+        setRequests([])
+        return
+      }
+      
+      const sortedRequests = sortRequestsByDate(response || [], 'all')
       setRequests(sortedRequests)
     } catch (error) {
       const errorDetails = {
@@ -180,7 +201,7 @@ export function RequestsPage() {
   const handleStatusFilter = (status: 'all' | 'pending' | 'accepted' | 'denied') => {
     setStatusFilter(status)
     setCurrentPage(1) // Reset to first page when changing status filter
-    fetchRequests(status)
+    // Não precisa chamar fetchRequests aqui, pois já temos todas as requests carregadas
   }
 
   const handleTeamFilter = (teamId: string) => {
@@ -260,7 +281,16 @@ export function RequestsPage() {
     if (newValue && !Number.isNaN(parseFloat(newValue))) {
       try {
         await updateTransactionRequestValue({ id: request.id, value: parseFloat(newValue) })
-        await fetchRequests(statusFilter)
+        
+        // Atualizar a lista de requisições localmente após edição do valor
+        setRequests(prevRequests => 
+          prevRequests.map(req => 
+            req.id === request.id 
+              ? { ...req, value: parseFloat(newValue) }
+              : req
+          )
+        )
+        
         Swal.fire({
           title: 'Success!',
           text: 'Transaction value updated successfully',
@@ -292,8 +322,14 @@ export function RequestsPage() {
         status: 'accepted'
       })
       
-      // Atualizar a lista de requisições após aceitação
-      await fetchRequests(statusFilter)
+      // Atualizar a lista de requisições localmente após aceitação
+      setRequests(prevRequests => 
+        prevRequests.map(request => 
+          request.id.toString() === requestId 
+            ? { ...request, status: 'accepted' as const }
+            : request
+        )
+      )
       
       // Mostrar mensagem de sucesso
       console.log('Request accepted successfully:', requestId)
@@ -324,8 +360,14 @@ export function RequestsPage() {
         status: 'denied'
       })
       
-      // Atualizar a lista de requisições após negação
-      await fetchRequests(statusFilter)
+      // Atualizar a lista de requisições localmente após negação
+      setRequests(prevRequests => 
+        prevRequests.map(request => 
+          request.id.toString() === requestId 
+            ? { ...request, status: 'denied' as const }
+            : request
+        )
+      )
       
       // Mostrar mensagem de sucesso
       console.log('Request denied successfully:', requestId)
@@ -361,6 +403,33 @@ export function RequestsPage() {
         return 'error'
       default:
         return 'default'
+    }
+  }
+
+  // Função para determinar a cor do card baseada no valor
+  const getCardColor = (value: number) => {
+    if (value > 0) {
+      return {
+        backgroundColor: '#1e3a8a', // Azul escuro para valores positivos
+        borderColor: '#3b82f6', // Azul mais claro para a borda
+        hoverBackgroundColor: '#1e40af', // Azul um pouco mais claro no hover
+        hoverBorderColor: '#60a5fa', // Azul mais claro no hover
+      }
+    } else if (value < 0) {
+      return {
+        backgroundColor: '#2a2a2a', // Cor padrão para valores negativos
+        borderColor: '#333', // Borda padrão
+        hoverBackgroundColor: '#3a3a3a', // Hover padrão
+        hoverBorderColor: 'rgb(147, 51, 234)', // Hover padrão
+      }
+    } else {
+      // Para valor zero, manter a cor padrão
+      return {
+        backgroundColor: '#2a2a2a',
+        borderColor: '#333',
+        hoverBackgroundColor: '#3a3a3a',
+        hoverBorderColor: 'rgb(147, 51, 234)',
+      }
     }
   }
 
@@ -813,18 +882,22 @@ export function RequestsPage() {
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={request.id}>
                 <Card
                   sx={{
-                    bgcolor: '#2a2a2a',
-                    border: '1px solid #333',
+                    bgcolor: getCardColor(request.value).backgroundColor,
+                    border: `1px solid ${getCardColor(request.value).borderColor}`,
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
                     transition: 'all 0.3s ease-in-out',
                     '&:hover': {
-                      borderColor: 'rgb(147, 51, 234)',
-                      bgcolor: '#3a3a3a',
+                      borderColor: getCardColor(request.value).hoverBorderColor,
+                      bgcolor: getCardColor(request.value).hoverBackgroundColor,
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(147, 51, 234, 0.1)',
+                      boxShadow: request.value > 0 
+                        ? '0 6px 20px rgba(59, 130, 246, 0.2)' 
+                        : request.value < 0 
+                        ? '0 6px 20px rgba(245, 158, 11, 0.2)'
+                        : '0 6px 20px rgba(147, 51, 234, 0.1)',
                     },
                   }}
                 >
@@ -964,7 +1037,11 @@ export function RequestsPage() {
                           variant="h5" 
                           sx={{ 
                             fontWeight: 700,
-                            color: 'rgb(147, 51, 234)',
+                            color: request.value > 0 
+                              ? '#60a5fa' // Azul claro para valores positivos
+                              : request.value < 0 
+                              ? '#ef4444' // Vermelho para valores negativos
+                              : 'rgb(147, 51, 234)', // Roxo para valor zero
                             fontSize: '1.4rem'
                           }}
                         >
@@ -976,7 +1053,13 @@ export function RequestsPage() {
                               aria-label="edit value"
                               size="small"
                               onClick={() => openEditValueDialog(request)}
-                              sx={{ color: 'rgb(147, 51, 234)' }}
+                              sx={{ 
+                                color: request.value > 0 
+                                  ? '#60a5fa' // Azul claro para valores positivos
+                                  : request.value < 0 
+                                  ? '#ef4444' // Vermelho para valores negativos
+                                  : 'rgb(147, 51, 234)' // Roxo para valor zero
+                              }}
                             >
                               <PencilSimple size={18} />
                             </IconButton>

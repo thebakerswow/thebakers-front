@@ -97,10 +97,15 @@ export const createTransactionRequest = async (data: {
 }
 
 export const getTransactionRequests = async (status?: string) => {
-  const params: any = { status: status === 'all' ? '' : status }
+  const params: any = {}
+  if (status && status !== 'all') {
+    params.status = status
+  }
+  
   const response = await api.get('/transaction/request', {
     params
   })
+  
   return response.data.info
 }
 
