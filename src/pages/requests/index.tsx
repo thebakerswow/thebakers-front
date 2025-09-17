@@ -16,9 +16,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Pagination,
+  TextField,
+  InputAdornment,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Check, X, Eye } from '@phosphor-icons/react'
+import { Check, X, Eye, MagnifyingGlass, Calendar, CurrencyDollar } from '@phosphor-icons/react'
 import { PencilSimple } from '@phosphor-icons/react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
@@ -64,13 +67,26 @@ export function RequestsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'denied'>('pending')
   const [teamFilter, setTeamFilter] = useState<string>('all')
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(12)
+  const [playerFilter, setPlayerFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+  const [minValueFilter, setMinValueFilter] = useState('')
+  const [maxValueFilter, setMaxValueFilter] = useState('')
 
-  // Função para ordenar requisições por data e hora (mais recente primeiro)
+  // Função para ordenar requisições por data e hora
   const sortRequestsByDate = (requests: TransactionRequest[]) => {
     return [...requests].sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime()
       const dateB = new Date(b.createdAt).getTime()
-      return dateB - dateA // Ordem decrescente (mais recente primeiro)
+      
+      // Para requests pending, ordenar por data de criação (mais antigas primeiro)
+      if (statusFilter === 'pending') {
+        return dateA - dateB // Ordem crescente (mais antigas primeiro)
+      }
+      
+      // Para outros status, manter ordem decrescente (mais recentes primeiro)
+      return dateB - dateA
     })
   }
 
@@ -80,6 +96,68 @@ export function RequestsPage() {
       return requests
     }
     return requests.filter(request => request.idTeam === teamId)
+  }
+
+  // Função para filtrar requests por player
+  const filterRequestsByPlayer = (requests: TransactionRequest[], playerName: string) => {
+    if (!playerName.trim()) {
+      return requests
+    }
+    return requests.filter(request => 
+      request.nameUserRequest.toLowerCase().includes(playerName.toLowerCase())
+    )
+  }
+
+  // Função para filtrar requests por data
+  const filterRequestsByDate = (requests: TransactionRequest[], date: string) => {
+    if (!date) {
+      return requests
+    }
+    const filterDate = new Date(date)
+    return requests.filter(request => {
+      const requestDate = new Date(request.createdAt)
+      return requestDate.toDateString() === filterDate.toDateString()
+    })
+  }
+
+  // Função para filtrar requests por valor
+  const filterRequestsByValue = (requests: TransactionRequest[], minValue: string, maxValue: string) => {
+    const min = minValue ? parseFloat(minValue) : 0
+    const max = maxValue ? parseFloat(maxValue) : Infinity
+    
+    return requests.filter(request => {
+      const value = request.value
+      return value >= min && value <= max
+    })
+  }
+
+  // Função para aplicar todos os filtros
+  const applyAllFilters = (requests: TransactionRequest[]) => {
+    let filtered = requests
+    
+    // Aplicar filtros em sequência
+    filtered = filterRequestsByTeam(filtered, teamFilter)
+    filtered = filterRequestsByPlayer(filtered, playerFilter)
+    filtered = filterRequestsByDate(filtered, dateFilter)
+    filtered = filterRequestsByValue(filtered, minValueFilter, maxValueFilter)
+    
+    return filtered
+  }
+
+  // Função para calcular dados de paginação
+  const getPaginatedData = (requests: TransactionRequest[]) => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedRequests = requests.slice(startIndex, endIndex)
+    const totalPages = Math.ceil(requests.length / itemsPerPage)
+    
+    return {
+      paginatedRequests,
+      totalPages,
+      totalItems: requests.length,
+      startIndex: startIndex + 1,
+      endIndex: Math.min(endIndex, requests.length)
+    }
   }
 
   const fetchRequests = async (status: string = statusFilter) => {
@@ -101,12 +179,51 @@ export function RequestsPage() {
 
   const handleStatusFilter = (status: 'all' | 'pending' | 'accepted' | 'denied') => {
     setStatusFilter(status)
+    setCurrentPage(1) // Reset to first page when changing status filter
     fetchRequests(status)
   }
 
   const handleTeamFilter = (teamId: string) => {
     setTeamFilter(teamId)
+    setCurrentPage(1) // Reset to first page when changing team filter
     // Não precisa chamar fetchRequests aqui, pois o filtro será aplicado no render
+  }
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (event: any) => {
+    setItemsPerPage(event.target.value as number)
+    setCurrentPage(1) // Reset to first page when changing items per page
+  }
+
+  const handlePlayerFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPlayerFilter(event.target.value)
+    setCurrentPage(1) // Reset to first page when changing player filter
+  }
+
+  const handleDateFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFilter(event.target.value)
+    setCurrentPage(1) // Reset to first page when changing date filter
+  }
+
+  const handleMinValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setMinValueFilter(event.target.value)
+    setCurrentPage(1) // Reset to first page when changing value filter
+  }
+
+  const handleMaxValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setMaxValueFilter(event.target.value)
+    setCurrentPage(1) // Reset to first page when changing value filter
+  }
+
+  const clearAllFilters = () => {
+    setPlayerFilter('')
+    setDateFilter('')
+    setMinValueFilter('')
+    setMaxValueFilter('')
+    setCurrentPage(1)
   }
 
   useEffect(() => {
@@ -357,7 +474,12 @@ export function RequestsPage() {
 
           {/* Team Filter */}
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel sx={{ color: 'white' }}>Team</InputLabel>
+            <InputLabel sx={{ 
+              color: 'white',
+              '&.Mui-focused': {
+                color: 'rgb(147, 51, 234)',
+              },
+            }}>Team</InputLabel>
             <Select
               value={teamFilter}
               onChange={(e) => handleTeamFilter(e.target.value)}
@@ -411,16 +533,266 @@ export function RequestsPage() {
               ))}
             </Select>
           </FormControl>
+
+          {/* Items per page selector */}
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel sx={{ 
+              color: 'white',
+              '&.Mui-focused': {
+                color: 'rgb(147, 51, 234)',
+              },
+            }}>Per Page</InputLabel>
+            <Select
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              label="Per Page"
+              sx={{
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+                '& .MuiSvgIcon-root': {
+                  color: 'white',
+                },
+                '& .MuiSelect-select': {
+                  color: 'white',
+                  backgroundColor: '#2a2a2a',
+                },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #333',
+                    '& .MuiMenuItem-root': {
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#3a3a3a',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              <MenuItem value={6}>6</MenuItem>
+              <MenuItem value={12}>12</MenuItem>
+              <MenuItem value={24}>24</MenuItem>
+              <MenuItem value={48}>48</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Additional Filters */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Player Filter */}
+          <TextField
+            size="small"
+            label="Filter by Player"
+            value={playerFilter}
+            onChange={handlePlayerFilterChange}
+            placeholder="Search player name..."
+            sx={{
+              minWidth: 200,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MagnifyingGlass size={20} color="#9ca3af" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          {/* Date Filter */}
+          <TextField
+            size="small"
+            label="Filter by Date"
+            type="date"
+            value={dateFilter}
+            onChange={handleDateFilterChange}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Calendar size={20} color="#9ca3af" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{
+              minWidth: 180,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+          />
+
+          {/* Min Value Filter */}
+          <TextField
+            size="small"
+            label="Min Value"
+            type="number"
+            value={minValueFilter}
+            onChange={handleMinValueFilterChange}
+            placeholder="0"
+            sx={{
+              minWidth: 120,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyDollar size={20} color="#9ca3af" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          {/* Max Value Filter */}
+          <TextField
+            size="small"
+            label="Max Value"
+            type="number"
+            value={maxValueFilter}
+            onChange={handleMaxValueFilterChange}
+            placeholder="∞"
+            sx={{
+              minWidth: 120,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CurrencyDollar size={20} color="#9ca3af" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          {/* Clear Filters Button */}
+          <Button
+            variant="outlined"
+            onClick={clearAllFilters}
+            sx={{
+              borderColor: '#6b7280',
+              color: '#9ca3af',
+              '&:hover': {
+                borderColor: '#9ca3af',
+                backgroundColor: 'rgba(107, 114, 128, 0.1)',
+              },
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 2,
+              py: 1
+            }}
+          >
+            Clear Filters
+          </Button>
         </Box>
 
         {/* Requests Grid */}
         {(() => {
-          const filteredRequests = filterRequestsByTeam(requests, teamFilter)
+          const filteredRequests = applyAllFilters(requests)
+          const { paginatedRequests, totalPages, totalItems, startIndex, endIndex } = getPaginatedData(filteredRequests)
+          
           return filteredRequests.length === 0 ? (
             <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
               <CardContent sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="h6" color="textSecondary">
-                  {statusFilter === 'all' && teamFilter === 'all'
+                  {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateFilter && !minValueFilter && !maxValueFilter
                     ? 'No requests found' 
                     : `No requests found for the selected filters`
                   }
@@ -428,8 +800,16 @@ export function RequestsPage() {
               </CardContent>
             </Card>
           ) : (
-            <Grid container spacing={3}>
-              {filteredRequests.map((request) => (
+            <>
+              {/* Results info */}
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                  Showing {startIndex}-{endIndex} of {totalItems} requests
+                </Typography>
+              </Box>
+
+              <Grid container spacing={3}>
+                {paginatedRequests.map((request) => (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={request.id}>
                 <Card
                   sx={{
@@ -771,6 +1151,49 @@ export function RequestsPage() {
               </Grid>
               ))}
             </Grid>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                mt: 4,
+                mb: 2
+              }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: 'white',
+                      backgroundColor: '#2a2a2a',
+                      border: '1px solid #333',
+                      '&:hover': {
+                        backgroundColor: '#3a3a3a',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgb(147, 51, 234)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgb(168, 85, 247)',
+                        },
+                      },
+                      '&.MuiPaginationItem-previousNext': {
+                        backgroundColor: '#2a2a2a',
+                        border: '1px solid #333',
+                        '&:hover': {
+                          backgroundColor: '#3a3a3a',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
+            </>
           )
         })()}
       </div>
