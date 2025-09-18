@@ -111,7 +111,6 @@ export function GBankListNew({ onError }: GBankListNewProps) {
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const [warningStates, setWarningStates] = useState<Record<string, boolean>>({})
 
   const handleError = (error: unknown, defaultMessage: string) => {
     if (axios.isAxiosError(error)) {
@@ -135,13 +134,6 @@ export function GBankListNew({ onError }: GBankListNewProps) {
     return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
   }
 
-  // Verifica se o valor de saque é maior que o balance total
-  const checkWithdrawalWarning = (value: string, balance: number) => {
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    if (rawValue === '-' || rawValue === '') return false
-    const numberValue = Number(rawValue.replace(/,/g, ''))
-    return numberValue < 0 && Math.abs(numberValue) > balance
-  }
 
 
   // Função para mostrar SweetAlert com upload de imagem
@@ -459,17 +451,12 @@ export function GBankListNew({ onError }: GBankListNewProps) {
                           <TableCell align='center' sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>
                             <div className="flex flex-col items-center gap-1">
                               <input
-                                className={`rounded-sm bg-zinc-100 p-2 border focus:outline-none ${
-                                  warningStates[g.id] 
-                                    ? 'border-red-500 focus:border-red-600' 
-                                    : 'border-gray-400 focus:border-black'
-                                }`}
+                                className="rounded-sm bg-zinc-100 p-2 border border-gray-400 focus:outline-none focus:border-black"
                                 style={{ fontSize: '1rem', height: '40px', minWidth: '120px' }}
                                 type='text'
                                 value={g.calculatorValue}
                                 onChange={(e) => {
                                   const formatted = formatCalculatorValue(e.target.value)
-                                  const hasWarning = checkWithdrawalWarning(formatted, g.balance)
                                   
                                   setGbanks((prev) =>
                                     prev.map((gbank) =>
@@ -478,11 +465,6 @@ export function GBankListNew({ onError }: GBankListNewProps) {
                                         : gbank
                                     )
                                   )
-                                  
-                                  setWarningStates((prev) => ({
-                                    ...prev,
-                                    [g.id]: hasWarning
-                                  }))
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
@@ -495,11 +477,6 @@ export function GBankListNew({ onError }: GBankListNewProps) {
                                 }}
                                 data-tutorial="gbank-transactions"
                               />
-                              {warningStates[g.id] && (
-                                <div className="text-xs text-red-600 font-medium text-center max-w-[120px]">
-                                  ⚠️ Value exceeds available balance
-                                </div>
-                              )}
                             </div>
                           </TableCell>
                         </TableRow>
