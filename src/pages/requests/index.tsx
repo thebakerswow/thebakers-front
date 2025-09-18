@@ -43,6 +43,11 @@ interface TransactionRequest {
   sumDay: number
 }
 
+interface TransactionRequestResponse {
+  transactions: TransactionRequest[]
+  totalPages: number
+}
+
 // Mapeamento dos IDs dos times para nomes legíveis
 const TEAM_NAMES: Record<string, string> = {
   [import.meta.env.VITE_TEAM_MPLUS]: 'M+',
@@ -58,8 +63,10 @@ const TEAM_NAMES: Record<string, string> = {
 
 
 
+
 export function RequestsPage() {
   const [requests, setRequests] = useState<TransactionRequest[]>([])
+  const [totalPages, setTotalPages] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<TransactionRequest | null>(null)
@@ -68,7 +75,6 @@ export function RequestsPage() {
   const [teamFilter, setTeamFilter] = useState<string>('all')
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(12)
   const [playerFilter, setPlayerFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
   const [minValueFilter, setMinValueFilter] = useState('')
@@ -157,36 +163,28 @@ export function RequestsPage() {
     return filtered
   }
 
-  // Função para calcular dados de paginação
-  const getPaginatedData = (requests: TransactionRequest[]) => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    const paginatedRequests = requests.slice(startIndex, endIndex)
-    const totalPages = Math.ceil(requests.length / itemsPerPage)
-    
-    return {
-      paginatedRequests,
-      totalPages,
-      totalItems: requests.length,
-      startIndex: startIndex + 1,
-      endIndex: Math.min(endIndex, requests.length)
-    }
-  }
 
   const fetchRequests = async () => {
     setIsLoading(true)
     try {
-      // Sempre buscar todas as requests
-      const response = await getTransactionRequests('all')
+      const response = await getTransactionRequests({
+        status: statusFilter, // Enviar o status atual do filtro
+        page: currentPage,
+        limit: 12
+      })
       
-      // Verificar se response é um array
-      if (!Array.isArray(response)) {
+      // Verificar se response tem a estrutura esperada
+      if (response && Array.isArray(response) && response.length > 0) {
+        const data = response[0] as TransactionRequestResponse
+        setRequests(data.transactions || [])
+        // Calcular número de páginas baseado no total de resultados e limit de 12
+        const totalResults = data.totalPages || 0
+        const calculatedPages = Math.ceil(totalResults / 12)
+        setTotalPages(calculatedPages)
+      } else {
         setRequests([])
-        return
+        setTotalPages(0)
       }
-      
-      const sortedRequests = sortRequestsByDate(response || [], 'all')
-      setRequests(sortedRequests)
     } catch (error) {
       const errorDetails = {
         message: 'Error fetching requests',
@@ -201,22 +199,15 @@ export function RequestsPage() {
   const handleStatusFilter = (status: 'all' | 'pending' | 'accepted' | 'denied') => {
     setStatusFilter(status)
     setCurrentPage(1) // Reset to first page when changing status filter
-    // Não precisa chamar fetchRequests aqui, pois já temos todas as requests carregadas
   }
 
   const handleTeamFilter = (teamId: string) => {
     setTeamFilter(teamId)
     setCurrentPage(1) // Reset to first page when changing team filter
-    // Não precisa chamar fetchRequests aqui, pois o filtro será aplicado no render
   }
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page)
-  }
-
-  const handleItemsPerPageChange = (event: any) => {
-    setItemsPerPage(event.target.value as number)
-    setCurrentPage(1) // Reset to first page when changing items per page
   }
 
   const handlePlayerFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,7 +240,7 @@ export function RequestsPage() {
 
   useEffect(() => {
     fetchRequests()
-  }, [])
+  }, [statusFilter, currentPage])
 
   const openEditValueDialog = async (request: TransactionRequest) => {
     if (request.status !== 'pending') return
@@ -602,66 +593,6 @@ export function RequestsPage() {
               ))}
             </Select>
           </FormControl>
-
-          {/* Items per page selector */}
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel sx={{ 
-              color: 'white',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            }}>Per Page</InputLabel>
-            <Select
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              label="Per Page"
-              sx={{
-                color: 'white',
-                backgroundColor: '#2a2a2a',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.23)',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgb(147, 51, 234)',
-                },
-                '& .MuiSvgIcon-root': {
-                  color: 'white',
-                },
-                '& .MuiSelect-select': {
-                  color: 'white',
-                  backgroundColor: '#2a2a2a',
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    backgroundColor: '#2a2a2a',
-                    border: '1px solid #333',
-                    '& .MuiMenuItem-root': {
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#3a3a3a',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(147, 51, 234, 0.3)',
-                        },
-                      },
-                    },
-                  },
-                },
-              }}
-            >
-              <MenuItem value={6}>6</MenuItem>
-              <MenuItem value={12}>12</MenuItem>
-              <MenuItem value={24}>24</MenuItem>
-              <MenuItem value={48}>48</MenuItem>
-            </Select>
-          </FormControl>
         </Box>
 
         {/* Additional Filters */}
@@ -855,7 +786,6 @@ export function RequestsPage() {
         {/* Requests Grid */}
         {(() => {
           const filteredRequests = applyAllFilters(requests)
-          const { paginatedRequests, totalPages, totalItems, startIndex, endIndex } = getPaginatedData(filteredRequests)
           
           return filteredRequests.length === 0 ? (
             <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
@@ -873,12 +803,12 @@ export function RequestsPage() {
               {/* Results info */}
               <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body2" sx={{ color: '#9ca3af' }}>
-                  Showing {startIndex}-{endIndex} of {totalItems} requests
+                  Showing {filteredRequests.length} requests on page {currentPage}
                 </Typography>
               </Box>
 
               <Grid container spacing={3}>
-                {paginatedRequests.map((request) => (
+                {filteredRequests.map((request) => (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={request.id}>
                 <Card
                   sx={{
@@ -1235,47 +1165,47 @@ export function RequestsPage() {
               ))}
             </Grid>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                mt: 4,
-                mb: 2
-              }}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      color: 'white',
-                      backgroundColor: '#2a2a2a',
-                      border: '1px solid #333',
-                      '&:hover': {
-                        backgroundColor: '#3a3a3a',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgb(147, 51, 234)',
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  mt: 4,
+                  mb: 2
+                }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
                         color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgb(168, 85, 247)',
-                        },
-                      },
-                      '&.MuiPaginationItem-previousNext': {
                         backgroundColor: '#2a2a2a',
                         border: '1px solid #333',
                         '&:hover': {
                           backgroundColor: '#3a3a3a',
                         },
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgb(147, 51, 234)',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: 'rgb(168, 85, 247)',
+                          },
+                        },
+                        '&.MuiPaginationItem-previousNext': {
+                          backgroundColor: '#2a2a2a',
+                          border: '1px solid #333',
+                          '&:hover': {
+                            backgroundColor: '#3a3a3a',
+                          },
+                        },
                       },
-                    },
-                  }}
-                />
-              </Box>
-            )}
+                    }}
+                  />
+                </Box>
+              )}
             </>
           )
         })()}

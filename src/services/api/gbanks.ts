@@ -96,14 +96,27 @@ export const createTransactionRequest = async (data: {
   return request.data
 }
 
-export const getTransactionRequests = async (status?: string) => {
-  const params: any = {}
-  if (status && status !== 'all') {
-    params.status = status
+export const getTransactionRequests = async (params: {
+  status?: string
+  page?: number
+  limit?: number
+}) => {
+  const queryParams: any = {}
+  
+  if (params.status && params.status !== 'all') {
+    queryParams.status = params.status
+  }
+  
+  if (params.page) {
+    queryParams.page = params.page
+  }
+  
+  if (params.limit) {
+    queryParams.limit = params.limit
   }
   
   const response = await api.get('/transaction/request', {
-    params
+    params: queryParams
   })
   
   return response.data.info
