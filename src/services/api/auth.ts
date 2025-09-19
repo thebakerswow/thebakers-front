@@ -10,21 +10,6 @@ export const loginDiscord = async () => {
   return response.data
 }
 
-export const loginWithCredentials = async (credentials: {
-  id_discord: string
-  password: string
-}) => {
-  const response = await api.post('/login', credentials)
-  return response.data
-}
-
-export const register = async (data: {
-  id_discord: string
-  password: string
-}) => {
-  const response = await api.post('/login/register', data)
-  return response.data
-}
 
 export const checkRunAccess = async (runId: string) => {
   const response = await api.get(`/access/run/${runId}`)
