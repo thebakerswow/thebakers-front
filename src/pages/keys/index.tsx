@@ -245,7 +245,7 @@ export function KeysPage() {
     : []
 
   return (
-    <div className='flex w-full flex-col items-center overflow-y-auto'>
+    <div className='flex h-screen w-full flex-col items-center overflow-y-auto'>
       {error && <ErrorComponent error={error} onClose={clearError} />}
 
       <DateFilter onDaySelect={setSelectedDate} />
@@ -254,6 +254,7 @@ export function KeysPage() {
         style={{
           minHeight: '500px',
           // Ajusta a altura para ocupar o espaço disponível
+          paddingBottom: '80px', // Margem inferior adequada
         }}
       >
         {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}

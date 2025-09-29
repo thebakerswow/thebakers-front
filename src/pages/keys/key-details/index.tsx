@@ -573,7 +573,7 @@ export function KeyDetails() {
 
   return (
     <div
-      className={`flex min-h-screen w-full flex-col rounded-xl text-gray-100 shadow-2xl ${
+      className={`flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl ${
         isLoadingRun || !runData ? 'items-center justify-center' : ''
       }`}
     >
@@ -584,7 +584,7 @@ export function KeyDetails() {
           <CircularProgress />
         </div>
       ) : (
-        <div className='mx-2 p-4'>
+        <div className='mx-2 p-4 pb-20'>
           {runData ? (
             <KeyRunInfo
               run={runData}

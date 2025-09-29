@@ -234,6 +234,7 @@ export function Header() {
                 </Button>
               )}
 
+              {/* Management Menu - Only for CHEFE */}
               {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
                 <>
                   <Button
@@ -309,6 +310,17 @@ export function Header() {
                     </MenuItem>
                   </Menu>
                 </>
+              )}
+
+              {/* Services Button - Only for M+ */}
+              {hasAccess([import.meta.env.VITE_TEAM_MPLUS]) && !hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
+                <Button
+                  color='inherit'
+                  onClick={() => navigate('/services')}
+                  startIcon={<CalendarBlank size={20} />}
+                >
+                  Services
+                </Button>
               )}
 
               {/* Bookings (NA) Dropdown */}
@@ -436,6 +448,7 @@ export function Header() {
           </MenuItem>
         )}
 
+        {/* Management Menu - Only for CHEFE */}
         {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
           <MenuItem
             onClick={handleMobileManagementMenuOpen}
@@ -443,6 +456,17 @@ export function Header() {
           >
             <Briefcase size={20} />
             Management
+          </MenuItem>
+        )}
+
+        {/* Services Button - Only for M+ */}
+        {hasAccess([import.meta.env.VITE_TEAM_MPLUS]) && !hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
+          <MenuItem
+            onClick={() => handleMobileNavigation('/services')}
+            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
+          >
+            <CalendarBlank size={20} />
+            Services
           </MenuItem>
         )}
 

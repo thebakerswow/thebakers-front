@@ -212,9 +212,10 @@ export function KeysDataGrid({
     <TableContainer
       component={Paper}
       className='relative mb-8 rounded-sm'
-      style={{
+      sx={{
         fontSize: '1rem',
-        overflow: 'hidden',
+        overflow: 'hidden', // Ensures content stays within rounded corners
+        borderRadius: '6px', // Matches the style of runs-data-grid
       }}
     >
       <Table stickyHeader>

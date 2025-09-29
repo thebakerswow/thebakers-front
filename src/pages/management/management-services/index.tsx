@@ -402,40 +402,64 @@ export default function PriceTableManagement() {
           onClose={handleCloseCategoryServicesDialog}
           maxWidth='lg'
           fullWidth
+          PaperProps={{
+            sx: {
+              maxHeight: '90vh',
+              height: '90vh',
+              marginTop: '64px', // Margem do header (altura padrão do AppBar)
+              marginBottom: '16px',
+            }
+          }}
         >
-          <DialogContent sx={{ bgcolor: '#1a1a1a', color: '#fff' }}>
+          <DialogContent 
+            sx={{ 
+              bgcolor: '#1a1a1a', 
+              color: '#fff',
+              overflow: 'auto',
+              height: '100%',
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
             {selectedCategory && (
               <>
-                                 <div className='mb-6 flex items-center justify-between border-b border-zinc-700 pb-4'>
-                   <div className='flex items-center gap-3'>
-                     <CategoryIcon sx={{ color: 'rgb(147, 51, 234)' }} />
-                     <Typography variant='h5' fontWeight='bold'>
-                       {selectedCategory.name} Services
-                     </Typography>
-                   </div>
-                   <div className='flex items-center gap-2'>
-                     <Button
-                       variant='contained'
-                       size='small'
-                       onClick={handleAddService}
-                       sx={{
-                         backgroundColor: 'rgb(147, 51, 234)',
-                         '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                         fontSize: '0.875rem',
-                         px: 2,
-                         py: 0.5,
-                       }}
-                     >
-                       Add Service
-                     </Button>
-                     <IconButton
-                       onClick={handleCloseCategoryServicesDialog}
-                       sx={{ color: '#fff' }}
-                     >
-                       <CloseIcon />
-                     </IconButton>
-                   </div>
-                 </div>
+                {/* Fixed Header */}
+                <div className='sticky top-0 z-10 bg-[#1a1a1a] p-6 pb-4 border-b border-zinc-700'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                      <CategoryIcon sx={{ color: 'rgb(147, 51, 234)' }} />
+                      <Typography variant='h5' fontWeight='bold'>
+                        {selectedCategory.name} Services
+                      </Typography>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        variant='contained'
+                        size='small'
+                        onClick={handleAddService}
+                        sx={{
+                          backgroundColor: 'rgb(147, 51, 234)',
+                          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                          fontSize: '0.875rem',
+                          px: 2,
+                          py: 0.5,
+                        }}
+                      >
+                        Add Service
+                      </Button>
+                      <IconButton
+                        onClick={handleCloseCategoryServicesDialog}
+                        sx={{ color: '#fff' }}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className='flex-1 overflow-auto p-6 pt-4'>
 
                 {/* Services Grid */}
                 {getServicesForCategory(selectedCategory.id).length === 0 ? (
@@ -561,6 +585,7 @@ export default function PriceTableManagement() {
                     ))}
                   </Grid>
                 )}
+                </div>
               </>
             )}
           </DialogContent>
@@ -572,6 +597,12 @@ export default function PriceTableManagement() {
           onClose={() => setOpenCategories(false)}
           maxWidth='md'
           fullWidth
+          PaperProps={{
+            sx: {
+              marginTop: '64px', // Margem do header (altura padrão do AppBar)
+              marginBottom: '16px',
+            }
+          }}
         >
           <DialogContent>
             <div

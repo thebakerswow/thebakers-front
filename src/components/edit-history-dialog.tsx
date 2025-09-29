@@ -71,6 +71,8 @@ export function EditHistoryDialog({
           sx: {
             maxHeight: '90vh', // Limita a altura máxima a 90% da altura da viewport
             height: 'auto',
+            marginTop: '64px', // Margem do header (altura padrão do AppBar)
+            marginBottom: '16px',
           }
         }
       }}
