@@ -100,6 +100,11 @@ export const getTransactionRequests = async (params: {
   status?: string
   page?: number
   limit?: number
+  id_team?: string
+  player_name?: string
+  date?: string
+  min_value?: string
+  max_value?: string
 }) => {
   const queryParams: any = {}
   
@@ -113,6 +118,30 @@ export const getTransactionRequests = async (params: {
   
   if (params.limit) {
     queryParams.limit = params.limit
+  }
+  
+  if (params.id_team && params.id_team !== 'all') {
+    queryParams.id_team = params.id_team
+  }
+  
+  if (params.player_name && params.player_name.trim() !== '') {
+    queryParams.player_name = params.player_name
+  }
+  
+  if (params.date && params.date.trim() !== '') {
+    queryParams.date = params.date
+  }
+  
+  if (params.min_value && params.min_value.trim() !== '') {
+    queryParams.min_value = params.min_value
+  } else {
+    queryParams.min_value = null
+  }
+  
+  if (params.max_value && params.max_value.trim() !== '') {
+    queryParams.max_value = params.max_value
+  } else {
+    queryParams.max_value = null
   }
   
   const response = await api.get('/transaction/request', {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Button,
   Dialog,
@@ -76,93 +76,66 @@ export function RequestsPage() {
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
   const [playerFilter, setPlayerFilter] = useState('')
+  const [playerFilterInput, setPlayerFilterInput] = useState('') // For the input field
   const [dateFilter, setDateFilter] = useState('')
   const [minValueFilter, setMinValueFilter] = useState('')
+  const [minValueFilterInput, setMinValueFilterInput] = useState('') // For the input field
   const [maxValueFilter, setMaxValueFilter] = useState('')
+  const [maxValueFilterInput, setMaxValueFilterInput] = useState('') // For the input field
+  const debounceTimeoutRef = useRef<number | null>(null)
+  const minValueDebounceTimeoutRef = useRef<number | null>(null)
+  const maxValueDebounceTimeoutRef = useRef<number | null>(null)
 
-  // Função para ordenar requisições por data e hora
-  const sortRequestsByDate = (requests: TransactionRequest[], currentStatus: string = statusFilter) => {
-    return [...requests].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime()
-      const dateB = new Date(b.createdAt).getTime()
-      
-      // Para requests pending, ordenar por data de criação (mais antigas primeiro)
-      if (currentStatus === 'pending') {
-        return dateA - dateB // Ordem crescente (mais antigas primeiro)
-      }
-      
-      // Para all, accepted e denied, manter ordem decrescente (mais recentes primeiro)
-      return dateB - dateA
-    })
-  }
-
-  // Função para filtrar requests por time
-  const filterRequestsByTeam = (requests: TransactionRequest[], teamId: string) => {
-    if (teamId === 'all') {
-      return requests
+  // Função para extrair e formatar data diretamente da string da API
+  const formatDateFromAPI = (apiDateString: string) => {
+    // Extrair apenas a parte da data (YYYY-MM-DD) da string ISO
+    const datePart = apiDateString.split('T')[0] // "2025-09-26"
+    const [year, month, day] = datePart.split('-')
+    
+    // Criar array de meses em português
+    const months = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ]
+    
+    // Criar array de dias da semana em português
+    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    
+    // Criar data para obter o dia da semana
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+    const weekday = weekdays[date.getDay()]
+    
+    return {
+      date: `${weekday}, ${day} ${months[parseInt(month) - 1]} ${year}`,
+      time: apiDateString.split('T')[1].split('.')[0].substring(0, 5) // HH:MM
     }
-    return requests.filter(request => request.idTeam === teamId)
   }
 
-  // Função para filtrar requests por player
-  const filterRequestsByPlayer = (requests: TransactionRequest[], playerName: string) => {
-    if (!playerName.trim()) {
-      return requests
-    }
-    return requests.filter(request => 
-      request.nameUserRequest.toLowerCase().includes(playerName.toLowerCase())
-    )
+  // Função para formatar valor da calculadora igual ao gbank-table
+  const formatCalculatorValue = (value: string) => {
+    // Se está vazio, retorna vazio
+    if (!value || value === '') return ''
+    
+    // Remove caracteres não numéricos exceto hífen no início
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+    
+    // Se é apenas hífen, mantém
+    if (rawValue === '-') return '-'
+    
+    // Se não há números, retorna vazio
+    if (!/\d/.test(rawValue)) return ''
+    
+    // Converte para número e formata
+    const numberValue = Number(rawValue)
+    return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
   }
 
-  // Função para filtrar requests por data
-  const filterRequestsByDate = (requests: TransactionRequest[], date: string) => {
-    if (!date) {
-      return requests
-    }
-    const filterDate = new Date(date)
-    return requests.filter(request => {
-      const requestDate = new Date(request.createdAt)
-      return requestDate.toDateString() === filterDate.toDateString()
-    })
+  // Função para formatar valor para exibição em cards
+  const formatValueForDisplay = (value: number): string => {
+    // Formatação manual para garantir vírgula como separador de milhares
+    const formatted = Math.abs(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return value < 0 ? `-${formatted}` : formatted
   }
-
-  // Função para filtrar requests por valor
-  const filterRequestsByValue = (requests: TransactionRequest[], minValue: string, maxValue: string) => {
-    // Se ambos os filtros estão vazios, não filtrar nada
-    if (!minValue && !maxValue) {
-      return requests
-    }
-    
-    const min = minValue ? parseFloat(minValue) : -Infinity
-    const max = maxValue ? parseFloat(maxValue) : Infinity
-    
-    return requests.filter(request => {
-      const value = request.value
-      return value >= min && value <= max
-    })
-  }
-
-  // Função para aplicar todos os filtros
-  const applyAllFilters = (requests: TransactionRequest[]) => {
-    let filtered = requests
-    
-    // Aplicar filtro de status primeiro
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(request => request.status === statusFilter)
-    }
-    
-    // Aplicar outros filtros em sequência
-    filtered = filterRequestsByTeam(filtered, teamFilter)
-    filtered = filterRequestsByPlayer(filtered, playerFilter)
-    filtered = filterRequestsByDate(filtered, dateFilter)
-    filtered = filterRequestsByValue(filtered, minValueFilter, maxValueFilter)
-    
-    // Aplicar ordenação baseada no status atual
-    filtered = sortRequestsByDate(filtered, statusFilter)
-    
-    return filtered
-  }
-
 
   const fetchRequests = async () => {
     setIsLoading(true)
@@ -170,7 +143,12 @@ export function RequestsPage() {
       const response = await getTransactionRequests({
         status: statusFilter, // Enviar o status atual do filtro
         page: currentPage,
-        limit: 12
+        limit: 12,
+        id_team: teamFilter,
+        player_name: playerFilter,
+        date: dateFilter,
+        min_value: minValueFilter,
+        max_value: maxValueFilter
       })
       
       // Verificar se response tem a estrutura esperada
@@ -210,9 +188,57 @@ export function RequestsPage() {
     setCurrentPage(page)
   }
 
+  // Debounced search function for player
+  const debouncedSearch = (value: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      setPlayerFilter(value)
+      setCurrentPage(1)
+    }, 1000) // 1 seconds delay
+  }
+
+  // Debounced search function for min value
+  const debouncedMinValueSearch = (value: string) => {
+    if (minValueDebounceTimeoutRef.current) {
+      clearTimeout(minValueDebounceTimeoutRef.current)
+    }
+    
+    minValueDebounceTimeoutRef.current = setTimeout(() => {
+      setMinValueFilter(value)
+      setCurrentPage(1)
+    }, 1000) // 1 seconds delay
+  }
+
+  // Debounced search function for max value
+  const debouncedMaxValueSearch = (value: string) => {
+    if (maxValueDebounceTimeoutRef.current) {
+      clearTimeout(maxValueDebounceTimeoutRef.current)
+    }
+    
+    maxValueDebounceTimeoutRef.current = setTimeout(() => {
+      setMaxValueFilter(value)
+      setCurrentPage(1)
+    }, 1000) // 1 seconds delay
+  }
+
   const handlePlayerFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPlayerFilter(event.target.value)
-    setCurrentPage(1) // Reset to first page when changing player filter
+    const value = event.target.value
+    setPlayerFilterInput(value)
+    debouncedSearch(value)
+  }
+
+  const handlePlayerFilterKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Clear the timeout and search immediately
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+      setPlayerFilter(playerFilterInput)
+      setCurrentPage(1)
+    }
   }
 
   const handleDateFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,26 +247,116 @@ export function RequestsPage() {
   }
 
   const handleMinValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMinValueFilter(event.target.value)
-    setCurrentPage(1) // Reset to first page when changing value filter
+    const value = event.target.value
+    const formattedValue = formatCalculatorValue(value)
+    setMinValueFilterInput(formattedValue)
+    
+    // Extrair valor numérico para a API
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+    
+    // Se o campo está vazio ou só tem hífen, limpa o filtro
+    if (!rawValue || rawValue === '-') {
+      debouncedMinValueSearch('')
+    } else if (!isNaN(Number(rawValue))) {
+      debouncedMinValueSearch(rawValue)
+    }
+  }
+
+
+  const handleMinValueFilterKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Clear the timeout and search immediately
+      if (minValueDebounceTimeoutRef.current) {
+        clearTimeout(minValueDebounceTimeoutRef.current)
+      }
+      const rawValue = minValueFilterInput.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+      
+      // Se o campo está vazio ou só tem hífen, limpa o filtro
+      if (!rawValue || rawValue === '-') {
+        setMinValueFilter('')
+      } else if (!isNaN(Number(rawValue))) {
+        setMinValueFilter(rawValue)
+      }
+      setCurrentPage(1)
+    }
   }
 
   const handleMaxValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMaxValueFilter(event.target.value)
-    setCurrentPage(1) // Reset to first page when changing value filter
+    const value = event.target.value
+    const formattedValue = formatCalculatorValue(value)
+    setMaxValueFilterInput(formattedValue)
+    
+    // Extrair valor numérico para a API
+    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+    
+    // Se o campo está vazio ou só tem hífen, limpa o filtro
+    if (!rawValue || rawValue === '-') {
+      debouncedMaxValueSearch('')
+    } else if (!isNaN(Number(rawValue))) {
+      debouncedMaxValueSearch(rawValue)
+    }
+  }
+
+
+  const handleMaxValueFilterKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Clear the timeout and search immediately
+      if (maxValueDebounceTimeoutRef.current) {
+        clearTimeout(maxValueDebounceTimeoutRef.current)
+      }
+      const rawValue = maxValueFilterInput.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
+      
+      // Se o campo está vazio ou só tem hífen, limpa o filtro
+      if (!rawValue || rawValue === '-') {
+        setMaxValueFilter('')
+      } else if (!isNaN(Number(rawValue))) {
+        setMaxValueFilter(rawValue)
+      }
+      setCurrentPage(1)
+    }
   }
 
   const clearAllFilters = () => {
     setPlayerFilter('')
+    setPlayerFilterInput('')
     setDateFilter('')
     setMinValueFilter('')
+    setMinValueFilterInput('')
     setMaxValueFilter('')
+    setMaxValueFilterInput('')
     setCurrentPage(1)
+    
+    // Clear any pending debounced searches
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+    if (minValueDebounceTimeoutRef.current) {
+      clearTimeout(minValueDebounceTimeoutRef.current)
+    }
+    if (maxValueDebounceTimeoutRef.current) {
+      clearTimeout(maxValueDebounceTimeoutRef.current)
+    }
   }
 
   useEffect(() => {
     fetchRequests()
-  }, [statusFilter, currentPage])
+  }, [statusFilter, currentPage, teamFilter, playerFilter, dateFilter, minValueFilter, maxValueFilter])
+
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+      if (minValueDebounceTimeoutRef.current) {
+        clearTimeout(minValueDebounceTimeoutRef.current)
+      }
+      if (maxValueDebounceTimeoutRef.current) {
+        clearTimeout(maxValueDebounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const openEditValueDialog = async (request: TransactionRequest) => {
     if (request.status !== 'pending') return
@@ -601,8 +717,9 @@ export function RequestsPage() {
           <TextField
             size="small"
             label="Filter by Player"
-            value={playerFilter}
+            value={playerFilterInput}
             onChange={handlePlayerFilterChange}
+            onKeyPress={handlePlayerFilterKeyPress}
             placeholder="Search player name..."
             sx={{
               minWidth: 200,
@@ -684,9 +801,10 @@ export function RequestsPage() {
           <TextField
             size="small"
             label="Min Value"
-            type="number"
-            value={minValueFilter}
+            type="text"
+            value={minValueFilterInput}
             onChange={handleMinValueFilterChange}
+            onKeyPress={handleMinValueFilterKeyPress}
             placeholder="0"
             sx={{
               minWidth: 120,
@@ -725,9 +843,10 @@ export function RequestsPage() {
           <TextField
             size="small"
             label="Max Value"
-            type="number"
-            value={maxValueFilter}
+            type="text"
+            value={maxValueFilterInput}
             onChange={handleMaxValueFilterChange}
+            onKeyPress={handleMaxValueFilterKeyPress}
             placeholder="∞"
             sx={{
               minWidth: 120,
@@ -784,31 +903,28 @@ export function RequestsPage() {
         </Box>
 
         {/* Requests Grid */}
-        {(() => {
-          const filteredRequests = applyAllFilters(requests)
-          
-          return filteredRequests.length === 0 ? (
-            <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
-              <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="textSecondary">
-                  {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateFilter && !minValueFilter && !maxValueFilter
-                    ? 'No requests found' 
-                    : `No requests found for the selected filters`
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              {/* Results info */}
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
-                  Showing {filteredRequests.length} requests on page {currentPage}
-                </Typography>
-              </Box>
+        {requests.length === 0 ? (
+          <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="textSecondary">
+                {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateFilter && !minValueFilter && !maxValueFilter
+                  ? 'No requests found' 
+                  : `No requests found for the selected filters`
+                }
+              </Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Results info */}
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                Showing {requests.length} requests on page {currentPage}
+              </Typography>
+            </Box>
 
-              <Grid container spacing={3}>
-                {filteredRequests.map((request) => (
+            <Grid container spacing={3}>
+              {requests.map((request) => (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={request.id}>
                 <Card
                   sx={{
@@ -975,7 +1091,7 @@ export function RequestsPage() {
                             fontSize: '1.4rem'
                           }}
                         >
-                          {request.value.toLocaleString()}
+                          {formatValueForDisplay(request.value)}
                         </Typography>
                         {request.status === 'pending' && (
                           <Tooltip title="Edit" placement="top">
@@ -1029,7 +1145,7 @@ export function RequestsPage() {
                           {request.status === 'pending' && (
                             <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                               <Chip
-                                label={`Daily Balance: ${request.sumDay.toLocaleString()}g`}
+                                label={`Daily Balance: ${formatValueForDisplay(request.sumDay)}g`}
                                 size="small"
                                 sx={{
                                   fontSize: '1rem',
@@ -1045,7 +1161,7 @@ export function RequestsPage() {
                                 }}
                               />
                               <Chip
-                                label={`Balance Total: ${request.balanceTotal.toLocaleString()}g`}
+                                label={`Balance Total: ${formatValueForDisplay(request.balanceTotal)}g`}
                                 size="small"
                                 sx={{
                                   fontSize: '1rem',
@@ -1089,12 +1205,7 @@ export function RequestsPage() {
                               color: 'white'
                             }}
                           >
-                            {new Date(request.createdAt).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
+                            {formatDateFromAPI(request.createdAt).date}
                           </Typography>
                           <Typography 
                             variant="body2" 
@@ -1104,11 +1215,7 @@ export function RequestsPage() {
                               fontFamily: 'monospace'
                             }}
                           >
-                            {new Date(request.createdAt).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: false
-                            })}
+                            {formatDateFromAPI(request.createdAt).time}
                           </Typography>
                         </Box>
                       </Box>
@@ -1165,50 +1272,49 @@ export function RequestsPage() {
               ))}
             </Grid>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mt: 4,
-                  mb: 2
-                }}>
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    size="large"
-                    sx={{
-                      '& .MuiPaginationItem-root': {
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                mt: 4,
+                mb: 2
+              }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: 'white',
+                      backgroundColor: '#2a2a2a',
+                      border: '1px solid #333',
+                      '&:hover': {
+                        backgroundColor: '#3a3a3a',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgb(147, 51, 234)',
                         color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgb(168, 85, 247)',
+                        },
+                      },
+                      '&.MuiPaginationItem-previousNext': {
                         backgroundColor: '#2a2a2a',
                         border: '1px solid #333',
                         '&:hover': {
                           backgroundColor: '#3a3a3a',
                         },
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgb(147, 51, 234)',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgb(168, 85, 247)',
-                          },
-                        },
-                        '&.MuiPaginationItem-previousNext': {
-                          backgroundColor: '#2a2a2a',
-                          border: '1px solid #333',
-                          '&:hover': {
-                            backgroundColor: '#3a3a3a',
-                          },
-                        },
                       },
-                    }}
-                  />
-                </Box>
-              )}
-            </>
-          )
-        })()}
+                    },
+                  }}
+                />
+              </Box>
+            )}
+          </>
+        )}
       </div>
 
     {/* Image Dialog */}
@@ -1281,13 +1387,13 @@ export function RequestsPage() {
               </TransformWrapper>
               <Box mt={2}>
                 <Typography variant="body2" color="textSecondary">
-                  Value: <strong>{selectedRequest.value.toLocaleString()}</strong>
+                  Value: <strong>{formatValueForDisplay(selectedRequest.value)}</strong>
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Status: <strong>{selectedRequest.status}</strong>
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Created: {new Date(selectedRequest.createdAt).toLocaleString()}
+                  Created: {formatDateFromAPI(selectedRequest.createdAt).date} às {formatDateFromAPI(selectedRequest.createdAt).time}
                 </Typography>
               </Box>
             </Box>
