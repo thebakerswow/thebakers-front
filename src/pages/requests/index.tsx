@@ -77,7 +77,8 @@ export function RequestsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [playerFilter, setPlayerFilter] = useState('')
   const [playerFilterInput, setPlayerFilterInput] = useState('') // For the input field
-  const [dateFilter, setDateFilter] = useState('')
+  const [dateMinFilter, setDateMinFilter] = useState('')
+  const [dateMaxFilter, setDateMaxFilter] = useState('')
   const [minValueFilter, setMinValueFilter] = useState('')
   const [minValueFilterInput, setMinValueFilterInput] = useState('') // For the input field
   const [maxValueFilter, setMaxValueFilter] = useState('')
@@ -146,7 +147,8 @@ export function RequestsPage() {
         limit: 12,
         id_team: teamFilter,
         player_name: playerFilter,
-        date: dateFilter,
+        date_min: dateMinFilter,
+        date_max: dateMaxFilter,
         min_value: minValueFilter,
         max_value: maxValueFilter
       })
@@ -241,8 +243,13 @@ export function RequestsPage() {
     }
   }
 
-  const handleDateFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateFilter(event.target.value)
+  const handleDateMinFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateMinFilter(event.target.value)
+    setCurrentPage(1) // Reset to first page when changing date filter
+  }
+
+  const handleDateMaxFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateMaxFilter(event.target.value)
     setCurrentPage(1) // Reset to first page when changing date filter
   }
 
@@ -319,7 +326,8 @@ export function RequestsPage() {
   const clearAllFilters = () => {
     setPlayerFilter('')
     setPlayerFilterInput('')
-    setDateFilter('')
+    setDateMinFilter('')
+    setDateMaxFilter('')
     setMinValueFilter('')
     setMinValueFilterInput('')
     setMaxValueFilter('')
@@ -340,7 +348,7 @@ export function RequestsPage() {
 
   useEffect(() => {
     fetchRequests()
-  }, [statusFilter, currentPage, teamFilter, playerFilter, dateFilter, minValueFilter, maxValueFilter])
+  }, [statusFilter, currentPage, teamFilter, playerFilter, dateMinFilter, dateMaxFilter, minValueFilter, maxValueFilter])
 
 
   // Cleanup timeouts on unmount
@@ -754,13 +762,13 @@ export function RequestsPage() {
             }}
           />
 
-          {/* Date Filter */}
+          {/* Date Min Filter */}
           <TextField
             size="small"
-            label="Filter by Date"
+            label="From Date"
             type="date"
-            value={dateFilter}
-            onChange={handleDateFilterChange}
+            value={dateMinFilter}
+            onChange={handleDateMinFilterChange}
             slotProps={{
               inputLabel: {
                 shrink: true,
@@ -774,7 +782,50 @@ export function RequestsPage() {
               },
             }}
             sx={{
-              minWidth: 180,
+              minWidth: 160,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                backgroundColor: '#2a2a2a',
+                '& fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+          />
+
+          {/* Date Max Filter */}
+          <TextField
+            size="small"
+            label="To Date"
+            type="date"
+            value={dateMaxFilter}
+            onChange={handleDateMaxFilterChange}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Calendar size={20} color="#9ca3af" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{
+              minWidth: 160,
               '& .MuiOutlinedInput-root': {
                 color: 'white',
                 backgroundColor: '#2a2a2a',
@@ -907,7 +958,7 @@ export function RequestsPage() {
           <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="h6" color="textSecondary">
-                {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateFilter && !minValueFilter && !maxValueFilter
+                {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateMinFilter && !dateMaxFilter && !minValueFilter && !maxValueFilter
                   ? 'No requests found' 
                   : `No requests found for the selected filters`
                 }

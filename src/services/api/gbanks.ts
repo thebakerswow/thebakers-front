@@ -102,7 +102,8 @@ export const getTransactionRequests = async (params: {
   limit?: number
   id_team?: string
   player_name?: string
-  date?: string
+  date_min?: string
+  date_max?: string
   min_value?: string
   max_value?: string
 }) => {
@@ -128,8 +129,12 @@ export const getTransactionRequests = async (params: {
     queryParams.player_name = params.player_name
   }
   
-  if (params.date && params.date.trim() !== '') {
-    queryParams.date = params.date
+  if (params.date_min && params.date_min.trim() !== '') {
+    queryParams.date_min = params.date_min
+  }
+  
+  if (params.date_max && params.date_max.trim() !== '') {
+    queryParams.date_max = params.date_max
   }
   
   if (params.min_value && params.min_value.trim() !== '') {
