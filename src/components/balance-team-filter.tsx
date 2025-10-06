@@ -36,6 +36,7 @@ const sortTeamsByPriority = (
     'Booty Reaper',
     'Padeirinho',
     'Milharal',
+    'Bastard Munchen',
   ]
 
   return teams.sort((a, b) => {
@@ -121,7 +122,7 @@ export function BalanceTeamFilter({
     } finally {
       setIsLoadingTeams(false)
     }
-  }, [onError, isLoadingTeams, userTeams, userRoles])
+  }, [onError, userTeams, userRoles])
 
   useEffect(() => {
     // Só busca teams se deve mostrar o filtro e se ainda não carregou
@@ -133,7 +134,7 @@ export function BalanceTeamFilter({
     if (shouldFetch) {
       fetchTeams()
     }
-  }, [shouldShowFilter, teams.length, isLoadingTeams, fetchTeams, userTeams.length, userRoles])
+  }, [shouldShowFilter, teams.length, isLoadingTeams, userTeams.length, userRoles])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
   const options = useMemo(
