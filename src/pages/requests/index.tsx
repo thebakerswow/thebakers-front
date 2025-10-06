@@ -438,16 +438,23 @@ export function RequestsPage() {
       })
       
       // Atualizar a lista de requisições localmente após aceitação
-      setRequests(prevRequests => 
-        prevRequests.map(request => 
-          request.id.toString() === requestId 
-            ? { ...request, status: 'accepted' as const }
-            : request
-        )
+      const updatedRequests = requests.map(request => 
+        request.id.toString() === requestId 
+          ? { ...request, status: 'accepted' as const }
+          : request
       )
+      setRequests(updatedRequests)
       
-      // Mostrar mensagem de sucesso
-      console.log('Request accepted successfully:', requestId)
+      // Verificar se todos os cards da página atual foram processados
+      const remainingPendingRequests = updatedRequests.filter(req => req.status === 'pending')
+      
+      // Se não há mais requests pendentes na página atual, fazer nova requisição GET
+      if (remainingPendingRequests.length === 0) {
+        // Fazer nova requisição GET para buscar novos cards pendentes
+        // Se não houver mais requests, a lista ficará vazia e mostrará "No requests found"
+        fetchRequests()
+      }
+
     } catch (error) {
       console.error('Error accepting request:', error)
       const errorDetails = {
@@ -476,16 +483,23 @@ export function RequestsPage() {
       })
       
       // Atualizar a lista de requisições localmente após negação
-      setRequests(prevRequests => 
-        prevRequests.map(request => 
-          request.id.toString() === requestId 
-            ? { ...request, status: 'denied' as const }
-            : request
-        )
+      const updatedRequests = requests.map(request => 
+        request.id.toString() === requestId 
+          ? { ...request, status: 'denied' as const }
+          : request
       )
+      setRequests(updatedRequests)
       
-      // Mostrar mensagem de sucesso
-      console.log('Request denied successfully:', requestId)
+      // Verificar se todos os cards da página atual foram processados
+      const remainingPendingRequests = updatedRequests.filter(req => req.status === 'pending')
+      
+      // Se não há mais requests pendentes na página atual, fazer nova requisição GET
+      if (remainingPendingRequests.length === 0) {
+        // Fazer nova requisição GET para buscar novos cards pendentes
+        // Se não houver mais requests, a lista ficará vazia e mostrará "No requests found"
+        fetchRequests()
+      }
+    
     } catch (error) {
       console.error('Error denying request:', error)
       const errorDetails = {
@@ -958,7 +972,9 @@ export function RequestsPage() {
           <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="h6" color="textSecondary">
-                {statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateMinFilter && !dateMaxFilter && !minValueFilter && !maxValueFilter
+                {statusFilter === 'pending' && teamFilter === 'all' && !playerFilter && !dateMinFilter && !dateMaxFilter && !minValueFilter && !maxValueFilter
+                  ? 'No pending requests found - All requests have been processed!' 
+                  : statusFilter === 'all' && teamFilter === 'all' && !playerFilter && !dateMinFilter && !dateMaxFilter && !minValueFilter && !maxValueFilter
                   ? 'No requests found' 
                   : `No requests found for the selected filters`
                 }
