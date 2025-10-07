@@ -20,6 +20,7 @@ import {
   ArrowFatUp,
   ClipboardText,
   User,
+  CurrencyDollar,
 } from '@phosphor-icons/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
@@ -308,6 +309,16 @@ export function Header() {
                       <ClipboardText size={20} />
                       Requests
                     </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        navigate('/payments')
+                        handleMenuClose()
+                      }}
+                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <CurrencyDollar size={20} />
+                      Payments
+                    </MenuItem>
                   </Menu>
                 </>
               )}
@@ -538,6 +549,13 @@ export function Header() {
         >
           <ClipboardText size={20} />
           Requests
+        </MenuItem>
+        <MenuItem
+          onClick={() => handleMobileNavigation('/payments')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <CurrencyDollar size={20} />
+          Payments
         </MenuItem>
       </Menu>
 
