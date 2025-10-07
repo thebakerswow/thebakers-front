@@ -17,6 +17,10 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
@@ -32,6 +36,9 @@ export function FullRaidsNa() {
   const [isCopied, setIsCopied] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<string>('All')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
+  const [selectedLoot, setSelectedLoot] = useState<string>('All')
   const { userRoles } = useAuth()
 
   // Verifica se o usuário possui o papel necessário
@@ -44,7 +51,7 @@ export function FullRaidsNa() {
 
   // Copia os dados das corridas para a área de transferência
   const copyRunsToClipboard = () => {
-    if (rows.length === 0) {
+    if (filteredRows.length === 0) {
       Swal.fire({
         icon: 'warning',
         title: 'No runs available to copy.',
@@ -55,7 +62,7 @@ export function FullRaidsNa() {
       return
     }
 
-    const formattedRuns = rows.map((run) => ({
+    const formattedRuns = filteredRows.map((run) => ({
       date: run.date,
       time: run.time,
       raid: run.raid,
@@ -208,6 +215,15 @@ export function FullRaidsNa() {
     })
   }
 
+  // Filtra os dados baseado nos filtros selecionados
+  const filteredRows = rows.filter((run) => {
+    const teamMatch = selectedTeam === 'All' || run.team === selectedTeam
+    const difficultyMatch =
+      selectedDifficulty === 'All' || run.difficulty === selectedDifficulty
+    const lootMatch = selectedLoot === 'All' || run.loot === selectedLoot
+    return teamMatch && difficultyMatch && lootMatch
+  })
+
   // Busca inicial e configuração de polling
   useEffect(() => {
     fetchRuns(true)
@@ -220,59 +236,161 @@ export function FullRaidsNa() {
     <div className='flex min-h-screen w-full flex-col items-center overflow-auto pb-20'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
       <DateFilter onDaySelect={setSelectedDate} />
+
       <div className='mx-auto mt-6 flex w-[90%] flex-col p-4'>
-        {/* Deve possuir o papel de Chefe de Cozinha para adicionar corridas. */}
-        {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
-          <div className='mb-2 flex gap-2 self-start'>
+        {/* Linha com botões e filtros */}
+        <div className='mb-2 flex flex-wrap items-end justify-between gap-4'>
+          {/* Botões à esquerda */}
+          {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
+            <div className='flex gap-2'>
+              <Button
+                variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                  padding: '10px 20px',
+                  boxShadow: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                startIcon={<UserPlus size={18} />}
+                onClick={() => setIsAddRunOpen(true)}
+              >
+                Add Run
+              </Button>
+              <Button
+                variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': {
+                    backgroundColor: 'rgb(168, 85, 247)',
+                  },
+                  padding: '10px 20px',
+                  boxShadow: 3,
+                  display: 'flex',
+                  justify: 'center',
+                }}
+                startIcon={<ClipboardText size={18} />}
+                onClick={copyRunsToClipboard}
+              >
+                {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
+              </Button>
+              <Button
+                variant='contained'
+                sx={{
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                  padding: '10px 20px',
+                  boxShadow: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                startIcon={<UsersFour size={18} />}
+                onClick={() => setIsBulkAddOpen(true)}
+              >
+                Add Multiple Runs
+              </Button>
+            </div>
+          )}
+
+          {/* Filtros à direita */}
+          <div className='flex flex-wrap items-end gap-4'>
+            {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
+              <div className='flex flex-col'>
+                <InputLabel className='font-normal' style={{ color: 'white' }}>
+                  Team:
+                </InputLabel>
+                <Select
+                  className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
+                  id='team-filter'
+                  value={selectedTeam}
+                  onChange={(e: SelectChangeEvent) =>
+                    setSelectedTeam(e.target.value)
+                  }
+                  variant='outlined'
+                >
+                  <MenuItem value='All'>All</MenuItem>
+                  <MenuItem value='Garçom'>Garçom</MenuItem>
+                  <MenuItem value='Confeiteiros'>Confeiteiros</MenuItem>
+                  <MenuItem value='Jackfruit'>Jackfruit</MenuItem>
+                  <MenuItem value='Insanos'>Insanos</MenuItem>
+                  <MenuItem value='APAE'>APAE</MenuItem>
+                  <MenuItem value='Los Renegados'>Los Renegados</MenuItem>
+                  <MenuItem value='DTM'>DTM</MenuItem>
+                  <MenuItem value='KFFC'>KFFC</MenuItem>
+                  <MenuItem value='Greensky'>Greensky</MenuItem>
+                  <MenuItem value='Guild Azralon BR#1'>Guild Azralon BR#1</MenuItem>
+                  <MenuItem value='Guild Azralon BR#2'>
+                    Guild Azralon BR#2
+                  </MenuItem>
+                  <MenuItem value='Rocket'>Rocket</MenuItem>
+                  <MenuItem value='Booty Reaper'>Booty Reaper</MenuItem>
+                  <MenuItem value='Padeirinho'>Padeirinho</MenuItem>
+                  <MenuItem value='Milharal'>Milharal</MenuItem>
+                  <MenuItem value='Bastard Munchen'>Bastard Munchen</MenuItem>
+                  <MenuItem value='Kiwi'>Kiwi</MenuItem>
+                </Select>
+              </div>
+            )}
+
+            <div className='flex flex-col'>
+              <InputLabel className='font-normal' style={{ color: 'white' }}>
+                Difficulty:
+              </InputLabel>
+              <Select
+                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
+                id='difficulty-filter'
+                value={selectedDifficulty}
+                onChange={(e: SelectChangeEvent) =>
+                  setSelectedDifficulty(e.target.value)
+                }
+                variant='outlined'
+              >
+                <MenuItem value='All'>All</MenuItem>
+                <MenuItem value='Normal'>Normal</MenuItem>
+                <MenuItem value='Heroic'>Heroic</MenuItem>
+                <MenuItem value='Mythic'>Mythic</MenuItem>
+              </Select>
+            </div>
+
+            <div className='flex flex-col'>
+              <InputLabel className='font-normal' style={{ color: 'white' }}>
+                Loot:
+              </InputLabel>
+              <Select
+                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
+                id='loot-filter'
+                value={selectedLoot}
+                onChange={(e: SelectChangeEvent) =>
+                  setSelectedLoot(e.target.value)
+                }
+                variant='outlined'
+              >
+                <MenuItem value='All'>All</MenuItem>
+                <MenuItem value='Saved'>Saved</MenuItem>
+                <MenuItem value='Unsaved'>Unsaved</MenuItem>
+              </Select>
+            </div>
+
             <Button
+              onClick={() => {
+                setSelectedTeam('All')
+                setSelectedDifficulty('All')
+                setSelectedLoot('All')
+              }}
               variant='contained'
               sx={{
                 backgroundColor: 'rgb(147, 51, 234)',
                 '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                padding: '10px 20px',
-                boxShadow: 3,
-                display: 'flex',
-                alignItems: 'center',
+                height: '40px',
               }}
-              startIcon={<UserPlus size={18} />}
-              onClick={() => setIsAddRunOpen(true)}
+              size='small'
+              className='shadow-lg'
             >
-              Add Run
-            </Button>
-            <Button
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': {
-                  backgroundColor: 'rgb(168, 85, 247)',
-                },
-                padding: '10px 20px',
-                boxShadow: 3,
-                display: 'flex',
-                justify: 'center',
-              }}
-              startIcon={<ClipboardText size={18} />}
-              onClick={copyRunsToClipboard}
-            >
-              {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
-            </Button>
-            <Button
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                padding: '10px 20px',
-                boxShadow: 3,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              startIcon={<UsersFour size={18} />}
-              onClick={() => setIsBulkAddOpen(true)}
-            >
-              Add Multiple Runs
+              Reset
             </Button>
           </div>
-        )}
+        </div>
 
         {isBulkAddOpen && (
           <Dialog
@@ -336,7 +454,7 @@ export function FullRaidsNa() {
         )}
 
         <RunsDataGrid
-          data={rows}
+          data={filteredRows}
           isLoading={isLoading}
           onDeleteSuccess={() => fetchRuns(true)}
           onEditSuccess={handleEditRunSuccess}

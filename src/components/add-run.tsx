@@ -248,6 +248,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               <MenuItem value='Full Raid'>Full Raid</MenuItem>
               <MenuItem value='AOTC'>AOTC</MenuItem>
               <MenuItem value='Legacy'>Legacy</MenuItem>
+              <MenuItem value='Remix'>Remix</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth variant='outlined' required>

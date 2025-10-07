@@ -228,6 +228,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                   <MenuItem value='Full Raid'>Full Raid</MenuItem>
                   <MenuItem value='AOTC'>AOTC</MenuItem>
                   <MenuItem value='Legacy'>Legacy</MenuItem>
+                  <MenuItem value='Remix'>Remix</MenuItem>
                 </Select>
               </FormControl>
             )}
