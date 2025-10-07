@@ -39,6 +39,7 @@ export function FullRaidsNa() {
   const [selectedTeam, setSelectedTeam] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
   const [selectedLoot, setSelectedLoot] = useState<string>('All')
+  const [selectedRunType, setSelectedRunType] = useState<string>('All')
   const { userRoles } = useAuth()
 
   // Verifica se o usuário possui o papel necessário
@@ -221,7 +222,8 @@ export function FullRaidsNa() {
     const difficultyMatch =
       selectedDifficulty === 'All' || run.difficulty === selectedDifficulty
     const lootMatch = selectedLoot === 'All' || run.loot === selectedLoot
-    return teamMatch && difficultyMatch && lootMatch
+    const runTypeMatch = selectedRunType === 'All' || run.runType === selectedRunType
+    return teamMatch && difficultyMatch && lootMatch && runTypeMatch
   })
 
   // Busca inicial e configuração de polling
@@ -372,11 +374,33 @@ export function FullRaidsNa() {
               </Select>
             </div>
 
+            <div className='flex flex-col'>
+              <InputLabel className='font-normal' style={{ color: 'white' }}>
+                Run Type:
+              </InputLabel>
+              <Select
+                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
+                id='run-type-filter'
+                value={selectedRunType}
+                onChange={(e: SelectChangeEvent) =>
+                  setSelectedRunType(e.target.value)
+                }
+                variant='outlined'
+              >
+                <MenuItem value='All'>All</MenuItem>
+                <MenuItem value='Full Raid'>Full Raid</MenuItem>
+                <MenuItem value='AOTC'>AOTC</MenuItem>
+                <MenuItem value='Legacy'>Legacy</MenuItem>
+                <MenuItem value='Remix'>Remix</MenuItem>
+              </Select>
+            </div>
+
             <Button
               onClick={() => {
                 setSelectedTeam('All')
                 setSelectedDifficulty('All')
                 setSelectedLoot('All')
+                setSelectedRunType('All')
               }}
               variant='contained'
               sx={{
