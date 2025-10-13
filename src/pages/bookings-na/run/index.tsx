@@ -615,7 +615,7 @@ export function RunDetails() {
             <CircularProgress />
           </div>
         ) : (
-          <div className='p-4'>
+          <div className='p-4 pb-20'>
             {runData ? (
               <RunInfo
                 run={runData}
