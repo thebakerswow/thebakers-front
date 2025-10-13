@@ -6,7 +6,8 @@ export interface Payment {
   dollar: number
   mValue: number
   date: string
-  status: 'pending' | 'paid' | 'cancelled'
+  paymentDate: string
+  paymentStatus: 'pending' | 'completed'
   idTeam?: string
 }
 
@@ -16,7 +17,8 @@ export interface PaymentResponse {
 }
 
 export interface PaymentFilters {
-  status?: 'all' | 'pending' | 'paid' | 'cancelled'
+  paymentDate?: string
+  paymentStatus?: 'pending' | 'completed'
   page?: number
   limit?: number
   id_team?: string

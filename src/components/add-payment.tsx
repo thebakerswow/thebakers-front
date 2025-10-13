@@ -48,7 +48,8 @@ export function AddPayment({
     dollar: '',
     mValue: '',
     date: '',
-    status: 'pending' as 'pending' | 'paid' | 'cancelled',
+    paymentDate: 'payment 01/10',
+    paymentStatus: 'pending' as 'pending' | 'completed',
   })
   
   const [buyers, setBuyers] = useState<BuyerOption[]>([
@@ -58,16 +59,21 @@ export function AddPayment({
     { id: 3, name: 'Pedro Costa' },
   ])
 
-  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([
-    { value: 'pending', label: 'Pending' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'cancelled', label: 'Cancelled' },
+  const [paymentDateOptions, setPaymentDateOptions] = useState<StatusOption[]>([
+    { value: 'payment 01/10', label: 'Payment 01/10' },
+    { value: 'payment 07/10', label: 'Payment 07/10' },
+    { value: 'payment 15/10', label: 'Payment 15/10' },
   ])
+
+  const paymentStatusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'completed', label: 'Completed' },
+  ]
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
-  const [isAddStatusOpen, setIsAddStatusOpen] = useState(false)
+  const [isAddPaymentDateOpen, setIsAddPaymentDateOpen] = useState(false)
 
   // Função para formatar valor em gold
   const formatGoldValue = (value: string) => {
@@ -133,7 +139,8 @@ export function AddPayment({
       dollar: Number(formData.dollar.replace(/,/g, '')) || 0,
       mValue: Number(formData.mValue.replace(/,/g, '')) || 0,
       date: formData.date,
-      status: formData.status,
+      paymentDate: formData.paymentDate,
+      paymentStatus: formData.paymentStatus,
     }
 
     try {
@@ -188,21 +195,21 @@ export function AddPayment({
     setIsAddBuyerOpen(false)
   }
 
-  const handleStatusAdded = (statusLabel: string, statusValue: string) => {
-    // Adiciona a nova situação à lista
-    const newStatus = {
+  const handlePaymentDateAdded = (statusLabel: string, statusValue: string) => {
+    // Adiciona a nova payment date à lista
+    const newPaymentDate = {
       value: statusValue,
       label: statusLabel,
     }
-    setStatusOptions((prev) => [...prev, newStatus])
+    setPaymentDateOptions((prev) => [...prev, newPaymentDate])
     
-    // Seleciona automaticamente a situação recém-adicionada
+    // Seleciona automaticamente a payment date recém-adicionada
     setFormData((prev) => ({
       ...prev,
-      status: statusValue as 'pending' | 'paid' | 'cancelled',
+      paymentDate: statusValue,
     }))
     
-    setIsAddStatusOpen(false)
+    setIsAddPaymentDateOpen(false)
   }
 
   return (
@@ -337,29 +344,29 @@ export function AddPayment({
 
               <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
                 <FormControl fullWidth variant='outlined'>
-                  <InputLabel id='status-label'>Status</InputLabel>
+                  <InputLabel id='payment-date-label'>Payment Date</InputLabel>
                   <Select
-                    id='status'
-                    labelId='status-label'
-                    value={formData.status}
+                    id='paymentDate'
+                    labelId='payment-date-label'
+                    value={formData.paymentDate}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        status: e.target.value as 'pending' | 'paid' | 'cancelled',
+                        paymentDate: e.target.value,
                       }))
                     }
-                    label='Status'
+                    label='Payment Date'
                   >
-                    {statusOptions.map((status) => (
-                      <MenuItem key={status.value} value={status.value}>
-                        {status.label}
+                    {paymentDateOptions.map((paymentDate) => (
+                      <MenuItem key={paymentDate.value} value={paymentDate.value}>
+                        {paymentDate.label}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
                 <Button
                   variant='contained'
-                  onClick={() => setIsAddStatusOpen(true)}
+                  onClick={() => setIsAddPaymentDateOpen(true)}
                   startIcon={<Plus size={20} />}
                   sx={{
                     backgroundColor: 'rgb(147, 51, 234)',
@@ -370,6 +377,28 @@ export function AddPayment({
                   New
                 </Button>
               </Box>
+
+              <FormControl fullWidth variant='outlined' className='col-span-2'>
+                <InputLabel id='payment-status-label'>Status</InputLabel>
+                <Select
+                  id='paymentStatus'
+                  labelId='payment-status-label'
+                  value={formData.paymentStatus}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      paymentStatus: e.target.value as 'pending' | 'completed',
+                    }))
+                  }
+                  label='Status'
+                >
+                  {paymentStatusOptions.map((status) => (
+                    <MenuItem key={status.value} value={status.value}>
+                      {status.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               {formError && (
                 <div className='col-span-2 text-center font-semibold text-red-600'>
@@ -409,10 +438,10 @@ export function AddPayment({
         />
       )}
 
-      {isAddStatusOpen && (
+      {isAddPaymentDateOpen && (
         <AddStatusToList
-          onClose={() => setIsAddStatusOpen(false)}
-          onStatusAdded={handleStatusAdded}
+          onClose={() => setIsAddPaymentDateOpen(false)}
+          onStatusAdded={handlePaymentDateAdded}
         />
       )}
     </>

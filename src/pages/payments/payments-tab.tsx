@@ -16,11 +16,10 @@ import {
   Checkbox,
   TextField,
   InputLabel,
-  InputAdornment,
-  Button,
   Typography,
+  Button,
 } from '@mui/material'
-import { Calendar, CurrencyDollar, Wallet, ShoppingCart } from '@phosphor-icons/react'
+import { Wallet, ShoppingCart } from '@phosphor-icons/react'
 import { ErrorDetails } from '../../components/error-display'
 import Swal from 'sweetalert2'
 
@@ -54,7 +53,8 @@ interface PaymentRow {
   shopBalance: number
   balanceSold: number
   mInDollarSold: number
-  status: string
+  paymentDate: string
+  paymentStatus: 'pending' | 'completed'
   nextDollarShop: number
   nextGPayment: number
   total: number
@@ -70,16 +70,9 @@ interface PaymentsTabProps {
 export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([])
   const [allPaymentRows, setAllPaymentRows] = useState<PaymentRow[]>([])
-  const [selectedStatusColumn, setSelectedStatusColumn] = useState('all')
+  const [paymentDateFilter, setPaymentDateFilter] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
   const [teamFilter, setTeamFilter] = useState<string>('all')
-  const [playerFilter, setPlayerFilter] = useState('all')
-  const [dateMinFilter, setDateMinFilter] = useState('')
-  const [dateMaxFilter, setDateMaxFilter] = useState('')
-  const [minValueFilter, setMinValueFilter] = useState('')
-  const [minValueFilterInput, setMinValueFilterInput] = useState('')
-  const [maxValueFilter, setMaxValueFilter] = useState('')
-  const [maxValueFilterInput, setMaxValueFilterInput] = useState('')
 
   const handleHoldChange = (id: string | number, checked: boolean) => {
     setPaymentRows(prevRows =>
@@ -194,26 +187,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
     }
   }
 
-  // Lista única de players
-  const uniquePlayers = useMemo(() => {
-    const playersSet = new Set(allPaymentRows.map(p => p.player))
-    return Array.from(playersSet).sort()
-  }, [allPaymentRows])
-
-  // Função para formatar valor da calculadora
-  const formatCalculatorValue = (value: string) => {
-    if (!value || value === '') return ''
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (rawValue === '-') return '-'
-    
-    if (!/\d/.test(rawValue)) return ''
-    
-    const numberValue = Number(rawValue)
-    return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
-  }
-
   // Função para formatar valor para exibição
   const formatValueForDisplay = (value: number): string => {
     const formatted = Math.abs(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -240,7 +213,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           shopBalance: 800000,
           balanceSold: 700000,
           mInDollarSold: 63.70,
-          status: 'pending',
+          paymentDate: 'payment 01/10',
+          paymentStatus: 'pending',
           nextDollarShop: 72.80,
           nextGPayment: 500000,
           total: 2300000,
@@ -255,7 +229,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           shopBalance: 1200000,
           balanceSold: 800000,
           mInDollarSold: 72.80,
-          status: 'paid',
+          paymentDate: 'payment 07/10',
+          paymentStatus: 'completed',
           nextDollarShop: 109.20,
           nextGPayment: 800000,
           total: 3200000,
@@ -270,7 +245,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           shopBalance: 400000,
           balanceSold: 400000,
           mInDollarSold: 36.40,
-          status: 'pending',
+          paymentDate: 'payment 15/10',
+          paymentStatus: 'pending',
           nextDollarShop: 36.40,
           nextGPayment: 300000,
           total: 1200000,
@@ -285,7 +261,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           shopBalance: 600000,
           balanceSold: 600000,
           mInDollarSold: 54.60,
-          status: 'paid',
+          paymentDate: 'payment 01/10',
+          paymentStatus: 'completed',
           nextDollarShop: 54.60,
           nextGPayment: 400000,
           total: 1600000,
@@ -313,55 +290,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
     setTeamFilter(teamId)
   }
 
-  const handlePlayerFilterChange = (playerId: string) => {
-    setPlayerFilter(playerId)
-  }
-
-  const handleDateMinFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateMinFilter(event.target.value)
-  }
-
-  const handleDateMaxFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateMaxFilter(event.target.value)
-  }
-
-  const handleMinValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    const formattedValue = formatCalculatorValue(value)
-    setMinValueFilterInput(formattedValue)
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (!rawValue || rawValue === '-') {
-      setMinValueFilter('')
-    } else if (!isNaN(Number(rawValue))) {
-      setMinValueFilter(rawValue)
-    }
-  }
-
-  const handleMaxValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    const formattedValue = formatCalculatorValue(value)
-    setMaxValueFilterInput(formattedValue)
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (!rawValue || rawValue === '-') {
-      setMaxValueFilter('')
-    } else if (!isNaN(Number(rawValue))) {
-      setMaxValueFilter(rawValue)
-    }
-  }
-
-  const clearAllFilters = () => {
-    setTeamFilter('all')
-    setPlayerFilter('all')
-    setDateMinFilter('')
-    setDateMaxFilter('')
-    setMinValueFilter('')
-    setMinValueFilterInput('')
-    setMaxValueFilter('')
-    setMaxValueFilterInput('')
+  const handlePaymentDateFilter = (paymentDate: string) => {
+    setPaymentDateFilter(paymentDate)
   }
 
   useEffect(() => {
@@ -392,59 +322,48 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       filtered = filtered.filter(row => row.idTeam === teamFilter)
     }
 
-    // Filtro por player
-    if (playerFilter !== 'all') {
-      filtered = filtered.filter(row => row.player === playerFilter)
-    }
-
-    // Filtro por data mínima
-    if (dateMinFilter) {
-      // TODO: implementar filtro por data quando tivermos o campo de data nos payment rows
-    }
-
-    // Filtro por data máxima
-    if (dateMaxFilter) {
-      // TODO: implementar filtro por data quando tivermos o campo de data nos payment rows
-    }
-
-    // Filtro por valor mínimo
-    if (minValueFilter) {
-      const minVal = Number(minValueFilter)
-      filtered = filtered.filter(row => row.total >= minVal)
-    }
-
-    // Filtro por valor máximo
-    if (maxValueFilter) {
-      const maxVal = Number(maxValueFilter)
-      filtered = filtered.filter(row => row.total <= maxVal)
+    // Filtro por payment date
+    if (paymentDateFilter !== 'all') {
+      filtered = filtered.filter(row => row.paymentDate === paymentDateFilter)
     }
 
     setPaymentRows(filtered)
-  }, [allPaymentRows, teamFilter, playerFilter, dateMinFilter, dateMaxFilter, minValueFilter, maxValueFilter])
+  }, [allPaymentRows, teamFilter, paymentDateFilter])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getPaymentDateColor = (paymentDate: string) => {
+    // Payment dates get different colors
+    if (paymentDate.startsWith('payment')) {
+      return 'info'
+    }
+    return 'default'
+  }
+
+  const getPaymentDateLabel = (paymentDate: string) => {
+    // Format payment dates nicely
+    if (paymentDate.startsWith('payment')) {
+      const datePart = paymentDate.replace('payment', 'Payment').trim()
+      return datePart.toUpperCase()
+    }
+    return paymentDate.toUpperCase()
+  }
+
+  const getPaymentStatusColor = (paymentStatus: 'pending' | 'completed') => {
+    switch (paymentStatus) {
       case 'pending':
         return 'warning'
-      case 'paid':
+      case 'completed':
         return 'success'
-      case 'cancelled':
-        return 'error'
       default:
         return 'default'
     }
   }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
+  const getPaymentStatusLabel = (paymentStatus: 'pending' | 'completed') => {
+    switch (paymentStatus) {
       case 'pending':
         return 'PENDING'
-      case 'paid':
-        return 'PAID'
-      case 'cancelled':
-        return 'CANCELLED'
-      default:
-        return status.toUpperCase()
+      case 'completed':
+        return 'COMPLETED'
     }
   }
 
@@ -458,9 +377,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
 
   const renderTableRows = (rows: PaymentRow[]) => (
     <>
-      {rows
-        .filter(row => selectedStatusColumn === 'all' || row.status === selectedStatusColumn)
-        .map((row) => (
+      {rows.map((row) => (
           <TableRow
             key={row.id}
             sx={{
@@ -487,8 +404,19 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             </TableCell>
             <TableCell align="center">
               <Chip
-                label={getStatusLabel(row.status)}
-                color={getStatusColor(row.status) as any}
+                label={getPaymentDateLabel(row.paymentDate)}
+                color={getPaymentDateColor(row.paymentDate) as any}
+                size="small"
+                sx={{
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                }}
+              />
+            </TableCell>
+            <TableCell align="center">
+              <Chip
+                label={getPaymentStatusLabel(row.paymentStatus)}
+                color={getPaymentStatusColor(row.paymentStatus) as any}
                 size="small"
                 sx={{
                   fontWeight: 'bold',
@@ -624,34 +552,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Shop Balance</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Balance Sold</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>M in $ Sold</TableCell>
-              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', minWidth: 150 }}>
-                <FormControl size="small" fullWidth>
-                  <Select
-                    value={selectedStatusColumn}
-                    onChange={(e) => setSelectedStatusColumn(e.target.value)}
-                    sx={{
-                      color: 'white',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(255, 255, 255, 0.23)',
-                      },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgb(147, 51, 234)',
-                      },
-                      '& .MuiSvgIcon-root': {
-                        color: 'white',
-                      },
-                    }}
-                  >
-                    <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="paid">Paid</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                  </Select>
-                </FormControl>
-              </TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Payment Date</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Status</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Next $ Shop</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Next G Payment</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Total</TableCell>
@@ -671,7 +573,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
   return (
     <Box>
       {/* Filters */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         {/* Team Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel sx={{ 
@@ -734,18 +636,18 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           </Select>
         </FormControl>
 
-        {/* Player Filter */}
+        {/* Payment Date Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel sx={{ 
             color: 'white',
             '&.Mui-focused': {
               color: 'rgb(147, 51, 234)',
             },
-          }}>Player</InputLabel>
+          }}>Payment Date</InputLabel>
           <Select
-            value={playerFilter}
-            onChange={(e) => handlePlayerFilterChange(e.target.value)}
-            label="Player"
+            value={paymentDateFilter}
+            onChange={(e) => handlePaymentDateFilter(e.target.value)}
+            label="Payment Date"
             sx={{
               color: 'white',
               backgroundColor: '#2a2a2a',
@@ -787,205 +689,12 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               },
             }}
           >
-            <MenuItem value="all">All Players</MenuItem>
-            {uniquePlayers.map((player) => (
-              <MenuItem key={player} value={player}>
-                {player}
-              </MenuItem>
-            ))}
+            <MenuItem value="all">All Payment Dates</MenuItem>
+            <MenuItem value="payment 01/10">Payment 01/10</MenuItem>
+            <MenuItem value="payment 07/10">Payment 07/10</MenuItem>
+            <MenuItem value="payment 15/10">Payment 15/10</MenuItem>
           </Select>
         </FormControl>
-      </Box>
-
-      {/* Additional Filters */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Date Min Filter */}
-        <TextField
-          size="small"
-          label="Start Date"
-          type="date"
-          value={dateMinFilter}
-          onChange={handleDateMinFilterChange}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Calendar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            minWidth: 160,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-        />
-
-        {/* Date Max Filter */}
-        <TextField
-          size="small"
-          label="End Date"
-          type="date"
-          value={dateMaxFilter}
-          onChange={handleDateMaxFilterChange}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Calendar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            minWidth: 160,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-        />
-
-        {/* Min Value Filter */}
-        <TextField
-          size="small"
-          label="Min Value"
-          type="text"
-          value={minValueFilterInput}
-          onChange={handleMinValueFilterChange}
-          placeholder="0"
-          sx={{
-            minWidth: 120,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyDollar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        {/* Max Value Filter */}
-        <TextField
-          size="small"
-          label="Max Value"
-          type="text"
-          value={maxValueFilterInput}
-          onChange={handleMaxValueFilterChange}
-          placeholder="∞"
-          sx={{
-            minWidth: 120,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyDollar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        {/* Clear Filters Button */}
-        <Button
-          variant="outlined"
-          onClick={clearAllFilters}
-          sx={{
-            borderColor: '#6b7280',
-            color: '#9ca3af',
-            '&:hover': {
-              borderColor: '#9ca3af',
-              backgroundColor: 'rgba(107, 114, 128, 0.1)',
-            },
-            textTransform: 'none',
-            fontWeight: 500,
-            px: 2,
-            py: 1
-          }}
-        >
-          Clear Filters
-        </Button>
       </Box>
 
       {/* Renderizar tabelas */}

@@ -8,8 +8,6 @@ import {
   Select,
   MenuItem,
   Pagination,
-  TextField,
-  InputAdornment,
   Table,
   TableBody,
   TableCell,
@@ -20,7 +18,7 @@ import {
   Chip,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Calendar, CurrencyDollar, Plus } from '@phosphor-icons/react'
+import { Plus } from '@phosphor-icons/react'
 import { ErrorDetails } from '../../components/error-display'
 import { Payment } from '../../types/payment-interface'
 import { AddPayment } from '../../components/add-payment'
@@ -32,16 +30,31 @@ interface SellsTabProps {
 export function SellsTab({ onError }: SellsTabProps) {
   const [payments, setPayments] = useState<Payment[]>([])
   const [totalPages, setTotalPages] = useState(0)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'cancelled'>('all')
+  const [paymentDateFilter, setPaymentDateFilter] = useState<string>('all')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'pending' | 'completed'>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [buyerFilter, setBuyerFilter] = useState('all')
-  const [dateMinFilter, setDateMinFilter] = useState('')
-  const [dateMaxFilter, setDateMaxFilter] = useState('')
-  const [minValueFilter, setMinValueFilter] = useState('')
-  const [minValueFilterInput, setMinValueFilterInput] = useState('')
-  const [maxValueFilter, setMaxValueFilter] = useState('')
-  const [maxValueFilterInput, setMaxValueFilterInput] = useState('')
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
+
+  // Lista de buyers disponíveis
+  const availableBuyers = [
+    'João Silva',
+    'Maria Santos',
+    'Pedro Costa',
+    'Ana Costa',
+  ]
+
+  // Lista de payment dates disponíveis
+  const availablePaymentDates = [
+    'payment 01/10',
+    'payment 07/10',
+    'payment 15/10',
+  ]
+
+  // Lista de payment status disponíveis
+  const availablePaymentStatuses = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'completed', label: 'Completed' },
+  ]
 
   // Função para extrair e formatar data diretamente da string da API
   const formatDateFromAPI = (apiDateString: string) => {
@@ -62,20 +75,6 @@ export function SellsTab({ onError }: SellsTabProps) {
       date: `${weekday}, ${day} ${months[parseInt(month) - 1]} ${year}`,
       time: apiDateString.split('T')[1]?.split('.')[0]?.substring(0, 5) || '00:00'
     }
-  }
-
-  // Função para formatar valor da calculadora
-  const formatCalculatorValue = (value: string) => {
-    if (!value || value === '') return ''
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (rawValue === '-') return '-'
-    
-    if (!/\d/.test(rawValue)) return ''
-    
-    const numberValue = Number(rawValue)
-    return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
   }
 
   // Função para formatar valor para exibição
@@ -104,7 +103,8 @@ export function SellsTab({ onError }: SellsTabProps) {
           dollar: 45.50,
           mValue: 0.091,
           date: '2025-10-05T14:30:00',
-          status: 'paid'
+          paymentDate: 'payment 01/10',
+          paymentStatus: 'pending'
         },
         {
           id: 2,
@@ -114,7 +114,8 @@ export function SellsTab({ onError }: SellsTabProps) {
           dollar: 109.20,
           mValue: 0.091,
           date: '2025-10-06T18:00:00',
-          status: 'pending'
+          paymentDate: 'payment 07/10',
+          paymentStatus: 'completed'
         },
         {
           id: 3,
@@ -124,7 +125,8 @@ export function SellsTab({ onError }: SellsTabProps) {
           dollar: 27.30,
           mValue: 0.091,
           date: '2025-10-04T10:15:00',
-          status: 'cancelled'
+          paymentDate: 'payment 15/10',
+          paymentStatus: 'pending'
         },
       ]
 
@@ -141,186 +143,262 @@ export function SellsTab({ onError }: SellsTabProps) {
     }
   }
 
-  const handleStatusFilter = (status: 'all' | 'pending' | 'paid' | 'cancelled') => {
-    setStatusFilter(status)
+  const handlePaymentDateFilter = (paymentDate: string) => {
+    setPaymentDateFilter(paymentDate)
     setCurrentPage(1)
+  }
+
+  const handlePaymentStatusFilter = (status: 'all' | 'pending' | 'completed') => {
+    setPaymentStatusFilter(status)
+    setCurrentPage(1)
+  }
+
+  const handleBuyerChange = (paymentId: string | number, newBuyer: string) => {
+    setPayments(prevPayments =>
+      prevPayments.map(payment =>
+        payment.id === paymentId ? { ...payment, buyer: newBuyer } : payment
+      )
+    )
+    // TODO: Chamar API para atualizar o buyer
+    console.log(`Updated buyer for payment ${paymentId}: ${newBuyer}`)
+  }
+
+  const handlePaymentDateChange = (paymentId: string | number, newPaymentDate: string) => {
+    setPayments(prevPayments =>
+      prevPayments.map(payment =>
+        payment.id === paymentId ? { ...payment, paymentDate: newPaymentDate } : payment
+      )
+    )
+    // TODO: Chamar API para atualizar o payment date
+    console.log(`Updated payment date for payment ${paymentId}: ${newPaymentDate}`)
+  }
+
+  const handlePaymentStatusChange = (paymentId: string | number, newPaymentStatus: 'pending' | 'completed') => {
+    setPayments(prevPayments =>
+      prevPayments.map(payment =>
+        payment.id === paymentId ? { ...payment, paymentStatus: newPaymentStatus } : payment
+      )
+    )
+    // TODO: Chamar API para atualizar o payment status
+    console.log(`Updated payment status for payment ${paymentId}: ${newPaymentStatus}`)
   }
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page)
   }
 
-  const handleBuyerFilterChange = (buyerId: string) => {
-    setBuyerFilter(buyerId)
-    setCurrentPage(1)
-  }
-
-  // Lista única de buyers dos pagamentos
-  const uniqueBuyers = useMemo(() => {
-    const buyersSet = new Set(payments.map(p => p.buyer))
-    return Array.from(buyersSet).sort()
-  }, [payments])
-
-  const handleDateMinFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateMinFilter(event.target.value)
-    setCurrentPage(1)
-  }
-
-  const handleDateMaxFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateMaxFilter(event.target.value)
-    setCurrentPage(1)
-  }
-
-  const handleMinValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    const formattedValue = formatCalculatorValue(value)
-    setMinValueFilterInput(formattedValue)
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (!rawValue || rawValue === '-') {
-      setMinValueFilter('')
-    } else if (!isNaN(Number(rawValue))) {
-      setMinValueFilter(rawValue)
-    }
-  }
-
-  const handleMaxValueFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    const formattedValue = formatCalculatorValue(value)
-    setMaxValueFilterInput(formattedValue)
-    
-    const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
-    
-    if (!rawValue || rawValue === '-') {
-      setMaxValueFilter('')
-    } else if (!isNaN(Number(rawValue))) {
-      setMaxValueFilter(rawValue)
-    }
-  }
-
-  const clearAllFilters = () => {
-    setBuyerFilter('all')
-    setDateMinFilter('')
-    setDateMaxFilter('')
-    setMinValueFilter('')
-    setMinValueFilterInput('')
-    setMaxValueFilter('')
-    setMaxValueFilterInput('')
-    setCurrentPage(1)
-  }
-
   useEffect(() => {
     fetchPayments()
-  }, [statusFilter, currentPage, buyerFilter, dateMinFilter, dateMaxFilter, minValueFilter, maxValueFilter])
+  }, [paymentDateFilter, paymentStatusFilter, currentPage])
 
-  // Função para agrupar pagamentos por situação
+  // Função para agrupar pagamentos por payment date (aplicando filtros)
   const paymentsSummary = useMemo(() => {
     const summary: Record<string, { count: number; totalGold: number; totalDollar: number }> = {}
 
-    payments.forEach((payment) => {
-      const status = payment.status
-      if (!summary[status]) {
-        summary[status] = { count: 0, totalGold: 0, totalDollar: 0 }
-      }
-      summary[status].count++
-      summary[status].totalGold += payment.valueGold || 0
-      summary[status].totalDollar += payment.dollar || 0
-    })
+    payments
+      .filter(p => 
+        (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+        (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+      )
+      .forEach((payment) => {
+        const paymentDate = payment.paymentDate
+        if (!summary[paymentDate]) {
+          summary[paymentDate] = { count: 0, totalGold: 0, totalDollar: 0 }
+        }
+        summary[paymentDate].count++
+        summary[paymentDate].totalGold += payment.valueGold || 0
+        summary[paymentDate].totalDollar += payment.dollar || 0
+      })
 
     return summary
-  }, [payments])
+  }, [payments, paymentDateFilter, paymentStatusFilter])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getPaymentDateColor = (paymentDate: string) => {
+    // Payment dates get different colors
+    if (paymentDate.startsWith('payment')) {
+      return 'info'
+    }
+    return 'default'
+  }
+
+  const getPaymentDateLabel = (paymentDate: string) => {
+    // Format payment dates nicely
+    if (paymentDate.startsWith('payment')) {
+      const datePart = paymentDate.replace('payment', 'Payment').trim()
+      return datePart.toUpperCase()
+    }
+    return paymentDate.toUpperCase()
+  }
+
+  const getPaymentStatusColor = (paymentStatus: 'pending' | 'completed') => {
+    switch (paymentStatus) {
       case 'pending':
         return 'warning'
-      case 'paid':
+      case 'completed':
         return 'success'
-      case 'cancelled':
-        return 'error'
       default:
         return 'default'
     }
   }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
+  const getPaymentStatusLabel = (paymentStatus: 'pending' | 'completed') => {
+    switch (paymentStatus) {
       case 'pending':
         return 'PENDING'
-      case 'paid':
-        return 'PAID'
-      case 'cancelled':
-        return 'CANCELLED'
-      default:
-        return status.toUpperCase()
+      case 'completed':
+        return 'COMPLETED'
     }
   }
 
   return (
     <>
       {/* Filters */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Status Filter */}
+          {/* Payment Date Filter */}
           <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel sx={{ 
-            color: 'white',
-            '&.Mui-focused': {
-              color: 'rgb(147, 51, 234)',
-            },
-          }}>Status</InputLabel>
-          <Select
-            value={statusFilter}
-            onChange={(e) => handleStatusFilter(e.target.value as 'all' | 'pending' | 'paid' | 'cancelled')}
-            label="Status"
-            sx={{
+            <InputLabel sx={{ 
               color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
+              '&.Mui-focused': {
+                color: 'rgb(147, 51, 234)',
               },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-              '& .MuiSvgIcon-root': {
-                color: 'white',
-              },
-              '& .MuiSelect-select': {
+            }}>Payment Date</InputLabel>
+            <Select
+              value={paymentDateFilter}
+              onChange={(e) => handlePaymentDateFilter(e.target.value)}
+              label="Payment Date"
+              sx={{
                 color: 'white',
                 backgroundColor: '#2a2a2a',
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+                '& .MuiSvgIcon-root': {
+                  color: 'white',
+                },
+                '& .MuiSelect-select': {
+                  color: 'white',
                   backgroundColor: '#2a2a2a',
-                  border: '1px solid #333',
-                  '& .MuiMenuItem-root': {
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#3a3a3a',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #333',
+                    '& .MuiMenuItem-root': {
+                      color: 'white',
                       '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        backgroundColor: '#3a3a3a',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        },
                       },
                     },
                   },
                 },
-              },
-            }}
-          >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="paid">Paid</MenuItem>
-            <MenuItem value="cancelled">Cancelled</MenuItem>
-          </Select>
-        </FormControl>
+              }}
+            >
+              <MenuItem value="all">All Payment Dates</MenuItem>
+              <MenuItem value="payment 01/10">Payment 01/10</MenuItem>
+              <MenuItem value="payment 07/10">Payment 07/10</MenuItem>
+              <MenuItem value="payment 15/10">Payment 15/10</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Status Filter Buttons */}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Typography sx={{ color: '#9ca3af', fontSize: '0.875rem', mr: 1 }}>
+              Status:
+            </Typography>
+            <Button
+              variant={paymentStatusFilter === 'all' ? 'contained' : 'outlined'}
+              onClick={() => handlePaymentStatusFilter('all')}
+              size="medium"
+              sx={{
+                ...(paymentStatusFilter === 'all' ? {
+                  backgroundColor: 'rgb(147, 51, 234)',
+                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+                  color: 'white',
+                } : {
+                  borderColor: '#6b7280',
+                  color: '#9ca3af',
+                  '&:hover': {
+                    borderColor: '#9ca3af',
+                    backgroundColor: 'rgba(107, 114, 128, 0.1)',
+                  },
+                }),
+                textTransform: 'none',
+                minWidth: '90px',
+                padding: '8px 20px',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              }}
+            >
+              All
+            </Button>
+            <Button
+              variant={paymentStatusFilter === 'pending' ? 'contained' : 'outlined'}
+              onClick={() => handlePaymentStatusFilter('pending')}
+              size="medium"
+              sx={{
+                ...(paymentStatusFilter === 'pending' ? {
+                  backgroundColor: '#f59e0b',
+                  '&:hover': { backgroundColor: '#d97706' },
+                  color: 'white',
+                } : {
+                  borderColor: '#f59e0b',
+                  color: '#f59e0b',
+                  '&:hover': {
+                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                  },
+                }),
+                textTransform: 'none',
+                minWidth: '110px',
+                padding: '8px 20px',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              }}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={paymentStatusFilter === 'completed' ? 'contained' : 'outlined'}
+              onClick={() => handlePaymentStatusFilter('completed')}
+              size="medium"
+              sx={{
+                ...(paymentStatusFilter === 'completed' ? {
+                  backgroundColor: '#10b981',
+                  '&:hover': { backgroundColor: '#059669' },
+                  color: 'white',
+                } : {
+                  borderColor: '#10b981',
+                  color: '#10b981',
+                  '&:hover': {
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  },
+                }),
+                textTransform: 'none',
+                minWidth: '120px',
+                padding: '8px 20px',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              }}
+            >
+              Completed
+            </Button>
+          </Box>
         </Box>
         
         <Button
@@ -338,264 +416,14 @@ export function SellsTab({ onError }: SellsTabProps) {
         </Button>
       </Box>
 
-      {/* Additional Filters */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Buyer Filter */}
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel sx={{ 
-            color: 'white',
-            '&.Mui-focused': {
-              color: 'rgb(147, 51, 234)',
-            },
-          }}>Buyer</InputLabel>
-          <Select
-            value={buyerFilter}
-            onChange={(e) => handleBuyerFilterChange(e.target.value)}
-            label="Buyer"
-            sx={{
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-              '& .MuiSvgIcon-root': {
-                color: 'white',
-              },
-              '& .MuiSelect-select': {
-                color: 'white',
-                backgroundColor: '#2a2a2a',
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid #333',
-                  '& .MuiMenuItem-root': {
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#3a3a3a',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.3)',
-                      },
-                    },
-                  },
-                },
-              },
-            }}
-          >
-            <MenuItem value="all">All Buyers</MenuItem>
-            {uniqueBuyers.map((buyer) => (
-              <MenuItem key={buyer} value={buyer}>
-                {buyer}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Date Min Filter */}
-        <TextField
-          size="small"
-          label="Start Date"
-          type="date"
-          value={dateMinFilter}
-          onChange={handleDateMinFilterChange}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Calendar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            minWidth: 160,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-        />
-
-        {/* Date Max Filter */}
-        <TextField
-          size="small"
-          label="End Date"
-          type="date"
-          value={dateMaxFilter}
-          onChange={handleDateMaxFilterChange}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Calendar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            minWidth: 160,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-        />
-
-        {/* Min Value Filter */}
-        <TextField
-          size="small"
-          label="Min Value"
-          type="text"
-          value={minValueFilterInput}
-          onChange={handleMinValueFilterChange}
-          placeholder="0"
-          sx={{
-            minWidth: 120,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyDollar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        {/* Max Value Filter */}
-        <TextField
-          size="small"
-          label="Max Value"
-          type="text"
-          value={maxValueFilterInput}
-          onChange={handleMaxValueFilterChange}
-          placeholder="∞"
-          sx={{
-            minWidth: 120,
-            '& .MuiOutlinedInput-root': {
-              color: 'white',
-              backgroundColor: '#2a2a2a',
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'rgb(147, 51, 234)',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'rgba(255, 255, 255, 0.7)',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            },
-          }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CurrencyDollar size={20} color="#9ca3af" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        {/* Clear Filters Button */}
-        <Button
-          variant="outlined"
-          onClick={clearAllFilters}
-          sx={{
-            borderColor: '#6b7280',
-            color: '#9ca3af',
-            '&:hover': {
-              borderColor: '#9ca3af',
-              backgroundColor: 'rgba(107, 114, 128, 0.1)',
-            },
-            textTransform: 'none',
-            fontWeight: 500,
-            px: 2,
-            py: 1
-          }}
-        >
-          Clear Filters
-        </Button>
-      </Box>
-
       {/* Layout com duas colunas: Tabela Principal e Resumo */}
       <Grid container spacing={3}>
         {/* Coluna da Tabela Principal */}
         <Grid size={{ xs: 12, lg: 8 }}>
-          {payments.length === 0 ? (
+          {payments.filter(p => 
+            (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+            (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+          ).length === 0 ? (
             <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
               <Typography variant="h6" color="textSecondary">
                 No payments found
@@ -622,11 +450,17 @@ export function SellsTab({ onError }: SellsTabProps) {
                       <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Dollar $</TableCell>
                       <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>M Value in $</TableCell>
                       <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Date</TableCell>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Payment Date</TableCell>
                       <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Status</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {payments.map((payment) => (
+                    {payments
+                      .filter(p => 
+                        (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+                        (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+                      )
+                      .map((payment) => (
                       <TableRow
                         key={payment.id}
                         sx={{
@@ -639,8 +473,35 @@ export function SellsTab({ onError }: SellsTabProps) {
                         <TableCell sx={{ color: 'white', fontSize: '0.85rem' }}>
                           {payment.note}
                         </TableCell>
-                        <TableCell sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 500 }}>
-                          {payment.buyer}
+                        <TableCell sx={{ width: 180 }}>
+                          <FormControl size="small" fullWidth>
+                            <Select
+                              value={payment.buyer}
+                              onChange={(e) => handleBuyerChange(payment.id, e.target.value)}
+                              sx={{
+                                color: 'white',
+                                fontSize: '0.85rem',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'rgb(147, 51, 234)',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                  color: 'white',
+                                },
+                              }}
+                            >
+                              {availableBuyers.map((buyer) => (
+                                <MenuItem key={buyer} value={buyer}>
+                                  {buyer}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
                         </TableCell>
                         <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600 }}>
                           {formatValueForDisplay(payment.valueGold)}g
@@ -661,16 +522,105 @@ export function SellsTab({ onError }: SellsTabProps) {
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={getStatusLabel(payment.status)}
-                            color={getStatusColor(payment.status) as any}
-                            size="small"
-                            sx={{
-                              fontWeight: 'bold',
-                              fontSize: '0.75rem',
-                            }}
-                          />
+                        <TableCell align="center" sx={{ width: 180 }}>
+                          <FormControl size="small" fullWidth>
+                            <Select
+                              value={payment.paymentDate}
+                              onChange={(e) => handlePaymentDateChange(payment.id, e.target.value)}
+                              sx={{
+                                color: 'white',
+                                fontSize: '0.85rem',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                  color: 'white',
+                                },
+                              }}
+                              renderValue={(value) => (
+                                <Chip
+                                  label={getPaymentDateLabel(value)}
+                                  color={getPaymentDateColor(value) as any}
+                                  size="small"
+                                  sx={{
+                                    fontWeight: 'bold',
+                                    fontSize: '0.75rem',
+                                    height: '24px',
+                                  }}
+                                />
+                              )}
+                            >
+                              {availablePaymentDates.map((paymentDate) => (
+                                <MenuItem key={paymentDate} value={paymentDate}>
+                                  <Chip
+                                    label={getPaymentDateLabel(paymentDate)}
+                                    color={getPaymentDateColor(paymentDate) as any}
+                                    size="small"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      fontSize: '0.75rem',
+                                    }}
+                                  />
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </TableCell>
+                        <TableCell align="center" sx={{ width: 150 }}>
+                          <FormControl size="small" fullWidth>
+                            <Select
+                              value={payment.paymentStatus}
+                              onChange={(e) => handlePaymentStatusChange(payment.id, e.target.value as 'pending' | 'completed')}
+                              sx={{
+                                color: 'white',
+                                fontSize: '0.85rem',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  border: 'none',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                  color: 'white',
+                                },
+                              }}
+                              renderValue={(value) => (
+                                <Chip
+                                  label={getPaymentStatusLabel(value as 'pending' | 'completed')}
+                                  color={getPaymentStatusColor(value as 'pending' | 'completed') as any}
+                                  size="small"
+                                  sx={{
+                                    fontWeight: 'bold',
+                                    fontSize: '0.75rem',
+                                    height: '24px',
+                                  }}
+                                />
+                              )}
+                            >
+                              {availablePaymentStatuses.map((status) => (
+                                <MenuItem key={status.value} value={status.value}>
+                                  <Chip
+                                    label={status.label}
+                                    color={getPaymentStatusColor(status.value as 'pending' | 'completed') as any}
+                                    size="small"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      fontSize: '0.75rem',
+                                    }}
+                                  />
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -754,9 +704,9 @@ export function SellsTab({ onError }: SellsTabProps) {
               </Typography>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {Object.entries(paymentsSummary).map(([status, data]) => (
+                {Object.entries(paymentsSummary).map(([paymentDate, data]) => (
                   <Paper
-                    key={status}
+                    key={paymentDate}
                     sx={{
                       bgcolor: '#1a1a1a',
                       border: '1px solid #444',
@@ -771,8 +721,8 @@ export function SellsTab({ onError }: SellsTabProps) {
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                       <Chip
-                        label={getStatusLabel(status)}
-                        color={getStatusColor(status) as any}
+                        label={getPaymentDateLabel(paymentDate)}
+                        color={getPaymentDateColor(paymentDate) as any}
                         size="small"
                         sx={{
                           fontWeight: 'bold',
@@ -859,7 +809,10 @@ export function SellsTab({ onError }: SellsTabProps) {
                           fontWeight: 'bold',
                         }}
                       >
-                        {payments.length}
+                        {payments.filter(p => 
+                          (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+                          (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+                        ).length}
                       </Typography>
                     </Box>
 
@@ -875,7 +828,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                         }}
                       >
                         {formatValueForDisplay(
-                          payments.reduce((sum, p) => sum + (p.valueGold || 0), 0)
+                          payments
+                            .filter(p => 
+                              (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+                              (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+                            )
+                            .reduce((sum, p) => sum + (p.valueGold || 0), 0)
                         )}g
                       </Typography>
                     </Box>
@@ -892,7 +850,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                         }}
                       >
                         {formatDollar(
-                          payments.reduce((sum, p) => sum + (p.dollar || 0), 0)
+                          payments
+                            .filter(p => 
+                              (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
+                              (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+                            )
+                            .reduce((sum, p) => sum + (p.dollar || 0), 0)
                         )}
                       </Typography>
                     </Box>
