@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Button,
   Typography,
@@ -16,66 +16,50 @@ import {
   TableRow,
   Paper,
   Chip,
+  CircularProgress,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
-import { Plus } from '@phosphor-icons/react'
+import { Plus, Trash, PencilSimple } from '@phosphor-icons/react'
+import { format, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { ErrorDetails } from '../../components/error-display'
-import { Payment } from '../../types/payment-interface'
 import { AddPayment } from '../../components/add-payment'
+import { EditSale } from '../../components/edit-sale'
+import { getSales, getPayers, deleteSale, getPaymentDates, updateSaleStatus, getPaymentSummaryByStatus, type Payer, type Sale, type PaymentDate, type PaymentSummaryResponse } from '../../services/api'
+import Swal from 'sweetalert2'
+
+interface PaymentDisplay {
+  id: number
+  note: string
+  buyer: string
+  buyerName: string
+  idPayer: number
+  idPaymentDate: number
+  valueGold: number
+  dollar: number
+  mValue: number
+  createdAt: string
+  paymentDate: string
+  status: string
+}
 
 interface SellsTabProps {
   onError?: (error: ErrorDetails | null) => void
 }
 
 export function SellsTab({ onError }: SellsTabProps) {
-  const [payments, setPayments] = useState<Payment[]>([])
+  const [payments, setPayments] = useState<PaymentDisplay[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [paymentDateFilter, setPaymentDateFilter] = useState<string>('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'pending' | 'completed'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
-
-  // Lista de buyers disponíveis
-  const availableBuyers = [
-    'João Silva',
-    'Maria Santos',
-    'Pedro Costa',
-    'Ana Costa',
-  ]
-
-  // Lista de payment dates disponíveis
-  const availablePaymentDates = [
-    'payment 01/10',
-    'payment 07/10',
-    'payment 15/10',
-  ]
-
-  // Lista de payment status disponíveis
-  const availablePaymentStatuses = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'completed', label: 'Completed' },
-  ]
-
-  // Função para extrair e formatar data diretamente da string da API
-  const formatDateFromAPI = (apiDateString: string) => {
-    const datePart = apiDateString.split('T')[0]
-    const [year, month, day] = datePart.split('-')
-    
-    const months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
-    ]
-    
-    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-    
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-    const weekday = weekdays[date.getDay()]
-    
-    return {
-      date: `${weekday}, ${day} ${months[parseInt(month) - 1]} ${year}`,
-      time: apiDateString.split('T')[1]?.split('.')[0]?.substring(0, 5) || '00:00'
-    }
-  }
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true)
+  const [editingSale, setEditingSale] = useState<PaymentDisplay | null>(null)
+  const [paymentDateOptions, setPaymentDateOptions] = useState<PaymentDate[]>([])
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryResponse | null>(null)
 
   // Função para formatar valor para exibição
   const formatValueForDisplay = (value: number): string => {
@@ -91,48 +75,70 @@ export function SellsTab({ onError }: SellsTabProps) {
     }).format(value)
   }
 
+  // Função para formatar data do created_at
+  const formatCreatedAt = (createdAt: string) => {
+    if (!createdAt) return { date: '-', time: '-' }
+    
+    try {
+      const date = parseISO(createdAt)
+      return {
+        date: format(date, "MM/dd/yyyy", { locale: ptBR }),
+        time: format(date, "HH:mm")
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return { date: '-', time: '-' }
+    }
+  }
+
   const fetchPayments = async () => {
     try {
-      // TODO: Substituir por chamada real à API
-      const mockPayments: Payment[] = [
-        {
-          id: 1,
-          note: 'Pagamento de run M+20',
-          buyer: 'João Silva',
-          valueGold: 500000,
-          dollar: 45.50,
-          mValue: 0.091,
-          date: '2025-10-05T14:30:00',
-          paymentDate: 'payment 01/10',
-          paymentStatus: 'pending'
-        },
-        {
-          id: 2,
-          note: 'Raid Heroic completa',
-          buyer: 'Maria Santos',
-          valueGold: 1200000,
-          dollar: 109.20,
-          mValue: 0.091,
-          date: '2025-10-06T18:00:00',
-          paymentDate: 'payment 07/10',
-          paymentStatus: 'completed'
-        },
-        {
-          id: 3,
-          note: 'Leveling 60-70',
-          buyer: 'Pedro Costa',
-          valueGold: 300000,
-          dollar: 27.30,
-          mValue: 0.091,
-          date: '2025-10-04T10:15:00',
-          paymentDate: 'payment 15/10',
-          paymentStatus: 'pending'
-        },
-      ]
-
-      setPayments(mockPayments)
+      setIsLoadingPayments(true)
+      
+      // Busca sales, payers e payment dates em paralelo
+      const [salesData, payersData, paymentDatesData] = await Promise.all([
+        getSales(),
+        getPayers(),
+        getPaymentDates()
+      ])
+      
+      // Validação: garante que os dados são arrays
+      const validSalesData = Array.isArray(salesData) ? salesData : []
+      const validPayersData = Array.isArray(payersData) ? payersData : []
+      const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
+      
+      // Cria um mapa de id_payer -> name para busca rápida
+      const payersMap = new Map<number, string>()
+      validPayersData.forEach((payer: Payer) => {
+        payersMap.set(Number(payer.id), payer.name)
+      })
+      
+      // Cria um mapa de id_payment_date -> name para busca rápida
+      const paymentDatesMap = new Map<number, string>()
+      validPaymentDatesData.forEach((paymentDate: PaymentDate) => {
+        paymentDatesMap.set(Number(paymentDate.id), paymentDate.name)
+      })
+      
+      // Mapeia os dados da API para o formato de exibição
+      const mappedPayments: PaymentDisplay[] = validSalesData.map((sale: Sale) => ({
+        id: sale.id,
+        note: sale.note,
+        buyer: String(sale.id_payer), // Mantém o ID para futuras operações
+        buyerName: payersMap.get(sale.id_payer) || 'Unknown',
+        idPayer: sale.id_payer,
+        idPaymentDate: sale.id_payment_date,
+        valueGold: sale.gold_value,
+        dollar: sale.dolar_value,
+        mValue: sale.m_value,
+        createdAt: sale.created_at,
+        paymentDate: paymentDatesMap.get(sale.id_payment_date) || sale.payment_date,
+        status: sale.status,
+      }))
+      
+      setPayments(mappedPayments)
       setTotalPages(1)
     } catch (error) {
+      console.error('Error fetching payments:', error)
       const errorDetails = {
         message: 'Error fetching payments',
         response: error,
@@ -140,6 +146,8 @@ export function SellsTab({ onError }: SellsTabProps) {
       if (onError) {
         onError(errorDetails)
       }
+    } finally {
+      setIsLoadingPayments(false)
     }
   }
 
@@ -153,75 +161,146 @@ export function SellsTab({ onError }: SellsTabProps) {
     setCurrentPage(1)
   }
 
-  const handleBuyerChange = (paymentId: string | number, newBuyer: string) => {
-    setPayments(prevPayments =>
-      prevPayments.map(payment =>
-        payment.id === paymentId ? { ...payment, buyer: newBuyer } : payment
-      )
-    )
-    // TODO: Chamar API para atualizar o buyer
-    console.log(`Updated buyer for payment ${paymentId}: ${newBuyer}`)
-  }
-
-  const handlePaymentDateChange = (paymentId: string | number, newPaymentDate: string) => {
-    setPayments(prevPayments =>
-      prevPayments.map(payment =>
-        payment.id === paymentId ? { ...payment, paymentDate: newPaymentDate } : payment
-      )
-    )
-    // TODO: Chamar API para atualizar o payment date
-    console.log(`Updated payment date for payment ${paymentId}: ${newPaymentDate}`)
-  }
-
-  const handlePaymentStatusChange = (paymentId: string | number, newPaymentStatus: 'pending' | 'completed') => {
-    setPayments(prevPayments =>
-      prevPayments.map(payment =>
-        payment.id === paymentId ? { ...payment, paymentStatus: newPaymentStatus } : payment
-      )
-    )
-    // TODO: Chamar API para atualizar o payment status
-    console.log(`Updated payment status for payment ${paymentId}: ${newPaymentStatus}`)
-  }
-
   const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page)
   }
+
+  const handleStatusChange = async (payment: PaymentDisplay) => {
+    // Só permite alterar se status atual for "pending"
+    if (payment.status !== 'pending') {
+      return
+    }
+
+    const result = await Swal.fire({
+      title: 'Are you sure you want to mark this sale as completed?',
+      html: '<span style="color: #ef4444; font-weight: bold;">This action cannot be undone.</span>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, complete it!',
+      cancelButtonText: 'Cancel',
+      background: '#2a2a2a',
+      color: 'white',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await updateSaleStatus(payment.id)
+        
+        // Re-fetch da lista de sales
+        await fetchPayments()
+        
+        Swal.fire({
+          title: 'Updated!',
+          text: 'Sale status changed to Completed.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      } catch (error) {
+        console.error('Error updating status:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to update status.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      }
+    }
+  }
+
+  const handleDeleteSale = async (payment: PaymentDisplay) => {
+    const result = await Swal.fire({
+      title: 'Delete Sale?',
+      text: `Are you sure you want to delete this sale? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      background: '#2a2a2a',
+      color: 'white',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await deleteSale(payment.id)
+        
+        // Re-fetch da lista de sales
+        await fetchPayments()
+        
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Sale has been deleted successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      } catch (error) {
+        console.error('Error deleting sale:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to delete sale.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      }
+    }
+  }
+
+  // Carregar lista de payment dates ao montar o componente
+  useEffect(() => {
+    const fetchPaymentDatesData = async () => {
+      try {
+        const paymentDatesData = await getPaymentDates()
+        const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
+        setPaymentDateOptions(validPaymentDatesData)
+      } catch (error) {
+        console.error('Error fetching payment dates:', error)
+        const errorDetails = {
+          message: 'Error fetching payment dates',
+          response: error,
+        }
+        if (onError) {
+          onError(errorDetails)
+        }
+      }
+    }
+
+    fetchPaymentDatesData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     fetchPayments()
   }, [paymentDateFilter, paymentStatusFilter, currentPage])
 
-  // Função para agrupar pagamentos por payment date (aplicando filtros)
-  const paymentsSummary = useMemo(() => {
-    const summary: Record<string, { count: number; totalGold: number; totalDollar: number }> = {}
-
-    payments
-      .filter(p => 
-        (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-        (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
-      )
-      .forEach((payment) => {
-        const paymentDate = payment.paymentDate
-        if (!summary[paymentDate]) {
-          summary[paymentDate] = { count: 0, totalGold: 0, totalDollar: 0 }
-        }
-        summary[paymentDate].count++
-        summary[paymentDate].totalGold += payment.valueGold || 0
-        summary[paymentDate].totalDollar += payment.dollar || 0
-      })
-
-    return summary
-  }, [payments, paymentDateFilter, paymentStatusFilter])
-
-  const getPaymentDateColor = (paymentDate: string) => {
-    // Payment dates get different colors
-    if (paymentDate.startsWith('payment')) {
-      return 'info'
+  // Buscar summary da API
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const summaryData = await getPaymentSummaryByStatus()
+        setPaymentSummary(summaryData)
+      } catch (error) {
+        console.error('Error fetching payment summary:', error)
+      }
     }
-    return 'default'
-  }
+    
+    fetchSummary()
+  }, [paymentDateFilter, paymentStatusFilter])
 
   const getPaymentDateLabel = (paymentDate: string) => {
+    if (!paymentDate) return '-'
     // Format payment dates nicely
     if (paymentDate.startsWith('payment')) {
       const datePart = paymentDate.replace('payment', 'Payment').trim()
@@ -230,8 +309,8 @@ export function SellsTab({ onError }: SellsTabProps) {
     return paymentDate.toUpperCase()
   }
 
-  const getPaymentStatusColor = (paymentStatus: 'pending' | 'completed') => {
-    switch (paymentStatus) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
       case 'pending':
         return 'warning'
       case 'completed':
@@ -241,13 +320,9 @@ export function SellsTab({ onError }: SellsTabProps) {
     }
   }
 
-  const getPaymentStatusLabel = (paymentStatus: 'pending' | 'completed') => {
-    switch (paymentStatus) {
-      case 'pending':
-        return 'PENDING'
-      case 'completed':
-        return 'COMPLETED'
-    }
+  const getStatusLabel = (status: string) => {
+    if (!status) return '-'
+    return status.toUpperCase()
   }
 
   return (
@@ -309,9 +384,11 @@ export function SellsTab({ onError }: SellsTabProps) {
               }}
             >
               <MenuItem value="all">All Payment Dates</MenuItem>
-              <MenuItem value="payment 01/10">Payment 01/10</MenuItem>
-              <MenuItem value="payment 07/10">Payment 07/10</MenuItem>
-              <MenuItem value="payment 15/10">Payment 15/10</MenuItem>
+              {paymentDateOptions && paymentDateOptions.map((paymentDate) => (
+                <MenuItem key={paymentDate.id} value={paymentDate.name}>
+                  {paymentDate.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
@@ -420,9 +497,13 @@ export function SellsTab({ onError }: SellsTabProps) {
       <Grid container spacing={3}>
         {/* Coluna da Tabela Principal */}
         <Grid size={{ xs: 12, lg: 8 }}>
-          {payments.filter(p => 
+          {isLoadingPayments ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress size={40} sx={{ color: 'rgb(147, 51, 234)' }} />
+            </Box>
+          ) : payments.filter(p => 
             (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-            (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+            (paymentStatusFilter === 'all' || p.status === paymentStatusFilter)
           ).length === 0 ? (
             <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
               <Typography variant="h6" color="textSecondary">
@@ -452,13 +533,14 @@ export function SellsTab({ onError }: SellsTabProps) {
                       <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Date</TableCell>
                       <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Payment Date</TableCell>
                       <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Status</TableCell>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 100 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {payments
                       .filter(p => 
                         (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                        (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
+                        (paymentStatusFilter === 'all' || p.status === paymentStatusFilter)
                       )
                       .map((payment) => (
                       <TableRow
@@ -473,35 +555,8 @@ export function SellsTab({ onError }: SellsTabProps) {
                         <TableCell sx={{ color: 'white', fontSize: '0.85rem' }}>
                           {payment.note}
                         </TableCell>
-                        <TableCell sx={{ width: 180 }}>
-                          <FormControl size="small" fullWidth>
-                            <Select
-                              value={payment.buyer}
-                              onChange={(e) => handleBuyerChange(payment.id, e.target.value)}
-                              sx={{
-                                color: 'white',
-                                fontSize: '0.85rem',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'rgba(255, 255, 255, 0.23)',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'rgb(147, 51, 234)',
-                                },
-                                '& .MuiSvgIcon-root': {
-                                  color: 'white',
-                                },
-                              }}
-                            >
-                              {availableBuyers.map((buyer) => (
-                                <MenuItem key={buyer} value={buyer}>
-                                  {buyer}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                        <TableCell sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 500 }}>
+                          {payment.buyerName}
                         </TableCell>
                         <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600 }}>
                           {formatValueForDisplay(payment.valueGold)}g
@@ -515,112 +570,75 @@ export function SellsTab({ onError }: SellsTabProps) {
                         <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '0.85rem' }}>
                           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <Typography variant="body2" sx={{ fontSize: '0.85rem', color: 'white' }}>
-                              {formatDateFromAPI(payment.date).date}
+                              {formatCreatedAt(payment.createdAt).date}
                             </Typography>
                             <Typography variant="caption" sx={{ fontSize: '0.75rem', color: '#9ca3af', fontFamily: 'monospace' }}>
-                              {formatDateFromAPI(payment.date).time}
+                              {formatCreatedAt(payment.createdAt).time}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center" sx={{ width: 180 }}>
-                          <FormControl size="small" fullWidth>
-                            <Select
-                              value={payment.paymentDate}
-                              onChange={(e) => handlePaymentDateChange(payment.id, e.target.value)}
-                              sx={{
-                                color: 'white',
-                                fontSize: '0.85rem',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '& .MuiSvgIcon-root': {
-                                  color: 'white',
-                                },
-                              }}
-                              renderValue={(value) => (
-                                <Chip
-                                  label={getPaymentDateLabel(value)}
-                                  color={getPaymentDateColor(value) as any}
-                                  size="small"
-                                  sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '0.75rem',
-                                    height: '24px',
-                                  }}
-                                />
-                              )}
-                            >
-                              {availablePaymentDates.map((paymentDate) => (
-                                <MenuItem key={paymentDate} value={paymentDate}>
-                                  <Chip
-                                    label={getPaymentDateLabel(paymentDate)}
-                                    color={getPaymentDateColor(paymentDate) as any}
-                                    size="small"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      fontSize: '0.75rem',
-                                    }}
-                                  />
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                        <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '0.85rem' }}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Typography variant="body2" sx={{ fontSize: '0.85rem', color: 'white' }}>
+                              {getPaymentDateLabel(payment.paymentDate)}
+                            </Typography>
+                          </Box>
                         </TableCell>
-                        <TableCell align="center" sx={{ width: 150 }}>
-                          <FormControl size="small" fullWidth>
-                            <Select
-                              value={payment.paymentStatus}
-                              onChange={(e) => handlePaymentStatusChange(payment.id, e.target.value as 'pending' | 'completed')}
-                              sx={{
-                                color: 'white',
-                                fontSize: '0.85rem',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  border: 'none',
-                                },
-                                '& .MuiSvgIcon-root': {
-                                  color: 'white',
-                                },
-                              }}
-                              renderValue={(value) => (
-                                <Chip
-                                  label={getPaymentStatusLabel(value as 'pending' | 'completed')}
-                                  color={getPaymentStatusColor(value as 'pending' | 'completed') as any}
+                        <TableCell align="center">
+                          <Chip
+                            label={getStatusLabel(payment.status)}
+                            color={getStatusColor(payment.status) as any}
+                            size="small"
+                            onClick={() => handleStatusChange(payment)}
+                            sx={{
+                              fontWeight: 'bold',
+                              fontSize: '0.75rem',
+                              cursor: payment.status === 'pending' ? 'pointer' : 'default',
+                              '&:hover': payment.status === 'pending' ? {
+                                opacity: 0.8,
+                                transform: 'scale(1.05)',
+                              } : {},
+                              transition: 'all 0.2s ease-in-out',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          {payment.status !== 'completed' ? (
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                              <Tooltip title="Edit" placement="top">
+                                <IconButton
                                   size="small"
+                                  onClick={() => setEditingSale(payment)}
                                   sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '0.75rem',
-                                    height: '24px',
+                                    color: 'rgb(147, 51, 234)',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                                    },
                                   }}
-                                />
-                              )}
-                            >
-                              {availablePaymentStatuses.map((status) => (
-                                <MenuItem key={status.value} value={status.value}>
-                                  <Chip
-                                    label={status.label}
-                                    color={getPaymentStatusColor(status.value as 'pending' | 'completed') as any}
-                                    size="small"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      fontSize: '0.75rem',
-                                    }}
-                                  />
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                                >
+                                  <PencilSimple size={18} />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete" placement="top">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleDeleteSale(payment)}
+                                  sx={{
+                                    color: '#ef4444',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    },
+                                  }}
+                                >
+                                  <Trash size={18} />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          ) : (
+                            <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                              -
+                            </Typography>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -698,15 +716,15 @@ export function SellsTab({ onError }: SellsTabProps) {
               Summary by Status
             </Typography>
 
-            {Object.keys(paymentsSummary).length === 0 ? (
+            {!paymentSummary || !paymentSummary.info.summary || paymentSummary.info.summary.length === 0 ? (
               <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', py: 4 }}>
                 No data available
               </Typography>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {Object.entries(paymentsSummary).map(([paymentDate, data]) => (
+                {paymentSummary.info.summary.map((dateData) => (
                   <Paper
-                    key={paymentDate}
+                    key={dateData.date}
                     sx={{
                       bgcolor: '#1a1a1a',
                       border: '1px solid #444',
@@ -721,12 +739,15 @@ export function SellsTab({ onError }: SellsTabProps) {
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                       <Chip
-                        label={getPaymentDateLabel(paymentDate)}
-                        color={getPaymentDateColor(paymentDate) as any}
+                        label={dateData.date.toUpperCase()}
+                        color="info"
                         size="small"
                         sx={{
                           fontWeight: 'bold',
                           fontSize: '0.75rem',
+                          '& .MuiChip-label': {
+                            color: 'white',
+                          },
                         }}
                       />
                       <Typography
@@ -736,7 +757,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                           fontWeight: 'bold',
                         }}
                       >
-                        {data.count} {data.count === 1 ? 'payment' : 'payments'}
+                        {dateData.total_payments} {dateData.total_payments === 1 ? 'payment' : 'payments'}
                       </Typography>
                     </Box>
 
@@ -748,12 +769,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                         <Typography
                           variant="body2"
                           sx={{
-                            color: '#60a5fa',
+                            color: 'white',
                             fontWeight: 600,
                             fontSize: '0.85rem',
                           }}
                         >
-                          {formatValueForDisplay(data.totalGold)}g
+                          {formatValueForDisplay(dateData.total_gold)}g
                         </Typography>
                       </Box>
 
@@ -764,15 +785,67 @@ export function SellsTab({ onError }: SellsTabProps) {
                         <Typography
                           variant="body2"
                           sx={{
-                            color: '#10b981',
+                            color: 'white',
                             fontWeight: 600,
                             fontSize: '0.85rem',
                           }}
                         >
-                          {formatDollar(data.totalDollar)}
+                          {formatDollar(dateData.total_dollar)}
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Agrupamento por Status */}
+                    {dateData.status_breakdown && dateData.status_breakdown.length > 0 && (
+                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #444' }}>
+                        <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.75rem', mb: 1.5, fontWeight: 600 }}>
+                          By Status:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          {dateData.status_breakdown.map((statusData) => (
+                            <Box key={statusData.status} sx={{ 
+                              bgcolor: '#2a2a2a', 
+                              p: 1.5, 
+                              borderRadius: 1,
+                              border: '1px solid #333'
+                            }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Chip
+                                  label={statusData.status.toUpperCase()}
+                                  color={getStatusColor(statusData.status.toLowerCase()) as any}
+                                  size="small"
+                                  sx={{
+                                    fontWeight: 'bold',
+                                    fontSize: '0.7rem',
+                                  }}
+                                />
+                                <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
+                                  {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
+                                </Typography>
+                              </Box>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                    Gold:
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                    {formatValueForDisplay(statusData.gold_amount)}g
+                                  </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                    Dollar:
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                    {formatDollar(statusData.dollar_amount)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
                   </Paper>
                 ))}
 
@@ -794,7 +867,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                       textAlign: 'center',
                     }}
                   >
-                    GRAND TOTAL
+                   TOTAL
                   </Typography>
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -809,10 +882,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                           fontWeight: 'bold',
                         }}
                       >
-                        {payments.filter(p => 
-                          (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                          (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
-                        ).length}
+                        {paymentSummary.info.totals.total_payments}
                       </Typography>
                     </Box>
 
@@ -823,18 +893,11 @@ export function SellsTab({ onError }: SellsTabProps) {
                       <Typography
                         variant="body1"
                         sx={{
-                          color: '#60a5fa',
+                          color: 'white',
                           fontWeight: 700,
                         }}
                       >
-                        {formatValueForDisplay(
-                          payments
-                            .filter(p => 
-                              (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                              (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
-                            )
-                            .reduce((sum, p) => sum + (p.valueGold || 0), 0)
-                        )}g
+                        {formatValueForDisplay(paymentSummary.info.totals.total_gold)}g
                       </Typography>
                     </Box>
 
@@ -845,21 +908,66 @@ export function SellsTab({ onError }: SellsTabProps) {
                       <Typography
                         variant="body1"
                         sx={{
-                          color: '#10b981',
+                          color: 'white',
                           fontWeight: 700,
                         }}
                       >
-                        {formatDollar(
-                          payments
-                            .filter(p => 
-                              (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                              (paymentStatusFilter === 'all' || p.paymentStatus === paymentStatusFilter)
-                            )
-                            .reduce((sum, p) => sum + (p.dollar || 0), 0)
-                        )}
+                        {formatDollar(paymentSummary.info.totals.total_dollar)}
                       </Typography>
                     </Box>
                   </Box>
+
+                  {/* Total Agrupado por Status */}
+                  {paymentSummary.info.totals.by_status && paymentSummary.info.totals.by_status.length > 0 && (
+                    <Box sx={{ mt: 2, pt: 2, borderTop: '2px solid rgb(147, 51, 234)' }}>
+                      <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.85rem', mb: 2, fontWeight: 600 }}>
+                        By Status:
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {paymentSummary.info.totals.by_status.map((statusData) => (
+                          <Box key={statusData.status} sx={{ 
+                            bgcolor: '#2a2a2a', 
+                            p: 2, 
+                            borderRadius: 1,
+                            border: '1px solid #444'
+                          }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                              <Chip
+                                label={statusData.status.toUpperCase()}
+                                color={getStatusColor(statusData.status.toLowerCase()) as any}
+                                size="small"
+                                sx={{
+                                  fontWeight: 'bold',
+                                  fontSize: '0.75rem',
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
+                                {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+                                  Gold:
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
+                                  {formatValueForDisplay(statusData.gold_amount)}g
+                                </Typography>
+                              </Box>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+                                  Dollar:
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
+                                  {formatDollar(statusData.dollar_amount)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Paper>
               </Box>
             )}
@@ -876,6 +984,29 @@ export function SellsTab({ onError }: SellsTabProps) {
             fetchPayments()
           }}
           onError={onError}
+        />
+      )}
+
+      {/* Edit Sale Dialog */}
+      {editingSale && (
+        <EditSale
+          sale={{
+            id: editingSale.id,
+            note: editingSale.note,
+            idPayer: editingSale.idPayer,
+            idPaymentDate: editingSale.idPaymentDate,
+            status: editingSale.status,
+            buyerName: editingSale.buyerName,
+            valueGold: editingSale.valueGold,
+            dollar: editingSale.dollar,
+            mValue: editingSale.mValue,
+            paymentDate: editingSale.paymentDate,
+          }}
+          onClose={() => setEditingSale(null)}
+          onSaleUpdated={() => {
+            setEditingSale(null)
+            fetchPayments()
+          }}
         />
       )}
     </>

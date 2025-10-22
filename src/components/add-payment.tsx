@@ -1,6 +1,6 @@
-import { UserPlus, Plus } from '@phosphor-icons/react'
+import { UserPlus, Plus, PencilSimple, Trash } from '@phosphor-icons/react'
 import CloseIcon from '@mui/icons-material/Close'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 
 import {
@@ -15,10 +15,13 @@ import {
   Button,
   IconButton,
   Box,
+  CircularProgress,
 } from '@mui/material'
 import { ErrorDetails } from './error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
-import { AddStatusToList } from './add-status-to-list'
+import { AddPaymentDate } from './add-payment-date'
+import { EditBuyerName } from './edit-buyer-name'
+import { getPayers, deletePayer, getPaymentDates, deletePaymentDate, createSale, type Payer, type PaymentDate } from '../services/api'
 
 interface AddPaymentProps {
   onClose: () => void
@@ -26,15 +29,6 @@ interface AddPaymentProps {
   onError?: (error: ErrorDetails) => void
 }
 
-interface BuyerOption {
-  id: string | number
-  name: string
-}
-
-interface StatusOption {
-  value: string
-  label: string
-}
 
 export function AddPayment({
   onClose,
@@ -46,34 +40,71 @@ export function AddPayment({
     buyer: '',
     valueGold: '',
     dollar: '',
-    mValue: '',
-    date: '',
-    paymentDate: 'payment 01/10',
-    paymentStatus: 'pending' as 'pending' | 'completed',
+    paymentDate: '',
   })
   
-  const [buyers, setBuyers] = useState<BuyerOption[]>([
-    // Mock data - substituir por chamada à API
-    { id: 1, name: 'João Silva' },
-    { id: 2, name: 'Maria Santos' },
-    { id: 3, name: 'Pedro Costa' },
-  ])
+  const [buyers, setBuyers] = useState<Payer[]>([])
+  const [isLoadingBuyers, setIsLoadingBuyers] = useState(true)
 
-  const [paymentDateOptions, setPaymentDateOptions] = useState<StatusOption[]>([
-    { value: 'payment 01/10', label: 'Payment 01/10' },
-    { value: 'payment 07/10', label: 'Payment 07/10' },
-    { value: 'payment 15/10', label: 'Payment 15/10' },
-  ])
-
-  const paymentStatusOptions = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'completed', label: 'Completed' },
-  ]
+  const [paymentDateOptions, setPaymentDateOptions] = useState<PaymentDate[]>([])
+  const [isLoadingPaymentDates, setIsLoadingPaymentDates] = useState(true)
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
-  const [isAddPaymentDateOpen, setIsAddPaymentDateOpen] = useState(false)
+  const [paymentDateAnchorEl, setPaymentDateAnchorEl] = useState<HTMLElement | null>(null)
+  const [paymentDatePickerKey, setPaymentDatePickerKey] = useState(0)
+  const [editingBuyer, setEditingBuyer] = useState<Payer | null>(null)
+  const [paymentDateSelectOpen, setPaymentDateSelectOpen] = useState(false)
+
+  // Função para carregar payers da API
+  const fetchPayers = async () => {
+    try {
+      setIsLoadingBuyers(true)
+      const payersData = await getPayers()
+      const validPayersData = Array.isArray(payersData) ? payersData : []
+      setBuyers(validPayersData)
+    } catch (error) {
+      console.error('Error fetching payers:', error)
+      const errorDetails = {
+        message: 'Error fetching payers',
+        response: error,
+      }
+      if (onError) {
+        onError(errorDetails)
+      }
+    } finally {
+      setIsLoadingBuyers(false)
+    }
+  }
+
+  // Função para carregar payment dates da API
+  const fetchPaymentDates = async () => {
+    try {
+      setIsLoadingPaymentDates(true)
+      const paymentDatesData = await getPaymentDates()
+      const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
+      setPaymentDateOptions(validPaymentDatesData)
+    } catch (error) {
+      console.error('Error fetching payment dates:', error)
+      const errorDetails = {
+        message: 'Error fetching payment dates',
+        response: error,
+      }
+      if (onError) {
+        onError(errorDetails)
+      }
+    } finally {
+      setIsLoadingPaymentDates(false)
+    }
+  }
+
+  // Carregar lista de payers e payment dates ao montar o componente
+  useEffect(() => {
+    fetchPayers()
+    fetchPaymentDates()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Função para formatar valor em gold
   const formatGoldValue = (value: string) => {
@@ -126,90 +157,230 @@ export function AddPayment({
       return
     }
 
-    if (!formData.valueGold && !formData.dollar) {
-      setFormError('Please fill in at least Gold Value or Dollar Value.')
+    if (!formData.paymentDate) {
+      setFormError('Please select a payment date.')
       setIsSubmitting(false)
       return
     }
 
-    const data = {
+    // Valida que pelo menos um dos valores (gold ou dollar) foi preenchido
+    const goldValue = Number(formData.valueGold.replace(/,/g, ''))
+    const dollarValue = Number(formData.dollar.replace(/,/g, ''))
+    
+    if (!goldValue && !dollarValue) {
+      setFormError('Please provide at least Gold Value or Dollar Value.')
+      setIsSubmitting(false)
+      return
+    }
+
+    // Busca o ID do buyer selecionado
+    const selectedBuyer = buyers.find(b => b.name === formData.buyer)
+    if (!selectedBuyer) {
+      setFormError('Invalid buyer selected.')
+      setIsSubmitting(false)
+      return
+    }
+
+    // Busca o ID da payment date selecionada
+    const selectedPaymentDate = paymentDateOptions.find(pd => pd.name === formData.paymentDate)
+    if (!selectedPaymentDate) {
+      setFormError('Invalid payment date selected.')
+      setIsSubmitting(false)
+      return
+    }
+
+    const payload = {
+      id_payer: Number(selectedBuyer.id),
+      id_payment_date: Number(selectedPaymentDate.id),
+      gold_value: Number(formData.valueGold.replace(/,/g, '')) || 0,
+      dolar_value: Number(formData.dollar.replace(/,/g, '')) || 0,
+      payment_date: formData.paymentDate,
       note: formData.note,
-      buyer: formData.buyer,
-      valueGold: Number(formData.valueGold.replace(/,/g, '')) || 0,
-      dollar: Number(formData.dollar.replace(/,/g, '')) || 0,
-      mValue: Number(formData.mValue.replace(/,/g, '')) || 0,
-      date: formData.date,
-      paymentDate: formData.paymentDate,
-      paymentStatus: formData.paymentStatus,
     }
 
     try {
-      // TODO: Substituir por chamada real à API
-      // await createPayment(data)
-      console.log('Payment data:', data)
+      await createSale(payload)
       
       onPaymentAdded()
-      onClose()
-
+      
+      // Fecha o dialog após um pequeno delay
+      setTimeout(() => {
+        onClose()
+      }, 150)
+      
+      // Mostra mensagem de sucesso após fechar o dialog
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',
-          text: 'Payment added successfully!',
+          text: 'Sale added successfully!',
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          customClass: {
-            popup: 'swal2-custom-popup',
-          },
+          background: '#2a2a2a',
+          color: 'white',
         })
       }, 150)
     } catch (error) {
-      console.error('Error creating payment:', error)
+      console.error('Error creating sale:', error)
       const errorDetails = {
-        message: 'Error creating payment',
+        message: 'Error creating sale',
         response: error,
       }
-
       if (onError) {
         onError(errorDetails)
       }
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to create sale.',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleBuyerAdded = (buyerName: string) => {
-    // Adiciona o novo buyer à lista
-    const newBuyer = {
-      id: Date.now(),
-      name: buyerName,
-    }
-    setBuyers((prev) => [...prev, newBuyer])
+  const handleBuyerAdded = async (buyerName: string, _buyerId: string | number) => {
+    // Re-fetch da lista de payers para garantir sincronização
+    await fetchPayers()
     
     // Seleciona automaticamente o buyer recém-adicionado
     setFormData((prev) => ({
       ...prev,
       buyer: buyerName,
     }))
-    
-    setIsAddBuyerOpen(false)
   }
 
-  const handlePaymentDateAdded = (statusLabel: string, statusValue: string) => {
-    // Adiciona a nova payment date à lista
-    const newPaymentDate = {
-      value: statusValue,
-      label: statusLabel,
+  const handleBuyerUpdated = async (updatedBuyer: Payer) => {
+    // Re-fetch da lista de payers para garantir sincronização
+    await fetchPayers()
+    
+    // Mantém o buyer selecionado se for o que foi editado
+    if (formData.buyer === editingBuyer?.name) {
+      setFormData((prev) => ({
+        ...prev,
+        buyer: updatedBuyer.name,
+      }))
     }
-    setPaymentDateOptions((prev) => [...prev, newPaymentDate])
+  }
+
+  const handleDeleteBuyer = async (buyer: Payer) => {
+    const result = await Swal.fire({
+      title: 'Delete Buyer?',
+      text: `Are you sure you want to delete "${buyer.name}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      background: '#2a2a2a',
+      color: 'white',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await deletePayer(buyer.id)
+        
+        // Re-fetch da lista de payers
+        await fetchPayers()
+        
+        // Limpa a seleção se o buyer deletado estava selecionado
+        if (formData.buyer === buyer.name) {
+          setFormData((prev) => ({
+            ...prev,
+            buyer: '',
+          }))
+        }
+        
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Buyer has been deleted successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      } catch (error) {
+        console.error('Error deleting buyer:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to delete buyer.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      }
+    }
+  }
+
+  const handlePaymentDateAdded = async (paymentDateName: string, _paymentDateId: string | number) => {
+    // Re-fetch da lista de payment dates para garantir sincronização
+    await fetchPaymentDates()
     
     // Seleciona automaticamente a payment date recém-adicionada
     setFormData((prev) => ({
       ...prev,
-      paymentDate: statusValue,
+      paymentDate: paymentDateName,
     }))
-    
-    setIsAddPaymentDateOpen(false)
+  }
+
+
+  const handleDeletePaymentDate = async (paymentDate: PaymentDate) => {
+    const result = await Swal.fire({
+      title: 'Delete Payment Date?',
+      text: `Are you sure you want to delete "${paymentDate.name}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      background: '#2a2a2a',
+      color: 'white',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await deletePaymentDate(paymentDate.id)
+        
+        // Re-fetch da lista de payment dates
+        await fetchPaymentDates()
+        
+        // Limpa a seleção se a payment date deletada estava selecionada
+        if (formData.paymentDate === paymentDate.name) {
+          setFormData((prev) => ({
+            ...prev,
+            paymentDate: paymentDateOptions[0]?.name || '',
+          }))
+        }
+        
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Payment date has been deleted successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      } catch (error) {
+        console.error('Error deleting payment date:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to delete payment date.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+      }
+    }
   }
 
   return (
@@ -256,13 +427,61 @@ export function AddPayment({
                     }
                     label='Buyer *'
                     required
+                    disabled={isLoadingBuyers}
+                    startAdornment={
+                      isLoadingBuyers ? (
+                        <CircularProgress size={20} sx={{ ml: 1 }} />
+                      ) : null
+                    }
                   >
                     <MenuItem value='' disabled>
-                      Select a Buyer
+                      {isLoadingBuyers ? 'Loading buyers...' : 'Select a Buyer'}
                     </MenuItem>
                     {buyers.map((buyer) => (
                       <MenuItem key={buyer.id} value={buyer.name}>
-                        {buyer.name}
+                        <Box sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          width: '100%',
+                          gap: 1,
+                        }}>
+                          <span>{buyer.name}</span>
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingBuyer(buyer)
+                              }}
+                              sx={{
+                                padding: '4px',
+                                color: 'rgb(147, 51, 234)',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                                },
+                              }}
+                            >
+                              <PencilSimple size={16} />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteBuyer(buyer)
+                              }}
+                              sx={{
+                                padding: '4px',
+                                color: '#ef4444',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                },
+                              }}
+                            >
+                              <Trash size={16} />
+                            </IconButton>
+                          </Box>
+                        </Box>
                       </MenuItem>
                     ))}
                   </Select>
@@ -284,6 +503,7 @@ export function AddPayment({
               <TextField
                 id='valueGold'
                 label='Gold Value'
+                required
                 value={formData.valueGold}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -299,6 +519,7 @@ export function AddPayment({
               <TextField
                 id='dollar'
                 label='Dollar Value ($)'
+                required
                 value={formData.dollar}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -311,40 +532,9 @@ export function AddPayment({
                 placeholder='0.00'
               />
 
-              <TextField
-                id='mValue'
-                label='M Value in $ (optional)'
-                value={formData.mValue}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    mValue: formatDollarValue(e.target.value),
-                  }))
-                }
-                variant='outlined'
-                fullWidth
-                placeholder='0.00'
-              />
-
-              <TextField
-                id='date'
-                label='Date'
-                type='datetime-local'
-                required
-                value={formData.date}
-                onChange={handleTextFieldChange}
-                variant='outlined'
-                fullWidth
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-              />
-
               <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <FormControl fullWidth variant='outlined'>
-                  <InputLabel id='payment-date-label'>Payment Date</InputLabel>
+                <FormControl fullWidth variant='outlined' required>
+                  <InputLabel id='payment-date-label'>Payment Date </InputLabel>
                   <Select
                     id='paymentDate'
                     labelId='payment-date-label'
@@ -356,17 +546,58 @@ export function AddPayment({
                       }))
                     }
                     label='Payment Date'
+                    required
+                    disabled={isLoadingPaymentDates}
+                    open={paymentDateSelectOpen}
+                    onOpen={() => setPaymentDateSelectOpen(true)}
+                    onClose={() => setPaymentDateSelectOpen(false)}
+                    startAdornment={
+                      isLoadingPaymentDates ? (
+                        <CircularProgress size={20} sx={{ ml: 1 }} />
+                      ) : null
+                    }
                   >
-                    {paymentDateOptions.map((paymentDate) => (
-                      <MenuItem key={paymentDate.value} value={paymentDate.value}>
-                        {paymentDate.label}
+                    <MenuItem value='' disabled>
+                      {isLoadingPaymentDates ? 'Loading payment dates...' : 'Select a Payment Date'}
+                    </MenuItem>
+                    {paymentDateOptions && paymentDateOptions.map((paymentDate) => (
+                      <MenuItem key={paymentDate.id} value={paymentDate.name}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          width: '100%',
+                          gap: 1,
+                        }}>
+                          <span>{paymentDate.name}</span>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setPaymentDateSelectOpen(false) // Fecha o select
+                              handleDeletePaymentDate(paymentDate)
+                            }}
+                            sx={{
+                              padding: '4px',
+                              color: '#ef4444',
+                              '&:hover': {
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              },
+                            }}
+                          >
+                            <Trash size={16} />
+                          </IconButton>
+                        </Box>
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
                 <Button
                   variant='contained'
-                  onClick={() => setIsAddPaymentDateOpen(true)}
+                  onClick={(e) => {
+                    setPaymentDateAnchorEl(e.currentTarget)
+                    setPaymentDatePickerKey(prev => prev + 1) // Força remontagem
+                  }}
                   startIcon={<Plus size={20} />}
                   sx={{
                     backgroundColor: 'rgb(147, 51, 234)',
@@ -377,28 +608,6 @@ export function AddPayment({
                   New
                 </Button>
               </Box>
-
-              <FormControl fullWidth variant='outlined' className='col-span-2'>
-                <InputLabel id='payment-status-label'>Status</InputLabel>
-                <Select
-                  id='paymentStatus'
-                  labelId='payment-status-label'
-                  value={formData.paymentStatus}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      paymentStatus: e.target.value as 'pending' | 'completed',
-                    }))
-                  }
-                  label='Status'
-                >
-                  {paymentStatusOptions.map((status) => (
-                    <MenuItem key={status.value} value={status.value}>
-                      {status.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
 
               {formError && (
                 <div className='col-span-2 text-center font-semibold text-red-600'>
@@ -438,10 +647,18 @@ export function AddPayment({
         />
       )}
 
-      {isAddPaymentDateOpen && (
-        <AddStatusToList
-          onClose={() => setIsAddPaymentDateOpen(false)}
-          onStatusAdded={handlePaymentDateAdded}
+      <AddPaymentDate
+        key={paymentDatePickerKey}
+        anchorEl={paymentDateAnchorEl}
+        onClose={() => setPaymentDateAnchorEl(null)}
+        onPaymentDateAdded={handlePaymentDateAdded}
+      />
+
+      {editingBuyer && (
+        <EditBuyerName
+          buyer={editingBuyer}
+          onClose={() => setEditingBuyer(null)}
+          onBuyerUpdated={handleBuyerUpdated}
         />
       )}
     </>

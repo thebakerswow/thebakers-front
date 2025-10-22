@@ -309,7 +309,7 @@ export function Header() {
                       <ClipboardText size={20} />
                       Requests
                     </MenuItem>
-                    {/* <MenuItem
+                     <MenuItem
                       onClick={() => {
                         navigate('/payments')
                         handleMenuClose()
@@ -318,7 +318,7 @@ export function Header() {
                     >
                       <CurrencyDollar size={20} />
                       Payments
-                    </MenuItem> */}
+                    </MenuItem> 
                   </Menu>
                 </>
               )}
