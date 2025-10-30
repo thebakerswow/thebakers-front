@@ -191,10 +191,10 @@ export function AddPayment({
 
     const payload = {
       id_payer: Number(selectedBuyer.id),
+      status: 'pending',
       id_payment_date: Number(selectedPaymentDate.id),
       gold_value: Number(formData.valueGold.replace(/,/g, '')) || 0,
       dolar_value: Number(formData.dollar.replace(/,/g, '')) || 0,
-      payment_date: formData.paymentDate,
       note: formData.note,
     }
 

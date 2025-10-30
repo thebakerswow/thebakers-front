@@ -26,6 +26,7 @@ import { KeyDetails } from './pages/keys/key-details'
 import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
 import { ExternalHomePage } from './pages/external/home'
+import { RemixPage } from './pages/remix'
 import { DomainRouter } from './components/domain-router'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
@@ -122,6 +123,10 @@ export function App() {
                   <Route
                     path='/leveling'
                     element={<PrivateRoute element={<LevelingPage />} />}
+                  />
+                  <Route
+                    path='/remix'
+                    element={<PrivateRoute element={<RemixPage />} />}
                   />
                   <Route
                     path='/requests'

@@ -21,6 +21,7 @@ import {
   ClipboardText,
   User,
   CurrencyDollar,
+  Fire,
 } from '@phosphor-icons/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
@@ -309,7 +310,7 @@ export function Header() {
                       <ClipboardText size={20} />
                       Requests
                     </MenuItem>
-                     <MenuItem
+                     {/* <MenuItem
                       onClick={() => {
                         navigate('/payments')
                         handleMenuClose()
@@ -318,7 +319,7 @@ export function Header() {
                     >
                       <CurrencyDollar size={20} />
                       Payments
-                    </MenuItem> 
+                    </MenuItem>  */}
                   </Menu>
                 </>
               )}
@@ -395,6 +396,15 @@ export function Header() {
                   sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                   <ArrowFatUp size={20} /> Leveling
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    navigate('/remix')
+                    handleBookingsMenuClose()
+                  }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Fire size={20} /> Remix
                 </MenuItem>
               </Menu>
 
@@ -601,6 +611,13 @@ export function Header() {
         >
           <ArrowFatUp size={20} />
           Leveling
+        </MenuItem>
+        <MenuItem
+          onClick={() => handleMobileNavigation('/remix')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Fire size={20} />
+          Remix
         </MenuItem>
       </Menu>
     </>

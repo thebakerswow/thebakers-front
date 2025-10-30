@@ -98,10 +98,10 @@ export interface UpdatePaymentDateResponse {
 
 export interface CreateSalePayload {
   id_payer: number
+  status: string
   id_payment_date: number
   gold_value: number
   dolar_value: number
-  payment_date: string
   note: string
 }
 
