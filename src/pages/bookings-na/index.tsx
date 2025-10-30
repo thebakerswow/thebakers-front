@@ -218,6 +218,10 @@ export function FullRaidsNa() {
 
   // Filtra os dados baseado nos filtros selecionados
   const filteredRows = rows.filter((run) => {
+    // Sempre exclui runs com runType = 'Remix'
+    if (run.runType === 'Remix') {
+      return false
+    }
     const teamMatch = selectedTeam === 'All' || run.team === selectedTeam
     const difficultyMatch =
       selectedDifficulty === 'All' || run.difficulty === selectedDifficulty
