@@ -98,10 +98,10 @@ export interface UpdatePaymentDateResponse {
 
 export interface CreateSalePayload {
   id_payer: number
-  status: string
   id_payment_date: number
   gold_value: number
   dolar_value: number
+  payment_date: string
   note: string
 }
 
@@ -236,5 +236,93 @@ export interface PaymentSummaryResponse {
 export const getPaymentSummaryByStatus = async (): Promise<PaymentSummaryResponse> => {
   const response = await api.get<PaymentSummaryResponse>(`/payments/summary/status`)
   return response.data
+}
+
+// Interfaces para Payment Management
+export interface PaymentManagementPlayer {
+  id_discord: string
+  username: string
+  balance_total: number
+  balance_sold: number
+  m_in_dolar_sold: number
+  payment_date: string
+  hold: boolean
+  id_binance: string
+}
+
+export interface PaymentManagementTeam {
+  id: string
+  name: string
+  players: PaymentManagementPlayer[]
+}
+
+export interface PaymentManagementResponse {
+  info: {
+    teams: PaymentManagementTeam[]
+  }
+  errors?: any[]
+}
+
+export interface PaymentManagementFilters {
+  id_team?: string
+  id_payment_date?: number
+}
+
+// GET /payments/management - Busca dados de management de pagamentos
+export const getPaymentManagement = async (filters?: PaymentManagementFilters): Promise<PaymentManagementTeam[]> => {
+  const params: Record<string, string | number> = {}
+  
+  if (filters?.id_team) {
+    params.id_team = filters.id_team
+  }
+  
+  if (filters?.id_payment_date !== undefined) {
+    params.id_payment_date = filters.id_payment_date
+  }
+  
+  const response = await api.get<PaymentManagementResponse>('/payments/management', {
+    params
+  })
+  
+  return response.data.info.teams
+}
+
+// GET /payments/management/date - Busca lista de payment dates disponíveis para management
+export const getPaymentManagementDates = async (): Promise<PaymentDate[]> => {
+  const response = await api.get<PaymentDatesResponse>('/payments/management/date')
+  return response.data.info
+}
+
+// Interfaces para Update Payment Hold
+export interface UpdatePaymentHoldPayload {
+  id_discord: string
+  id_payment_date: number
+  hold: boolean
+}
+
+export interface UpdatePaymentHoldResponse {
+  success: boolean
+  message?: string
+}
+
+// PUT /payments/hold - Atualiza o campo hold de um pagamento
+export const updatePaymentHold = async (data: UpdatePaymentHoldPayload): Promise<void> => {
+  await api.put<UpdatePaymentHoldResponse>('/payments/hold', data)
+}
+
+// Interfaces para Update Payment Binance
+export interface UpdatePaymentBinancePayload {
+  id_discord: string
+  id_binance: string
+}
+
+export interface UpdatePaymentBinanceResponse {
+  success: boolean
+  message?: string
+}
+
+// PUT /payments/binance - Atualiza o campo id_binance de um pagamento
+export const updatePaymentBinance = async (data: UpdatePaymentBinancePayload): Promise<void> => {
+  await api.put<UpdatePaymentBinanceResponse>('/payments/binance', data)
 }
 

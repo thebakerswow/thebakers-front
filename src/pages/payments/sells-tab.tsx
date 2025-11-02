@@ -53,7 +53,7 @@ export function SellsTab({ onError }: SellsTabProps) {
   const [payments, setPayments] = useState<PaymentDisplay[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [paymentDateFilter, setPaymentDateFilter] = useState<string>('all')
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'pending' | 'completed'>('pending')
   const [currentPage, setCurrentPage] = useState(1)
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
   const [isLoadingPayments, setIsLoadingPayments] = useState(true)
@@ -156,7 +156,7 @@ export function SellsTab({ onError }: SellsTabProps) {
     setCurrentPage(1)
   }
 
-  const handlePaymentStatusFilter = (status: 'all' | 'pending' | 'completed') => {
+  const handlePaymentStatusFilter = (status: 'pending' | 'completed') => {
     setPaymentStatusFilter(status)
     setCurrentPage(1)
   }
@@ -398,32 +398,6 @@ export function SellsTab({ onError }: SellsTabProps) {
               Status:
             </Typography>
             <Button
-              variant={paymentStatusFilter === 'all' ? 'contained' : 'outlined'}
-              onClick={() => handlePaymentStatusFilter('all')}
-              size="medium"
-              sx={{
-                ...(paymentStatusFilter === 'all' ? {
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  color: 'white',
-                } : {
-                  borderColor: '#6b7280',
-                  color: '#9ca3af',
-                  '&:hover': {
-                    borderColor: '#9ca3af',
-                    backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                  },
-                }),
-                textTransform: 'none',
-                minWidth: '90px',
-                padding: '8px 20px',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-              }}
-            >
-              All
-            </Button>
-            <Button
               variant={paymentStatusFilter === 'pending' ? 'contained' : 'outlined'}
               onClick={() => handlePaymentStatusFilter('pending')}
               size="medium"
@@ -503,7 +477,7 @@ export function SellsTab({ onError }: SellsTabProps) {
             </Box>
           ) : payments.filter(p => 
             (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-            (paymentStatusFilter === 'all' || p.status === paymentStatusFilter)
+            p.status === paymentStatusFilter
           ).length === 0 ? (
             <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
               <Typography variant="h6" color="textSecondary">
@@ -540,7 +514,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                     {payments
                       .filter(p => 
                         (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                        (paymentStatusFilter === 'all' || p.status === paymentStatusFilter)
+                        p.status === paymentStatusFilter
                       )
                       .map((payment) => (
                       <TableRow
