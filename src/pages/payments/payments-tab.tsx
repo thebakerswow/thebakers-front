@@ -43,6 +43,7 @@ interface PaymentRow {
   nextDollarShop: number
   nextGPayment: number
   total: number
+  averageDolarPerGold: number
   hold: boolean
   binanceId: string
   idTeam: string
@@ -284,24 +285,27 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       })
       setTeamNamesMap(newTeamNamesMap)
       
-      // Transform API response to PaymentRow format
+      // Transform API response to PaymentRow format and sort players alphabetically
       const transformedRows: PaymentRow[] = teamsData.flatMap((team: PaymentManagementTeam) =>
-        team.players.map((player) => ({
-          id: player.id_discord,
-          player: player.username,
-          balanceTotal: player.balance_total,
-          shopBalance: 0, // Not provided by API
-          balanceSold: player.balance_sold,
-          mInDollarSold: player.m_in_dolar_sold,
-          paymentDate: player.payment_date,
-          paymentStatus: 'pending' as const, // Not provided by API
-          nextDollarShop: 0, // Not provided by API
-          nextGPayment: 0, // Not provided by API
-          total: player.balance_total,
-          hold: player.hold,
-          binanceId: player.id_binance,
-          idTeam: team.id,
-        }))
+        team.players
+          .sort((a, b) => a.username.localeCompare(b.username, 'en', { sensitivity: 'base' }))
+          .map((player) => ({
+            id: player.id_discord,
+            player: player.username,
+            balanceTotal: player.balance_total,
+            shopBalance: 0, // Not provided by API
+            balanceSold: player.balance_sold,
+            mInDollarSold: player.m_in_dolar_sold,
+            paymentDate: player.payment_date,
+            paymentStatus: 'pending' as const, // Not provided by API
+            nextDollarShop: 0, // Not provided by API
+            nextGPayment: 0, // Not provided by API
+            total: player.balance_total,
+            averageDolarPerGold: player.average_dolar_per_gold,
+            hold: player.hold,
+            binanceId: player.id_binance,
+            idTeam: team.id,
+          }))
       )
       
       setPaymentRows(transformedRows)
@@ -369,6 +373,15 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       return getTeamOrderIndex(teamNameA) - getTeamOrderIndex(teamNameB)
     })
   }, [groupedByTeam, teamNamesMap])
+
+  // Calcular a média ponderada global de dólar por gold
+  const averageDolarPerGold = useMemo(() => {
+    if (paymentRows.length === 0) return 0
+    
+    // Pega a média do primeiro registro (todos devem ter a mesma média para a mesma data de pagamento)
+    const firstRow = paymentRows[0]
+    return firstRow?.averageDolarPerGold || 0
+  }, [paymentRows])
 
   // Note: Filtering is now done by the API
 
@@ -659,21 +672,41 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           </Select>
         </FormControl>
 
-          {/* Currency Toggle Button */}
-          <Button
-            variant='contained'
-            sx={{
-              height: '40px',
-              minWidth: '80px',
-              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-              color: isDolar ? '#fff' : '#000',
-              '&:hover': {
-                backgroundColor: isDolar ? '#dc2626' : '#FFC300',
-              },
-            }}
-          >
-            {isDolar ? 'U$' : 'Gold'}
-          </Button>
+          {/* Currency Toggle Button with Average */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant='contained'
+              sx={{
+                height: '40px',
+                minWidth: '80px',
+                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
+                color: isDolar ? '#fff' : '#000',
+                '&:hover': {
+                  backgroundColor: isDolar ? '#dc2626' : '#FFC300',
+                },
+              }}
+            >
+              {isDolar ? 'U$' : 'Gold'}
+            </Button>
+            {!isDolar && averageDolarPerGold > 0 && (
+              <Typography
+                sx={{
+                  color: '#10b981',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: '#1a1a1a',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  border: '1px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                Avg: {formatDollar(averageDolarPerGold)}/M
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         {/* Debit G Button */}

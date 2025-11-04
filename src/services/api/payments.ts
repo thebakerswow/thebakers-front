@@ -246,6 +246,7 @@ export interface PaymentManagementPlayer {
   balance_sold: number
   m_in_dolar_sold: number
   payment_date: string
+  average_dolar_per_gold: number
   hold: boolean
   id_binance: string
 }
