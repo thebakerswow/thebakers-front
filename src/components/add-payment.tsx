@@ -1,4 +1,4 @@
-import { UserPlus, Plus, PencilSimple, Trash } from '@phosphor-icons/react'
+import { UserPlus, Plus, PencilSimple } from '@phosphor-icons/react'
 import CloseIcon from '@mui/icons-material/Close'
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
@@ -16,12 +16,13 @@ import {
   IconButton,
   Box,
   CircularProgress,
+  Autocomplete,
 } from '@mui/material'
 import { ErrorDetails } from './error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
 import { AddPaymentDate } from './add-payment-date'
 import { EditBuyerName } from './edit-buyer-name'
-import { getPayers, deletePayer, getPaymentDates, createSale, type Payer, type PaymentDate } from '../services/api'
+import { getPayers, getPaymentDates, createSale, type Payer, type PaymentDate } from '../services/api'
 
 interface AddPaymentProps {
   onClose: () => void
@@ -310,58 +311,6 @@ export function AddPayment({
     }
   }
 
-  const handleDeleteBuyer = async (buyer: Payer) => {
-    const result = await Swal.fire({
-      title: 'Delete Buyer?',
-      text: `Are you sure you want to delete "${buyer.name}"? This action cannot be undone.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
-    })
-
-    if (result.isConfirmed) {
-      try {
-        await deletePayer(buyer.id)
-        
-        // Re-fetch da lista de payers
-        await fetchPayers()
-        
-        // Limpa a seleção se o buyer deletado estava selecionado
-        if (formData.buyer === buyer.name) {
-          setFormData((prev) => ({
-            ...prev,
-            buyer: '',
-          }))
-        }
-        
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Buyer has been deleted successfully.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      } catch (error) {
-        console.error('Error deleting buyer:', error)
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to delete buyer.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      }
-    }
-  }
-
   const handlePaymentDateAdded = async (paymentDateName: string, _paymentDateId: string | number) => {
     // Re-fetch da lista de payment dates para garantir sincronização
     await fetchPaymentDates()
@@ -403,79 +352,66 @@ export function AddPayment({
               />
 
               <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <FormControl fullWidth variant='outlined'>
-                  <InputLabel id='buyer-label'>Buyer *</InputLabel>
-                  <Select
-                    id='buyer'
-                    labelId='buyer-label'
-                    value={formData.buyer}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        buyer: e.target.value,
-                      }))
-                    }
-                    label='Buyer *'
-                    required
-                    disabled={isLoadingBuyers}
-                    startAdornment={
-                      isLoadingBuyers ? (
-                        <CircularProgress size={20} sx={{ ml: 1 }} />
-                      ) : null
-                    }
-                  >
-                    <MenuItem value='' disabled>
-                      {isLoadingBuyers ? 'Loading buyers...' : 'Select a Buyer'}
-                    </MenuItem>
-                    {buyers.map((buyer) => (
-                      <MenuItem key={buyer.id} value={buyer.name}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          width: '100%',
-                          gap: 1,
-                        }}>
-                          <span>{buyer.name}</span>
-                          <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setEditingBuyer(buyer)
-                              }}
-                              sx={{
-                                padding: '4px',
-                                color: 'rgb(147, 51, 234)',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                                },
-                              }}
-                            >
-                              <PencilSimple size={16} />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDeleteBuyer(buyer)
-                              }}
-                              sx={{
-                                padding: '4px',
-                                color: '#ef4444',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                },
-                              }}
-                            >
-                              <Trash size={16} />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  fullWidth
+                  id='buyer'
+                  options={buyers}
+                  getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                  value={buyers.find(b => b.name === formData.buyer) || null}
+                  onChange={(_, newValue) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      buyer: newValue ? newValue.name : '',
+                    }))
+                  }}
+                  disabled={isLoadingBuyers}
+                  loading={isLoadingBuyers}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Buyer'
+                      required
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {isLoadingBuyers ? <CircularProgress size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  renderOption={(props, buyer) => (
+                    <li {...props} key={buyer.id}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        width: '100%',
+                        gap: 1,
+                      }}>
+                        <span>{buyer.name}</span>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingBuyer(buyer)
+                          }}
+                          sx={{
+                            padding: '4px',
+                            color: 'rgb(147, 51, 234)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                            },
+                          }}
+                        >
+                          <PencilSimple size={16} />
+                        </IconButton>
+                      </Box>
+                    </li>
+                  )}
+                />
                 <Button
                   variant='contained'
                   onClick={() => setIsAddBuyerOpen(true)}

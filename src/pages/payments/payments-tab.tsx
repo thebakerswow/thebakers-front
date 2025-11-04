@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Box,
   FormControl,
@@ -17,7 +17,7 @@ import {
   Typography,
   Button,
 } from '@mui/material'
-import { Wallet } from '@phosphor-icons/react'
+import { Wallet, CopySimple } from '@phosphor-icons/react'
 import { ErrorDetails } from '../../components/error-display'
 import { 
   getPaymentManagement, 
@@ -63,6 +63,9 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [availablePaymentDates, setAvailablePaymentDates] = useState<PaymentDateType[]>([])
   const [selectedPaymentDateId, setSelectedPaymentDateId] = useState<number | undefined>(undefined)
   const [teamNamesMap, setTeamNamesMap] = useState<Record<string, string>>({})
+  
+  // Timer para reload após mudança de hold
+  const reloadTimerRef = useRef<number | null>(null)
 
   // Função para converter data de YYYY-MM-DD para MM/DD
   const formatSummaryDate = (dateStr: string) => {
@@ -89,6 +92,18 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         row.id === id ? { ...row, hold: checked } : row
       )
     )
+
+    // Limpar timer anterior se existir
+    if (reloadTimerRef.current) {
+      clearTimeout(reloadTimerRef.current)
+    }
+
+    // Iniciar novo timer de 2 segundos para reload
+    reloadTimerRef.current = setTimeout(() => {
+      // Salvar a tab ativa antes do reload
+      sessionStorage.setItem('paymentsActiveTab', '1')
+      window.location.reload()
+    }, 2000)
 
     try {
       // Chamar API para atualizar hold
@@ -211,7 +226,70 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
     }
   }
 
- 
+  const handleCopyBinanceTemplate = async () => {
+    try {
+      // Filtrar apenas linhas que não estão em hold e têm valor maior que 0
+      const validRows = paymentRows.filter(row => !row.hold && row.mInDollarSold > 0)
+      
+      if (validRows.length === 0) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'No Data',
+          text: 'No valid payment data to copy.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        return
+      }
+
+      // Criar linhas de dados
+      const rows = validRows.map(row => {
+        const accountType = 'Binance ID (BUID)'
+        const binanceId = row.binanceId || '' // Vazio se não tiver
+        const cryptoCurrency = 'USDT'
+        const amount = row.mInDollarSold.toFixed(2)
+        
+        return `${accountType}\t${binanceId}\t${cryptoCurrency}\t${amount}`
+      })
+      
+      // Combinar linhas sem cabeçalho
+      const tsvContent = rows.join('\n')
+      
+      // Copiar para clipboard
+      await navigator.clipboard.writeText(tsvContent)
+      
+      await Swal.fire({
+        title: 'Copied!',
+        text: `${validRows.length} payment(s) copied to clipboard in Binance template format.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#2a2a2a',
+        color: 'white',
+      })
+    } catch (error) {
+      console.error('Error copying to clipboard:', error)
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to copy to clipboard.',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+    }
+  }
+
+  // Limpar timer quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (reloadTimerRef.current) {
+        clearTimeout(reloadTimerRef.current)
+      }
+    }
+  }, [])
 
   // Função para formatar valor para exibição
   const formatValueForDisplay = (value: number): string => {
@@ -334,6 +412,14 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       }
       
       const teamsData = await getPaymentManagement(filters)
+      
+      // Verificar se a resposta é null ou vazia
+      if (!teamsData || !Array.isArray(teamsData) || teamsData.length === 0) {
+        setPaymentRows([])
+        setTeamNamesMap({})
+        setIsLoading(false)
+        return
+      }
       
       // Build a map of team.id -> team.name for display
       const newTeamNamesMap: Record<string, string> = {}
@@ -808,36 +894,79 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           </Box>
         </Box>
 
-        {/* Debit G Button */}
-        <Button
-          variant="contained"
-          size="medium"
-          startIcon={<Wallet size={16} />}
-          sx={{
-            backgroundColor: '#60a5fa',
-            '&:hover': { backgroundColor: '#3b82f6' },
-            fontSize: '0.875rem',
-            textTransform: 'none',
-            height: '40px',
-            px: 2,
-          }}
-        >
-          Debit G for {getPaymentDateLabel(paymentDateFilter)}
-        </Button>
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="medium"
+            startIcon={<CopySimple size={16} />}
+            onClick={handleCopyBinanceTemplate}
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(126, 34, 206)' },
+              fontSize: '0.875rem',
+              textTransform: 'none',
+              height: '40px',
+              px: 2,
+            }}
+          >
+            Copy Binance Template for {paymentDateFilter}
+          </Button>
+          
+          <Button
+            variant="contained"
+            size="medium"
+            startIcon={<Wallet size={16} />}
+            sx={{
+              backgroundColor: '#60a5fa',
+              '&:hover': { backgroundColor: '#3b82f6' },
+              fontSize: '0.875rem',
+              textTransform: 'none',
+              height: '40px',
+              px: 2,
+            }}
+          >
+            Debit G for {getPaymentDateLabel(paymentDateFilter)}
+          </Button>
+        </Box>
       </Box>
 
+      {/* Mensagem quando não há dados */}
+      {paymentRows.length === 0 && !isLoading && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
+          <Paper sx={{ 
+            bgcolor: '#2a2a2a', 
+            border: '1px solid #333', 
+            p: 4, 
+            textAlign: 'center',
+            maxWidth: 500 
+          }}>
+            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
+              No Payment Data Available
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#9ca3af' }}>
+              There are no payment records for the selected filters.
+            </Typography>
+          </Paper>
+        </Box>
+      )}
+
       {/* Renderizar tabelas */}
-      {teamFilter === 'all' ? (
-        // Renderizar uma tabela para cada time
+      {paymentRows.length > 0 && (
         <>
-          {sortedTeamEntries.map(([teamId, rows]) => {
-            const teamName = teamNamesMap[teamId] || teamId
-            return <Box key={teamId}>{renderTable(rows, teamName)}</Box>
-          })}
+          {teamFilter === 'all' ? (
+            // Renderizar uma tabela para cada time
+            <>
+              {sortedTeamEntries.map(([teamId, rows]) => {
+                const teamName = teamNamesMap[teamId] || teamId
+                return <Box key={teamId}>{renderTable(rows, teamName)}</Box>
+              })}
+            </>
+          ) : (
+            // Renderizar apenas uma tabela com o time selecionado
+            renderTable(paymentRows, availableTeams?.find(t => t.id_discord === teamFilter)?.team_name || teamFilter)
+          )}
         </>
-      ) : (
-        // Renderizar apenas uma tabela com o time selecionado
-        renderTable(paymentRows, availableTeams?.find(t => t.id_discord === teamFilter)?.team_name || teamFilter)
       )}
     </Box>
   )

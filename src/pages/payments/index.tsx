@@ -11,7 +11,19 @@ import { SellsTab } from './sells-tab'
 import { PaymentsTab } from './payments-tab'
 
 export function PaymentsPage() {
-  const [activeTab, setActiveTab] = useState(0)
+  // Inicializar o estado diretamente com o valor do sessionStorage para evitar "piscar"
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = sessionStorage.getItem('paymentsActiveTab')
+    if (savedTab) {
+      const tabIndex = parseInt(savedTab, 10)
+      // Agendar remoção assíncrona para evitar problema de dupla montagem (React StrictMode)
+      setTimeout(() => {
+        sessionStorage.removeItem('paymentsActiveTab')
+      }, 100)
+      return tabIndex
+    }
+    return 0
+  })
   const [isLoading] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
 
