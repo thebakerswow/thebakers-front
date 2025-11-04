@@ -21,7 +21,7 @@ import { ErrorDetails } from './error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
 import { AddPaymentDate } from './add-payment-date'
 import { EditBuyerName } from './edit-buyer-name'
-import { getPayers, deletePayer, getPaymentDates, deletePaymentDate, createSale, type Payer, type PaymentDate } from '../services/api'
+import { getPayers, deletePayer, getPaymentDates, createSale, type Payer, type PaymentDate } from '../services/api'
 
 interface AddPaymentProps {
   onClose: () => void
@@ -55,7 +55,6 @@ export function AddPayment({
   const [paymentDateAnchorEl, setPaymentDateAnchorEl] = useState<HTMLElement | null>(null)
   const [paymentDatePickerKey, setPaymentDatePickerKey] = useState(0)
   const [editingBuyer, setEditingBuyer] = useState<Payer | null>(null)
-  const [paymentDateSelectOpen, setPaymentDateSelectOpen] = useState(false)
 
   // Função para carregar payers da API
   const fetchPayers = async () => {
@@ -82,9 +81,54 @@ export function AddPayment({
   const fetchPaymentDates = async () => {
     try {
       setIsLoadingPaymentDates(true)
-      const paymentDatesData = await getPaymentDates()
+      const paymentDatesData = await getPaymentDates({ is_date_valid: true })
       const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
-      setPaymentDateOptions(validPaymentDatesData)
+      
+      // Converte datas de YYYY-MM-DD para MM/DD
+      const convertedDates = validPaymentDatesData.map(date => {
+        const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+        if (match) {
+          const month = match[1]
+          const day = match[2]
+          return { ...date, name: `${month}/${day}` }
+        }
+        return date
+      })
+      
+      // Ordenar datas por data parseada (cronologicamente)
+      const sortedDates = [...convertedDates].sort((dateA, dateB) => {
+        // Função para parsear data no formato MM/DD
+        const parseDateString = (dateStr: string) => {
+          const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
+          if (match) {
+            const month = parseInt(match[1])
+            const day = parseInt(match[2])
+            return month * 100 + day
+          }
+          return 0
+        }
+        
+        // PRIORIDADE 1: Tenta parsear como data MM/DD
+        const dateValueA = parseDateString(dateA.name)
+        const dateValueB = parseDateString(dateB.name)
+        
+        if (dateValueA && dateValueB) {
+          return dateValueA - dateValueB
+        }
+        
+        // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
+        const idA = Number(dateA.id)
+        const idB = Number(dateB.id)
+        
+        if (!isNaN(idA) && !isNaN(idB)) {
+          return idA - idB
+        }
+        
+        // PRIORIDADE 3: Fallback para ordenação alfabética
+        return dateA.name.localeCompare(dateB.name)
+      })
+      
+      setPaymentDateOptions(sortedDates)
     } catch (error) {
       console.error('Error fetching payment dates:', error)
       const errorDetails = {
@@ -191,7 +235,6 @@ export function AddPayment({
 
     const payload = {
       id_payer: Number(selectedBuyer.id),
-      status: 'pending',
       id_payment_date: Number(selectedPaymentDate.id),
       gold_value: Number(formData.valueGold.replace(/,/g, '')) || 0,
       dolar_value: Number(formData.dollar.replace(/,/g, '')) || 0,
@@ -328,59 +371,6 @@ export function AddPayment({
       ...prev,
       paymentDate: paymentDateName,
     }))
-  }
-
-
-  const handleDeletePaymentDate = async (paymentDate: PaymentDate) => {
-    const result = await Swal.fire({
-      title: 'Delete Payment Date?',
-      text: `Are you sure you want to delete "${paymentDate.name}"? This action cannot be undone.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
-    })
-
-    if (result.isConfirmed) {
-      try {
-        await deletePaymentDate(paymentDate.id)
-        
-        // Re-fetch da lista de payment dates
-        await fetchPaymentDates()
-        
-        // Limpa a seleção se a payment date deletada estava selecionada
-        if (formData.paymentDate === paymentDate.name) {
-          setFormData((prev) => ({
-            ...prev,
-            paymentDate: paymentDateOptions[0]?.name || '',
-          }))
-        }
-        
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Payment date has been deleted successfully.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      } catch (error) {
-        console.error('Error deleting payment date:', error)
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to delete payment date.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      }
-    }
   }
 
   return (
@@ -548,9 +538,6 @@ export function AddPayment({
                     label='Payment Date'
                     required
                     disabled={isLoadingPaymentDates}
-                    open={paymentDateSelectOpen}
-                    onOpen={() => setPaymentDateSelectOpen(true)}
-                    onClose={() => setPaymentDateSelectOpen(false)}
                     startAdornment={
                       isLoadingPaymentDates ? (
                         <CircularProgress size={20} sx={{ ml: 1 }} />
@@ -562,32 +549,7 @@ export function AddPayment({
                     </MenuItem>
                     {paymentDateOptions && paymentDateOptions.map((paymentDate) => (
                       <MenuItem key={paymentDate.id} value={paymentDate.name}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          width: '100%',
-                          gap: 1,
-                        }}>
-                          <span>{paymentDate.name}</span>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setPaymentDateSelectOpen(false) // Fecha o select
-                              handleDeletePaymentDate(paymentDate)
-                            }}
-                            sx={{
-                              padding: '4px',
-                              color: '#ef4444',
-                              '&:hover': {
-                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                              },
-                            }}
-                          >
-                            <Trash size={16} />
-                          </IconButton>
-                        </Box>
+                        {paymentDate.name}
                       </MenuItem>
                     ))}
                   </Select>

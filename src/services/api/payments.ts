@@ -101,7 +101,6 @@ export interface CreateSalePayload {
   id_payment_date: number
   gold_value: number
   dolar_value: number
-  payment_date: string
   note: string
 }
 
@@ -139,8 +138,8 @@ export const deletePayer = async (idPaymentPayer: string | number): Promise<void
 }
 
 // GET /payments/date - Busca lista de payment dates disponíveis
-export const getPaymentDates = async (): Promise<PaymentDate[]> => {
-  const response = await api.get<PaymentDatesResponse>('/payments/date')
+export const getPaymentDates = async (params?: { is_date_valid?: boolean }): Promise<PaymentDate[]> => {
+  const response = await api.get<PaymentDatesResponse>('/payments/date', { params })
   return response.data.info
 }
 
@@ -154,15 +153,6 @@ export const createPaymentDate = async (data: CreatePaymentDatePayload): Promise
 export const updatePaymentDate = async (data: UpdatePaymentDatePayload): Promise<PaymentDate> => {
   const response = await api.put<UpdatePaymentDateResponse>('/payments/date', data)
   return response.data.info
-}
-
-// DELETE /payments/date - Remove uma payment date existente
-export const deletePaymentDate = async (idPaymentDate: string | number): Promise<void> => {
-  await api.delete('/payments/date', {
-    params: {
-      id_payment_date: idPaymentDate
-    }
-  })
 }
 
 // GET /payments/sales - Busca lista de sales
@@ -206,21 +196,22 @@ export interface StatusBreakdown {
   status: string
   payments_count: number
   gold_amount: number
-  dollar_amount: number
+  m_total_value: number
 }
 
 export interface PaymentSummaryByDate {
   date: string
   total_payments: number
   total_gold: number
-  total_dollar: number
+  m_total_value: number
+  average_dolar_per_gold: number
   status_breakdown: StatusBreakdown[]
 }
 
 export interface PaymentSummaryTotals {
   total_payments: number
   total_gold: number
-  total_dollar: number
+  m_total_value: number
   by_status: StatusBreakdown[]
 }
 

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Swal from 'sweetalert2'
+import { Popover, TextField } from '@mui/material'
 import { createPaymentDate } from '../services/api'
 
 interface AddPaymentDateProps {
@@ -14,45 +15,48 @@ export function AddPaymentDate({
   onPaymentDateAdded,
 }: AddPaymentDateProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const dateInputRef = useRef<HTMLInputElement>(null)
-  const hasOpenedRef = useRef(false)
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [displayDate, setDisplayDate] = useState<string>('')
 
-  // Abre o calendário automaticamente apenas uma vez ao montar
-  useEffect(() => {
-    if (anchorEl && !hasOpenedRef.current) {
-      hasOpenedRef.current = true
-      setTimeout(() => {
-        if (dateInputRef.current) {
-          dateInputRef.current.showPicker()
-        }
-      }, 100)
-    }
-    
-    // Reset quando o componente é desmontado
-    return () => {
-      hasOpenedRef.current = false
-    }
-  }, [anchorEl])
-
-  const handleDateChange = (dateString: string) => {
-    if (!dateString) {
-      onClose()
-      return
-    }
-    
-    // Converte YYYY-MM-DD para MM/DD
-    const [_year, month, day] = dateString.split('-')
-    const formattedDate = `${month}/${day}`
-    
-    // Abre modal de confirmação imediatamente
-    handleConfirmDate(formattedDate)
+  const handleClose = () => {
+    setSelectedDate('')
+    setDisplayDate('')
+    onClose()
   }
 
-  const handleConfirmDate = async (formattedDate: string) => {
+  const handleDateChange = (value: string) => {
+    setSelectedDate(value)
+    
+    // Converte YYYY-MM-DD para MM/DD/YYYY para exibição
+    if (value) {
+      const [year, month, day] = value.split('-')
+      setDisplayDate(`${month}/${day}/${year}`)
+    } else {
+      setDisplayDate('')
+    }
+  }
+
+  const handleDateSelect = () => {
+    if (!selectedDate) {
+      handleClose()
+      return
+    }
+
+    // selectedDate já está no formato YYYY-MM-DD (formato do input type="date")
+    const [_year, month, day] = selectedDate.split('-')
+    
+    // Converte para MM/DD para confirmação
+    const confirmDisplayDate = `${month}/${day}`
+
+    // Envia no formato YYYY-MM-DD para a API
+    handleConfirmDate(selectedDate, confirmDisplayDate)
+  }
+
+  const handleConfirmDate = async (dateString: string, displayDate: string) => {
     // Abre modal de confirmação
     const result = await Swal.fire({
       title: 'Confirm Payment Date',
-      html: `<p style="color: white; font-size: 1.1rem;">Create payment date <strong style="color: rgb(147, 51, 234);">${formattedDate}</strong>?</p>`,
+      html: `<p style="color: white; font-size: 1.1rem;">Create payment date <strong style="color: rgb(147, 51, 234);">${displayDate}</strong>?</p>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: 'rgb(147, 51, 234)',
@@ -67,14 +71,20 @@ export function AddPaymentDate({
       setIsSubmitting(true)
       
       try {
-        // Chama API para criar a payment date
+        // Chama API para criar a payment date no formato YYYY-MM-DD
         const newPaymentDate = await createPaymentDate({ 
-          name: formattedDate 
+          name: dateString 
         })
         
+        // Converte a data para MM/DD para exibição
+        // Usa displayDate que já foi passado como parâmetro (já está no formato correto)
+        const formattedName = displayDate
+        
         // Fecha e atualiza
+        setSelectedDate('')
+        setDisplayDate('')
         onClose()
-        onPaymentDateAdded(newPaymentDate.name, newPaymentDate.id)
+        onPaymentDateAdded(formattedName, newPaymentDate.id)
         
         // Mostra mensagem de sucesso
         setTimeout(() => {
@@ -90,6 +100,8 @@ export function AddPaymentDate({
         }, 100)
       } catch (error) {
         console.error('Error creating payment date:', error)
+        setSelectedDate('')
+        setDisplayDate('')
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -103,7 +115,7 @@ export function AddPaymentDate({
       }
     } else {
       // Se cancelar, fecha sem criar
-      onClose()
+      handleClose()
     }
   }
 
@@ -113,54 +125,132 @@ export function AddPaymentDate({
   }
 
   return (
-    <>
-      {/* Input que abre o calendário nativo - só renderiza quando há anchor */}
-      <div
-        style={{
-          position: 'fixed',
-          left: anchorEl.getBoundingClientRect().left,
-          top: anchorEl.getBoundingClientRect().bottom + 5,
-          zIndex: 1300,
-          opacity: 0, // Invisível mas ainda funcional
-          pointerEvents: 'none', // Não interfere com outros elementos
-        }}
-      >
-        <input
-          ref={dateInputRef}
-          type="date"
-          onChange={(e) => handleDateChange(e.target.value)}
-          onBlur={onClose}
-          disabled={isSubmitting}
-          style={{ 
-            padding: '8px',
-            fontSize: '14px',
-            border: '1px solid rgba(255, 255, 255, 0.23)',
-            borderRadius: '4px',
-            backgroundColor: 'transparent',
-            color: 'transparent',
-            cursor: 'pointer',
-            pointerEvents: 'auto', // Input precisa ser interativo
-          }}
-        />
-      </div>
-      
-      {/* Loading overlay enquanto salva */}
-      {isSubmitting && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-        }}>
-          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-600'></div>
+    <Popover
+      open={Boolean(anchorEl)}
+      anchorEl={anchorEl}
+      onClose={handleClose}
+      disableRestoreFocus
+      disableEnforceFocus
+      disableAutoFocus={false}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+      }}
+      slotProps={{
+        paper: {
+          sx: {
+            mt: 1,
+            p: 2,
+            backgroundColor: '#2a2a2a',
+            border: '1px solid #444',
+          }
+        }
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '250px' }}>
+        <div style={{ position: 'relative' }}>
+          {/* Campo visível que mostra a data formatada */}
+          <TextField
+            label="Select Date (MM/DD/YYYY)"
+            type="text"
+            value={displayDate}
+            placeholder="MM/DD/YYYY"
+            fullWidth
+            disabled={isSubmitting}
+            InputProps={{
+              readOnly: true,
+              onClick: () => {
+                // Abre o calendário quando clicar no campo de texto
+                const dateInput = document.getElementById('hidden-date-input') as HTMLInputElement
+                if (dateInput) {
+                  try {
+                    dateInput.showPicker()
+                  } catch (error) {
+                    // showPicker pode não estar disponível em todos os navegadores
+                    dateInput.click()
+                  }
+                }
+              },
+              style: { cursor: 'pointer' }
+            }}
+            sx={{
+              '& .MuiInputBase-input': {
+                color: 'white',
+                cursor: 'pointer',
+              },
+              '& .MuiInputLabel-root': {
+                color: '#9ca3af',
+              },
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#444',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgb(147, 51, 234)',
+                },
+              },
+            }}
+          />
+          {/* Input de data oculto que abre o calendário */}
+          <input
+            id="hidden-date-input"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => handleDateChange(e.target.value)}
+            disabled={isSubmitting}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              opacity: 0,
+              cursor: 'pointer',
+              zIndex: -1,
+            }}
+          />
         </div>
-      )}
-    </>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handleClose}
+            disabled={isSubmitting}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              opacity: isSubmitting ? 0.6 : 1,
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDateSelect}
+            disabled={isSubmitting || !selectedDate}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: isSubmitting || !selectedDate ? '#6b7280' : 'rgb(147, 51, 234)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isSubmitting || !selectedDate ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            {isSubmitting ? 'Creating...' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </Popover>
   )
 }

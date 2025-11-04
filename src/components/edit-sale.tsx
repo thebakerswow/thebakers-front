@@ -73,7 +73,52 @@ export function EditSale({
         setIsLoadingPaymentDates(true)
         const paymentDatesData = await getPaymentDates()
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
-        setPaymentDateOptions(validPaymentDatesData)
+        
+        // Converte datas de YYYY-MM-DD para MM/DD
+        const convertedDates = validPaymentDatesData.map(date => {
+          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+          if (match) {
+            const month = match[1]
+            const day = match[2]
+            return { ...date, name: `${month}/${day}` }
+          }
+          return date
+        })
+        
+        // Ordenar datas por data parseada (cronologicamente)
+        const sortedDates = [...convertedDates].sort((dateA, dateB) => {
+          // Função para parsear data no formato MM/DD
+          const parseDateString = (dateStr: string) => {
+            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
+            if (match) {
+              const month = parseInt(match[1])
+              const day = parseInt(match[2])
+              return month * 100 + day
+            }
+            return 0
+          }
+          
+          // PRIORIDADE 1: Tenta parsear como data MM/DD
+          const dateValueA = parseDateString(dateA.name)
+          const dateValueB = parseDateString(dateB.name)
+          
+          if (dateValueA && dateValueB) {
+            return dateValueA - dateValueB
+          }
+          
+          // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
+          const idA = Number(dateA.id)
+          const idB = Number(dateB.id)
+          
+          if (!isNaN(idA) && !isNaN(idB)) {
+            return idA - idB
+          }
+          
+          // PRIORIDADE 3: Fallback para ordenação alfabética
+          return dateA.name.localeCompare(dateB.name)
+        })
+        
+        setPaymentDateOptions(sortedDates)
       } catch (error) {
         console.error('Error fetching payment dates:', error)
       } finally {

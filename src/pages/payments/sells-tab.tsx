@@ -91,6 +91,17 @@ export function SellsTab({ onError }: SellsTabProps) {
     }
   }
 
+  // Função para converter data de YYYY-MM-DD para MM/DD
+  const formatSummaryDate = (dateStr: string) => {
+    const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+    if (match) {
+      const month = match[1]
+      const day = match[2]
+      return `${month}/${day}`
+    }
+    return dateStr
+  }
+
   const fetchPayments = async () => {
     try {
       setIsLoadingPayments(true)
@@ -188,8 +199,9 @@ export function SellsTab({ onError }: SellsTabProps) {
       try {
         await updateSaleStatus(payment.id)
         
-        // Re-fetch da lista de sales
+        // Re-fetch da lista de sales e summary
         await fetchPayments()
+        await fetchSummary()
         
         Swal.fire({
           title: 'Updated!',
@@ -232,8 +244,9 @@ export function SellsTab({ onError }: SellsTabProps) {
       try {
         await deleteSale(payment.id)
         
-        // Re-fetch da lista de sales
+        // Re-fetch da lista de sales e summary
         await fetchPayments()
+        await fetchSummary()
         
         Swal.fire({
           title: 'Deleted!',
@@ -264,7 +277,52 @@ export function SellsTab({ onError }: SellsTabProps) {
       try {
         const paymentDatesData = await getPaymentDates()
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
-        setPaymentDateOptions(validPaymentDatesData)
+        
+        // Converte datas de YYYY-MM-DD para MM/DD
+        const convertedDates = validPaymentDatesData.map(date => {
+          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+          if (match) {
+            const month = match[1]
+            const day = match[2]
+            return { ...date, name: `${month}/${day}` }
+          }
+          return date
+        })
+        
+        // Ordenar datas por data parseada (cronologicamente)
+        const sortedDates = [...convertedDates].sort((dateA, dateB) => {
+          // Função para parsear data no formato MM/DD
+          const parseDateString = (dateStr: string) => {
+            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
+            if (match) {
+              const month = parseInt(match[1])
+              const day = parseInt(match[2])
+              return month * 100 + day
+            }
+            return 0
+          }
+          
+          // PRIORIDADE 1: Tenta parsear como data MM/DD
+          const dateValueA = parseDateString(dateA.name)
+          const dateValueB = parseDateString(dateB.name)
+          
+          if (dateValueA && dateValueB) {
+            return dateValueA - dateValueB
+          }
+          
+          // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
+          const idA = Number(dateA.id)
+          const idB = Number(dateB.id)
+          
+          if (!isNaN(idA) && !isNaN(idB)) {
+            return idA - idB
+          }
+          
+          // PRIORIDADE 3: Fallback para ordenação alfabética
+          return dateA.name.localeCompare(dateB.name)
+        })
+        
+        setPaymentDateOptions(sortedDates)
       } catch (error) {
         console.error('Error fetching payment dates:', error)
         const errorDetails = {
@@ -281,22 +339,24 @@ export function SellsTab({ onError }: SellsTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Função para buscar summary da API
+  const fetchSummary = async () => {
+    try {
+      const summaryData = await getPaymentSummaryByStatus()
+      setPaymentSummary(summaryData)
+    } catch (error) {
+      console.error('Error fetching payment summary:', error)
+    }
+  }
+
   useEffect(() => {
     fetchPayments()
   }, [paymentDateFilter, paymentStatusFilter, currentPage])
 
   // Buscar summary da API
   useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const summaryData = await getPaymentSummaryByStatus()
-        setPaymentSummary(summaryData)
-      } catch (error) {
-        console.error('Error fetching payment summary:', error)
-      }
-    }
-    
     fetchSummary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentDateFilter, paymentStatusFilter])
 
   const getPaymentDateLabel = (paymentDate: string) => {
@@ -306,7 +366,7 @@ export function SellsTab({ onError }: SellsTabProps) {
       const datePart = paymentDate.replace('payment', 'Payment').trim()
       return datePart.toUpperCase()
     }
-    return paymentDate.toUpperCase()
+    return formatSummaryDate(paymentDate).toUpperCase()
   }
 
   const getStatusColor = (status: string) => {
@@ -687,7 +747,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                 pb: 1,
               }}
             >
-              Summary by Status
+              Pending Sales Summary
             </Typography>
 
             {!paymentSummary || !paymentSummary.info.summary || paymentSummary.info.summary.length === 0 ? (
@@ -713,7 +773,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                       <Chip
-                        label={dateData.date.toUpperCase()}
+                        label={formatSummaryDate(dateData.date).toUpperCase()}
                         color="info"
                         size="small"
                         sx={{
@@ -735,48 +795,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                       </Typography>
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
-                          Total Gold:
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.85rem',
-                          }}
-                        >
-                          {formatValueForDisplay(dateData.total_gold)}g
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
-                          Total Dollar:
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.85rem',
-                          }}
-                        >
-                          {formatDollar(dateData.total_dollar)}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Agrupamento por Status */}
+                    {/* Informações do Status Pending */}
                     {dateData.status_breakdown && dateData.status_breakdown.length > 0 && (
-                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #444' }}>
-                        <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.75rem', mb: 1.5, fontWeight: 600 }}>
-                          By Status:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                          {dateData.status_breakdown.map((statusData) => (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {dateData.status_breakdown
+                          .filter((statusData) => statusData.status.toLowerCase() === 'pending')
+                          .map((statusData) => (
                             <Box key={statusData.status} sx={{ 
                               bgcolor: '#2a2a2a', 
                               p: 1.5, 
@@ -811,13 +835,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                                     Dollar:
                                   </Typography>
                                   <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
-                                    {formatDollar(statusData.dollar_amount)}
+                                    {formatDollar(statusData.m_total_value)}
                                   </Typography>
                                 </Box>
                               </Box>
                             </Box>
                           ))}
-                        </Box>
                       </Box>
                     )}
                   </Paper>
@@ -886,7 +909,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                           fontWeight: 700,
                         }}
                       >
-                        {formatDollar(paymentSummary.info.totals.total_dollar)}
+                        {formatDollar(paymentSummary.info.totals.m_total_value)}
                       </Typography>
                     </Box>
                   </Box>
@@ -933,7 +956,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                                   Dollar:
                                 </Typography>
                                 <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
-                                  {formatDollar(statusData.dollar_amount)}
+                                  {formatDollar(statusData.m_total_value)}
                                 </Typography>
                               </Box>
                             </Box>
@@ -956,6 +979,7 @@ export function SellsTab({ onError }: SellsTabProps) {
           onPaymentAdded={() => {
             setIsAddPaymentOpen(false)
             fetchPayments()
+            fetchSummary()
           }}
           onError={onError}
         />
@@ -980,6 +1004,7 @@ export function SellsTab({ onError }: SellsTabProps) {
           onSaleUpdated={() => {
             setEditingSale(null)
             fetchPayments()
+            fetchSummary()
           }}
         />
       )}

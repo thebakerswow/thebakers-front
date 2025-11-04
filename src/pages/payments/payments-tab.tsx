@@ -64,6 +64,17 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [selectedPaymentDateId, setSelectedPaymentDateId] = useState<number | undefined>(undefined)
   const [teamNamesMap, setTeamNamesMap] = useState<Record<string, string>>({})
 
+  // Função para converter data de YYYY-MM-DD para MM/DD
+  const formatSummaryDate = (dateStr: string) => {
+    const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+    if (match) {
+      const month = match[1]
+      const day = match[2]
+      return `${month}/${day}`
+    }
+    return dateStr
+  }
+
   const handleHoldChange = async (id: string | number, checked: boolean) => {
     // Encontrar a linha correspondente para obter o id_payment_date
     const row = paymentRows.find(r => r.id === id)
@@ -233,11 +244,57 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
         
         setAvailableTeams(validTeamsData)
-        setAvailablePaymentDates(validPaymentDatesData)
         
-        // Set default payment date if available
-        if (validPaymentDatesData.length > 0) {
-          const firstPaymentDate = validPaymentDatesData[0]
+        // Converte datas de YYYY-MM-DD para MM/DD
+        const convertedDates = validPaymentDatesData.map(date => {
+          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+          if (match) {
+            const month = match[1]
+            const day = match[2]
+            return { ...date, name: `${month}/${day}` }
+          }
+          return date
+        })
+        
+        // Ordenar datas antes de definir
+        const sortedDates = [...convertedDates].sort((dateA, dateB) => {
+          // Função para parsear data no formato MM/DD
+          const parseDateString = (dateStr: string) => {
+            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
+            if (match) {
+              const month = parseInt(match[1])
+              const day = parseInt(match[2])
+              // Retorna um valor que pode ser usado para comparação
+              return month * 100 + day
+            }
+            return 0
+          }
+          
+          // PRIORIDADE 1: Tenta parsear como data MM/DD
+          const dateValueA = parseDateString(dateA.name)
+          const dateValueB = parseDateString(dateB.name)
+          
+          if (dateValueA && dateValueB) {
+            return dateValueA - dateValueB
+          }
+          
+          // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
+          const idA = Number(dateA.id)
+          const idB = Number(dateB.id)
+          
+          if (!isNaN(idA) && !isNaN(idB)) {
+            return idA - idB
+          }
+          
+          // PRIORIDADE 3: Fallback para ordenação alfabética
+          return dateA.name.localeCompare(dateB.name)
+        })
+        
+        setAvailablePaymentDates(sortedDates)
+        
+        // Set default payment date if available (primeira data ordenada)
+        if (sortedDates.length > 0) {
+          const firstPaymentDate = sortedDates[0]
           setPaymentDateFilter(firstPaymentDate.name)
           setSelectedPaymentDateId(Number(firstPaymentDate.id))
         } else {
@@ -383,6 +440,48 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
     return firstRow?.averageDolarPerGold || 0
   }, [paymentRows])
 
+  // Ordenar times disponíveis de acordo com teamOrder
+  const sortedAvailableTeams = useMemo(() => {
+    return [...availableTeams].sort((teamA, teamB) => {
+      return getTeamOrderIndex(teamA.team_name) - getTeamOrderIndex(teamB.team_name)
+    })
+  }, [availableTeams])
+
+  // Ordenar datas de pagamento cronologicamente
+  const sortedPaymentDates = useMemo(() => {
+    return [...availablePaymentDates].sort((dateA, dateB) => {
+      // Função para parsear data no formato MM/DD
+      const parseDateString = (dateStr: string) => {
+        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
+        if (match) {
+          const month = parseInt(match[1])
+          const day = parseInt(match[2])
+          return month * 100 + day
+        }
+        return 0
+      }
+      
+      // PRIORIDADE 1: Tenta parsear como data MM/DD
+      const dateValueA = parseDateString(dateA.name)
+      const dateValueB = parseDateString(dateB.name)
+      
+      if (dateValueA && dateValueB) {
+        return dateValueA - dateValueB
+      }
+      
+      // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
+      const idA = Number(dateA.id)
+      const idB = Number(dateB.id)
+      
+      if (!isNaN(idA) && !isNaN(idB)) {
+        return idA - idB
+      }
+      
+      // PRIORIDADE 3: Fallback para ordenação alfabética
+      return dateA.name.localeCompare(dateB.name)
+    })
+  }, [availablePaymentDates])
+
   // Note: Filtering is now done by the API
 
   const getPaymentDateLabel = (paymentDate: string) => {
@@ -392,7 +491,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       const datePart = paymentDate.replace('payment', 'Payment').trim()
       return datePart.toUpperCase()
     }
-    return paymentDate.toUpperCase()
+    return formatSummaryDate(paymentDate).toUpperCase()
   }
 
 
@@ -603,7 +702,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             }}
           >
             <MenuItem value="all">All Teams</MenuItem>
-            {availableTeams && availableTeams.map((team) => (
+            {sortedAvailableTeams && sortedAvailableTeams.map((team) => (
               <MenuItem key={team.id_discord} value={team.id_discord}>
                 {team.team_name}
               </MenuItem>
@@ -664,7 +763,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               },
             }}
           >
-            {availablePaymentDates && availablePaymentDates.map((paymentDate) => (
+            {sortedPaymentDates && sortedPaymentDates.map((paymentDate) => (
               <MenuItem key={paymentDate.id} value={paymentDate.name}>
                 {paymentDate.name}
               </MenuItem>
