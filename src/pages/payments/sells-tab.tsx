@@ -27,7 +27,7 @@ import { ptBR } from 'date-fns/locale'
 import { ErrorDetails } from '../../components/error-display'
 import { AddPayment } from '../../components/add-payment'
 import { EditSale } from '../../components/edit-sale'
-import { getSales, getPayers, deleteSale, getPaymentDates, updateSaleStatus, getPaymentSummaryByStatus, type Payer, type Sale, type PaymentDate, type PaymentSummaryResponse } from '../../services/api'
+import { getSales, getPayers, deleteSale, getPaymentDates, getPaymentSummaryByStatus, type Payer, type Sale, type PaymentDate, type PaymentSummaryResponse } from '../../services/api'
 import Swal from 'sweetalert2'
 
 interface PaymentDisplay {
@@ -60,6 +60,7 @@ export function SellsTab({ onError }: SellsTabProps) {
   const [editingSale, setEditingSale] = useState<PaymentDisplay | null>(null)
   const [paymentDateOptions, setPaymentDateOptions] = useState<PaymentDate[]>([])
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryResponse | null>(null)
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false)
 
   // Função para formatar valor para exibição
   const formatValueForDisplay = (value: number): string => {
@@ -176,55 +177,6 @@ export function SellsTab({ onError }: SellsTabProps) {
     setCurrentPage(page)
   }
 
-  const handleStatusChange = async (payment: PaymentDisplay) => {
-    // Só permite alterar se status atual for "pending"
-    if (payment.status !== 'pending') {
-      return
-    }
-
-    const result = await Swal.fire({
-      title: 'Are you sure you want to mark this sale as completed?',
-      html: '<span style="color: #ef4444; font-weight: bold;">This action cannot be undone.</span>',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, complete it!',
-      cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
-    })
-
-    if (result.isConfirmed) {
-      try {
-        await updateSaleStatus(payment.id)
-        
-        // Re-fetch da lista de sales e summary
-        await fetchPayments()
-        await fetchSummary()
-        
-        Swal.fire({
-          title: 'Updated!',
-          text: 'Sale status changed to Completed.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      } catch (error) {
-        console.error('Error updating status:', error)
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to update status.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
-      }
-    }
-  }
 
   const handleDeleteSale = async (payment: PaymentDisplay) => {
     const result = await Swal.fire({
@@ -342,10 +294,13 @@ export function SellsTab({ onError }: SellsTabProps) {
   // Função para buscar summary da API
   const fetchSummary = async () => {
     try {
+      setIsLoadingSummary(true)
       const summaryData = await getPaymentSummaryByStatus()
       setPaymentSummary(summaryData)
     } catch (error) {
       console.error('Error fetching payment summary:', error)
+    } finally {
+      setIsLoadingSummary(false)
     }
   }
 
@@ -623,16 +578,9 @@ export function SellsTab({ onError }: SellsTabProps) {
                             label={getStatusLabel(payment.status)}
                             color={getStatusColor(payment.status) as any}
                             size="small"
-                            onClick={() => handleStatusChange(payment)}
                             sx={{
                               fontWeight: 'bold',
                               fontSize: '0.75rem',
-                              cursor: payment.status === 'pending' ? 'pointer' : 'default',
-                              '&:hover': payment.status === 'pending' ? {
-                                opacity: 0.8,
-                                transform: 'scale(1.05)',
-                              } : {},
-                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         </TableCell>
@@ -750,104 +698,162 @@ export function SellsTab({ onError }: SellsTabProps) {
               Pending Sales Summary
             </Typography>
 
-            {!paymentSummary || !paymentSummary.info.summary || paymentSummary.info.summary.length === 0 ? (
-              <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', py: 4 }}>
-                No data available
-              </Typography>
+            {/* Loading State */}
+            {isLoadingSummary ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress size={40} sx={{ color: 'rgb(147, 51, 234)' }} />
+              </Box>
             ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {paymentSummary.info.summary.map((dateData) => (
-                  <Paper
-                    key={dateData.date}
-                    sx={{
-                      bgcolor: '#1a1a1a',
-                      border: '1px solid #444',
-                      p: 2,
-                      transition: 'all 0.3s ease-in-out',
-                      '&:hover': {
-                        borderColor: 'rgb(147, 51, 234)',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(147, 51, 234, 0.2)',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Chip
-                        label={formatSummaryDate(dateData.date).toUpperCase()}
-                        color="info"
-                        size="small"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.75rem',
-                          '& .MuiChip-label': {
+              <>
+                {/* Summary por data */}
+                {paymentSummary && paymentSummary.info.summary && Array.isArray(paymentSummary.info.summary) && paymentSummary.info.summary.length > 0 && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                {[...paymentSummary.info.summary]
+                  .sort((a, b) => {
+                    // Ordena da data mais antiga para a mais atual
+                    return new Date(a.date).getTime() - new Date(b.date).getTime()
+                  })
+                  .map((dateData) => {
+                  // Usa valores que vêm da API e arredonda
+                  const goldInStock = Math.round(dateData.gold_in_stock || 0)
+                  const goldMissing = Math.round(dateData.gold_missing_date || 0)
+                  const hasEnoughGoldForDate = goldMissing >= 0
+                  
+                  return (
+                    <Paper
+                      key={dateData.date}
+                      sx={{
+                        bgcolor: '#1a1a1a',
+                        border: '1px solid #444',
+                        p: 2,
+                        transition: 'all 0.3s ease-in-out',
+                        '&:hover': {
+                          borderColor: 'rgb(147, 51, 234)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(147, 51, 234, 0.2)',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Chip
+                          label={formatSummaryDate(dateData.date).toUpperCase()}
+                          color="info"
+                          size="small"
+                          sx={{
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem',
+                            '& .MuiChip-label': {
+                              color: 'white',
+                            },
+                          }}
+                        />
+                        <Typography
+                          variant="h6"
+                          sx={{
                             color: 'white',
-                          },
-                        }}
-                      />
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: 'white',
-                          fontWeight: 'bold',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {dateData.total_payments} {dateData.total_payments === 1 ? 'payment' : 'payments'}
+                        </Typography>
+                      </Box>
+
+                      {/* Informações do Status Pending */}
+                      {dateData.status_breakdown && dateData.status_breakdown.length > 0 && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          {dateData.status_breakdown
+                            .filter((statusData) => statusData.status.toLowerCase() === 'pending')
+                            .map((statusData) => (
+                              <Box key={statusData.status} sx={{ 
+                                bgcolor: '#2a2a2a', 
+                                p: 1.5, 
+                                borderRadius: 1,
+                                border: '1px solid #333'
+                              }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                  <Chip
+                                    label={statusData.status.toUpperCase()}
+                                    color={getStatusColor(statusData.status.toLowerCase()) as any}
+                                    size="small"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      fontSize: '0.7rem',
+                                    }}
+                                  />
+                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
+                                    {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
+                                  </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                      Gold:
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                      {formatValueForDisplay(statusData.gold_amount)}g
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                      Dollar:
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                      {formatDollar(statusData.m_total_value)}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            ))}
+                        </Box>
+                      )}
+
+                      {/* Gold Control - Para cada data */}
+                      <Box 
+                        sx={{ 
+                          mt: 2, 
+                          pt: 2, 
+                          borderTop: '2px solid #444',
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: 1 
                         }}
                       >
-                        {dateData.total_payments} {dateData.total_payments === 1 ? 'payment' : 'payments'}
-                      </Typography>
-                    </Box>
+                        {/* Estoque de Gold */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                            Gold in Stock:
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                            {formatValueForDisplay(goldInStock)}g
+                          </Typography>
+                        </Box>
 
-                    {/* Informações do Status Pending */}
-                    {dateData.status_breakdown && dateData.status_breakdown.length > 0 && (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        {dateData.status_breakdown
-                          .filter((statusData) => statusData.status.toLowerCase() === 'pending')
-                          .map((statusData) => (
-                            <Box key={statusData.status} sx={{ 
-                              bgcolor: '#2a2a2a', 
-                              p: 1.5, 
-                              borderRadius: 1,
-                              border: '1px solid #333'
-                            }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                <Chip
-                                  label={statusData.status.toUpperCase()}
-                                  color={getStatusColor(statusData.status.toLowerCase()) as any}
-                                  size="small"
-                                  sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '0.7rem',
-                                  }}
-                                />
-                                <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
-                                  {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
-                                </Typography>
-                              </Box>
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
-                                    Gold:
-                                  </Typography>
-                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
-                                    {formatValueForDisplay(statusData.gold_amount)}g
-                                  </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
-                                    Dollar:
-                                  </Typography>
-                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
-                                    {formatDollar(statusData.m_total_value)}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Box>
-                          ))}
+                        {/* Gold Missing Date */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
+                            {hasEnoughGoldForDate ? 'Surplus:' : 'Missing:'}
+                          </Typography>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: hasEnoughGoldForDate ? '#10b981' : '#ef4444', 
+                              fontWeight: 700,
+                              fontSize: '0.75rem'
+                            }}
+                          >
+                            {formatValueForDisplay(goldMissing)}g
+                          </Typography>
+                        </Box>
                       </Box>
-                    )}
-                  </Paper>
-                ))}
+                    </Paper>
+                  )
+                })}
+              </Box>
+            )}
 
-                {/* Total Geral */}
-                <Paper
+            {/* Total Geral */}
+            {paymentSummary && paymentSummary.info.totals ? (
+              <Paper
                   sx={{
                     bgcolor: '#1a1a1a',
                     border: '2px solid rgb(147, 51, 234)',
@@ -921,7 +927,14 @@ export function SellsTab({ onError }: SellsTabProps) {
                         By Status:
                       </Typography>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {paymentSummary.info.totals.by_status.map((statusData) => (
+                        {[...paymentSummary.info.totals.by_status]
+                          .sort((a, b) => {
+                            // Pending sempre em cima
+                            if (a.status === 'pending') return -1
+                            if (b.status === 'pending') return 1
+                            return 0
+                          })
+                          .map((statusData) => (
                           <Box key={statusData.status} sx={{ 
                             bgcolor: '#2a2a2a', 
                             p: 2, 
@@ -966,7 +979,12 @@ export function SellsTab({ onError }: SellsTabProps) {
                     </Box>
                   )}
                 </Paper>
-              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', py: 4 }}>
+                No summary data available
+              </Typography>
+            )}
+              </>
             )}
           </Paper>
         </Grid>

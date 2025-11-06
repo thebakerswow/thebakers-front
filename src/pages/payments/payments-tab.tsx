@@ -24,6 +24,7 @@ import {
   getPaymentManagementDates, 
   updatePaymentHold,
   updatePaymentBinance,
+  updatePaymentManagementDebit,
   PaymentManagementTeam,
   PaymentDate as PaymentDateType 
 } from '../../services/api/payments'
@@ -279,6 +280,155 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         background: '#2a2a2a',
         color: 'white',
       })
+    }
+  }
+
+  const handleDebitG = async () => {
+    try {
+      // Verificar se há um payment date selecionado
+      if (selectedPaymentDateId === undefined) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'No Payment Date Selected',
+          text: 'Please select a payment date first.',
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        return
+      }
+
+      // Calcular o total de gold a ser debitado (apenas linhas não em hold)
+      const validRows = paymentRows.filter(row => !row.hold)
+      const totalGold = validRows.reduce((sum, row) => sum + row.balanceSold, 0)
+      const totalPlayers = validRows.length
+
+      // Mostrar confirmação com os detalhes
+      const result = await Swal.fire({
+        title: 'Confirm Debit',
+        html: `
+          <div style="text-align: left; margin-bottom: 10px;">
+            <p style="color: white; margin-bottom: 10px;">
+              Are you sure you want to debit gold for 
+              <strong style="color: rgb(147, 51, 234);">${getPaymentDateLabel(paymentDateFilter)}</strong>?
+            </p>
+            <div style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333;">
+              <p style="color: #9ca3af; margin: 5px 0;">
+                <strong style="color: white;">Players:</strong> ${totalPlayers}
+              </p>
+              <p style="color: #9ca3af; margin: 5px 0;">
+                <strong style="color: white;">Total Gold:</strong> 
+                <span style="color: #10b981;">${formatValueForDisplay(totalGold)}g</span>
+              </p>
+            </div>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#60a5fa',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, debit it!',
+        cancelButtonText: 'Cancel',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+
+      if (!result.isConfirmed) {
+        return
+      }
+
+      // Chamar a API
+      await updatePaymentManagementDebit({
+        id_payment_date: selectedPaymentDateId
+      })
+
+      // Mostrar sucesso
+      await Swal.fire({
+        title: 'Success!',
+        text: 'Gold has been debited successfully.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#2a2a2a',
+        color: 'white',
+      })
+
+      // Reload completo da página para atualizar os filtros de datas
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Error debiting gold:', error)
+      
+      // Verificar se é o erro de data pendente anterior
+      const isPendingOldDateError = error?.response?.data?.errors?.some(
+        (err: any) => err.type === 'pending-old-date-not-allowed'
+      )
+      
+      if (isPendingOldDateError) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Pending Previous Date',
+          html: `
+            <div style="text-align: left;">
+              <p style="color: white; margin-bottom: 10px;">
+                You cannot debit a future payment date while there are still pending payments from previous dates.
+              </p>
+              <p style="color: #f59e0b; font-weight: bold; margin-top: 15px;">
+                Please debit the previous payment dates first, in chronological order.
+              </p>
+            </div>
+          `,
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        // Não chama onError para evitar mensagem duplicada
+        return
+      }
+
+      // Verificar se é o erro de valor de gold maior que débitos
+      const isTotalGoldGreaterError = error?.response?.data?.errors?.some(
+        (err: any) => err.type === 'total-gold-value-greater-than-total-debits'
+      )
+      
+      if (isTotalGoldGreaterError) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Insufficient Debit Value',
+          html: `
+            <div style="text-align: left;">
+              <p style="color: white; margin-bottom: 10px;">
+                The total gold value to be debited is greater than the total available debits.
+              </p>
+              <p style="color: #ef4444; font-weight: bold; margin-top: 15px;">
+                Please change any payment date.
+              </p>
+            </div>
+          `,
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        // Não chama onError para evitar mensagem duplicada
+        return
+      }
+      
+      // Para outros erros, mostra mensagem genérica
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to debit gold. Please try again.',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+
+      const errorDetails = {
+        message: 'Error debiting gold',
+        response: error,
+      }
+      if (onError) {
+        onError(errorDetails)
+      }
     }
   }
 
@@ -917,6 +1067,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             variant="contained"
             size="medium"
             startIcon={<Wallet size={16} />}
+            onClick={handleDebitG}
             sx={{
               backgroundColor: '#60a5fa',
               '&:hover': { backgroundColor: '#3b82f6' },

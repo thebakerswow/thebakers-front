@@ -205,6 +205,8 @@ export interface PaymentSummaryByDate {
   total_gold: number
   m_total_value: number
   average_dolar_per_gold: number
+  gold_in_stock: number
+  gold_missing_date: number
   status_breakdown: StatusBreakdown[]
 }
 
@@ -316,5 +318,20 @@ export interface UpdatePaymentBinanceResponse {
 // PUT /payments/binance - Atualiza o campo id_binance de um pagamento
 export const updatePaymentBinance = async (data: UpdatePaymentBinancePayload): Promise<void> => {
   await api.put<UpdatePaymentBinanceResponse>('/payments/binance', data)
+}
+
+// Interfaces para Update Payment Management Debit
+export interface UpdatePaymentManagementDebitPayload {
+  id_payment_date: number
+}
+
+export interface UpdatePaymentManagementDebitResponse {
+  success: boolean
+  message?: string
+}
+
+// PUT /payments/management/debit - Debita gold da data de pagamento selecionada
+export const updatePaymentManagementDebit = async (data: UpdatePaymentManagementDebitPayload): Promise<void> => {
+  await api.put<UpdatePaymentManagementDebitResponse>('/payments/management/debit', data)
 }
 
