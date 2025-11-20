@@ -467,19 +467,21 @@ export function SellsTab({ onError }: SellsTabProps) {
           </Box>
         </Box>
         
-        <Button
-          variant='contained'
-          startIcon={<Plus size={20} />}
-          onClick={() => setIsAddPaymentOpen(true)}
-          sx={{
-            backgroundColor: 'rgb(147, 51, 234)',
-            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-            padding: '10px 20px',
-            boxShadow: 3,
-          }}
-        >
-          Add Sale
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant='contained'
+            startIcon={<Plus size={20} />}
+            onClick={() => setIsAddPaymentOpen(true)}
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              padding: '10px 20px',
+              boxShadow: 3,
+            }}
+          >
+            Add Sale
+          </Button>
+        </Box>
       </Box>
 
       {/* Layout com duas colunas: Tabela Principal e Resumo */}

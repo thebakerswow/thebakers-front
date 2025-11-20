@@ -59,7 +59,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [paymentDateFilter, setPaymentDateFilter] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const [teamFilter, setTeamFilter] = useState<string>('all')
-  const [isDolar, _] = useState(false)
   const [availableTeams, setAvailableTeams] = useState<Array<{ id_discord: string; team_name: string }>>([])
   const [availablePaymentDates, setAvailablePaymentDates] = useState<PaymentDateType[]>([])
   const [selectedPaymentDateId, setSelectedPaymentDateId] = useState<number | undefined>(undefined)
@@ -301,7 +300,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       // Calcular o total de gold a ser debitado (apenas linhas não em hold)
       const validRows = paymentRows.filter(row => !row.hold)
       const totalGold = validRows.reduce((sum, row) => sum + row.balanceSold, 0)
-      const totalPlayers = validRows.length
 
       // Mostrar confirmação com os detalhes
       const result = await Swal.fire({
@@ -312,10 +310,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               Are you sure you want to debit gold for 
               <strong style="color: rgb(147, 51, 234);">${getPaymentDateLabel(paymentDateFilter)}</strong>?
             </p>
-            <div style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333;">
-              <p style="color: #9ca3af; margin: 5px 0;">
-                <strong style="color: white;">Players:</strong> ${totalPlayers}
-              </p>
+            <div style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333;">      
               <p style="color: #9ca3af; margin: 5px 0;">
                 <strong style="color: white;">Total Gold:</strong> 
                 <span style="color: #10b981;">${formatValueForDisplay(totalGold)}g</span>
@@ -773,21 +768,21 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               transition: 'all 0.2s ease-in-out',
             }}
           >
-            <TableCell align="left" sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 500, width: 180 }}>
+            <TableCell align="left" sx={{ color: 'white', fontSize: '1rem', fontWeight: 500, width: 180 }}>
               {row.player}
             </TableCell>
-            <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600, width: 150 }}>
-              {formatValueForDisplay(row.balanceTotal)}g
+            <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+              {row.balanceTotal === 0 ? '0' : `${formatValueForDisplay(row.balanceTotal)}g`}
             </TableCell>
-            <TableCell align="right" sx={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600, width: 150 }}>
-              {formatValueForDisplay(row.balanceSold)}g
+            <TableCell align="right" sx={{ color: '#10b981', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+              {row.balanceSold === 0 ? '-' : `${formatValueForDisplay(row.balanceSold)}g`}
             </TableCell>
-            <TableCell align="right" sx={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 600, width: 150 }}>
-              {formatDollar(row.mInDollarSold)}
+            <TableCell align="right" sx={{ color: '#f59e0b', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+              {row.mInDollarSold === 0 ? '-' : `U$ ${row.mInDollarSold.toFixed(2)}`}
             </TableCell>
-            <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '0.85rem', width: 150 }}>
+            <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '1rem', width: 150 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ fontSize: '0.85rem', color: 'white' }}>
+                <Typography variant="body2" sx={{ fontSize: '1rem', color: 'white' }}>
                   {getPaymentDateLabel(row.paymentDate)}
                 </Typography>
               </Box>
@@ -814,7 +809,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
                   border: '1px solid rgba(255, 255, 255, 0.23)',
                   backgroundColor: '#1a1a1a',
                   color: row.binanceId ? 'white' : '#9ca3af',
-                  fontSize: '0.85rem',
+                  fontSize: '1rem',
                   transition: 'all 0.2s ease-in-out',
                   minHeight: '36px',
                   display: 'flex',
@@ -862,13 +857,13 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: '#1a1a1a' }}>
-              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 180 }}>Player</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 150 }}>Balance Total</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 150 }}>Balance Sold</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 150 }}>M in $ Sold</TableCell>
-              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 150 }}>Payment Date</TableCell>
-              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 100 }}>Hold</TableCell>
-              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 180 }}>Binance ID</TableCell>
+              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 180 }}>Player</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Total</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Sold</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>M in $ Sold</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Payment Date</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 100 }}>Hold</TableCell>
+              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 180 }}>Binance ID</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -1007,41 +1002,25 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           </Select>
         </FormControl>
 
-          {/* Currency Toggle Button with Average */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button
-              variant='contained'
-              sx={{
-                height: '40px',
-                minWidth: '80px',
-                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-                color: isDolar ? '#fff' : '#000',
-                '&:hover': {
-                  backgroundColor: isDolar ? '#dc2626' : '#FFC300',
-                },
-              }}
-            >
-              {isDolar ? 'U$' : 'Gold'}
-            </Button>
-            {!isDolar && averageDolarPerGold > 0 && (
-              <Typography
-                sx={{
-                  color: '#10b981',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  backgroundColor: '#1a1a1a',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  border: '1px solid #10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                }}
-              >
-                Avg: {formatDollar(averageDolarPerGold)}/M
-              </Typography>
-            )}
-          </Box>
+        {/* Average Display */}
+        {averageDolarPerGold > 0 && (
+          <Typography
+            sx={{
+              color: '#10b981',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              backgroundColor: '#1a1a1a',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: '1px solid #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            Avg: {formatDollar(averageDolarPerGold)}/M
+          </Typography>
+        )}
         </Box>
 
         {/* Action Buttons */}

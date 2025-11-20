@@ -318,8 +318,18 @@ export function Header() {
                       sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                       <CurrencyDollar size={20} />
-                      Payments
+                      Gold
                     </MenuItem> 
+                    <MenuItem
+                      onClick={() => {
+                        navigate('/receipts')
+                        handleMenuClose()
+                      }}
+                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <CurrencyDollar size={20} />
+                      Dolar
+                    </MenuItem>
                   </Menu>
                 </>
               )}
@@ -566,6 +576,13 @@ export function Header() {
         >
           <CurrencyDollar size={20} />
           Payments
+        </MenuItem>
+        <MenuItem
+          onClick={() => handleMobileNavigation('/receipts')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <CurrencyDollar size={20} />
+          Receipts
         </MenuItem>
       </Menu>
 

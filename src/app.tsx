@@ -31,6 +31,7 @@ import { DomainRouter } from './components/domain-router'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/payments'
+import { ReceiptsPage } from './pages/receipts'
 import './styles/global.css'
 
 // Componente para proteger rotas privadas
@@ -139,6 +140,10 @@ export function App() {
                   <Route
                     path='/payments'
                     element={<PrivateRoute element={<PaymentsPage />} />}
+                  />
+                  <Route
+                    path='/receipts'
+                    element={<PrivateRoute element={<ReceiptsPage />} />}
                   />
 
                   {/* Rota catch-all */}
