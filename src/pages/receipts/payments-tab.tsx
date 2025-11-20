@@ -457,6 +457,20 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
     }
   }
 
+  // Função para formatar valor em dólar (para o display de total)
+  const formatDollar = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value)
+  }
+
+  // Calcular a soma total do balance_total de todos os times
+  const totalBalanceDollar = useMemo(() => {
+    const allPlayers = sortedManagementTeams.flatMap((team) => team.players)
+    return allPlayers.reduce((sum, player) => sum + (player.balance_total ?? 0), 0)
+  }, [sortedManagementTeams])
+
   const getPaymentDateLabel = (dateId: number | null) => {
     if (!dateId) return '-'
     const date = availableDates.find((d) => Number(d.id) === Number(dateId))
@@ -579,6 +593,26 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
                 ))}
               </Select>
             </FormControl>
+
+            {/* Total Balance Display */}
+            {totalBalanceDollar > 0 && (
+              <Typography
+                sx={{
+                  color: '#10b981',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: '#1a1a1a',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  border: '1px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                Total: {formatDollar(totalBalanceDollar)}
+              </Typography>
+            )}
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
