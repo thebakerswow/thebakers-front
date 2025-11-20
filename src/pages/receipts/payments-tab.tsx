@@ -87,7 +87,7 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
       })
       setManagementTeams(teams ?? [])
     } catch (error) {
-      handleError('Error fetching receipts management data', error)
+      handleError('Error fetching dolar management data', error)
     } finally {
       setIsLoading(false)
     }
@@ -232,6 +232,34 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
               </p>
               <p style="color: #f59e0b; font-weight: bold; margin-top: 15px;">
                 Please debit the previous receipts dates first, in chronological order.
+              </p>
+            </div>
+          `,
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        // Não chama onError para evitar mensagem duplicada
+        setIsDebiting(false)
+        return
+      }
+      
+      // Verificar se é o erro de valor da receita maior que o valor em caixa
+      const isTotalDolarValueGreaterError = error?.response?.data?.errors?.some(
+        (err: any) => err.type === 'total-dolar-value-greater-than-total-debits'
+      )
+      
+      if (isTotalDolarValueGreaterError) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Insufficient Cash Value',
+          html: `
+            <div style="text-align: left;">
+              <p style="color: white; margin-bottom: 10px;">
+                The total receipt value is greater than the available cash value to distribute.
+              </p>
+              <p style="color: #ef4444; font-weight: bold; margin-top: 15px;">
+                Please check the values and adjust the payments before trying to debit again.
               </p>
             </div>
           `,

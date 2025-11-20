@@ -53,7 +53,7 @@ export function ReceiptsPage() {
         
         <div className='mb-6'>
           <Typography variant='h4' fontWeight='bold'>
-            Receipts Management
+            Dolar Management
           </Typography>
         </div>
 
