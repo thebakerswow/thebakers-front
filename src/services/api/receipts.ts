@@ -388,7 +388,7 @@ export const updateReceiptsBinance = async (data: {
   id_discord: string
   id_binance: string
 }): Promise<void> => {
-  await api.put('/payments/binance', data)
+  await api.put('/receipts/dolar/binance', data)
 }
 
 

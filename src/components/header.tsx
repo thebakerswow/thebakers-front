@@ -39,6 +39,8 @@ export function Header() {
   const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState<null | HTMLElement>(null)
   const [mobileBookingsAnchorEl, setMobileBookingsAnchorEl] = useState<null | HTMLElement>(null)
   const [mobileManagementAnchorEl, setMobileManagementAnchorEl] = useState<null | HTMLElement>(null)
+  const [financeAnchorEl, setFinanceAnchorEl] = useState<null | HTMLElement>(null)
+  const [mobileFinanceAnchorEl, setMobileFinanceAnchorEl] = useState<null | HTMLElement>(null)
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -120,11 +122,28 @@ export function Header() {
     setMobileManagementAnchorEl(null)
   }
 
+  const handleFinanceMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setFinanceAnchorEl(event.currentTarget)
+  }
+
+  const handleFinanceMenuClose = () => {
+    setFinanceAnchorEl(null)
+  }
+
+  const handleMobileFinanceMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileFinanceAnchorEl(event.currentTarget)
+  }
+
+  const handleMobileFinanceMenuClose = () => {
+    setMobileFinanceAnchorEl(null)
+  }
+
   const handleMobileNavigation = (path: string) => {
     navigate(path)
     setMobileMenuAnchorEl(null)
     setMobileBookingsAnchorEl(null)
     setMobileManagementAnchorEl(null)
+    setMobileFinanceAnchorEl(null)
   }
 
   // Se não está autenticado e não é página externa, mostra header de login
@@ -218,13 +237,59 @@ export function Header() {
             </IconButton>
           ) : (
             <>
+              {/* Finance Menu */}
               <Button
                 color='inherit'
-                onClick={() => navigate('/balance')}
-                startIcon={<Coins size={20} />}
+                onClick={handleFinanceMenuOpen}
+                startIcon={<CurrencyDollar size={20} />}
               >
-                Balance
+                Finance
               </Button>
+              <Menu
+                anchorEl={financeAnchorEl}
+                open={Boolean(financeAnchorEl)}
+                onClose={handleFinanceMenuClose}
+                sx={{
+                  zIndex: 99999,
+                  '& .MuiPaper-root': {
+                    zIndex: 99999,
+                  },
+                  '& .MuiBackdrop-root': {
+                    zIndex: 99998,
+                  },
+                }}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      width: '150px',
+                      zIndex: 99999,
+                      position: 'relative',
+                    },
+                  },
+                }}
+                style={{ zIndex: 99999 }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    navigate('/balance')
+                    handleFinanceMenuClose()
+                  }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Coins size={20} />
+                  Balance
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    navigate('/sells')
+                    handleFinanceMenuClose()
+                  }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <CurrencyDollar size={20} />
+                  Sells
+                </MenuItem>
+              </Menu>
 
               {shouldUseNewBalance(userRoles) && (
                 <Button
@@ -462,11 +527,11 @@ export function Header() {
         </MenuItem>
 
         <MenuItem
-          onClick={() => handleMobileNavigation('/balance')}
+          onClick={handleMobileFinanceMenuOpen}
           sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
         >
-          <Coins size={20} />
-          Balance
+          <CurrencyDollar size={20} />
+          Finance
         </MenuItem>
 
         {shouldUseNewBalance(userRoles) && (
@@ -635,6 +700,44 @@ export function Header() {
         >
           <Fire size={20} />
           Remix
+        </MenuItem>
+      </Menu>
+
+      {/* Submenu Finance Mobile */}
+      <Menu
+        anchorEl={mobileFinanceAnchorEl}
+        open={Boolean(mobileFinanceAnchorEl)}
+        onClose={handleMobileFinanceMenuClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
+          '& .MuiPaper-root': {
+            background: 'black',
+            color: 'white',
+            width: 200,
+          },
+          zIndex: 99999,
+        }}
+      >
+        <MenuItem
+          onClick={() => handleMobileNavigation('/balance')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Coins size={20} />
+          Balance
+        </MenuItem>
+        <MenuItem
+          onClick={() => handleMobileNavigation('/sells')}
+          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <CurrencyDollar size={20} />
+          Sells
         </MenuItem>
       </Menu>
     </>

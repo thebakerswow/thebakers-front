@@ -335,3 +335,29 @@ export const updatePaymentManagementDebit = async (data: UpdatePaymentManagement
   await api.put<UpdatePaymentManagementDebitResponse>('/payments/management/debit', data)
 }
 
+// Interfaces para Payments Resume
+export interface PaymentResumeItem {
+  payment_date: string
+  gold_sold: number
+  avg_m: number
+  gold_in_dolar: number
+  dolar_sold: number
+  total: number
+  type: 'gold' | 'dolar'
+}
+
+export interface PaymentsResumeResponse {
+  info: {
+    completed: Record<string, PaymentResumeItem>
+    pending_gold: Record<string, PaymentResumeItem>
+    pending_dolar: Record<string, PaymentResumeItem>
+  }
+  errors: any[]
+}
+
+// GET /payments/resume - Busca resumo de pagamentos
+export const getPaymentsResume = async (): Promise<PaymentsResumeResponse> => {
+  const response = await api.get<PaymentsResumeResponse>('/payments/resume')
+  return response.data
+}
+

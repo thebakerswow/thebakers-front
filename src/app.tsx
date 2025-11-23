@@ -32,6 +32,7 @@ import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/payments'
 import { ReceiptsPage } from './pages/receipts'
+import { SellsPage } from './pages/sells'
 import './styles/global.css'
 
 // Componente para proteger rotas privadas
@@ -144,6 +145,10 @@ export function App() {
                   <Route
                     path='/receipts'
                     element={<PrivateRoute element={<ReceiptsPage />} />}
+                  />
+                  <Route
+                    path='/sells'
+                    element={<PrivateRoute element={<SellsPage />} />}
                   />
 
                   {/* Rota catch-all */}
