@@ -243,7 +243,7 @@ export function Header() {
                 onClick={handleFinanceMenuOpen}
                 startIcon={<CurrencyDollar size={20} />}
               >
-                Finance
+                Finances
               </Button>
               <Menu
                 anchorEl={financeAnchorEl}
@@ -287,7 +287,7 @@ export function Header() {
                   sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                   <CurrencyDollar size={20} />
-                  Sells
+                  Payments
                 </MenuItem>
               </Menu>
 

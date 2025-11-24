@@ -43,21 +43,43 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
     return `${hour}:${minute}`
   }
 
+  const parseDate = (dateString: string): number => {
+    // Tenta parsear formato 'dd/MM/yyyy HH:mm:ss'
+    const match = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(
+      dateString
+    )
+    if (match) {
+      const [, day, month, year, hour, minute, second] = match
+      // Cria data no formato ISO: yyyy-MM-ddTHH:mm:ss
+      const isoDate = `${year}-${month}-${day}T${hour}:${minute}:${second}`
+      return new Date(isoDate).getTime()
+    }
+    // fallback para outros formatos
+    let normalized = dateString
+    if (normalized && !normalized.includes('T')) {
+      normalized = normalized.replace(' ', 'T')
+    }
+    normalized = normalized.replace(/\.\d+Z$/, 'Z')
+    const date = new Date(normalized)
+    return isNaN(date.getTime()) ? 0 : date.getTime()
+  }
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await getLatestTransactions()
-        const combinedTransactions = [
-          ...response.transactions,
-          ...response.transactions_gbanks,
+        const transactionsWithSource = [
+          ...response.transactions.map((t: Transaction) => ({ ...t, isGbank: false })),
+          ...response.transactions_gbanks.map((t: Transaction) => ({ ...t, isGbank: true })),
         ]
         // Filtra pelo tipo de acordo com isDolar
-        const filteredTransactions = combinedTransactions.filter((t) =>
+        const filteredTransactions = transactionsWithSource.filter((t) =>
           isDolar ? t.type === 'dolar' : t.type !== 'dolar'
         )
+        // Ordena por data/hora, mais recente primeiro (independente de origem)
         const sortedTransactions = filteredTransactions
           .sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            (a, b) => parseDate(b.date) - parseDate(a.date)
           )
           .slice(0, 20)
         setTransactions(sortedTransactions)
@@ -133,8 +155,9 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
                     {transaction.name_impacted}
                   </TableCell>
                   <TableCell align='center'>
-                    {isDolar ? '$' : ''}
+                    {transaction?.type === 'dolar' ? '$' : ''}
                     {transaction.value}
+                    {(transaction?.type === 'gold' || (transaction as any)?.isGbank) ? 'g' : ''}
                   </TableCell>
                   <TableCell align='center'>
                     {formatTime(transaction.date)}

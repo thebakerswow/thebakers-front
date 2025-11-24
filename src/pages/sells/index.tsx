@@ -24,6 +24,7 @@ interface SalesByDate {
   goldInDollar: number
   shopDolar: number
   total: number
+  type: 'gold' | 'dolar' | 'mixed'
 }
 
 export function SellsPage() {
@@ -86,30 +87,89 @@ export function SellsPage() {
     }
 
     // Seleciona os dados baseado no filtro de status
-    let dataSource: Record<string, PaymentResumeItem> = {}
+    type ExtendedPaymentResumeItem = Omit<PaymentResumeItem, 'type'> & { type: 'gold' | 'dolar' | 'mixed' }
+    let dataSource: Record<string, ExtendedPaymentResumeItem> = {}
     
     if (statusFilter === 'completed') {
-      dataSource = resumeData.info.completed || {}
+      // Para completed, usa os dados diretamente da API
+      // Se já vier como "mixed", usa o total que vem da API
+      const completed = resumeData.info.completed || {}
+      
+      Object.entries(completed).forEach(([date, item]) => {
+        // Se já for mixed, usa diretamente (o total já vem calculado da API)
+        const itemType = item.type as 'gold' | 'dolar' | 'mixed'
+        if (itemType === 'mixed') {
+          dataSource[date] = {
+            ...item,
+            type: 'mixed',
+          }
+        } else {
+          // Para gold e dolar, usa diretamente
+          dataSource[date] = item
+        }
+      })
     } else {
       // Para pending, combina pending_gold e pending_dolar
-      dataSource = {
-        ...(resumeData.info.pending_gold || {}),
-        ...(resumeData.info.pending_dolar || {}),
-      }
+      // Se houver a mesma data em ambos, combina em uma única linha
+      const pendingGold = resumeData.info.pending_gold || {}
+      const pendingDolar = resumeData.info.pending_dolar || {}
+      
+      // Coleta todas as datas únicas
+      const allDates = new Set([
+        ...Object.keys(pendingGold),
+        ...Object.keys(pendingDolar)
+      ])
+      
+      // Para cada data, combina os dados se existirem em ambos
+      allDates.forEach(date => {
+        const goldItem = pendingGold[date]
+        const dolarItem = pendingDolar[date]
+        
+        if (goldItem && dolarItem) {
+          // Combina: soma gold_in_dolar do gold com dolar_sold do dólar
+          dataSource[date] = {
+            ...goldItem,
+            dolar_sold: dolarItem.dolar_sold,
+            total: goldItem.gold_in_dolar + dolarItem.dolar_sold,
+            type: 'mixed',
+          }
+        } else if (goldItem) {
+          dataSource[date] = goldItem
+        } else if (dolarItem) {
+          dataSource[date] = dolarItem
+        }
+      })
     }
 
     // Converte o objeto em array e formata os dados
     return Object.entries(dataSource)
-      .map(([date, item]) => ({
-        date,
-        paymentDate: formatDate(item.payment_date),
-        goldSold: item.gold_sold,
-        avgM: item.avg_m,
-        goldInDollar: item.gold_in_dolar,
-        shopDolar: item.dolar_sold,
-        total: item.total,
-      }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Mais recente primeiro
+      .map(([date, item]) => {
+        const type = (item.type === 'mixed' ? 'mixed' : item.type) as 'gold' | 'dolar' | 'mixed'
+        let total: number
+        
+        if (type === 'mixed') {
+          // Mixed: usa o total que já vem calculado (do completed ou do pending combinado)
+          total = item.total
+        } else if (type === 'gold') {
+          // Gold: exibe gold_in_dolar
+          total = item.gold_in_dolar
+        } else {
+          // Dolar: exibe dolar_sold
+          total = item.dolar_sold
+        }
+        
+        return {
+          date,
+          paymentDate: formatDate(item.payment_date),
+          goldSold: item.gold_sold,
+          avgM: item.avg_m,
+          goldInDollar: item.gold_in_dolar,
+          shopDolar: item.dolar_sold,
+          total,
+          type,
+        }
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Mais antiga primeiro
   }, [resumeData, statusFilter])
 
   if (isLoading) {
@@ -134,7 +194,7 @@ export function SellsPage() {
         
         <div className='mb-6 flex justify-between items-center'>
           <Typography variant='h4' fontWeight='bold'>
-            Sells Management
+            Payments
           </Typography>
         </div>
 
@@ -184,7 +244,7 @@ export function SellsPage() {
         {salesByDate.length === 0 ? (
           <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
             <Typography variant="h6" color="textSecondary">
-              No sales found
+              No payments found
             </Typography>
           </Paper>
         ) : (
@@ -244,16 +304,16 @@ export function SellsPage() {
                       {dateData.paymentDate}
                     </TableCell>
                     <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
-                      {formatGold(dateData.goldSold)}g
+                      {dateData.type === 'dolar' ? '-' : `${formatGold(dateData.goldSold)}g`}
                     </TableCell>
                     <TableCell align='right' sx={{ color: '#a78bfa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
-                      {formatDollar(dateData.avgM)}
+                      {dateData.type === 'dolar' ? '-' : formatDollar(dateData.avgM)}
                     </TableCell>
                     <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
-                      {formatDollar(dateData.goldInDollar)}
+                      {dateData.type === 'dolar' ? '-' : formatDollar(dateData.goldInDollar)}
                     </TableCell>
                     <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
-                      {formatDollar(dateData.shopDolar)}
+                      {dateData.type === 'gold' ? '-' : formatDollar(dateData.shopDolar)}
                     </TableCell>
                     <TableCell align='right' sx={{ color: '#f59e0b', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
                       {formatDollar(dateData.total)}

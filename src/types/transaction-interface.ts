@@ -4,6 +4,7 @@ export interface Transaction {
   value: string
   made_by: string
   date: string
+  type?: 'dolar' | 'gold'
 }
 
 export interface VerifyTableData {
