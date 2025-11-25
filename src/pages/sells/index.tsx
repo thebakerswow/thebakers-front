@@ -25,6 +25,8 @@ interface SalesByDate {
   shopDolar: number
   total: number
   type: 'gold' | 'dolar' | 'mixed'
+  balanceGold: number | null
+  balanceDolar: number | null
 }
 
 export function SellsPage() {
@@ -102,10 +104,16 @@ export function SellsPage() {
           dataSource[date] = {
             ...item,
             type: 'mixed',
-          }
+            balance_total_gold: (item as any).balance_total,
+            balance_total_dolar: (item as any).balance_total,
+          } as any
         } else {
           // Para gold e dolar, usa diretamente
-          dataSource[date] = item
+          dataSource[date] = {
+            ...item,
+            balance_total_gold: item.type === 'gold' ? (item as any).balance_total : null,
+            balance_total_dolar: item.type === 'dolar' ? (item as any).balance_total : null,
+          } as any
         }
       })
     } else {
@@ -132,11 +140,21 @@ export function SellsPage() {
             dolar_sold: dolarItem.dolar_sold,
             total: goldItem.gold_in_dolar + dolarItem.dolar_sold,
             type: 'mixed',
-          }
+            balance_total_gold: (goldItem as any).balance_total,
+            balance_total_dolar: (dolarItem as any).balance_total,
+          } as any
         } else if (goldItem) {
-          dataSource[date] = goldItem
+          dataSource[date] = {
+            ...goldItem,
+            balance_total_gold: (goldItem as any).balance_total,
+            balance_total_dolar: null,
+          } as any
         } else if (dolarItem) {
-          dataSource[date] = dolarItem
+          dataSource[date] = {
+            ...dolarItem,
+            balance_total_gold: null,
+            balance_total_dolar: (dolarItem as any).balance_total,
+          } as any
         }
       })
     }
@@ -167,6 +185,8 @@ export function SellsPage() {
           shopDolar: item.dolar_sold,
           total,
           type,
+          balanceGold: (item as any).balance_total_gold ?? null,
+          balanceDolar: (item as any).balance_total_dolar ?? null,
         }
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Mais antiga primeiro
@@ -261,9 +281,11 @@ export function SellsPage() {
             <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
               <colgroup>
                 <col style={{ width: '120px' }} />
+                {statusFilter === 'pending' && <col style={{ width: '150px' }} />}
                 <col style={{ width: '150px' }} />
                 <col style={{ width: '150px' }} />
                 <col style={{ width: '150px' }} />
+                {statusFilter === 'pending' && <col style={{ width: '150px' }} />}
                 <col style={{ width: '150px' }} />
                 <col style={{ width: '150px' }} />
               </colgroup>
@@ -272,6 +294,11 @@ export function SellsPage() {
                   <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
                     Payment Date
                   </TableCell>
+                  {statusFilter === 'pending' && (
+                    <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                      Balance Gold
+                    </TableCell>
+                  )}
                   <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
                     Gold Sold
                   </TableCell>
@@ -281,6 +308,11 @@ export function SellsPage() {
                   <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
                     Gold In $
                   </TableCell>
+                  {statusFilter === 'pending' && (
+                    <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                      Balance Dolar
+                    </TableCell>
+                  )}
                   <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
                     Shop Dolar
                   </TableCell>
@@ -303,6 +335,11 @@ export function SellsPage() {
                     <TableCell sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 'medium', px: 2 }}>
                       {dateData.paymentDate}
                     </TableCell>
+                    {statusFilter === 'pending' && (
+                      <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                        {dateData.balanceGold !== null ? formatGold(dateData.balanceGold) + 'g' : '-'}
+                      </TableCell>
+                    )}
                     <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
                       {dateData.type === 'dolar' ? '-' : `${formatGold(dateData.goldSold)}g`}
                     </TableCell>
@@ -312,6 +349,11 @@ export function SellsPage() {
                     <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
                       {dateData.type === 'dolar' ? '-' : formatDollar(dateData.goldInDollar)}
                     </TableCell>
+                    {statusFilter === 'pending' && (
+                      <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                        {dateData.balanceDolar !== null ? formatDollar(dateData.balanceDolar) : '-'}
+                      </TableCell>
+                    )}
                     <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
                       {dateData.type === 'gold' ? '-' : formatDollar(dateData.shopDolar)}
                     </TableCell>
