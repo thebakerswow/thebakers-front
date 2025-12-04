@@ -38,7 +38,7 @@ export interface ReceiptsSummaryByDate {
   m_total_value: number
   average_dolar_per_gold: number
   gold_in_stock: number
-  gold_missing_date: number
+  total_sold_date: number
   status_breakdown: ReceiptsSummaryStatusBreakdown[]
 }
 

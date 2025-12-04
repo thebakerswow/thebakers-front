@@ -205,8 +205,9 @@ export interface PaymentSummaryByDate {
   total_gold: number
   m_total_value: number
   average_dolar_per_gold: number
+  gold_total_geral: number
   gold_in_stock: number
-  gold_missing_date: number
+  total_sold_date: number
   status_breakdown: StatusBreakdown[]
 }
 

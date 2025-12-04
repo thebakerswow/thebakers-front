@@ -717,8 +717,9 @@ export function SellsTab({ onError }: SellsTabProps) {
                   })
                   .map((dateData) => {
                   // Usa valores que vêm da API e arredonda
+                  const goldTotalGeral = Math.round(dateData.gold_total_geral || 0)
                   const goldInStock = Math.round(dateData.gold_in_stock || 0)
-                  const goldMissing = Math.round(dateData.gold_missing_date || 0)
+                  const goldMissing = Math.round(dateData.total_sold_date || 0)
                   const hasEnoughGoldForDate = goldMissing >= 0
                   
                   return (
@@ -820,32 +821,143 @@ export function SellsTab({ onError }: SellsTabProps) {
                           gap: 1 
                         }}
                       >
+                        {/* Gold Total */}
+                        <Tooltip
+                          title="Total gold available in the players balance system for this payment date"
+                          arrow
+                          placement="top-start"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                maxWidth: 250,
+                                mt: '4px !important',
+                              },
+                            },
+                            arrow: {
+                              sx: {
+                                color: '#1a1a1a',
+                              },
+                            },
+                            popper: {
+                              modifiers: [
+                                {
+                                  name: 'offset',
+                                  options: {
+                                    offset: [-8, -4],
+                                  },
+                                },
+                              ],
+                            },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                              Gold Balance Total:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                              {formatValueForDisplay(goldTotalGeral)}g
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+
                         {/* Estoque de Gold */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
-                            Gold in Stock:
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
-                            {formatValueForDisplay(goldInStock)}g
-                          </Typography>
-                        </Box>
+                        <Tooltip
+                          title="Quantity of gold in stock available for this payment date (Gbank - Sold)"
+                          arrow
+                          placement="top-start"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                maxWidth: 250,
+                                mt: '4px !important',
+                              },
+                            },
+                            arrow: {
+                              sx: {
+                                color: '#1a1a1a',
+                              },
+                            },
+                            popper: {
+                              modifiers: [
+                                {
+                                  name: 'offset',
+                                  options: {
+                                    offset: [-8, -4],
+                                  },
+                                },
+                              ],
+                            },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                              Gold in Stock:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                              {formatValueForDisplay(goldInStock)}g
+                            </Typography>
+                          </Box>
+                        </Tooltip>
 
                         {/* Gold Missing Date */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
-                            {hasEnoughGoldForDate ? 'Surplus:' : 'Missing:'}
-                          </Typography>
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              color: hasEnoughGoldForDate ? '#10b981' : '#ef4444', 
-                              fontWeight: 700,
-                              fontSize: '0.75rem'
-                            }}
-                          >
-                            {formatValueForDisplay(goldMissing)}g
-                          </Typography>
-                        </Box>
+                        <Tooltip
+                          title={hasEnoughGoldForDate 
+                            ? "Surplus: quantity of gold that remains after meeting all pending payments for this date" 
+                            : "Missing: quantity of gold that is still needed to complete all pending payments for this date"}
+                          arrow
+                          placement="top-start"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: '#1a1a1a',
+                                border: '1px solid #333',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                maxWidth: 250,
+                                mt: '4px !important',
+                              },
+                            },
+                            arrow: {
+                              sx: {
+                                color: '#1a1a1a',
+                              },
+                            },
+                            popper: {
+                              modifiers: [
+                                {
+                                  name: 'offset',
+                                  options: {
+                                    offset: [-8, -4],
+                                  },
+                                },
+                              ],
+                            },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
+                              {hasEnoughGoldForDate ? 'Surplus:' : 'Missing:'}
+                            </Typography>
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: hasEnoughGoldForDate ? '#10b981' : '#ef4444', 
+                                fontWeight: 700,
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              {formatValueForDisplay(goldMissing)}g
+                            </Typography>
+                          </Box>
+                        </Tooltip>
                       </Box>
                     </Paper>
                   )
