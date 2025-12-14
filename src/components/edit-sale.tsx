@@ -71,7 +71,7 @@ export function EditSale({
     const fetchPaymentDates = async () => {
       try {
         setIsLoadingPaymentDates(true)
-        const paymentDatesData = await getPaymentDates()
+        const paymentDatesData = await getPaymentDates({ is_date_valid: true })
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
         
         // Converte datas de YYYY-MM-DD para MM/DD

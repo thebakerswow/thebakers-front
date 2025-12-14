@@ -109,7 +109,7 @@ export function ReceiptsSellsTab({ onError }: ReceiptsSellsTabProps) {
       const [salesData, payersData, receiptsDatesData] = await Promise.all([
         getReceiptsSales(),
         getReceiptsPayers(),
-        getReceiptsDates(),
+        getReceiptsDates({ is_date_valid: true }),
       ])
       
       // Validação: garante que os dados são arrays
@@ -222,7 +222,7 @@ export function ReceiptsSellsTab({ onError }: ReceiptsSellsTabProps) {
   useEffect(() => {
     const fetchReceiptsDatesData = async () => {
       try {
-        const receiptsDatesData = await getReceiptsDates()
+        const receiptsDatesData = await getReceiptsDates({ is_date_valid: true })
         const validReceiptsDatesData = Array.isArray(receiptsDatesData) ? receiptsDatesData : []
         
         // Converte datas de YYYY-MM-DD para MM/DD

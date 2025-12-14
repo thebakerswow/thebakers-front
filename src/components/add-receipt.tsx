@@ -80,7 +80,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
   const fetchReceiptDates = async () => {
     try {
       setIsLoadingReceiptDates(true)
-      const receiptDatesData = await getReceiptsDates()
+      const receiptDatesData = await getReceiptsDates({ is_date_valid: true })
       const validReceiptDatesData = Array.isArray(receiptDatesData) ? receiptDatesData : []
 
       const convertedDates = validReceiptDatesData.map((date) => {

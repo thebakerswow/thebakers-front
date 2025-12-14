@@ -70,7 +70,7 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
     const fetchDates = async () => {
       try {
         setIsLoadingDates(true)
-        const datesData = await getReceiptsDates()
+        const datesData = await getReceiptsDates({ is_date_valid: true })
         const validDates = Array.isArray(datesData) ? datesData : []
 
         const convertedDates = validDates.map((date) => {

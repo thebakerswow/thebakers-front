@@ -3,10 +3,6 @@ import {
   Button,
   Typography,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Pagination,
   Table,
   TableBody,
@@ -19,6 +15,8 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  Autocomplete,
+  TextField,
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { Plus, Trash, PencilSimple } from '@phosphor-icons/react'
@@ -52,9 +50,11 @@ interface SellsTabProps {
 export function SellsTab({ onError }: SellsTabProps) {
   const [payments, setPayments] = useState<PaymentDisplay[]>([])
   const [totalPages, setTotalPages] = useState(0)
-  const [paymentDateFilter, setPaymentDateFilter] = useState<string>('all')
+  const [paymentDateFilter, setPaymentDateFilter] = useState<string | null>(null)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'pending' | 'completed'>('pending')
   const [currentPage, setCurrentPage] = useState(1)
+  const [autocompleteOpen, setAutocompleteOpen] = useState(false)
+  const [autocompleteInputValue, setAutocompleteInputValue] = useState('')
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
   const [isLoadingPayments, setIsLoadingPayments] = useState(true)
   const [editingSale, setEditingSale] = useState<PaymentDisplay | null>(null)
@@ -131,21 +131,47 @@ export function SellsTab({ onError }: SellsTabProps) {
         paymentDatesMap.set(Number(paymentDate.id), paymentDate.name)
       })
       
+      // Função auxiliar para converter data de YYYY-MM-DD para MM/DD
+      // Padroniza removendo zeros à esquerda para garantir consistência
+      const convertDateToMMDD = (dateStr: string): string => {
+        if (!dateStr) return dateStr
+        // Tenta formato YYYY-MM-DD
+        const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+        if (match) {
+          const month = parseInt(match[1], 10).toString()
+          const day = parseInt(match[2], 10).toString()
+          return `${month}/${day}`
+        }
+        // Se já estiver em formato MM/DD, retorna como está (mas remove zeros à esquerda se houver)
+        const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/)
+        if (mmddMatch) {
+          const month = parseInt(mmddMatch[1], 10).toString()
+          const day = parseInt(mmddMatch[2], 10).toString()
+          return `${month}/${day}`
+        }
+        return dateStr
+      }
+      
       // Mapeia os dados da API para o formato de exibição
-      const mappedPayments: PaymentDisplay[] = validSalesData.map((sale: Sale) => ({
-        id: sale.id,
-        note: sale.note,
-        buyer: String(sale.id_payer), // Mantém o ID para futuras operações
-        buyerName: payersMap.get(sale.id_payer) || 'Unknown',
-        idPayer: sale.id_payer,
-        idPaymentDate: sale.id_payment_date,
-        valueGold: sale.gold_value,
-        dollar: sale.dolar_value,
-        mValue: sale.m_value,
-        createdAt: sale.created_at,
-        paymentDate: paymentDatesMap.get(sale.id_payment_date) || sale.payment_date,
-        status: sale.status,
-      }))
+      const mappedPayments: PaymentDisplay[] = validSalesData.map((sale: Sale) => {
+        const rawPaymentDate = paymentDatesMap.get(sale.id_payment_date) || sale.payment_date
+        const formattedPaymentDate = convertDateToMMDD(rawPaymentDate)
+        
+        return {
+          id: sale.id,
+          note: sale.note,
+          buyer: String(sale.id_payer), // Mantém o ID para futuras operações
+          buyerName: payersMap.get(sale.id_payer) || 'Unknown',
+          idPayer: sale.id_payer,
+          idPaymentDate: sale.id_payment_date,
+          valueGold: sale.gold_value,
+          dollar: sale.dolar_value,
+          mValue: sale.m_value,
+          createdAt: sale.created_at,
+          paymentDate: formattedPaymentDate,
+          status: sale.status,
+        }
+      })
       
       setPayments(mappedPayments)
       setTotalPages(1)
@@ -163,7 +189,7 @@ export function SellsTab({ onError }: SellsTabProps) {
     }
   }
 
-  const handlePaymentDateFilter = (paymentDate: string) => {
+  const handlePaymentDateFilter = (paymentDate: string | null) => {
     setPaymentDateFilter(paymentDate)
     setCurrentPage(1)
   }
@@ -231,11 +257,12 @@ export function SellsTab({ onError }: SellsTabProps) {
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
         
         // Converte datas de YYYY-MM-DD para MM/DD
+        // Padroniza removendo zeros à esquerda para garantir consistência
         const convertedDates = validPaymentDatesData.map(date => {
           const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
           if (match) {
-            const month = match[1]
-            const day = match[2]
+            const month = parseInt(match[1], 10).toString()
+            const day = parseInt(match[2], 10).toString()
             return { ...date, name: `${month}/${day}` }
           }
           return date
@@ -314,6 +341,15 @@ export function SellsTab({ onError }: SellsTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentDateFilter, paymentStatusFilter])
 
+  // Sincronizar inputValue com paymentDateFilter quando mudar externamente
+  useEffect(() => {
+    if (paymentDateFilter) {
+      setAutocompleteInputValue(paymentDateFilter)
+    } else {
+      setAutocompleteInputValue('')
+    }
+  }, [paymentDateFilter])
+
   const getPaymentDateLabel = (paymentDate: string) => {
     if (!paymentDate) return '-'
     // Format payment dates nicely
@@ -346,18 +382,44 @@ export function SellsTab({ onError }: SellsTabProps) {
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Payment Date Filter */}
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel sx={{ 
-              color: 'white',
-              '&.Mui-focused': {
-                color: 'rgb(147, 51, 234)',
-              },
-            }}>Payment Date</InputLabel>
-            <Select
-              value={paymentDateFilter}
-              onChange={(e) => handlePaymentDateFilter(e.target.value)}
-              label="Payment Date"
-              sx={{
+          <Autocomplete
+            size="small"
+            options={paymentDateOptions?.map(date => date.name) || []}
+            value={paymentDateFilter}
+            open={autocompleteOpen}
+            onOpen={() => {
+              // Só abre se houver texto digitado
+              if (autocompleteInputValue.trim().length > 0) {
+                setAutocompleteOpen(true)
+              }
+            }}
+            onClose={() => setAutocompleteOpen(false)}
+            onInputChange={(_event, newInputValue) => {
+              setAutocompleteInputValue(newInputValue)
+              // Abre o dropdown apenas se houver texto digitado
+              if (newInputValue.trim().length > 0) {
+                setAutocompleteOpen(true)
+              } else {
+                setAutocompleteOpen(false)
+              }
+            }}
+            onChange={(_event, newValue) => {
+              handlePaymentDateFilter(newValue || null)
+              setAutocompleteOpen(false)
+            }}
+            inputValue={autocompleteInputValue}
+            getOptionLabel={(option) => option}
+            isOptionEqualToValue={(option, value) => option === value}
+            filterOptions={(options, params) => {
+              const filtered = options.filter(option => {
+                const searchValue = params.inputValue.toLowerCase()
+                return option.toLowerCase().includes(searchValue)
+              })
+              return filtered
+            }}
+            sx={{
+              minWidth: 200,
+              '& .MuiOutlinedInput-root': {
                 color: 'white',
                 backgroundColor: '#2a2a2a',
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -369,43 +431,57 @@ export function SellsTab({ onError }: SellsTabProps) {
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                   borderColor: 'rgb(147, 51, 234)',
                 },
-                '& .MuiSvgIcon-root': {
-                  color: 'white',
+              },
+              '& .MuiInputLabel-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-focused': {
+                  color: 'rgb(147, 51, 234)',
                 },
-                '& .MuiSelect-select': {
+              },
+              '& .MuiAutocomplete-input': {
+                color: 'white',
+              },
+              '& .MuiAutocomplete-popupIndicator': {
+                color: 'white',
+              },
+              '& .MuiAutocomplete-clearIndicator': {
+                color: 'white',
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Payment Date"
+                placeholder="Type to search..."
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-focused': {
+                      color: 'rgb(147, 51, 234)',
+                    },
+                  },
+                }}
+              />
+            )}
+            ListboxProps={{
+              sx: {
+                backgroundColor: '#2a2a2a',
+                border: '1px solid #333',
+                '& .MuiAutocomplete-option': {
                   color: 'white',
-                  backgroundColor: '#2a2a2a',
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    backgroundColor: '#2a2a2a',
-                    border: '1px solid #333',
-                    '& .MuiMenuItem-root': {
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#3a3a3a',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(147, 51, 234, 0.3)',
-                        },
-                      },
+                  '&:hover': {
+                    backgroundColor: '#3a3a3a',
+                  },
+                  '&[aria-selected="true"]': {
+                    backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(147, 51, 234, 0.3)',
                     },
                   },
                 },
-              }}
-            >
-              <MenuItem value="all">All Payment Dates</MenuItem>
-              {paymentDateOptions && paymentDateOptions.map((paymentDate) => (
-                <MenuItem key={paymentDate.id} value={paymentDate.name}>
-                  {paymentDate.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              },
+            }}
+          />
 
           {/* Status Filter Buttons */}
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -492,10 +568,14 @@ export function SellsTab({ onError }: SellsTabProps) {
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
               <CircularProgress size={40} sx={{ color: 'rgb(147, 51, 234)' }} />
             </Box>
-          ) : payments.filter(p => 
-            (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-            p.status === paymentStatusFilter
-          ).length === 0 ? (
+          ) : payments.filter(p => {
+            // Normaliza as strings para comparação (remove espaços)
+            const normalizedFilterDate = paymentDateFilter?.trim() || null
+            const normalizedPaymentDate = p.paymentDate?.trim() || ''
+            const matchesDate = !normalizedFilterDate || normalizedPaymentDate === normalizedFilterDate
+            const matchesStatus = p.status?.toLowerCase() === paymentStatusFilter?.toLowerCase()
+            return matchesDate && matchesStatus
+          }).length === 0 ? (
             <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
               <Typography variant="h6" color="textSecondary">
                 No payments found
@@ -529,10 +609,14 @@ export function SellsTab({ onError }: SellsTabProps) {
                   </TableHead>
                   <TableBody>
                     {payments
-                      .filter(p => 
-                        (paymentDateFilter === 'all' || p.paymentDate === paymentDateFilter) &&
-                        p.status === paymentStatusFilter
-                      )
+                      .filter(p => {
+                        // Normaliza as strings para comparação (remove espaços)
+                        const normalizedFilterDate = paymentDateFilter?.trim() || null
+                        const normalizedPaymentDate = p.paymentDate?.trim() || ''
+                        const matchesDate = !normalizedFilterDate || normalizedPaymentDate === normalizedFilterDate
+                        const matchesStatus = p.status?.toLowerCase() === paymentStatusFilter?.toLowerCase()
+                        return matchesDate && matchesStatus
+                      })
                       .map((payment) => (
                       <TableRow
                         key={payment.id}

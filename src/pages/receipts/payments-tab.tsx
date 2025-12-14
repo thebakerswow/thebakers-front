@@ -216,6 +216,34 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
     } catch (error: any) {
       console.error('Error debiting receipts date:', error)
       
+      // Verificar se é o erro de data de pagamento não é de hoje
+      const isPaymentDateNotTodayError = error?.response?.data?.errors?.some(
+        (err: any) => err.type === 'payment-date-not-today'
+      )
+      
+      if (isPaymentDateNotTodayError) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Payment Date Not Today',
+          html: `
+            <div style="text-align: left;">
+              <p style="color: white; margin-bottom: 10px;">
+                The selected payment date is not from today.
+              </p>
+              <p style="color: #f59e0b; font-weight: bold; margin-top: 15px;">
+                You can only debit receipts from today's payment date.
+              </p>
+            </div>
+          `,
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        // Não chama onError para evitar mensagem duplicada
+        setIsDebiting(false)
+        return
+      }
+      
       // Verificar se é o erro de data pendente anterior
       const isPendingOldDateError = error?.response?.data?.errors?.some(
         (err: any) => err.type === 'pending-old-date-not-allowed'

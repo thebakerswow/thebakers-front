@@ -162,9 +162,10 @@ export const deleteReceiptsPayer = async (id: number): Promise<void> => {
   })
 }
 
-export const getReceiptsDates = async (): Promise<ReceiptsDate[]> => {
+export const getReceiptsDates = async (params?: { is_date_valid?: boolean }): Promise<ReceiptsDate[]> => {
   const response = await api.get<ApiEnvelope<ReceiptsDate[]> | ReceiptsDate[]>(
-    '/receipts/dolar/date'
+    '/receipts/dolar/date',
+    { params }
   )
 
   const data = unwrap(response.data)

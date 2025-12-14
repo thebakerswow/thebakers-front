@@ -406,6 +406,33 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         // Não chama onError para evitar mensagem duplicada
         return
       }
+
+      // Verificar se é o erro de data de pagamento não é de hoje
+      const isPaymentDateNotTodayError = error?.response?.data?.errors?.some(
+        (err: any) => err.type === 'payment-date-not-today'
+      )
+      
+      if (isPaymentDateNotTodayError) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Payment Date Not Today',
+          html: `
+            <div style="text-align: left;">
+              <p style="color: white; margin-bottom: 10px;">
+                The selected payment details are not from today.
+              </p>
+              <p style="color: #f59e0b; font-weight: bold; margin-top: 15px;">
+                Please select today's payment date to proceed with the debit.
+              </p>
+            </div>
+          `,
+          confirmButtonColor: 'rgb(147, 51, 234)',
+          background: '#2a2a2a',
+          color: 'white',
+        })
+        // Não chama onError para evitar mensagem duplicada
+        return
+      }
       
       // Para outros erros, mostra mensagem genérica
       await Swal.fire({
