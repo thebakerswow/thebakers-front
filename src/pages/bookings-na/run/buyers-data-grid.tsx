@@ -204,6 +204,24 @@ export function BuyersDataGrid({
     })
   }
 
+  // Function to get recipient IDs for buyer notifications
+  // Handles special cases like baby johny and advertisers
+  const getBuyerRecipientIds = (buyer: BuyerData): string[] => {
+    const BABY_JOHNY_ID = '466344718507442177'
+    const BABY_JOHNY_EMPLOYEES = [
+      '1144320612966338751',
+      '1129084739597377767',
+    ]
+
+    if (buyer.idOwnerBuyer === BABY_JOHNY_ID) {
+      return BABY_JOHNY_EMPLOYEES
+    } else if (buyer.idBuyerAdvertiser) {
+      return [import.meta.env.VITE_ID_CALMAKARAI]
+    } else {
+      return [buyer.idOwnerBuyer]
+    }
+  }
+
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
   const [, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
@@ -338,18 +356,7 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      // 1144320612966338751: funcionário do baby johny
-      // 1129084739597377767: funcionário do baby johny
-      // 466344718507442177: baby johny
-      let recipientIds: string[] = []
-      if (buyer.idOwnerBuyer === '466344718507442177') {
-        // baby johny
-        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
-      } else if (buyer.idBuyerAdvertiser) {
-        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
-      } else {
-        recipientIds = [buyer.idOwnerBuyer]
-      }
+      const recipientIds = getBuyerRecipientIds(buyer)
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
         try {
@@ -404,18 +411,7 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      // 1144320612966338751: funcionário do baby johny
-      // 1129084739597377767: funcionário do baby johny
-      // 466344718507442177: baby johny
-      let recipientIds: string[] = []
-      if (buyer.idOwnerBuyer === '466344718507442177') {
-        // baby johny
-        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
-      } else if (buyer.idBuyerAdvertiser) {
-        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
-      } else {
-        recipientIds = [buyer.idOwnerBuyer]
-      }
+      const recipientIds = getBuyerRecipientIds(buyer)
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
         try {
@@ -662,18 +658,7 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      // 1144320612966338751: funcionário do baby johny
-      // 1129084739597377767: funcionário do baby johny
-      // 466344718507442177: baby johny
-      let recipientIds: string[] = []
-      if (buyer.idOwnerBuyer === '466344718507442177') {
-        // baby johny
-        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
-      } else if (buyer.idBuyerAdvertiser) {
-        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
-      } else {
-        recipientIds = [buyer.idOwnerBuyer]
-      }
+      const recipientIds = getBuyerRecipientIds(buyer)
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
         try {
@@ -728,18 +713,7 @@ export function BuyersDataGrid({
       const buyer = data.find((b) => b.id === buyerId)
       if (!buyer || !runId) return // Ensure buyer and runId exist
       const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      // 1144320612966338751: funcionário do baby johny
-      // 1129084739597377767: funcionário do baby johny
-      // 466344718507442177: baby johny
-      let recipientIds: string[] = []
-      if (buyer.idOwnerBuyer === '466344718507442177') {
-        // baby johny
-        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
-      } else if (buyer.idBuyerAdvertiser) {
-        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
-      } else {
-        recipientIds = [buyer.idOwnerBuyer]
-      }
+      const recipientIds = getBuyerRecipientIds(buyer)
       // Envia mensagem para todos os destinatários
       for (const recipientId of recipientIds) {
         try {
