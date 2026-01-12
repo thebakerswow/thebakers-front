@@ -8,6 +8,7 @@ import {
   RiLoginCircleLine,
   RiAlertLine,
   RiSwordLine,
+  RiArrowDownLine,
 } from 'react-icons/ri'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
@@ -227,6 +228,9 @@ export function BuyersDataGrid({
   const [cooldownBuyerCombat, setCooldownBuyerCombat] = useState<{
     [key: string]: boolean
   }>({}) // Cooldown for Buyer in Combat button
+  const [cooldownPriceWarning, setCooldownPriceWarning] = useState<{
+    [key: string]: boolean
+  }>({}) // Cooldown for Price Warning button
   const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
     {}
   ) // Track button clicks
@@ -699,6 +703,72 @@ export function BuyersDataGrid({
       setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: true }))
       setTimeout(() => {
         setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: false }))
+      }, 15000)
+    })
+  }
+
+  const handleSendPriceWarningMessage = async (buyerId: string) => {
+    handleGlobalAction(async () => {
+      if (clickTracker[buyerId]) {
+        Swal.fire({
+          title: 'Action Not Allowed',
+          text: 'Please wait 3 seconds before clicking again.',
+          icon: 'warning',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        return
+      }
+      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
+      }, 3000) // Reset click tracker after 3 seconds
+
+      if (cooldownPriceWarning[buyerId]) return // Prevent action if cooldown is active
+      const buyer = data.find((b) => b.id === buyerId)
+      if (!buyer || !runId) return // Ensure buyer and runId exist
+      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+      // 1144320612966338751: funcionário do baby johny
+      // 1129084739597377767: funcionário do baby johny
+      // 466344718507442177: baby johny
+      let recipientIds: string[] = []
+      if (buyer.idOwnerBuyer === '466344718507442177') {
+        // baby johny
+        recipientIds = ['1144320612966338751', '1129084739597377767'] // funcionários do baby johny
+      } else if (buyer.idBuyerAdvertiser) {
+        recipientIds = [import.meta.env.VITE_ID_CALMAKARAI]
+      } else {
+        recipientIds = [buyer.idOwnerBuyer]
+      }
+      // Envia mensagem para todos os destinatários
+      for (const recipientId of recipientIds) {
+        try {
+          await sendDiscordMessage(
+            recipientId,
+            `Buyer is below minimum price and will be replaced if the price is not corrected until 15 minutes before the invite\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
+          )
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            setError({
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            })
+          } else {
+            setError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+      Swal.fire({
+        title: 'Success!',
+        text: 'Advertiser notified',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      setCooldownPriceWarning((prev) => ({ ...prev, [buyerId]: true }))
+      setTimeout(() => {
+        setCooldownPriceWarning((prev) => ({ ...prev, [buyerId]: false }))
       }, 15000)
     })
   }
@@ -1222,6 +1292,29 @@ export function BuyersDataGrid({
                               }}
                             >
                               <RiSwordLine size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Price below minimum'>
+                            <IconButton
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendPriceWarningMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownPriceWarning[buyer.id] ||
+                                globalCooldown
+                              }
+                              sx={{
+                                opacity:
+                                  cooldownPriceWarning[buyer.id] ||
+                                  runIsLocked ||
+                                  globalCooldown
+                                    ? 0.5
+                                    : 1,
+                              }}
+                            >
+                              <RiArrowDownLine size={18} />
                             </IconButton>
                           </Tooltip>
                         </>
