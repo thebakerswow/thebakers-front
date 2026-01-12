@@ -205,6 +205,21 @@ export function BuyersDataGrid({
     })
   }
 
+  // Function to check if current user is chefe de cozinha
+  const isChefeDeCozinha = (): boolean => {
+    return userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  }
+
+  // Function to check if user can see raid leader buttons
+  const canSeeRaidLeaderButtons = (): boolean => {
+    return isRaidLeader() || isChefeDeCozinha()
+  }
+
+  // Function to check if user can see advertiser buttons
+  const canSeeAdvertiserButtons = (buyer: BuyerData): boolean => {
+    return isBuyerAdvertiser(buyer) || isChefeDeCozinha()
+  }
+
   // Function to get recipient IDs for buyer notifications
   // Handles special cases like baby johny and advertisers
   const getBuyerRecipientIds = (buyer: BuyerData): string[] => {
@@ -1300,7 +1315,7 @@ export function BuyersDataGrid({
                 <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
                   {buyer.nameAndRealm === 'Encrypted' ? null : (
                     <div className='flex justify-center gap-1'>
-                      {isRaidLeader() && (
+                      {canSeeRaidLeaderButtons() && (
                         <>
                           <Tooltip title='AFK'>
                             <IconButton
@@ -1420,7 +1435,7 @@ export function BuyersDataGrid({
                           )}
                         </>
                       )}
-                      {isBuyerAdvertiser(buyer) && (
+                      {canSeeAdvertiserButtons(buyer) && (
                         <>
                           <Tooltip title='Buyer Ready'>
                             <IconButton
