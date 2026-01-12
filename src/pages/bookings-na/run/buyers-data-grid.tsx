@@ -9,7 +9,6 @@ import {
   RiAlertLine,
   RiSwordLine,
   RiArrowDownLine,
-  RiMegaphoneLine,
 } from 'react-icons/ri'
 import DeathKnight from '../../../assets/class_icons/deathknight.png'
 import DemonHunter from '../../../assets/class_icons/demonhunter.png'
@@ -272,7 +271,6 @@ export function BuyersDataGrid({
   const [cooldownPaid, setCooldownPaid] = useState<{ [key: string]: boolean }>(
     {}
   ) // Cooldown for Paid Full button
-  const [cooldownMegaphone, setCooldownMegaphone] = useState(false) // Cooldown for Megaphone button
 
   const handleOpenModal = (buyer: BuyerData) => {
     setEditingBuyer({
@@ -762,106 +760,6 @@ export function BuyersDataGrid({
         setCooldownPriceWarning((prev) => ({ ...prev, [buyerId]: false }))
       }, 15000)
     })
-  }
-
-  const handleSendMessageToAllAdvertisers = async () => {
-    if (cooldownMegaphone || globalCooldown) {
-      Swal.fire({
-        title: 'Action Not Allowed',
-        text: 'Please wait before performing another action.',
-        icon: 'warning',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-      return
-    }
-
-    if (!runId) return
-
-    const { value: message } = await Swal.fire({
-      title: 'Send Message to All Advertisers',
-      input: 'textarea',
-      inputLabel: 'Message',
-      inputPlaceholder: 'Type your message here...',
-      inputAttributes: {
-        'aria-label': 'Type your message here',
-      },
-      showCancelButton: true,
-      confirmButtonText: 'Send',
-      cancelButtonText: 'Cancel',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'You need to write something!'
-        }
-      },
-    })
-
-    if (!message) return // User cancelled or didn't enter a message
-
-    setCooldownMegaphone(true)
-    setGlobalCooldown(true)
-
-    const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-
-    // Collect all unique recipient IDs from all buyers
-    const allRecipientIds = new Set<string>()
-    data.forEach((buyer) => {
-      const recipientIds = getBuyerRecipientIds(buyer)
-      recipientIds.forEach((id) => allRecipientIds.add(id))
-    })
-
-    const recipientIdsArray = Array.from(allRecipientIds)
-
-    if (recipientIdsArray.length === 0) {
-      Swal.fire({
-        title: 'No Advertisers',
-        text: 'There are no advertisers in this run.',
-        icon: 'info',
-        timer: 2000,
-        showConfirmButton: false,
-      })
-      setCooldownMegaphone(false)
-      setGlobalCooldown(false)
-      return
-    }
-
-    // Send message to all unique advertisers
-    let successCount = 0
-    let errorCount = 0
-
-    for (const recipientId of recipientIdsArray) {
-      try {
-        await sendDiscordMessage(
-          recipientId,
-          `${message}\n\nRun: ${runLink}`
-        )
-        successCount++
-      } catch (error) {
-        errorCount++
-        if (axios.isAxiosError(error)) {
-          setError({
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          })
-        } else {
-          setError({ message: 'Unexpected error', response: error })
-        }
-      }
-    }
-
-    Swal.fire({
-      title: 'Messages Sent!',
-      text: `Sent to ${successCount} advertiser(s)${errorCount > 0 ? `. ${errorCount} error(s) occurred.` : ''}`,
-      icon: successCount > 0 ? 'success' : 'error',
-      timer: 2000,
-      showConfirmButton: false,
-    })
-
-    setCooldownMegaphone(false)
-    setTimeout(() => {
-      setGlobalCooldown(false)
-    }, 5000)
   }
 
   const handleDeleteBuyer = async (buyer: BuyerData) => {
@@ -1408,31 +1306,6 @@ export function BuyersDataGrid({
                               <RiArrowDownLine size={18} />
                             </IconButton>
                           </Tooltip>
-                          {index === 0 && (
-                            <Tooltip title='Send message to all advertisers'>
-                              <IconButton
-                                onClick={() =>
-                                  !runIsLocked &&
-                                  handleSendMessageToAllAdvertisers()
-                                }
-                                disabled={
-                                  runIsLocked ||
-                                  cooldownMegaphone ||
-                                  globalCooldown
-                                }
-                                sx={{
-                                  opacity:
-                                    cooldownMegaphone ||
-                                    runIsLocked ||
-                                    globalCooldown
-                                      ? 0.5
-                                      : 1,
-                                }}
-                              >
-                                <RiMegaphoneLine size={18} />
-                              </IconButton>
-                            </Tooltip>
-                          )}
                         </>
                       )}
                       {canSeeAdvertiserButtons(buyer) && (

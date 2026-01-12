@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
+import { RiMegaphoneLine } from 'react-icons/ri'
 import omega from '../../../assets/omega.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
+import { BuyerData } from '../../../types/buyer-interface'
 import {
   Button,
   Card,
@@ -19,12 +21,17 @@ import {
 import { toggleRunLock as toggleRunLockService } from '../../../services/api/runs'
 import { EditHistoryDialog } from '../../../components/edit-history-dialog'
 import { ErrorDetails } from '../../../components/error-display'
+import { sendDiscordMessage } from '../../../services/api/discord'
+import { useParams } from 'react-router-dom'
+import Swal from 'sweetalert2'
+import axios from 'axios'
 
 interface RunInfoProps {
   run: RunData
   onBuyerAddedReload: () => void
   onRunEdit: () => void
   attendanceAccessDenied: boolean
+  buyers?: BuyerData[]
   onError?: (error: ErrorDetails) => void
 }
 
@@ -33,13 +40,38 @@ export function RunInfo({
   onBuyerAddedReload,
   onRunEdit,
   attendanceAccessDenied,
+  buyers = [],
   onError,
 }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isRunLocked, setIsRunLocked] = useState(run.runIsLocked) // Assume `isLocked` is part of `run`
-  const { userRoles } = useAuth() // Obtenha as roles do contexto
+  const { userRoles, idDiscord } = useAuth() // Obtenha as roles do contexto
   const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
+  const [cooldownMegaphone, setCooldownMegaphone] = useState(false)
+  const { id: runId } = useParams<{ id: string }>()
+
+  // Function to check if current user is a raid leader
+  const isRaidLeader = (): boolean => {
+    if (!run.raidLeaders || !idDiscord) return false
+    return run.raidLeaders.some((leader) => {
+      // Check if leader is encrypted
+      if (leader.idDiscord === 'Encrypted') {
+        // For encrypted leaders, we can't verify, so return false
+        return false
+      }
+      return leader.idDiscord === idDiscord
+    })
+  }
+
+  // Function to check if user can see megaphone button
+  const canSeeMegaphoneButton = (): boolean => {
+    return (
+      isRaidLeader() ||
+      userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
+      hasPrefeitoTeamAccess(run, userRoles)
+    )
+  }
 
   const handleOpenEditModal = () => {
     setIsEditModalOpen(true)
@@ -87,6 +119,124 @@ export function RunInfo({
     if (!hasTeamRoleForThisRun) return false
 
     return true
+  }
+
+  // Function to get recipient IDs for buyer notifications
+  // Handles special cases like baby johny and advertisers
+  const getBuyerRecipientIds = (buyer: BuyerData): string[] => {
+    const BABY_JOHNY_ID = '466344718507442177'
+    const BABY_JOHNY_EMPLOYEES = [
+      '1144320612966338751',
+      '1129084739597377767',
+    ]
+
+    if (buyer.idOwnerBuyer === BABY_JOHNY_ID) {
+      return BABY_JOHNY_EMPLOYEES
+    } else if (buyer.idBuyerAdvertiser) {
+      return [import.meta.env.VITE_ID_CALMAKARAI]
+    } else {
+      return [buyer.idOwnerBuyer]
+    }
+  }
+
+  const handleSendMessageToAllAdvertisers = async () => {
+    if (cooldownMegaphone) {
+      Swal.fire({
+        title: 'Action Not Allowed',
+        text: 'Please wait before performing another action.',
+        icon: 'warning',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
+
+    if (!runId) return
+
+    const { value: message } = await Swal.fire({
+      title: 'Send Message to All Advertisers',
+      input: 'textarea',
+      inputLabel: 'Message',
+      inputPlaceholder: 'Type your message here...',
+      inputAttributes: {
+        'aria-label': 'Type your message here',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Send',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'You need to write something!'
+        }
+      },
+    })
+
+    if (!message) return // User cancelled or didn't enter a message
+
+    setCooldownMegaphone(true)
+
+    const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+
+    // Collect all unique recipient IDs from all buyers
+    const allRecipientIds = new Set<string>()
+    buyers.forEach((buyer) => {
+      const recipientIds = getBuyerRecipientIds(buyer)
+      recipientIds.forEach((id) => allRecipientIds.add(id))
+    })
+
+    const recipientIdsArray = Array.from(allRecipientIds)
+
+    if (recipientIdsArray.length === 0) {
+      Swal.fire({
+        title: 'No Advertisers',
+        text: 'There are no advertisers in this run.',
+        icon: 'info',
+        timer: 2000,
+        showConfirmButton: false,
+      })
+      setCooldownMegaphone(false)
+      return
+    }
+
+    // Send message to all unique advertisers
+    let successCount = 0
+    let errorCount = 0
+
+    for (const recipientId of recipientIdsArray) {
+      try {
+        await sendDiscordMessage(
+          recipientId,
+          `${message}\n\nRun: ${runLink}`
+        )
+        successCount++
+      } catch (error) {
+        errorCount++
+        if (axios.isAxiosError(error)) {
+          const errorDetails = {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          }
+          if (onError) {
+            onError(errorDetails)
+          }
+        } else {
+          if (onError) {
+            onError({ message: 'Unexpected error', response: error })
+          }
+        }
+      }
+    }
+
+    Swal.fire({
+      title: 'Messages Sent!',
+      text: `Sent to ${successCount} advertiser(s)${errorCount > 0 ? `. ${errorCount} error(s) occurred.` : ''}`,
+      icon: successCount > 0 ? 'success' : 'error',
+      timer: 2000,
+      showConfirmButton: false,
+    })
+
+    setCooldownMegaphone(false)
   }
 
   return (
@@ -295,6 +445,30 @@ export function RunInfo({
               >
                 History
               </Button>
+              {/* Send Message to All Advertisers Button */}
+              {canSeeMegaphoneButton() && (
+                <Button
+                  variant='contained'
+                  startIcon={<RiMegaphoneLine size={18} />}
+                  fullWidth
+                  onClick={handleSendMessageToAllAdvertisers}
+                  disabled={isRunLocked || cooldownMegaphone}
+                  sx={{
+                    backgroundColor:
+                      isRunLocked || cooldownMegaphone
+                        ? 'rgb(209, 213, 219)'
+                        : 'rgb(147, 51, 234)',
+                    '&:hover': {
+                      backgroundColor:
+                        isRunLocked || cooldownMegaphone
+                          ? 'rgb(209, 213, 219)'
+                          : 'rgb(168, 85, 247)',
+                    },
+                  }}
+                >
+                  Message Advertisers
+                </Button>
+              )}
               <Button
                 variant='contained'
                 startIcon={

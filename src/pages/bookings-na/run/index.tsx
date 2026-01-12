@@ -622,6 +622,7 @@ export function RunDetails() {
                 onBuyerAddedReload={reloadAllData}
                 onRunEdit={fetchRunData}
                 attendanceAccessDenied={!hasAttendanceAccess}
+                buyers={rows}
                 onError={setError}
               />
             ) : (
