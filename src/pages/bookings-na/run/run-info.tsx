@@ -122,7 +122,7 @@ export function RunInfo({
   }
 
   // Function to get recipient IDs for buyer notifications
-  // Handles special cases like baby johny and advertisers
+  // Handles special cases like baby johny, widex and advertisers
   const getBuyerRecipientIds = (buyer: BuyerData): string[] => {
     const BABY_JOHNY_ID = '466344718507442177'
     const BABY_JOHNY_EMPLOYEES = [
@@ -130,8 +130,16 @@ export function RunInfo({
       '1129084739597377767',
     ]
 
+    const WIDEX_ID = '1043889212891594762'
+    const WIDEX_EMPLOYEES = [
+      '210470259226968066',
+      '420200946405212160',
+    ]
+
     if (buyer.idOwnerBuyer === BABY_JOHNY_ID) {
       return BABY_JOHNY_EMPLOYEES
+    } else if (buyer.idOwnerBuyer === WIDEX_ID) {
+      return WIDEX_EMPLOYEES
     } else if (buyer.idBuyerAdvertiser) {
       return [import.meta.env.VITE_ID_CALMAKARAI]
     } else {
