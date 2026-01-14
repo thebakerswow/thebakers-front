@@ -74,70 +74,70 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
   }, [runId, fetchData])
 
   return (
-    <Dialog open={true} onClose={onClose} fullWidth maxWidth='lg'>
-      <DialogContent>
+    <Dialog open={true} onClose={onClose} fullWidth maxWidth='xl'>
+      <DialogContent sx={{ padding: '24px', position: 'relative' }}>
         <IconButton
           aria-label='close'
           onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
+          sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}
         >
           <CloseIcon />
         </IconButton>
-        <div className='w-full max-w-[95vw] overflow-y-auto overflow-x-hidden'>
-          {/* Botão Add Buyer sempre visível */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 12,
+        {/* Botão Add Buyer sempre visível */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 12,
+          }}
+        >
+          <Button
+            onClick={() => setIsAddBuyerOpen(true)}
+            variant='contained'
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              minWidth: 140,
+              fontWeight: 500,
+              boxShadow: 'none',
             }}
           >
-            <Button
-              onClick={() => setIsAddBuyerOpen(true)}
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                minWidth: 140,
-                fontWeight: 500,
-                boxShadow: 'none',
-              }}
-            >
-              Add Buyer
-            </Button>
-            {/* Informativo de status só aparece se houver buyers */}
-            {Array.isArray(rows) && rows.length > 0 && (
-              <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
-                Waiting: {rows.filter((b) => b.status === 'waiting').length} |
-                Group: {rows.filter((b) => b.status === 'group').length}
-              </span>
-            )}
+            Add Buyer
+          </Button>
+          {/* Informativo de status só aparece se houver buyers */}
+          {Array.isArray(rows) && rows.length > 0 && (
+            <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
+              Waiting: {rows.filter((b) => b.status === 'waiting').length} |
+              Group: {rows.filter((b) => b.status === 'group').length}
+            </span>
+          )}
+        </div>
+        {error ? (
+          // Exibe componente de erro caso ocorra algum problema
+          <ErrorComponent error={error} onClose={() => setError(null)} />
+        ) : isLoading ? (
+          // Exibe indicador de carregamento enquanto os dados são buscados
+          <div className='flex h-full flex-col items-center justify-center'>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
+            <p className='mt-4 text-lg'>Loading buyers...</p>
           </div>
-          {error ? (
-            // Exibe componente de erro caso ocorra algum problema
-            <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : isLoading ? (
-            // Exibe indicador de carregamento enquanto os dados são buscados
-            <div className='flex h-full flex-col items-center justify-center'>
-              <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-zinc-600' />
-              <p className='mt-4 text-lg'>Loading buyers...</p>
-            </div>
-          ) : Array.isArray(rows) && rows.length > 0 ? (
-            // Exibe a lista de buyers caso existam dados
+        ) : Array.isArray(rows) && rows.length > 0 ? (
+          // Exibe a lista de buyers caso existam dados
+          <div style={{ overflowX: 'auto', width: '100%' }}>
             <BuyersDataGrid
               data={rows}
               onBuyerStatusEdit={fetchData}
               onBuyerNameNoteEdit={fetchData}
               onDeleteSuccess={fetchData}
             />
-          ) : (
-            // Exibe mensagem caso não existam buyers
-            <div className='flex h-full flex-col items-center justify-center'>
-              <p className='text-lg'>No buyers found</p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // Exibe mensagem caso não existam buyers
+          <div className='flex h-full flex-col items-center justify-center'>
+            <p className='text-lg'>No buyers found</p>
+          </div>
+        )}
 
         {isAddBuyerOpen && runData && (
           <AddBuyer

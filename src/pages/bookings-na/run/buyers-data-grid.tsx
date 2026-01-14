@@ -950,7 +950,8 @@ export function BuyersDataGrid({
     <TableContainer
       component={Paper}
       sx={{
-        overflow: 'hidden', // Ensures content stays within rounded corners
+        overflowX: 'auto', // Allows horizontal scroll
+        overflowY: 'hidden', // Ensures content stays within rounded corners
         borderRadius: '6px', // Matches the style of runs-data-grid
       }}
     >
