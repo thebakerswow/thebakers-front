@@ -503,41 +503,43 @@ export function RunsDataGrid({
                 {renderTableCell(run.loot)}
                 {renderTableCell(run.note)}
                 {renderTableCell(
-                  hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) ? (
-                    <>
-                      <Tooltip title='Edit'>
-                        <IconButton onClick={() => handleOpenEditRunModal(run)}>
-                          <Pencil size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Copy'>
-                        <IconButton onClick={() => copyRunToClipboard(run)}>
-                          <Clipboard size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Delete'>
-                        <IconButton
-                          onClick={() => handleOpenDeleteRunModal(run)}
-                        >
-                          <Trash size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={run.runIsLocked ? 'Unlock' : 'Lock'}>
-                        <IconButton
-                          onClick={() => toggleRunLock(run.id, run.runIsLocked)}
-                        >
-                          {run.runIsLocked ? (
-                            <LockOpen size={20} />
-                          ) : (
-                            <Lock size={20} />
-                          )}
-                        </IconButton>
-                      </Tooltip>
-                      <div className='mt-1 text-center text-xs text-gray-700'>
-                        {run.runIsLocked ? '(locked)' : '(unlocked)'}
-                      </div>
-                    </>
-                  ) : null
+                  <>
+                    {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
+                      <>
+                        <Tooltip title='Edit'>
+                          <IconButton onClick={() => handleOpenEditRunModal(run)}>
+                            <Pencil size={20} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Copy'>
+                          <IconButton onClick={() => copyRunToClipboard(run)}>
+                            <Clipboard size={20} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Delete'>
+                          <IconButton
+                            onClick={() => handleOpenDeleteRunModal(run)}
+                          >
+                            <Trash size={20} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={run.runIsLocked ? 'Unlock' : 'Lock'}>
+                          <IconButton
+                            onClick={() => toggleRunLock(run.id, run.runIsLocked)}
+                          >
+                            {run.runIsLocked ? (
+                              <LockOpen size={20} />
+                            ) : (
+                              <Lock size={20} />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
+                    <div className='mt-1 text-center text-normal'>
+                      {run.runIsLocked ? '(locked)' : '(unlocked)'}
+                    </div>
+                  </>
                 )}
               </TableRow>
             ))
