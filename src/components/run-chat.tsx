@@ -87,8 +87,8 @@ export function RunChat({
             variant='contained'
             sx={{
               minWidth: 0,
-              width: 56,
-              height: 56,
+              width: 80,
+              height: 80,
               borderRadius: '50%',
               backgroundColor: 'rgb(147, 51, 234)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
