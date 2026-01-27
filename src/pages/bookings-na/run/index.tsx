@@ -64,7 +64,7 @@ export function RunDetails() {
 
   const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
-  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(true)
   const [wsConnected, setWsConnected] = useState(false)
 
   const allowedRoles = [
