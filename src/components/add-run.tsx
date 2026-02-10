@@ -211,7 +211,8 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               <MenuItem value='Nerub-ar Palace'>Nerub-ar Palace</MenuItem>
               <MenuItem value='Liberation of Undermine'>Liberation of Undermine</MenuItem>
               <MenuItem value='Manaforge Omega'>Manaforge Omega</MenuItem>
-              <MenuItem value='Voidspire'>Voidspire</MenuItem>
+              <MenuItem value="Quel'Danas">Quel'Danas</MenuItem>
+              <MenuItem value='The Voidspire'>The Voidspire</MenuItem>
             </Select>
           </FormControl>
           <TextField

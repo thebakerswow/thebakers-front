@@ -202,7 +202,8 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
               <MenuItem value='Nerub-ar Palace'>Nerub-ar Palace</MenuItem>
               <MenuItem value='Liberation of Undermine'>Liberation of Undermine</MenuItem>
               <MenuItem value='Manaforge Omega'>Manaforge Omega</MenuItem>
-              <MenuItem value='Voidspire'>Voidspire</MenuItem>
+              <MenuItem value="Quel'Danas">Quel'Danas</MenuItem>
+              <MenuItem value='The Voidspire'>The Voidspire</MenuItem>
               </Select>
             </FormControl>
             <TextField
