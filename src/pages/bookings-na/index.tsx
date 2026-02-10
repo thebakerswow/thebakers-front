@@ -64,6 +64,7 @@ export function FullRaidsNa() {
     }
 
     const formattedRuns = filteredRows.map((run) => ({
+      name: run.name,
       date: run.date,
       time: run.time,
       raid: run.raid,

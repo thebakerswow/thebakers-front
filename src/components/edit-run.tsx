@@ -46,6 +46,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const isSpecialRun = isKeysRun || isLevelingRun
 
   const [formData, setFormData] = useState({
+    name: run.name
+      ? { String: run.name.String || '', Valid: !!run.name.Valid }
+      : { String: '', Valid: false },
     date: run.date,
     time: run.time, // Preencher o campo time com o valor vindo do run
     raid: run.raid,
@@ -175,6 +178,33 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
       <DialogContent>
         <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
           <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+            <FormControl fullWidth variant='outlined' required margin='dense'>
+              <InputLabel id='name-label'>Name</InputLabel>
+              <Select
+                id='name'
+                value={formData.name.String}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    name: { String: e.target.value, Valid: !!e.target.value },
+                  }))
+                }
+                label='Name'
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200,
+                      overflow: 'auto',
+                    },
+                  },
+                }}
+              >
+              <MenuItem value='Nerub-ar Palace'>Nerub-ar Palace</MenuItem>
+              <MenuItem value='Liberation of Undermine'>Liberation of Undermine</MenuItem>
+              <MenuItem value='Manaforge Omega'>Manaforge Omega</MenuItem>
+              <MenuItem value='Voidspire'>Voidspire</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               type='date'
               label='Date'

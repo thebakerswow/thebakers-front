@@ -40,6 +40,7 @@ export interface AddRunProps {
 
 export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
   const [formData, setFormData] = useState({
+    name: { String: '', Valid: false },
     date: '',
     time: '',
     raid: '',
@@ -186,6 +187,33 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
         {/* Formulário para criar uma nova run */}
         <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-2 gap-4'>
           {/* Inputs e selects para os dados da run */}
+          <FormControl fullWidth variant='outlined' required margin='dense'>
+            <InputLabel id='name-label'>Name</InputLabel>
+            <Select
+              id='name'
+              value={formData.name.String}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  name: { String: e.target.value, Valid: !!e.target.value },
+                }))
+              }
+              label='Name'
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 200,
+                    overflow: 'auto',
+                  },
+                },
+              }}
+            >
+              <MenuItem value='Nerub-ar Palace'>Nerub-ar Palace</MenuItem>
+              <MenuItem value='Liberation of Undermine'>Liberation of Undermine</MenuItem>
+              <MenuItem value='Manaforge Omega'>Manaforge Omega</MenuItem>
+              <MenuItem value='Voidspire'>Voidspire</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             type='date'
             id='date'

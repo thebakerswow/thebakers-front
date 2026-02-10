@@ -212,6 +212,7 @@ export function RunsDataGrid({
   // Function to copy an individual run's data to the clipboard
   const copyRunToClipboard = (run: RunData) => {
     const formattedRun = {
+      name: run.name,
       date: run.date,
       time: run.time,
       raid: run.raid,
@@ -225,7 +226,7 @@ export function RunsDataGrid({
         ) || [],
       loot: run.loot,
       note: run.note || '',
-      quantityBoss: run.quantityBoss, // adicionado para copiar também
+      quantityBoss: run.quantityBoss,
     }
 
     navigator.clipboard
