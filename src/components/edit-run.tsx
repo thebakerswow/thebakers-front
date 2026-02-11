@@ -257,7 +257,10 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                   label='Run Type'
                 >
                   <MenuItem value='Full Raid'>Full Raid</MenuItem>
-                  <MenuItem value='AOTC'>AOTC</MenuItem>
+                  <MenuItem value='AOTC'>AOTC</MenuItem>  
+                  <MenuItem value='VIP'>VIP</MenuItem>
+                  <MenuItem value='CE'>CE</MenuItem>
+                  <MenuItem value='ATP'>ATP</MenuItem>
                   <MenuItem value='Legacy'>Legacy</MenuItem>
                   <MenuItem value='Remix'>Remix</MenuItem>
                 </Select>
@@ -422,6 +425,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 >
                   <MenuItem value='Saved'>Saved</MenuItem>
                   <MenuItem value='Unsaved'>Unsaved</MenuItem>
+                  <MenuItem value='No Loot'>No Loot</MenuItem>
                 </Select>
               </FormControl>
             )}
