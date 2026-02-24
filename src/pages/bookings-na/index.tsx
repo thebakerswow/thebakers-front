@@ -99,6 +99,7 @@ export function FullRaidsNa() {
       const runsArray = Array.isArray(parsedRuns) ? parsedRuns : [parsedRuns]
 
       const formattedRuns = runsArray.map((run) => ({
+        name: run.name,
         date: run.date,
         time: run.time,
         raid: run.raid,
