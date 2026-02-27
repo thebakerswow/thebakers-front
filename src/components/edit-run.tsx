@@ -256,13 +256,12 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                   onChange={(e) => handleChange('runType', e.target.value)}
                   label='Run Type'
                 >
-                  <MenuItem value='Full Raid'>Full Raid</MenuItem>
-                  <MenuItem value='AOTC'>AOTC</MenuItem>  
-                  <MenuItem value='VIP'>VIP</MenuItem>
-                  <MenuItem value='CE'>CE</MenuItem>
-                  <MenuItem value='ATP'>ATP</MenuItem>
+                  <MenuItem value='Full Clear'>Full Clear</MenuItem>
+                  <MenuItem value='Last Boss'>Last Boss</MenuItem>
+                  <MenuItem value='Achievment'>Achievment</MenuItem>
                   <MenuItem value='Legacy'>Legacy</MenuItem>
                   <MenuItem value='Remix'>Remix</MenuItem>
+                  <MenuItem value='Mount Only'>Mount Only</MenuItem>
                 </Select>
               </FormControl>
             )}
@@ -417,15 +416,19 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
             </FormControl>
             {!isSpecialRun && (
               <FormControl fullWidth required>
-                <InputLabel>Loot</InputLabel>
+                <InputLabel>Loot Options</InputLabel>
                 <Select
                   value={formData.loot}
                   onChange={(e) => handleChange('loot', e.target.value)}
-                  label='Loot'
+                  label='Loot Options'
                 >
-                  <MenuItem value='Saved'>Saved</MenuItem>
-                  <MenuItem value='Unsaved'>Unsaved</MenuItem>
+                  <MenuItem value='Group loot'>Group loot</MenuItem>
+                  <MenuItem value='Unsaved Group loot'>Unsaved Group loot</MenuItem>
+                  <MenuItem value='Full priority'>Full priority</MenuItem>
                   <MenuItem value='No Loot'>No Loot</MenuItem>
+                  <MenuItem value='Armor and Token Priority'>
+                    Armor and Token Priority
+                  </MenuItem>
                 </Select>
               </FormControl>
             )}
