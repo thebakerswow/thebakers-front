@@ -18,7 +18,10 @@ import {
   TableRow,
   Paper,
 } from '@mui/material'
-import { toggleRunLock as toggleRunLockService } from '../../../services/api/runs'
+import {
+  getRunAttendance,
+  toggleRunLock as toggleRunLockService,
+} from '../../../services/api/runs'
 import { EditHistoryDialog } from '../../../components/edit-history-dialog'
 import { ErrorDetails } from '../../../components/error-display'
 import { sendDiscordMessage } from '../../../services/api/discord'
@@ -102,10 +105,45 @@ export function RunInfo({
 
   const handleToggleRunLock = async () => {
     try {
+      if (!isRunLocked) {
+        const attendanceData = await getRunAttendance(run.id)
+        const hasAnyAttendanceFilled = Array.isArray(attendanceData)
+          ? attendanceData.some(
+              (player) => Number(player.percentage) > 0
+            )
+          : false
+
+        if (!hasAnyAttendanceFilled) {
+          Swal.fire({
+            title: 'Attendance Required',
+            text: 'Fill attendance for at least one player before locking this run.',
+            icon: 'warning',
+            timer: 2500,
+            showConfirmButton: false,
+          })
+          return
+        }
+      }
+
       await toggleRunLockService(run.id, isRunLocked)
       setIsRunLocked(!isRunLocked)
       window.location.reload() // Reload the page after toggling the lock
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        if (onError) {
+          onError(errorDetails)
+        }
+      } else {
+        if (onError) {
+          onError({ message: 'Unexpected error', response: error })
+        }
+      }
+
       console.error('Failed to toggle run lock:', error)
     }
   }
