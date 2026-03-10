@@ -23,14 +23,13 @@ import {
   CurrencyDollar,
   Fire,
 } from '@phosphor-icons/react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/auth-context'
 import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/role-utils'
 
 export function Header() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [bookingsAnchorEl, setBookingsAnchorEl] = useState<null | HTMLElement>(
@@ -44,27 +43,6 @@ export function Header() {
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-
-  // Verifica se está no domínio externo (vitrine)
-  const isExternalDomain = () => {
-    // Se estiver em rotas /external, é página externa
-    if (location.pathname.startsWith('/external')) return true
-
-    // Se o hostname for diferente do domínio principal, é domínio externo
-    const currentHost = window.location.hostname
-    const mainDomain = import.meta.env.VITE_MAIN_DOMAIN || 'localhost'
-
-    // Remove 'www.' de ambos os hostnames para comparação
-    const normalizedCurrentHost = currentHost.replace(/^www\./, '')
-    const normalizedMainDomain = mainDomain.replace(/^www\./, '')
-
-    return (
-      normalizedCurrentHost !== normalizedMainDomain &&
-      normalizedCurrentHost !== 'localhost'
-    )
-  }
-
-  const isExternalPage = isExternalDomain()
 
   const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
     if (exactMatch) {
@@ -146,8 +124,8 @@ export function Header() {
     setMobileFinanceAnchorEl(null)
   }
 
-  // Se não está autenticado e não é página externa, mostra header de login
-  if (!isAuthenticated && !isExternalPage) {
+  // Se não está autenticado, mostra header de login
+  if (!isAuthenticated) {
     return (
       <AppBar
         position='static'
@@ -170,34 +148,6 @@ export function Header() {
           >
             TheBakers
             <span className='font-extrabold text-purple-500'>Hub</span>
-          </Typography>
-        </Toolbar>
-      </AppBar>
-    )
-  }
-
-  // Se é página externa, mostra header simplificado
-  if (isExternalPage) {
-    return (
-      <AppBar
-        position='static'
-        sx={{
-          background: 'black',
-          zIndex: 1000,
-        }}
-      >
-        <Toolbar sx={{ justifyContent: 'center' }}>
-          <Typography
-            variant='h6'
-            component='div'
-            sx={{
-              cursor: 'pointer',
-              fontSize: '1.8rem',
-              textAlign: 'center',
-            }}
-            onClick={() => navigate('/')}
-          >
-            Corn<span className='font-extrabold text-purple-500'>Field</span>
           </Typography>
         </Toolbar>
       </AppBar>

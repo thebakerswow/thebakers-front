@@ -25,9 +25,7 @@ import { KeysPage } from './pages/keys'
 import { KeyDetails } from './pages/keys/key-details'
 import { LevelingPage } from './pages/leveling'
 import { LevelingDetails } from './pages/leveling/leveling-details'
-import { ExternalHomePage } from './pages/external/home'
 import { RemixPage } from './pages/remix'
-import { DomainRouter } from './components/domain-router'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/payments'
@@ -66,95 +64,90 @@ export function App() {
               className='relative flex h-screen w-screen justify-center overflow-hidden bg-cover'
               style={{ backgroundImage: `url(${backgroundTeste})` }}
             >
-              <DomainRouter>
-                <Routes>
-                  {/* Rotas públicas */}
-                  <Route path='/' element={<Login />} />
-                  <Route path='/login/callback' element={<AuthCallback />} />
-                  <Route path='/login/error' element={<LoginErro />} />
-                  <Route path='/access-denied' element={<AccessDenied />} />
+              <Routes>
+                {/* Rotas públicas */}
+                <Route path='/' element={<Login />} />
+                <Route path='/login/callback' element={<AuthCallback />} />
+                <Route path='/login/error' element={<LoginErro />} />
+                <Route path='/access-denied' element={<AccessDenied />} />
 
-                  {/* Rotas externas (sem autenticação) */}
-                  <Route path='/external' element={<ExternalHomePage />} />
+                {/* Rotas privadas */}
+                <Route
+                  path='/home'
+                  element={<PrivateRoute element={<HomePage />} />}
+                />
+                <Route
+                  path='/balance'
+                  element={<PrivateRoute element={<BalancePageRouter />} />}
+                />
+                <Route
+                  path='/management-teams'
+                  element={<PrivateRoute element={<TeamsManagement />} />}
+                />
+                <Route
+                  path='/bookings-na'
+                  element={<PrivateRoute element={<FullRaidsNa />} />}
+                />
+                <Route
+                  path='/bookings-na/run/:id'
+                  element={<PrivateRoute element={<RunDetails />} />}
+                />
+                <Route
+                  path='/bookings-na/key/:id'
+                  element={<PrivateRoute element={<KeyDetails />} />}
+                />
+                <Route
+                  path='/bookings-na/leveling/:id'
+                  element={<PrivateRoute element={<LevelingDetails />} />}
+                />
+                <Route
+                  path='/admin'
+                  element={<PrivateRoute element={<AdminPage />} />}
+                />
+                <Route
+                  path='/check-access'
+                  element={<PrivateRoute element={<CheckAccess />} />}
+                />
+                <Route
+                  path='/services'
+                  element={<PrivateRoute element={<ManagementServices />} />}
+                />
+                <Route
+                  path='/keys'
+                  element={<PrivateRoute element={<KeysPage />} />}
+                />
+                <Route
+                  path='/leveling'
+                  element={<PrivateRoute element={<LevelingPage />} />}
+                />
+                <Route
+                  path='/remix'
+                  element={<PrivateRoute element={<RemixPage />} />}
+                />
+                <Route
+                  path='/requests'
+                  element={<PrivateRoute element={<RequestsPage />} />}
+                />
+                <Route
+                  path='/my-requests'
+                  element={<PrivateRoute element={<MyRequestsPage />} />}
+                />
+                <Route
+                  path='/payments'
+                  element={<PrivateRoute element={<PaymentsPage />} />}
+                />
+                <Route
+                  path='/receipts'
+                  element={<PrivateRoute element={<ReceiptsPage />} />}
+                />
+                <Route
+                  path='/sells'
+                  element={<PrivateRoute element={<SellsPage />} />}
+                />
 
-                  {/* Rotas privadas */}
-                  <Route
-                    path='/home'
-                    element={<PrivateRoute element={<HomePage />} />}
-                  />
-                  <Route
-                    path='/balance'
-                    element={<PrivateRoute element={<BalancePageRouter />} />}
-                  />
-                  <Route
-                    path='/management-teams'
-                    element={<PrivateRoute element={<TeamsManagement />} />}
-                  />
-                  <Route
-                    path='/bookings-na'
-                    element={<PrivateRoute element={<FullRaidsNa />} />}
-                  />
-                  <Route
-                    path='/bookings-na/run/:id'
-                    element={<PrivateRoute element={<RunDetails />} />}
-                  />
-                  <Route
-                    path='/bookings-na/key/:id'
-                    element={<PrivateRoute element={<KeyDetails />} />}
-                  />
-                  <Route
-                    path='/bookings-na/leveling/:id'
-                    element={<PrivateRoute element={<LevelingDetails />} />}
-                  />
-                  <Route
-                    path='/admin'
-                    element={<PrivateRoute element={<AdminPage />} />}
-                  />
-                  <Route
-                    path='/check-access'
-                    element={<PrivateRoute element={<CheckAccess />} />}
-                  />
-                  <Route
-                    path='/services'
-                    element={<PrivateRoute element={<ManagementServices />} />}
-                  />
-                  <Route
-                    path='/keys'
-                    element={<PrivateRoute element={<KeysPage />} />}
-                  />
-                  <Route
-                    path='/leveling'
-                    element={<PrivateRoute element={<LevelingPage />} />}
-                  />
-                  <Route
-                    path='/remix'
-                    element={<PrivateRoute element={<RemixPage />} />}
-                  />
-                  <Route
-                    path='/requests'
-                    element={<PrivateRoute element={<RequestsPage />} />}
-                  />
-                  <Route
-                    path='/my-requests'
-                    element={<PrivateRoute element={<MyRequestsPage />} />}
-                  />
-                  <Route
-                    path='/payments'
-                    element={<PrivateRoute element={<PaymentsPage />} />}
-                  />
-                  <Route
-                    path='/receipts'
-                    element={<PrivateRoute element={<ReceiptsPage />} />}
-                  />
-                  <Route
-                    path='/sells'
-                    element={<PrivateRoute element={<SellsPage />} />}
-                  />
-
-                  {/* Rota catch-all */}
-                  <Route path='*' element={<ErrorPage />} />
-                </Routes>
-              </DomainRouter>
+                {/* Rota catch-all */}
+                <Route path='*' element={<ErrorPage />} />
+              </Routes>
             </main>
 
           </div>
