@@ -125,7 +125,7 @@ export function NewBalancePage() {
             )}
           </div>
         <div className='basis-1/3 h-full' data-tutorial="gbank-list">
-          <GBankListNew onError={handleError} />
+          <GBankListNew onError={handleError} selectedTeam={selectedTeam} />
         </div>
       </div>
 

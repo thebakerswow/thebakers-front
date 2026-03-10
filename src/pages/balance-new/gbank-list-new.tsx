@@ -13,12 +13,25 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  TextField,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
 
 import { ErrorDetails } from '../../components/error-display'
-import { getUserGbanks, createTransactionRequest } from '../../services/api/gbanks'
+import {
+  createGBank,
+  createTransactionRequest,
+  getUserGbanks,
+} from '../../services/api/gbanks'
+import { useAuth } from '../../context/auth-context'
 import { GBank } from '../../types'
 
 // Mapeamento de IDs dos times para cores
@@ -105,12 +118,26 @@ const compareByPriority = (aLabel: string, bLabel: string) => {
 
 type GBankListNewProps = {
   onError?: (error: ErrorDetails) => void
+  selectedTeam?: string | null
 }
 
-export function GBankListNew({ onError }: GBankListNewProps) {
+export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
+  const { userRoles = [] } = useAuth()
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
+  const [newGBankName, setNewGBankName] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const canCreateGBank = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+  const selectedTeamLabel = useMemo(() => {
+    if (!selectedTeam) return '-'
+    const selectedColor = teamIdToColorMap[selectedTeam]
+    return (
+      colorOptions.find((option) => option.value === selectedColor)?.label ||
+      selectedTeam
+    )
+  }, [selectedTeam])
 
   const handleError = (error: unknown, defaultMessage: string) => {
     if (axios.isAxiosError(error)) {
@@ -389,9 +416,96 @@ export function GBankListNew({ onError }: GBankListNewProps) {
     })
   }
 
+  const handleCreateGBank = async () => {
+    if (!selectedTeam) {
+      handleError(
+        { message: 'No selected team for G-Bank creation' },
+        'Error adding G-Bank'
+      )
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await createGBank({
+        name: newGBankName,
+        idTeam: selectedTeam,
+      })
+      setNewGBankName('')
+      setAddGBankModalOpen(false)
+      await fetchGBanks(false)
+    } catch (error) {
+      handleError(error, 'Error adding G-Bank')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className='flex h-full w-full flex-col overflow-y-auto rounded-md'>
-    
+      {canCreateGBank && (
+        <div className='mb-2'>
+          <Button
+            variant='contained'
+            onClick={() => setAddGBankModalOpen(true)}
+            sx={{
+              backgroundColor: 'rgb(147, 51, 234)',
+              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+            }}
+          >
+            Add G-Bank
+          </Button>
+        </div>
+      )}
+
+      {addGBankModalOpen && (
+        <Dialog open={addGBankModalOpen} onClose={() => setAddGBankModalOpen(false)}>
+          <DialogTitle className='relative text-center'>
+            Add New G-Bank
+            <IconButton
+              aria-label='close'
+              onClick={() => setAddGBankModalOpen(false)}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Team'
+              value={selectedTeamLabel}
+              InputProps={{ readOnly: true }}
+            />
+            <TextField
+              fullWidth
+              margin='dense'
+              variant='outlined'
+              label='Name'
+              value={newGBankName}
+              onChange={(e) => setNewGBankName(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center' }}>
+            <Button
+              variant='contained'
+              onClick={handleCreateGBank}
+              disabled={isSubmitting}
+              sx={{
+                backgroundColor: 'rgb(147, 51, 234)',
+                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+              }}
+            >
+              {isSubmitting ? 'Adding...' : 'Save'}
+            </Button>
+            <Button variant='outlined' onClick={() => setAddGBankModalOpen(false)}>
+              Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       <div className='flex-1 overflow-y-auto'>
         {isLoading ? (
