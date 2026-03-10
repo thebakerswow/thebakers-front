@@ -30,6 +30,7 @@ import {
   updateBuyerStatus,
   deleteBuyer,
 } from '../../../services/api/buyers'
+import { getRun, getRunBuyers } from '../../../services/api/runs'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorDetails } from '../../../components/error-display'
 import { EditBuyer } from '../../../components/edit-buyer'
@@ -69,7 +70,7 @@ interface BuyersGridProps {
 const statusOptions = [
   { value: 'waiting', label: 'Waiting' },
   { value: 'noshow', label: 'No Show' },
-  { value: 'closed', label: 'Closed' },
+  { value: 'cancelled', label: 'Cancelled' },
   { value: 'backup', label: 'Backup' },
   { value: 'group', label: 'Group' },
   { value: 'done', label: 'Done' },
@@ -81,7 +82,7 @@ const statusPriorities: Record<string, number> = {
   waiting: 3,
   backup: 4,
   noshow: 5,
-  closed: 6,
+  cancelled: 6,
 }
 
 const TEAM_ROLE_IDS = [
@@ -128,6 +129,9 @@ export function BuyersDataGrid({
   onError,
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
+  const isOnlyAdvertiserRole =
+    userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER) &&
+    userRoles.length === 1
   const canSeeIdBuyer =
     userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
     (runIdTeam && hasPrefeitoTeamAccess(runIdTeam, userRoles))
@@ -344,19 +348,23 @@ export function BuyersDataGrid({
       await updateBuyerStatus(buyerId, newStatus)
 
       let availableSlotsAfterChange = Number(slotAvailable) || 0
+      let backupQueue = data.filter(
+        (buyer) => buyer.status === 'backup' && buyer.id !== buyerId
+      )
 
-      // Ajusta a projeção de slots considerando a mudança recém-feita no buyer.
-      if (currentBuyer.status === 'waiting' && newStatus !== 'waiting') {
-        availableSlotsAfterChange += 1
-      } else if (currentBuyer.status !== 'waiting' && newStatus === 'waiting') {
-        availableSlotsAfterChange = Math.max(availableSlotsAfterChange - 1, 0)
+      // Busca estado real da run e da fila após a mudança
+      if (runId) {
+        const [latestRun, latestBuyers] = await Promise.all([
+          getRun(runId),
+          getRunBuyers(runId),
+        ])
+        availableSlotsAfterChange = Number(latestRun?.slotAvailable) || 0
+        backupQueue = Array.isArray(latestBuyers)
+          ? latestBuyers.filter((buyer) => buyer.status === 'backup')
+          : []
       }
 
       if (availableSlotsAfterChange > 0) {
-        const backupQueue = data.filter(
-          (buyer) => buyer.status === 'backup' && buyer.id !== buyerId
-        )
-
         const buyersToPromote = backupQueue.slice(0, availableSlotsAfterChange)
 
         for (const backupBuyer of buyersToPromote) {
@@ -983,7 +991,7 @@ export function BuyersDataGrid({
         return 'bg-gradient-to-r from-green-300 to-green-400'
       case 'noshow':
         return 'bg-gradient-to-r from-red-500 to-red-600'
-      case 'closed':
+      case 'cancelled':
         return 'bg-gradient-to-r from-zinc-400 to-zinc-500'
       case '':
         return 'bg-gradient-to-r from-white to-gray-100'
@@ -1444,16 +1452,18 @@ export function BuyersDataGrid({
                           <Pencil size={18} />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title='Delete'>
-                        <IconButton
-                          onClick={() =>
-                            !runIsLocked && handleDeleteBuyer(buyer)
-                          }
-                          disabled={runIsLocked}
-                        >
-                          <Trash size={18} />
-                        </IconButton>
-                      </Tooltip>
+                      {!isOnlyAdvertiserRole && (
+                        <Tooltip title='Delete'>
+                          <IconButton
+                            onClick={() =>
+                              !runIsLocked && handleDeleteBuyer(buyer)
+                            }
+                            disabled={runIsLocked}
+                          >
+                            <Trash size={18} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </div>
                   )}
                 </TableCell>

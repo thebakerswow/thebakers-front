@@ -71,7 +71,7 @@ interface BuyersGridProps {
 const statusOptions = [
   { value: 'waiting', label: 'Waiting' },
   { value: 'noshow', label: 'No Show' },
-  { value: 'closed', label: 'Closed' },
+  { value: 'cancelled', label: 'Cancelled' },
   { value: 'backup', label: 'Backup' },
   { value: 'group', label: 'Group' },
   { value: 'done', label: 'Done' },
@@ -83,7 +83,7 @@ const statusPriorities: Record<string, number> = {
   waiting: 3,
   backup: 4,
   noshow: 5,
-  closed: 6,
+  cancelled: 6,
 }
 
 export function LevelingBuyersDataGrid({
@@ -733,7 +733,7 @@ export function LevelingBuyersDataGrid({
         return 'bg-gradient-to-r from-green-300 to-green-400'
       case 'noshow':
         return 'bg-gradient-to-r from-red-500 to-red-600'
-      case 'closed':
+      case 'cancelled':
         return 'bg-gradient-to-r from-zinc-400 to-zinc-500'
       case '':
         return 'bg-gradient-to-r from-white to-gray-100'
