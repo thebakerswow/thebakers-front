@@ -18,7 +18,6 @@ import { ErrorPage } from './pages/error-pages/not-found'
 import { AccessDenied } from './pages/error-pages/access-denied'
 import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
-import backgroundTeste from './assets/background_teste.png'
 import { CheckAccess } from './pages/error-pages/check-access'
 import ManagementServices from './pages/management/management-services'
 import { KeysPage } from './pages/special-runs/keys-page'
@@ -49,9 +48,109 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
   return isAuthenticated ? element : <Navigate to='/' />
 }
 
+function AppContent() {
+  const { isAuthenticated } = useAuth()
+
+  return (
+    <div className='flex min-h-screen flex-grow flex-col'>
+      {isAuthenticated ? <Header /> : null}
+      <main className='relative flex w-full flex-1 justify-center overflow-x-hidden bg-[#050505]'>
+        <Routes>
+          {/* Rotas públicas */}
+          <Route path='/' element={<Login />} />
+          <Route path='/login/callback' element={<AuthCallback />} />
+          <Route path='/login/error' element={<LoginErro />} />
+          <Route path='/access-denied' element={<AccessDenied />} />
+
+          {/* Rotas privadas */}
+          <Route
+            path='/home'
+            element={<PrivateRoute element={<HomePage />} />}
+          />
+          <Route
+            path='/balance'
+            element={<PrivateRoute element={<BalancePageRouter />} />}
+          />
+          <Route
+            path='/management-teams'
+            element={<PrivateRoute element={<TeamsManagement />} />}
+          />
+          <Route
+            path='/bookings-na'
+            element={<PrivateRoute element={<FullRaidsNa />} />}
+          />
+          <Route
+            path='/bookings-na/run/:id'
+            element={<PrivateRoute element={<RunDetails />} />}
+          />
+          <Route
+            path='/bookings-na/key/:id'
+            element={<PrivateRoute element={<KeyDetails />} />}
+          />
+          <Route
+            path='/bookings-na/leveling/:id'
+            element={<PrivateRoute element={<LevelingDetails />} />}
+          />
+          <Route
+            path='/bookings-na/pvp/:id'
+            element={<PrivateRoute element={<PvpDetails />} />}
+          />
+          <Route
+            path='/admin'
+            element={<PrivateRoute element={<AdminPage />} />}
+          />
+          <Route
+            path='/check-access'
+            element={<PrivateRoute element={<CheckAccess />} />}
+          />
+          <Route
+            path='/services'
+            element={<PrivateRoute element={<ManagementServices />} />}
+          />
+          <Route
+            path='/keys'
+            element={<PrivateRoute element={<KeysPage />} />}
+          />
+          <Route
+            path='/leveling'
+            element={<PrivateRoute element={<LevelingPage />} />}
+          />
+          <Route
+            path='/pvp'
+            element={<PrivateRoute element={<PvpPage />} />}
+          />
+          <Route
+            path='/requests'
+            element={<PrivateRoute element={<RequestsPage />} />}
+          />
+          <Route
+            path='/my-requests'
+            element={<PrivateRoute element={<MyRequestsPage />} />}
+          />
+          <Route
+            path='/payments'
+            element={<PrivateRoute element={<PaymentsPage />} />}
+          />
+          <Route
+            path='/receipts'
+            element={<PrivateRoute element={<ReceiptsPage />} />}
+          />
+          <Route
+            path='/sells'
+            element={<PrivateRoute element={<SellsPage />} />}
+          />
+
+          {/* Rota catch-all */}
+          <Route path='*' element={<ErrorPage />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
+
 export function App() {
   return (
-    <div className='flex h-full'>
+    <div className='flex min-h-screen'>
       <Router
         future={{
           v7_startTransition: true,
@@ -59,103 +158,7 @@ export function App() {
         }}
       >
         <AuthProvider>
-          <div className='flex flex-grow flex-col'>
-            <Header />
-            <main
-              className='relative flex h-screen w-screen justify-center overflow-hidden bg-cover'
-              style={{ backgroundImage: `url(${backgroundTeste})` }}
-            >
-              <Routes>
-                {/* Rotas públicas */}
-                <Route path='/' element={<Login />} />
-                <Route path='/login/callback' element={<AuthCallback />} />
-                <Route path='/login/error' element={<LoginErro />} />
-                <Route path='/access-denied' element={<AccessDenied />} />
-
-                {/* Rotas privadas */}
-                <Route
-                  path='/home'
-                  element={<PrivateRoute element={<HomePage />} />}
-                />
-                <Route
-                  path='/balance'
-                  element={<PrivateRoute element={<BalancePageRouter />} />}
-                />
-                <Route
-                  path='/management-teams'
-                  element={<PrivateRoute element={<TeamsManagement />} />}
-                />
-                <Route
-                  path='/bookings-na'
-                  element={<PrivateRoute element={<FullRaidsNa />} />}
-                />
-                <Route
-                  path='/bookings-na/run/:id'
-                  element={<PrivateRoute element={<RunDetails />} />}
-                />
-                <Route
-                  path='/bookings-na/key/:id'
-                  element={<PrivateRoute element={<KeyDetails />} />}
-                />
-                <Route
-                  path='/bookings-na/leveling/:id'
-                  element={<PrivateRoute element={<LevelingDetails />} />}
-                />
-                <Route
-                  path='/bookings-na/pvp/:id'
-                  element={<PrivateRoute element={<PvpDetails />} />}
-                />
-                <Route
-                  path='/admin'
-                  element={<PrivateRoute element={<AdminPage />} />}
-                />
-                <Route
-                  path='/check-access'
-                  element={<PrivateRoute element={<CheckAccess />} />}
-                />
-                <Route
-                  path='/services'
-                  element={<PrivateRoute element={<ManagementServices />} />}
-                />
-                <Route
-                  path='/keys'
-                  element={<PrivateRoute element={<KeysPage />} />}
-                />
-                <Route
-                  path='/leveling'
-                  element={<PrivateRoute element={<LevelingPage />} />}
-                />
-                <Route
-                  path='/pvp'
-                  element={<PrivateRoute element={<PvpPage />} />}
-                />
-                <Route
-                  path='/requests'
-                  element={<PrivateRoute element={<RequestsPage />} />}
-                />
-                <Route
-                  path='/my-requests'
-                  element={<PrivateRoute element={<MyRequestsPage />} />}
-                />
-                <Route
-                  path='/payments'
-                  element={<PrivateRoute element={<PaymentsPage />} />}
-                />
-                <Route
-                  path='/receipts'
-                  element={<PrivateRoute element={<ReceiptsPage />} />}
-                />
-                <Route
-                  path='/sells'
-                  element={<PrivateRoute element={<SellsPage />} />}
-                />
-
-                {/* Rota catch-all */}
-                <Route path='*' element={<ErrorPage />} />
-              </Routes>
-            </main>
-
-          </div>
+          <AppContent />
         </AuthProvider>
       </Router>
     </div>

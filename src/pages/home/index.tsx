@@ -1,155 +1,90 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { format, parseISO } from 'date-fns'
+import {
+  CalendarBlank,
+  CaretDown,
+  Clock,
+  Fire,
+  ShieldChevron,
+  Sword,
+  Users,
+} from '@phosphor-icons/react'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { getServices, getServiceCategories } from '../../services/api/services'
 import { getRuns } from '../../services/api/runs'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { shouldShowRestrictedHome } from '../../utils/role-utils'
-import services from '../../assets/services_new.png'
-import manaforge from '../../assets/manaforge.png'
-import schedule from '../../assets/schedule_new.png'
 import { Service, ServiceCategory } from '../../types'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Pagination, Autoplay } from 'swiper/modules'
-import { Swiper as SwiperType } from 'swiper'
-import { CaretLeft, CaretRight, X, CastleTurret, Key } from '@phosphor-icons/react'
-import { format, addDays } from 'date-fns'
-import { getWeekDatesEST, getCurrentESTDate } from '../../utils/timezone-utils'
-import 'swiper/css'
-import 'swiper/css/pagination'
+import { getWeekDatesEST } from '../../utils/timezone-utils'
+
+type RunItem = {
+  id: string | number
+  idTeam?: string
+  team?: string
+  name?: string
+  difficulty?: string
+  raid?: string
+  time: string
+  loot?: string
+  slotAvailable?: number
+}
 
 export function HomePage() {
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [servicesList, setServicesList] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(false)
   const [categories, setCategories] = useState<ServiceCategory[]>([])
-  const [selectedCategory, setSelectedCategory] =
-    useState<ServiceCategory | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [weekRuns, setWeekRuns] = useState<Record<string, any[]>>({})
+  const [weekRuns, setWeekRuns] = useState<Record<string, RunItem[]>>({})
   const [loadingRuns, setLoadingRuns] = useState(true)
-
-  // Refs para os Swipers
-  const swiperRefs = useRef<{ [key: string]: SwiperType | null }>({})
-
-  // Adiciona state para windowWidth
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1280
-  )
-
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // Função para pegar slidesPerView atual baseado nos breakpoints do Swiper
-  const getSlidesPerView = () => {
-    if (windowWidth >= 1280) return 5
-    if (windowWidth >= 1024) return 4
-    if (windowWidth >= 768) return 3
-    if (windowWidth >= 640) return 2
-    return 1
-  }
-
-  // Função para verificar se a paginação está ativa baseada no número de slides e breakpoints
-  const isPaginationActive = (totalSlides: number) => {
-    const slidesPerView = getSlidesPerView()
-    return totalSlides > slidesPerView
-  }
-
-  // Funções de navegação para as setas
-  const handlePrevSlide = (categoryId: string | number) => {
-    const swiper = swiperRefs.current[String(categoryId)]
-    if (swiper) {
-      swiper.slidePrev()
-    }
-  }
-
-  const handleNextSlide = (categoryId: string | number) => {
-    const swiper = swiperRefs.current[String(categoryId)]
-    if (swiper) {
-      swiper.slideNext()
-    }
-  }
-
-  // Função para abrir o dialog com os serviços da categoria
-  const handleCategoryClick = (category: ServiceCategory) => {
-    setSelectedCategory(category)
-    setIsDialogOpen(true)
-  }
-
-  // Função para fechar o dialog
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    setSelectedCategory(null)
-  }
-
-  // Buscar runs da semana atual
-  const fetchWeekRuns = async () => {
-    setLoadingRuns(true)
-    // Usa EST como referência para o schedule (independente do fuso do usuário)
-    const days = getWeekDatesEST()
-    try {
-      const results = await Promise.allSettled(
-        days.map((date) =>
-          getRuns(date).then((runs) => ({
-            date,
-            runs: runs || [],
-          }))
-        )
-      )
-      // Organiza as runs por data (yyyy-MM-dd)
-      const runsByDate: Record<string, any[]> = {}
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          runsByDate[result.value.date] = result.value.runs
-        }
-      })
-      setWeekRuns(runsByDate)
-    } catch (err) {
-      // ignore errors for now
-    } finally {
-      setLoadingRuns(false)
-    }
-  }
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [activeDate, setActiveDate] = useState<string | null>(null)
+  const [mobileDateOpen, setMobileDateOpen] = useState(false)
+  const [username, setUsername] = useState<string | null>(null)
 
   const navigate = useNavigate()
   const { isAuthenticated, loading, userRoles, idDiscord } = useAuth()
-  // Novo: username extraído do token
-  const [username, setUsername] = useState<string | null>(null)
+
+  const dates = useMemo(() => getWeekDatesEST(), [])
 
   useEffect(() => {
-    // Tenta extrair username do token salvo
     const token = localStorage.getItem('jwt')
-    if (token) {
-      try {
-        const decoded: any = JSON.parse(atob(token.split('.')[1]))
-        if (decoded.username) setUsername(decoded.username)
-        else setUsername(null)
-      } catch {
-        setUsername(null)
-      }
+    if (!token) return
+    try {
+      const decoded: any = JSON.parse(atob(token.split('.')[1]))
+      setUsername(decoded.username || null)
+    } catch {
+      setUsername(null)
     }
   }, [])
 
-  // Função utilitária para verificar se o usuário deve ver a home restrita
-  const isRestrictedUser = () => {
-    return shouldShowRestrictedHome(userRoles)
-  }
-
-  // Verifica se o usuário está autenticado
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/login')
-    }
+    if (!loading && !isAuthenticated) navigate('/login')
   }, [isAuthenticated, loading, navigate])
 
-  // Buscar serviços e categorias para exibir nos cards - apenas para usuários que não são restritos
   useEffect(() => {
-    // Se o usuário é restrito (freelancer + cargos não rastreados), não busca serviços
-    if (isRestrictedUser()) {
-      return
+    if (!activeDate && dates.length > 0) setActiveDate(dates[0])
+  }, [activeDate, dates])
+
+  useEffect(() => {
+    const fetchWeekRuns = async () => {
+      setLoadingRuns(true)
+      try {
+        const results = await Promise.allSettled(
+          dates.map((date) =>
+            getRuns(date).then((runs) => ({ date, runs: (runs || []) as RunItem[] }))
+          )
+        )
+        const mapped: Record<string, RunItem[]> = {}
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') mapped[result.value.date] = result.value.runs
+        })
+        setWeekRuns(mapped)
+      } finally {
+        setLoadingRuns(false)
+      }
     }
 
     const fetchServicesAndCategories = async () => {
@@ -161,14 +96,14 @@ export function HomePage() {
         ])
         setServicesList(servicesRes)
         setCategories(Array.isArray(categoriesRes) ? categoriesRes : [])
-        setError(null) // Clear any previous errors
+        setError(null)
       } catch (err: any) {
-        setServicesList([]) // Garante array vazio em erro
+        setServicesList([])
         setCategories([])
         setError({
           message:
             err?.response?.data?.message ||
-            err.message ||
+            err?.message ||
             'Error fetching services or categories',
           response: err?.response?.data,
           status: err?.response?.status,
@@ -177,11 +112,55 @@ export function HomePage() {
         setLoadingServices(false)
       }
     }
-    fetchServicesAndCategories()
-    fetchWeekRuns()
-  }, [userRoles])
 
-  // Mostra loading enquanto verifica autenticação
+    void fetchWeekRuns()
+    if (!shouldShowRestrictedHome(userRoles)) void fetchServicesAndCategories()
+  }, [userRoles, dates])
+
+  const categoriesWithServices = useMemo(() => {
+    const grouped = categories
+      .map((category) => ({
+        category,
+        services: servicesList.filter(
+          (service) => service.serviceCategoryId === category.id
+        ),
+      }))
+      .filter((item) => item.services.length > 0)
+
+    const knownCategoryIds = new Set(grouped.map((item) => item.category.id))
+    const orphanServices = servicesList.filter(
+      (service) => !knownCategoryIds.has(service.serviceCategoryId)
+    )
+
+    if (orphanServices.length) {
+      grouped.push({
+        category: { id: -1, name: 'Other' } as ServiceCategory,
+        services: orphanServices,
+      })
+    }
+
+    return grouped
+  }, [categories, servicesList])
+
+  const filteredCategories = useMemo(() => {
+    if (!activeCategory) return categoriesWithServices
+    return categoriesWithServices.filter(
+      (entry) => String(entry.category.id) === activeCategory
+    )
+  }, [activeCategory, categoriesWithServices])
+
+  const scheduleRuns = useMemo(() => {
+    if (!activeDate) return []
+    return (weekRuns[activeDate] || [])
+      .filter(
+        (run) =>
+          run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
+          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING &&
+          run.idTeam !== import.meta.env.VITE_TEAM_PVP
+      )
+      .sort((a, b) => a.time.localeCompare(b.time))
+  }, [weekRuns, activeDate])
+
   if (loading) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
@@ -190,480 +169,541 @@ export function HomePage() {
     )
   }
 
-  // Redireciona se não estiver autenticado
-  if (!isAuthenticated) {
-    return null // O useEffect já vai redirecionar
-  }
+  if (!isAuthenticated) return null
 
-  // Renderize a homepage para todos os usuários
   return (
-    <div
-      className='home-page relative w-full overflow-auto bg-cover bg-fixed bg-center bg-no-repeat'
-      style={{ backgroundImage: `url(${manaforge})` }}
-    >
+    <div className='relative flex min-h-screen w-full flex-col bg-[#050505] text-white'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      {isRestrictedUser() ? (
-        // Layout simples para usuários restritos - sem scroll, similar à página admin
-        <div className='flex h-full w-full items-center justify-center'>
-          <div className='relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center'>
-            <div className='absolute inset-0 z-10 rounded-2xl bg-black/60 backdrop-blur-md' />
-            <div className='relative z-20 rounded-2xl px-8 py-6'>
-              <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
-                Welcome to TheBakers{' '}
-                <span className='font-bold text-purple-500'>Hub</span>
-                {username
-                  ? `, ${username}!`
-                  : idDiscord
-                    ? `, ${idDiscord}!`
-                    : ", [User's Name]!"}
-              </h1>
-            </div>
+      <div
+        className='pointer-events-none fixed bottom-0 left-0 top-0 overflow-hidden'
+        style={{ right: 'calc(100vw - 100%)' }}
+      >
+        <div
+          className='absolute -top-20 left-1/2 h-[700px] w-[1000px] -translate-x-1/2 rounded-full blur-[180px]'
+          style={{ backgroundColor: 'rgba(147, 51, 234, 0.15)' }}
+        />
+        <div
+          className='absolute -right-40 top-[30%] h-[500px] w-[600px] rounded-full blur-[150px]'
+          style={{ backgroundColor: 'rgba(139, 92, 246, 0.10)' }}
+        />
+        <div
+          className='absolute -left-32 top-[55%] h-[450px] w-[550px] rounded-full blur-[140px]'
+          style={{ backgroundColor: 'rgba(162, 28, 175, 0.10)' }}
+        />
+        <div
+          className='absolute bottom-[10%] left-1/2 h-[400px] w-[700px] -translate-x-1/3 rounded-full blur-[160px]'
+          style={{ backgroundColor: 'rgba(147, 51, 234, 0.08)' }}
+        />
+        <div
+          className='absolute right-1/4 top-[15%] h-[300px] w-[400px] rounded-full blur-[120px]'
+          style={{ backgroundColor: 'rgba(167, 139, 250, 0.08)' }}
+        />
+        <div
+          className='absolute bottom-[40%] left-1/4 h-[350px] w-[450px] rounded-full blur-[130px]'
+          style={{ backgroundColor: 'rgba(168, 85, 247, 0.07)' }}
+        />
+      </div>
+      <div
+        className='pointer-events-none fixed bottom-0 left-0 top-0 opacity-[0.02]'
+        style={{
+          right: 'calc(100vw - 100%)',
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {shouldShowRestrictedHome(userRoles) ? (
+        <div className='relative z-10 mx-auto flex min-h-screen w-full max-w-[1720px] items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>
+          <div className='w-full max-w-3xl rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm'>
+            <h1 className='text-3xl font-bold text-white md:text-4xl'>
+              Welcome back{username ? `, ${username}` : idDiscord ? `, ${idDiscord}` : ''}.
+            </h1>
+            <p className='mt-4 text-neutral-400'>
+              Your account has restricted access mode enabled.
+            </p>
           </div>
         </div>
       ) : (
         <>
-          {/* Sessão Hero: Mensagem + Cards + Seta */}
-          <section
-            id='hero'
-            className='flex min-h-screen w-full flex-col items-center justify-center px-4'
-          >
-            <div className='relative mx-auto mt-12 flex w-full max-w-3xl flex-col items-center justify-center pb-8 pt-16'>
-              <div className='absolute inset-0 z-10 rounded-2xl bg-black/60 backdrop-blur-md' />
-              <div className='relative z-20 rounded-2xl px-8 py-6'>
-                <h1 className='text-center text-3xl font-bold text-white drop-shadow-lg md:text-4xl'>
-                  Welcome to TheBakers
-                  <span className='font-extrabold text-purple-500'>Hub</span>
-                  {username
-                    ? `, ${username}!`
-                    : idDiscord
-                      ? `, ${idDiscord}!`
-                      : ", [User's Name]!"}
-                </h1>
-                <p className='mt-4 max-w-2xl text-center text-base text-gray-200 md:text-lg'>
-                  At The Bakers, we strive to bring you the best experience in
-                  managing your schedules and pricing. Explore our offerings and
-                  see how we can help you achieve more.
-                </p>
-              </div>
-            </div>
-            {/* Seção de serviços - apenas para usuários que não são restritos */}
-            {!isRestrictedUser() && (
-              <div className='relative z-10 mx-auto max-w-[90%]'>
-                <div className='flex w-full flex-col items-center'>
-                  <img
-                    src={services}
-                    alt='Services'
-                    className='w-96 drop-shadow-lg'
-                    draggable={false}
-                  />
-                </div>
-                {/* Seção Hot Items e Categorias */}
-                {loadingServices ? (
-                  <div className='col-span-full flex h-40 items-center justify-center'>
-                    <span className='text-lg text-white'>
-                      Loading services...
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    {/* Hot Services */}
-                    {categories.length > 0 &&
-                      servicesList.some((s) => s.hotItem) && (
-                        <div className='mb-8 flex flex-col gap-4'>
-                          <div className='flex items-center gap-2'>
-                            <span className='mb-2 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
-                              🔥 HOT SERVICES
-                            </span>
-                          </div>
-                          <div className='relative px-8 py-12'>
-                            <Swiper
-                              modules={[Pagination, Autoplay]}
-                              spaceBetween={24}
-                              slidesPerView={1}
-                              breakpoints={{
-                                640: {
-                                  slidesPerView: 2,
-                                },
-                                768: {
-                                  slidesPerView: 3,
-                                },
-                                1024: {
-                                  slidesPerView: 4,
-                                },
-                                1280: {
-                                  slidesPerView: 5,
-                                },
-                              }}
-                              pagination={{
-                                clickable: true,
-                                dynamicBullets: true,
-                              }}
-                              autoplay={{
-                                delay: 5000,
-                                disableOnInteraction: false,
-                                pauseOnMouseEnter: true,
-                              }}
-                              speed={800}
-                              loop={isPaginationActive(
-                                servicesList.filter((s) => s.hotItem).length
-                              )}
-                              className='w-full'
-                              onSwiper={(swiper) => {
-                                swiperRefs.current['hot-services'] = swiper
-                              }}
-                            >
-                              {servicesList
-                                .filter((s) => s.hotItem)
-                                .map((service) => (
-                                  <SwiperSlide key={service.id}>
-                                    <div
-                                      className={`relative flex h-[220px] w-full flex-col justify-between overflow-hidden rounded-xl border border-purple-500 bg-zinc-900 p-4 shadow-lg transition-transform hover:z-10 hover:scale-105 sm:p-6`}
-                                    >
-                                      <div className='relative z-10 flex-1'>
-                                        <div className='mb-2 line-clamp-2 text-base font-bold text-white sm:text-lg'>
-                                          {service.name}
-                                        </div>
-                                        <div className='mb-4 line-clamp-3 text-xs text-gray-300 sm:text-sm'>
-                                          {service.description}
-                                        </div>
-                                      </div>
-                                      <div className='relative z-10 mt-auto text-base font-bold text-purple-500 sm:text-lg'>
-                                        {service.price.toLocaleString('en-US')}g
-                                      </div>
-                                    </div>
-                                  </SwiperSlide>
-                                ))}
-                            </Swiper>
-
-                            {/* Setas de navegação para Hot Services - apenas se houver paginação ativa */}
-                            {(() => {
-                              const hotServices = servicesList.filter(
-                                (s) => s.hotItem
-                              )
-                              const totalSlides = hotServices.length
-                              const hasPagination =
-                                isPaginationActive(totalSlides)
-
-                              return hasPagination ? (
-                                <>
-                                  <div className='absolute left-0 top-1/2 z-30 flex -translate-x-16 -translate-y-1/2'>
-                                    <button
-                                      onClick={() =>
-                                        handlePrevSlide('hot-services')
-                                      }
-                                      className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
-                                      aria-label='Previous slide for Hot Services'
-                                    >
-                                      <CaretLeft size={24} />
-                                    </button>
-                                  </div>
-
-                                  <div className='absolute right-0 top-1/2 z-30 flex -translate-y-1/2 translate-x-16'>
-                                    <button
-                                      onClick={() =>
-                                        handleNextSlide('hot-services')
-                                      }
-                                      className='flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/80 text-white shadow-lg transition-all hover:scale-110 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400'
-                                      aria-label='Next slide for Hot Services'
-                                    >
-                                      <CaretRight size={24} />
-                                    </button>
-                                  </div>
-                                </>
-                              ) : null
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                    {/* Categorias como Cards */}
-                    {categories.length > 0 && (
-                      <div className='mb-8 flex flex-col gap-4'>
-                        <div className='flex items-center gap-2'>
-                          <span className='mb-2 w-full rounded-lg bg-zinc-800/80 px-4 py-2 text-center text-xl font-bold text-white shadow'>
-                            CATEGORIES
-                          </span>
-                        </div>
-                        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-                          {categories.map((category) => {
-                            const servicesInCategory = servicesList.filter(
-                              (service) =>
-                                service.serviceCategoryId === category.id
-                            )
-                            const serviceCount = servicesInCategory.length
-
-                            return (
-                              <div
-                                key={category.id}
-                                className='group flex h-[160px] cursor-pointer flex-col justify-between rounded-xl border border-zinc-700 bg-zinc-900 p-4 shadow-lg transition-all hover:scale-105 hover:border-purple-500 hover:bg-zinc-800 sm:p-6'
-                                onClick={() => handleCategoryClick(category)}
-                              >
-                                <div className='text-center'>
-                                  <div className='mb-2 flex justify-center'>
-                                    {category.name.toLowerCase() === 'keys' ? (
-                                      <Key size={32} className='text-purple-500' />
-                                    ) : (
-                                      <CastleTurret size={32} className='text-purple-500' />
-                                    )}
-                                  </div>
-                                  <h3 className='line-clamp-2 text-base font-bold text-white sm:text-lg'>
-                                    {category.name}
-                                  </h3>
-                                </div>
-                                <div className='text-center text-xs text-gray-300 sm:text-sm'>
-                                  {serviceCount} service
-                                  {serviceCount !== 1 ? 's' : ''} available
-                                </div>
-                                <div className='text-center text-xs text-purple-400'>
-                                  Click to view services
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Sessão Schedule */}
-            <section
-              id='schedule'
-              className='relative z-10 mb-10 flex min-h-screen w-full flex-col items-center'
-            >
-              <div className='-mt-20 flex w-full flex-col items-center'>
-                <img
-                  src={schedule}
-                  alt='Schedule'
-                  className='w-96 drop-shadow-lg'
-                />
-              </div>
-              <div className='relative z-10 -mt-20 w-[96%] rounded-2xl bg-black/30 p-10 backdrop-blur-md'>
-                <div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7'>
-                  {(() => {
-                    // Dias em inglês
-                    const daysEn = [
-                      'Sunday',
-                      'Monday',
-                      'Tuesday',
-                      'Wednesday',
-                      'Thursday',
-                      'Friday',
-                      'Saturday',
-                    ]
-                    const todayDate = getCurrentESTDate()
-                    return Array.from({ length: 7 }, (_, colIdx) => {
-                      // Calcula a data do dia da coluna (hoje + colIdx) em EST
-                      const columnDate = addDays(todayDate, colIdx)
-                      const dayNumber = columnDate
-                        .getDate()
-                        .toString()
-                        .padStart(2, '0')
-                      const monthNumber = (columnDate.getMonth() + 1)
-                        .toString()
-                        .padStart(2, '0')
-                      const weekDayIdx = columnDate.getDay()
-                      const columnDateString = format(columnDate, 'yyyy-MM-dd')
-                      // Nova ordem de prioridade dos times
-                      const teamOrder = [
-                        'Garçom',
-                        'Confeiteiros',
-                        'Jackfruit',
-                        'Insanos',
-                        'APAE',
-                        'Los Renegados',
-                        'DTM',
-                        'KFFC',
-                        'Greensky',
-                        'Guild Azralon BR#1',
-                        'Guild Azralon BR#2',
-                        'Rocket',
-                        'Booty Reaper',
-                        'Padeirinho',
-                        'Milharal',
-                        'Kiwi',
-                        'Bastard Munchen',
-                      ]
-                      // Filtra as runs dos times especiais (MPlus, Leveling e PVP)
-                      const filteredRuns = (
-                        weekRuns[columnDateString] || []
-                      ).filter(
-                        (run) =>
-                          run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
-                          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING &&
-                          run.idTeam !== import.meta.env.VITE_TEAM_PVP
-                      )
-
-                      // Ordena as runs do dia pelo horário primeiro, depois pela prioridade do time
-                      const runsSorted = filteredRuns.slice().sort((a, b) => {
-                        if (!a?.time || !b?.time) return 0
-                        const [ha, ma] = a.time.split(':').map(Number)
-                        const [hb, mb] = b.time.split(':').map(Number)
-                        if (ha !== hb) return ha - hb
-                        if (ma !== mb) return ma - mb
-                        // Se o horário for igual, ordena pela ordem dos times
-                        const pa = teamOrder.indexOf(a.team)
-                        const pb = teamOrder.indexOf(b.team)
-                        if (pa === -1 && pb === -1) return 0
-                        if (pa === -1) return 1
-                        if (pb === -1) return -1
-                        return pa - pb
-                      })
-                      const runsToShow = runsSorted.length ? runsSorted : []
-                      return (
-                        <div
-                          key={daysEn[weekDayIdx] + monthNumber + dayNumber}
-                          className='flex h-[900px] w-full flex-col rounded-2xl bg-zinc-900 p-4 shadow-lg sm:p-6'
-                        >
-                          <div className='mb-4 text-2xl font-semibold text-white'>
-                            <span className='inline-flex items-center gap-2'>
-                              {daysEn[weekDayIdx]} {monthNumber}/{dayNumber}
-                              {colIdx === 0 && (
-                                <span className='rounded bg-purple-400 px-2 py-1 text-xs font-bold text-black'>
-                                  Today
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <div
-                            className='custom-scrollbar relative flex flex-col gap-2 pr-1'
-                            style={{ minHeight: 600, overflowY: 'auto' }}
-                          >
-                            {loadingRuns ? (
-                              <div className='flex h-full flex-1 items-center justify-center text-center text-gray-400'>
-                                <div className='flex flex-col items-center gap-2'>
-                                  <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
-                                  <span>Loading runs...</span>
-                                </div>
-                              </div>
-                            ) : runsToShow.length === 0 ? (
-                              <div className='flex h-full flex-1 items-center justify-center text-center text-gray-400'>
-                                No runs scheduled
-                              </div>
-                            ) : (
-                              runsToShow.map((run) => (
-                                <div
-                                  key={run.id}
-                                  className='flex cursor-pointer flex-col rounded-xl bg-zinc-800 p-4 shadow'
-                                  style={{
-                                    background:
-                                      teamColors[run.team] || undefined,
-                                  }}
-                                  onDoubleClick={() =>
-                                    navigate(`/bookings-na/run/${run.id}`)
-                                  }
-                                >
-                                  <div className='mb-1 text-lg font-bold text-white'>
-                                    {formatTime12h(run.time)} -{' '}
-                                    <span className='text-base'>
-                                      {run.difficulty}
-                                      {run.loot ? ` - ${run.loot}` : ''}
-                                    </span>
-                                  </div>
-                                  {typeof run.maxBuyers === 'number' &&
-                                    typeof run.slotAvailable === 'number' && (
-                                      <div className='text-xs text-white'>
-                                        Spots:{' '}
-                                        <span className='font-semibold text-white'>
-                                          {run.slotAvailable}
-                                        </span>
-                                      </div>
-                                    )}
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })
-                  })()}
-                </div>
-              </div>
-            </section>
-          </section>
-        </>
-      )}
-
-      {/* Dialog para mostrar serviços da categoria */}
-      {isDialogOpen && selectedCategory && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-          <div className='relative mx-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-zinc-900 p-6 shadow-2xl'>
-            {/* Header do Dialog */}
-            <div className='mb-6 flex items-center justify-between border-b border-zinc-700 pb-4'>
-              <div className='flex items-center gap-3'>
-                {selectedCategory.name.toLowerCase() === 'keys' ? (
-                  <Key size={28} className='text-purple-500' />
-                ) : (
-                  <CastleTurret size={28} className='text-purple-500' />
-                )}
-                <h2 className='text-2xl font-bold text-white'>
-                  {selectedCategory.name}
-                </h2>
-              </div>
-              <button
-                onClick={handleCloseDialog}
-                className='flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-white transition-colors hover:bg-zinc-700'
+          <section className='relative z-10 pb-12 pt-16 sm:pb-16 sm:pt-20'>
+            <div className='mx-auto w-full max-w-[1720px] px-4 text-center sm:px-6 lg:px-12 2xl:px-16'>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
               >
-                <X size={20} />
-              </button>
+                <div className='mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 backdrop-blur-sm'>
+                  <div className='h-2 w-2 animate-pulse rounded-full bg-purple-500' />
+                  <span className='text-sm font-medium uppercase tracking-wider text-neutral-400'>
+                    The Bakers
+                  </span>
+                </div>
+                <h1 className='font-space-grotesk text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl'>
+                  <span className='text-white'>Premium</span>{' '}
+                  <span className='bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-600 bg-clip-text text-transparent'>
+                    Catalog
+                  </span>
+                </h1>
+                <p className='mx-auto mt-4 max-w-xl text-lg leading-relaxed text-neutral-400'>
+                  Explore our full collection of products and services. Everything
+                  you need, organized by category.
+                </p>
+                <div className='mx-auto mt-8 h-px w-24 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent' />
+              </motion.div>
+            </div>
+          </section>
+
+          <motion.section
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className='sticky top-0 z-20 border-y border-white/5 bg-black/60 py-4 backdrop-blur-xl'
+          >
+            <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
+              <div className='flex items-center gap-3 md:hidden'>
+                <button
+                  onClick={() => setFiltersOpen((prev) => !prev)}
+                  className='flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium uppercase tracking-wide text-gray-300 transition-all duration-300'
+                >
+                  {activeCategory
+                    ? categoriesWithServices.find(
+                        (c) => String(c.category.id) === activeCategory
+                      )?.category.name || 'Filter'
+                    : 'All Categories'}
+                  <CaretDown
+                    size={16}
+                    className={`transition-transform duration-300 ${filtersOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <button
+                  onClick={() =>
+                    document.getElementById('schedule-section')?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }
+                  className='ml-auto inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium uppercase tracking-wide text-gray-400 transition-all duration-300 hover:border-white/20 hover:text-white'
+                >
+                  <CalendarBlank size={14} />
+                  Schedule
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {filtersOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className='overflow-hidden md:hidden'
+                  >
+                    <div className='flex flex-wrap gap-2 pt-3'>
+                      <button
+                        onClick={() => {
+                          setActiveCategory(null)
+                          setFiltersOpen(false)
+                        }}
+                        className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium uppercase tracking-wide transition-all duration-300 ${
+                          !activeCategory
+                            ? 'border border-purple-500/30 bg-purple-500/20 text-purple-300'
+                            : 'border border-white/10 text-gray-400'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {categoriesWithServices.map(({ category }) => (
+                        <button
+                          key={category.id}
+                          onClick={() => {
+                            setActiveCategory(String(category.id))
+                            setFiltersOpen(false)
+                          }}
+                          className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium uppercase tracking-wide transition-all duration-300 ${
+                            activeCategory === String(category.id)
+                              ? 'border border-purple-500/30 bg-purple-500/20 text-purple-300'
+                              : 'border border-white/10 text-gray-400'
+                          }`}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className='hidden flex-wrap items-center gap-3 md:flex'>
+                <button
+                  onClick={() => setActiveCategory(null)}
+                  className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium uppercase tracking-wide transition-all duration-300 ${
+                    !activeCategory
+                      ? 'border border-purple-500/30 bg-purple-500/20 text-purple-300'
+                      : 'border border-white/10 text-gray-400 hover:border-white/20 hover:text-white'
+                  }`}
+                >
+                  All
+                </button>
+                {categoriesWithServices.map(({ category }) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(String(category.id))}
+                    className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium uppercase tracking-wide transition-all duration-300 ${
+                      activeCategory === String(category.id)
+                        ? 'border border-purple-500/30 bg-purple-500/20 text-purple-300'
+                        : 'border border-white/10 text-gray-400 hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+                <div className='h-5 w-px shrink-0 bg-white/10' />
+                <button
+                  onClick={() =>
+                    document.getElementById('schedule-section')?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }
+                  className='inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-5 py-2 text-sm font-medium uppercase tracking-wide text-gray-400 transition-all duration-300 hover:border-white/20 hover:text-white'
+                >
+                  <CalendarBlank size={14} />
+                  Schedule
+                </button>
+              </div>
+            </div>
+          </motion.section>
+
+          <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
+            {loadingServices ? (
+              <div className='py-12 text-center text-gray-400'>Loading services...</div>
+            ) : (
+              <AnimatePresence mode='wait'>
+                <motion.div
+                  key={activeCategory ?? 'all'}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {filteredCategories.map(({ category, services }) => (
+                    <section key={category.id} className='pt-12 first:pt-8'>
+                      <div className='mb-8'>
+                        <div className='mb-2 flex items-center gap-3'>
+                          <div className='h-px flex-1 bg-gradient-to-r from-purple-500/30 to-transparent' />
+                          <h2 className='font-space-grotesk text-2xl font-bold tracking-tight text-white sm:text-3xl'>
+                            {category.name}
+                          </h2>
+                          <div className='h-px flex-1 bg-gradient-to-l from-purple-500/30 to-transparent' />
+                        </div>
+                        <p className='text-center text-sm text-neutral-500'>
+                          {services.length} service{services.length !== 1 ? 's' : ''} available
+                        </p>
+                      </div>
+
+                      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5'>
+                        {services.map((service) => (
+                          <div
+                            key={service.id}
+                            className='group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/20'
+                          >
+                            <div className='absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
+                            <div className='flex h-full flex-col p-5 sm:p-6'>
+                              <div className='mb-2 flex items-start gap-2'>
+                                <h3 className='line-clamp-1 flex-1 text-lg font-bold text-white transition-colors duration-300 group-hover:text-purple-100'>
+                                  {service.name}
+                                </h3>
+                                {service.hotItem && (
+                                  <span className='inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400'>
+                                    <Fire size={12} />
+                                    Hot
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className='line-clamp-3 mb-4 flex-1 text-sm leading-relaxed text-gray-400'>
+                                {service.description?.replace(/<[^>]*>/g, '') ||
+                                  'No description available.'}
+                              </p>
+
+                              <div className='border-t border-white/5 pt-3'>
+                                <span className='text-[10px] uppercase tracking-wider text-gray-500'>
+                                  Price
+                                </span>
+                                <p className='text-xl font-bold text-amber-400'>
+                                  {service.price.toLocaleString('en-US')}{' '}
+                                  <span className='text-xs font-medium text-amber-500/70'>
+                                    gold
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
+
+          <section
+            id='schedule-section'
+            className='relative z-10 mx-auto w-full max-w-[1720px] px-4 pb-16 pt-16 sm:px-6 lg:px-12 2xl:px-16'
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className='mb-8'
+            >
+              <div className='mb-2 flex items-center gap-3'>
+                <div className='h-px flex-1 bg-gradient-to-r from-purple-500/30 to-transparent' />
+                <h2 className='font-space-grotesk inline-flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-3xl'>
+                  <CalendarBlank size={28} className='text-purple-400' />
+                  Weekly Schedule
+                </h2>
+                <div className='h-px flex-1 bg-gradient-to-l from-purple-500/30 to-transparent' />
+              </div>
+              <p className='text-center text-sm text-neutral-500'>
+                Upcoming runs for the next 7 days (EST)
+              </p>
+            </motion.div>
+
+            <div className='mb-4 mt-4'>
+              <div className='relative sm:hidden'>
+                <button
+                  onClick={() => setMobileDateOpen((prev) => !prev)}
+                  className='inline-flex w-full cursor-pointer items-center gap-2 rounded-lg border border-purple-500/20 bg-purple-500/5 px-3 py-2 text-xs transition-colors'
+                >
+                  <CalendarBlank size={16} className='text-purple-400' />
+                  <span className='font-semibold uppercase tracking-wide text-purple-300'>
+                    {formatDateLabel(activeDate, dates[0], dates[1])}
+                  </span>
+                  <span className='text-neutral-500'>&mdash; {activeDate}</span>
+                  <CaretDown
+                    size={16}
+                    className={`ml-auto text-purple-300 transition-transform ${mobileDateOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {mobileDateOpen && (
+                  <div className='absolute z-30 mt-2 w-full rounded-lg border border-white/10 bg-[#0f0818] p-2 shadow-xl'>
+                    <div className='flex flex-col gap-2'>
+                      {dates.map((date) => {
+                        const isActive = date === activeDate
+                        return (
+                          <button
+                            key={date}
+                            onClick={() => {
+                              setActiveDate(date)
+                              setMobileDateOpen(false)
+                            }}
+                            className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                              isActive
+                                ? 'border-purple-500/20 bg-purple-500/10'
+                                : 'border-white/10 bg-white/[0.04] hover:border-white/20'
+                            }`}
+                          >
+                            <CalendarBlank
+                              size={16}
+                              className={isActive ? 'text-purple-400' : 'text-gray-500'}
+                            />
+                            <span
+                              className={`whitespace-nowrap font-semibold uppercase tracking-wide ${
+                                isActive ? 'text-purple-300' : 'text-gray-300'
+                              }`}
+                            >
+                              {formatDateLabel(date, dates[0], dates[1])}
+                            </span>
+                            <span className='whitespace-nowrap text-xs text-neutral-500'>
+                              &mdash; {date}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className='hidden sm:block'>
+                <div className='grid grid-cols-7 gap-2'>
+                  {dates.slice(0, 7).map((date) => {
+                    const isActive = date === activeDate
+                    return (
+                      <button
+                        key={date}
+                        onClick={() => setActiveDate(date)}
+                        className={`inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border px-2 py-2 text-xs transition-colors ${
+                          isActive
+                            ? 'border-purple-500/20 bg-purple-500/5'
+                            : 'border-white/10 bg-white/[0.04] hover:border-white/20'
+                        }`}
+                      >
+                        <CalendarBlank
+                          size={14}
+                          className={isActive ? 'text-purple-400' : 'text-gray-500'}
+                        />
+                        <span
+                          className={`whitespace-nowrap font-semibold uppercase tracking-wide ${
+                            isActive ? 'text-purple-300' : 'text-gray-300'
+                          }`}
+                        >
+                          {formatDateLabel(date, dates[0], dates[1])}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className='mt-2 flex items-center gap-3'>
+                <div className='h-px flex-1 bg-white/5' />
+                <span className='whitespace-nowrap text-xs text-neutral-600'>
+                  {loadingRuns
+                    ? 'Loading...'
+                    : `${scheduleRuns.length} run${scheduleRuns.length !== 1 ? 's' : ''}`}
+                </span>
+              </div>
             </div>
 
-            {/* Conteúdo do Dialog */}
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-              {servicesList
-                .filter(
-                  (service) => service.serviceCategoryId === selectedCategory.id
-                )
-                .map((service) => (
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              {loadingRuns &&
+                Array.from({ length: 4 }).map((_, idx) => (
                   <div
-                    key={service.id}
-                    className='rounded-xl border border-zinc-700 bg-zinc-800 p-4 shadow-lg transition-transform hover:scale-105'
+                    key={`schedule-skeleton-${idx}`}
+                    className='animate-pulse rounded-xl border border-white/10 bg-white/[0.04] p-5'
                   >
-                    <div className='mb-2 text-lg font-bold text-white'>
-                      {service.name}
+                    <div className='mb-3 flex items-center justify-between'>
+                      <div className='h-5 w-32 rounded bg-white/10' />
+                      <div className='h-5 w-14 rounded-full bg-white/10' />
                     </div>
-                    <div className='mb-4 text-sm text-gray-300'>
-                      {service.description}
+                    <div className='mb-4 h-4 w-24 rounded bg-white/10' />
+                    <div className='mb-4 space-y-2'>
+                      <div className='h-4 w-28 rounded bg-white/10' />
+                      <div className='h-4 w-36 rounded bg-white/10' />
                     </div>
-                    <div className='text-lg font-bold text-purple-500'>
-                      {service.price.toLocaleString('en-US')}g
+                    <div className='border-t border-white/5 pt-3'>
+                      <div className='h-4 w-24 rounded bg-white/10' />
+                    </div>
+                  </div>
+                ))}
+
+              {!loadingRuns && scheduleRuns.length === 0 && (
+                <div className='col-span-full rounded-xl border border-white/10 bg-white/[0.03] p-6 text-center'>
+                  <p className='text-sm text-neutral-400'>
+                    No runs available for this date.
+                  </p>
+                </div>
+              )}
+
+              {!loadingRuns &&
+                scheduleRuns.map((run, index) => (
+                  <div
+                    key={`${run.id}-${index}`}
+                    className='group rounded-xl border border-white/10 bg-white/[0.04] p-5 transition-all duration-300 hover:border-purple-500/15'
+                    onDoubleClick={() => navigate(`/bookings-na/run/${run.id}`)}
+                  >
+                    <div className='mb-1 flex items-start justify-between'>
+                      <h4 className='line-clamp-1 min-w-0 flex-1 text-base font-bold text-white'>
+                        {run.team || run.name || 'Run'}
+                      </h4>
+                      <span className='ml-2 shrink-0 rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-purple-300'>
+                        {run.difficulty || 'Run'}
+                      </span>
+                    </div>
+
+                    <div className='mb-3 flex items-center gap-1.5'>
+                      <Sword size={14} className='shrink-0 text-purple-400/60' />
+                      <span className='text-xs text-gray-500'>{run.raid || 'Raid'}</span>
+                    </div>
+
+                    <div className='mb-3 space-y-2'>
+                      <div className='flex items-center gap-2 text-sm text-gray-400'>
+                        <Clock size={14} className='shrink-0 text-purple-400/60' />
+                        <span>{formatTime12h(run.time)} EST</span>
+                      </div>
+                      <div className='flex items-center gap-2 text-sm text-gray-400'>
+                        <ShieldChevron
+                          size={14}
+                          className='shrink-0 text-purple-400/60'
+                        />
+                        <span>
+                          Loot:{' '}
+                          <span className='font-medium text-white/80'>
+                            {run.loot || '-'}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className='border-t border-white/5 pt-3'>
+                      <div className='flex items-center gap-2'>
+                        <Users size={14} className='text-purple-400/60' />
+                        <span className='text-sm text-gray-400'>
+                          <span
+                            className={`font-semibold ${
+                              Number(run.slotAvailable) > 0
+                                ? 'text-green-400'
+                                : 'text-red-400'
+                            }`}
+                          >
+                            {Number(run.slotAvailable) || 0}
+                          </span>{' '}
+                          slot{Number(run.slotAvailable) === 1 ? '' : 's'} available
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
             </div>
+          </section>
+        </>
+      )}
+      <footer className='relative z-10 border-t border-white/5 bg-black/50 backdrop-blur-sm'>
+        <div className='mx-auto w-full max-w-[1720px] px-4 py-8 sm:px-6 lg:px-12 2xl:px-16'>
+          <div className='flex flex-col items-center gap-4'>
+            <p
+              className='flex w-full select-none items-center justify-center gap-3 text-center text-lg font-semibold uppercase text-white/60'
+              style={{ fontFamily: 'Montserrat, sans-serif', letterSpacing: '0.5em' }}
+            >
+              <span>THE</span>
+              <span className='text-[10px] leading-none text-purple-500'>●</span>
+              <span>BAKERS</span>
+            </p>
+            <p className='text-xs text-neutral-600'>
+              &copy; {new Date().getFullYear()} The Bakers. All rights reserved.
+            </p>
           </div>
         </div>
-      )}
+      </footer>
     </div>
   )
 }
 
-const teamColors: { [key: string]: string } = {
-  Garçom: '#2563EB',
-  Confeiteiros: '#EC4899',
-  Jackfruit: '#16A34A',
-  Insanos: '#1E40AF',
-  APAE: '#F87171',
-  'Los Renegados': '#F59E0B',
-  DTM: '#8B5CF6',
-  KFFC: '#047857',
-  Greensky: '#BE185D',
-  'Guild Azralon BR#1': '#0D9488',
-  'Guild Azralon BR#2': '#1D4ED8',
-  Rocket: '#B91C1C',
-  'Booty Reaper': '#4C1D95',
-  Padeirinho: '#EA580C',
-  Milharal: '#FEF08A',
-  Kiwi: '#84CC16',
-  'Bastard Munchen': '#D97706',
+function formatDateLabel(
+  date: string | null,
+  todayDate?: string,
+  tomorrowDate?: string
+) {
+  if (!date) return 'Select Date'
+  if (todayDate && date === todayDate) return 'Today'
+  if (tomorrowDate && date === tomorrowDate) return 'Tomorrow'
+
+  try {
+    return format(parseISO(date), 'EEE, MMM d')
+  } catch {
+    return date
+  }
 }
 
-// Função utilitária para converter "HH:mm" para 12h com AM/PM
 function formatTime12h(time: string) {
   if (!time) return ''
   const [h, m] = time.split(':').map(Number)
-  if (isNaN(h) || isNaN(m)) return time
+  if (Number.isNaN(h) || Number.isNaN(m)) return time
   const hour = ((h + 11) % 12) + 1
   const ampm = h >= 12 ? 'PM' : 'AM'
   return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
