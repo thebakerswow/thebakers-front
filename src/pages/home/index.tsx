@@ -485,13 +485,14 @@ export function HomePage() {
                         'Kiwi',
                         'Bastard Munchen',
                       ]
-                      // Filtra as runs dos times MPlus e Leveling
+                      // Filtra as runs dos times especiais (MPlus, Leveling e PVP)
                       const filteredRuns = (
                         weekRuns[columnDateString] || []
                       ).filter(
                         (run) =>
                           run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
-                          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING
+                          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING &&
+                          run.idTeam !== import.meta.env.VITE_TEAM_PVP
                       )
 
                       // Ordena as runs do dia pelo horário primeiro, depois pela prioridade do time

@@ -21,11 +21,12 @@ import { AdminPage } from './pages/management/admin'
 import backgroundTeste from './assets/background_teste.png'
 import { CheckAccess } from './pages/error-pages/check-access'
 import ManagementServices from './pages/management/management-services'
-import { KeysPage } from './pages/keys'
-import { KeyDetails } from './pages/keys/key-details'
-import { LevelingPage } from './pages/leveling'
-import { LevelingDetails } from './pages/leveling/leveling-details'
-import { RemixPage } from './pages/remix'
+import { KeysPage } from './pages/special-runs/keys-page'
+import { KeyDetails } from './pages/special-runs/keys-details-page'
+import { LevelingPage } from './pages/special-runs/leveling-page'
+import { LevelingDetails } from './pages/special-runs/leveling-details-page'
+import { PvpPage } from './pages/special-runs/pvp-page'
+import { PvpDetails } from './pages/special-runs/pvp-details-page'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/payments'
@@ -101,6 +102,10 @@ export function App() {
                   element={<PrivateRoute element={<LevelingDetails />} />}
                 />
                 <Route
+                  path='/bookings-na/pvp/:id'
+                  element={<PrivateRoute element={<PvpDetails />} />}
+                />
+                <Route
                   path='/admin'
                   element={<PrivateRoute element={<AdminPage />} />}
                 />
@@ -121,8 +126,8 @@ export function App() {
                   element={<PrivateRoute element={<LevelingPage />} />}
                 />
                 <Route
-                  path='/remix'
-                  element={<PrivateRoute element={<RemixPage />} />}
+                  path='/pvp'
+                  element={<PrivateRoute element={<PvpPage />} />}
                 />
                 <Route
                   path='/requests'

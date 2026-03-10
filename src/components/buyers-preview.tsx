@@ -27,7 +27,7 @@ function handleApiError(error: unknown): ErrorDetails {
   return { message: 'Unexpected error', response: error }
 }
 
-export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
+export function BuyersPreview({ runId, runScreen, onClose }: BuyersPreviewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [rows, setRows] = useState<BuyerData[]>([])
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -40,8 +40,8 @@ export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
       if (showLoading) setIsLoading(true)
       try {
         const [runResponse, buyersResponse] = await Promise.all([
-          getRun(runId),
-          getRunBuyers(runId),
+          getRun(runId, runScreen),
+          getRunBuyers(runId, runScreen),
         ])
         const runInfo = runResponse
         setRunData({

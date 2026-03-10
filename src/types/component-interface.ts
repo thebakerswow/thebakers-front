@@ -10,6 +10,7 @@ export interface ErrorComponentProps {
 
 export interface BuyersPreviewProps {
   runId: string
+  runScreen?: 'keys' | 'leveling' | 'pvp' | 'traditional'
   onClose: () => void
 }
 

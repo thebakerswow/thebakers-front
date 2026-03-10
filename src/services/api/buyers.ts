@@ -1,4 +1,5 @@
 import { api } from '../axiosConfig'
+import { RUN_FLAG_QUERY_PARAM, RunScreenFlag } from '../../constants/run-flags'
 
 export const createBuyer = async (buyerData: any) => {
   const response = await api.post('/buyer', buyerData)
@@ -20,8 +21,9 @@ export const getBuyers = async (runId: string) => {
   return response.data.info
 }
 
-export const getRunBuyers = async (runId: string) => {
-  const response = await api.get(`/run/${runId}/buyers`)
+export const getRunBuyers = async (runId: string, runScreen?: RunScreenFlag) => {
+  const params = runScreen ? { [RUN_FLAG_QUERY_PARAM]: runScreen } : undefined
+  const response = await api.get(`/run/${runId}/buyers`, { params })
   return response.data.info
 }
 

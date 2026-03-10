@@ -1,13 +1,18 @@
 import { api } from '../axiosConfig'
+import { RUN_FLAG_QUERY_PARAM, RunScreenFlag } from '../../constants/run-flags'
 
-export const getRuns = async (date?: string) => {
-  const params = date ? { date } : {}
+export const getRuns = async (date?: string, runScreen?: RunScreenFlag) => {
+  const params = {
+    ...(date ? { date } : {}),
+    ...(runScreen ? { [RUN_FLAG_QUERY_PARAM]: runScreen } : {}),
+  }
   const response = await api.get('/run', { params })
   return response.data.info
 }
 
-export const getRun = async (runId: string) => {
-  const response = await api.get(`/run/${runId}`)
+export const getRun = async (runId: string, runScreen?: RunScreenFlag) => {
+  const params = runScreen ? { [RUN_FLAG_QUERY_PARAM]: runScreen } : undefined
+  const response = await api.get(`/run/${runId}`, { params })
   return response.data.info
 }
 
@@ -23,6 +28,11 @@ export const getRunAttendance = async (runId: string) => {
 
 export const createRun = async (runData: any) => {
   const response = await api.post('/run', runData)
+  return response.data
+}
+
+export const createSpecialRun = async (date: string, runType: string) => {
+  const response = await api.post('/run/special', { date, runType })
   return response.data
 }
 

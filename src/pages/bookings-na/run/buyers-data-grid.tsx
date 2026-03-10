@@ -869,6 +869,7 @@ export function BuyersDataGrid({
     }
   }
 
+
   const renderStatusSelect = (buyer: BuyerData) => (
     <Select
       value={buyer.status || ''}

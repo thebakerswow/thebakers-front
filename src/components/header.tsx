@@ -21,7 +21,7 @@ import {
   ClipboardText,
   User,
   CurrencyDollar,
-  Fire,
+  Sword,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -424,12 +424,12 @@ export function Header() {
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
-                    navigate('/remix')
+                    navigate('/pvp')
                     handleBookingsMenuClose()
                   }}
                   sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
-                  <Fire size={20} /> Remix
+                  <Sword size={20} /> PVP
                 </MenuItem>
               </Menu>
 
@@ -645,11 +645,11 @@ export function Header() {
           Leveling
         </MenuItem>
         <MenuItem
-          onClick={() => handleMobileNavigation('/remix')}
+          onClick={() => handleMobileNavigation('/pvp')}
           sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-          <Fire size={20} />
-          Remix
+          <Sword size={20} />
+          PVP
         </MenuItem>
       </Menu>
 

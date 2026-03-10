@@ -40,10 +40,11 @@ export interface EditRunProps {
 
 export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
-  // Detecta se é uma run de Keys ou Leveling baseado no runType ou idTeam
+  // Detecta se e uma run especial (Keys, Leveling ou PVP)
   const isKeysRun = run.idTeam === import.meta.env.VITE_TEAM_MPLUS
   const isLevelingRun = run.idTeam === import.meta.env.VITE_TEAM_LEVELING
-  const isSpecialRun = isKeysRun || isLevelingRun
+  const isPvpRun = run.idTeam === import.meta.env.VITE_TEAM_PVP
+  const isSpecialRun = isKeysRun || isLevelingRun || isPvpRun
 
   const [formData, setFormData] = useState({
     name: run.name
@@ -73,12 +74,14 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        // Se for uma run de Keys, busca membros do time M+, se for Leveling busca do time Leveling, senão busca do time Prefeito
+        // Runs especiais buscam membros do time da propria run
         let teamId
         if (isKeysRun) {
           teamId = import.meta.env.VITE_TEAM_MPLUS
         } else if (isLevelingRun) {
           teamId = import.meta.env.VITE_TEAM_LEVELING
+        } else if (isPvpRun) {
+          teamId = import.meta.env.VITE_TEAM_PVP
         } else {
           teamId = import.meta.env.VITE_TEAM_PREFEITO
         }
@@ -99,7 +102,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
       }
     }
     fetchOptions()
-  }, [onError, isKeysRun, isLevelingRun])
+  }, [onError, isKeysRun, isLevelingRun, isPvpRun])
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -108,7 +111,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    // Só valida o horário se não for uma run de Keys ou Leveling
+    // So valida o horario se nao for uma run especial
     if (!isSpecialRun && !formData.time) {
       if (onError) {
         onError({ message: 'Time is required', response: null })

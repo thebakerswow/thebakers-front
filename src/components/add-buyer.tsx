@@ -62,7 +62,8 @@ export function AddBuyer({
   const shouldHideDolarField = (): boolean => {
     return (
       run.idTeam === import.meta.env.VITE_TEAM_MPLUS ||
-      run.idTeam === import.meta.env.VITE_TEAM_LEVELING
+      run.idTeam === import.meta.env.VITE_TEAM_LEVELING ||
+      run.idTeam === import.meta.env.VITE_TEAM_PVP
     )
   }
 
