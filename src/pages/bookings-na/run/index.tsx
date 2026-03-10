@@ -684,6 +684,7 @@ export function RunDetails() {
                     onBuyerStatusEdit={reloadAllData}
                     onBuyerNameNoteEdit={reloadAllData}
                     onDeleteSuccess={reloadAllData}
+                    slotAvailable={runData?.slotAvailable ?? 0}
                     runIsLocked={runData?.runIsLocked ?? false}
                     runIdTeam={runData?.idTeam}
                     raidLeaders={runData?.raidLeaders}

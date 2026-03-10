@@ -55,6 +55,7 @@ interface BuyersGridProps {
   onBuyerStatusEdit: () => void
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
+  slotAvailable?: number
   runIsLocked?: boolean // Added runIsLocked prop
   runIdTeam?: string // Adicionada para permissão correta
   raidLeaders?: {
@@ -120,6 +121,7 @@ export function BuyersDataGrid({
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
+  slotAvailable = 0,
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Nova prop
   raidLeaders, // Added raid leaders prop
@@ -331,11 +333,55 @@ export function BuyersDataGrid({
     }, 3000) // 3 seconds cooldown
   }
 
-  const handleStatusChange = (buyerId: string, newStatus: string) => {
-    handleApiCall(
-      () => updateBuyerStatus(buyerId, newStatus),
-      onBuyerStatusEdit
-    )
+  const handleStatusChange = async (buyerId: string, newStatus: string) => {
+    const currentBuyer = data.find((buyer) => buyer.id === buyerId)
+
+    if (!currentBuyer) {
+      return
+    }
+
+    try {
+      await updateBuyerStatus(buyerId, newStatus)
+
+      let availableSlotsAfterChange = Number(slotAvailable) || 0
+
+      // Ajusta a projeção de slots considerando a mudança recém-feita no buyer.
+      if (currentBuyer.status === 'waiting' && newStatus !== 'waiting') {
+        availableSlotsAfterChange += 1
+      } else if (currentBuyer.status !== 'waiting' && newStatus === 'waiting') {
+        availableSlotsAfterChange = Math.max(availableSlotsAfterChange - 1, 0)
+      }
+
+      if (availableSlotsAfterChange > 0) {
+        const backupQueue = data.filter(
+          (buyer) => buyer.status === 'backup' && buyer.id !== buyerId
+        )
+
+        const buyersToPromote = backupQueue.slice(0, availableSlotsAfterChange)
+
+        for (const backupBuyer of buyersToPromote) {
+          await updateBuyerStatus(backupBuyer.id, 'waiting')
+        }
+      }
+
+      onBuyerStatusEdit()
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorDetails = {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        }
+        if (onError) {
+          onError(errorDetails)
+        }
+      } else {
+        const errorDetails = { message: 'Unexpected error', response: error }
+        if (onError) {
+          onError(errorDetails)
+        }
+      }
+    }
   }
 
   const handleGlobalAction = (action: () => void) => {
