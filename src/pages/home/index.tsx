@@ -663,23 +663,6 @@ export function HomePage() {
           </section>
         </>
       )}
-      <footer className='relative z-10 border-t border-white/5 bg-black/50 backdrop-blur-sm'>
-        <div className='mx-auto w-full max-w-[1720px] px-4 py-8 sm:px-6 lg:px-12 2xl:px-16'>
-          <div className='flex flex-col items-center gap-4'>
-            <p
-              className='flex w-full select-none items-center justify-center gap-3 text-center text-lg font-semibold uppercase text-white/60'
-              style={{ fontFamily: 'Montserrat, sans-serif', letterSpacing: '0.5em' }}
-            >
-              <span>THE</span>
-              <span className='text-[10px] leading-none text-purple-500'>●</span>
-              <span>BAKERS</span>
-            </p>
-            <p className='text-xs text-neutral-600'>
-              &copy; {new Date().getFullYear()} The Bakers. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

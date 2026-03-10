@@ -1,48 +1,42 @@
+import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Menu,
-  MenuItem,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material'
-import {
-  Coins,
+  ArrowFatUp,
   Briefcase,
   CalendarBlank,
-  SignOut,
-  UsersFour,
-  List as ListIcon,
-  Key,
-  ArrowFatUp,
-  ClipboardText,
-  User,
+  CaretDown,
+  Coins,
   CurrencyDollar,
+  Key,
+  List as ListIcon,
+  List,
+  SignOut,
   Sword,
+  User,
+  UsersFour,
+  X,
+  ClipboardText,
 } from '@phosphor-icons/react'
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
 import { useAuth } from '../context/auth-context'
 import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/role-utils'
 
+type NavItem = {
+  label: string
+  path?: string
+  icon: JSX.Element
+  children?: NavItem[]
+}
+
 export function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, isAuthenticated, userRoles } = useAuth()
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [bookingsAnchorEl, setBookingsAnchorEl] = useState<null | HTMLElement>(
-    null
-  )
-  const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState<null | HTMLElement>(null)
-  const [mobileBookingsAnchorEl, setMobileBookingsAnchorEl] = useState<null | HTMLElement>(null)
-  const [mobileManagementAnchorEl, setMobileManagementAnchorEl] = useState<null | HTMLElement>(null)
-  const [financeAnchorEl, setFinanceAnchorEl] = useState<null | HTMLElement>(null)
-  const [mobileFinanceAnchorEl, setMobileFinanceAnchorEl] = useState<null | HTMLElement>(null)
-
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    finances: true,
+    bookings: true,
+    management: true,
+  })
 
   const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
     if (exactMatch) {
@@ -57,639 +51,282 @@ export function Header() {
   const handleLogout = () => {
     logout()
     navigate('/')
-    setMobileMenuAnchorEl(null)
+    setIsMobileOpen(false)
   }
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-  }
-
-  const handleBookingsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setBookingsAnchorEl(event.currentTarget)
-  }
-
-  const handleBookingsMenuClose = () => {
-    setBookingsAnchorEl(null)
-  }
-
-  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileMenuAnchorEl(event.currentTarget)
-  }
-
-  const handleMobileMenuClose = () => {
-    setMobileMenuAnchorEl(null)
-  }
-
-  const handleMobileBookingsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileBookingsAnchorEl(event.currentTarget)
-  }
-
-  const handleMobileBookingsMenuClose = () => {
-    setMobileBookingsAnchorEl(null)
-  }
-
-  const handleMobileManagementMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileManagementAnchorEl(event.currentTarget)
-  }
-
-  const handleMobileManagementMenuClose = () => {
-    setMobileManagementAnchorEl(null)
-  }
-
-  const handleFinanceMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setFinanceAnchorEl(event.currentTarget)
-  }
-
-  const handleFinanceMenuClose = () => {
-    setFinanceAnchorEl(null)
-  }
-
-  const handleMobileFinanceMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileFinanceAnchorEl(event.currentTarget)
-  }
-
-  const handleMobileFinanceMenuClose = () => {
-    setMobileFinanceAnchorEl(null)
-  }
-
-  const handleMobileNavigation = (path: string) => {
+  const goTo = (path: string) => {
     navigate(path)
-    setMobileMenuAnchorEl(null)
-    setMobileBookingsAnchorEl(null)
-    setMobileManagementAnchorEl(null)
-    setMobileFinanceAnchorEl(null)
+    setIsMobileOpen(false)
   }
 
-  // Se não está autenticado, mostra header de login
-  if (!isAuthenticated) {
-    return (
-      <AppBar
-        position='static'
-        sx={{
-          background: 'black',
-          zIndex: 1000,
-        }}
-      >
-        <Toolbar>
-          <Typography
-            variant='h6'
-            component='div'
-            sx={{
-              fontSize: '1.8rem',
-              textAlign: 'center',
-              flexGrow: 1,
-              cursor: 'pointer',
-            }}
-            onClick={() => navigate('/')}
-          >
-            TheBakers
-            <span className='font-extrabold text-purple-500'>Hub</span>
-          </Typography>
-        </Toolbar>
-      </AppBar>
-    )
-  }
+  const navItems: NavItem[] = [
+    { label: 'Home', path: '/home', icon: <Briefcase size={18} /> },
+    {
+      label: 'Finances',
+      icon: <CurrencyDollar size={18} />,
+      children: [
+        { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
+        { label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> },
+      ],
+    },
+    ...(shouldUseNewBalance(userRoles)
+      ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
+      : []),
+    ...(hasAccess([import.meta.env.VITE_TEAM_CHEFE])
+      ? [
+          {
+            label: 'Management',
+            icon: <Briefcase size={18} />,
+            children: [
+              { label: 'Admin', path: '/admin', icon: <Briefcase size={18} /> },
+              {
+                label: 'Teams',
+                path: '/management-teams',
+                icon: <UsersFour size={18} />,
+              },
+              {
+                label: 'Services',
+                path: '/services',
+                icon: <CalendarBlank size={18} />,
+              },
+              {
+                label: 'Requests',
+                path: '/requests',
+                icon: <ClipboardText size={18} />,
+              },
+              {
+                label: 'Gold',
+                path: '/payments',
+                icon: <CurrencyDollar size={18} />,
+              },
+              {
+                label: 'Dollar',
+                path: '/receipts',
+                icon: <CurrencyDollar size={18} />,
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(hasAccess([import.meta.env.VITE_TEAM_MPLUS]) &&
+    !hasAccess([import.meta.env.VITE_TEAM_CHEFE])
+      ? [
+          {
+            label: 'Services',
+            path: '/services',
+            icon: <CalendarBlank size={18} />,
+          },
+        ]
+      : []),
+    ...(shouldShowBookingsTab(userRoles)
+      ? [
+          {
+            label: 'Bookings (NA)',
+            icon: <CalendarBlank size={18} />,
+            children: [
+              {
+                label: 'Full Raids',
+                path: '/bookings-na',
+                icon: <ListIcon size={18} />,
+              },
+              { label: 'Keys', path: '/keys', icon: <Key size={18} /> },
+              {
+                label: 'Leveling',
+                path: '/leveling',
+                icon: <ArrowFatUp size={18} />,
+              },
+              { label: 'PVP', path: '/pvp', icon: <Sword size={18} /> },
+            ],
+          },
+        ]
+      : []),
+  ]
+
+  if (!isAuthenticated) return null
 
   return (
     <>
-      <AppBar
-        position='static'
-        sx={{
-          background: 'black',
-          zIndex: 1000,
-        }}
-      >
-        <Toolbar sx={{ justifyContent: isMobile ? 'space-between' : 'space-around' }}>
-          <Typography
-            variant='h6'
-            component='div'
-            sx={{ 
-              cursor: 'pointer', 
-              fontSize: isMobile ? '1.5rem' : '1.8rem',
-              flexGrow: isMobile ? 1 : 0
-            }}
-            onClick={() => navigate('/home')}
+      <div className='fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-black/80 px-4 py-3 backdrop-blur-xl md:hidden'>
+        <div className='flex items-center justify-between'>
+          <button
+            onClick={() => goTo('/home')}
+            className='inline-flex items-center gap-2 text-base font-semibold uppercase tracking-[0.2em] text-white'
+            style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
           >
-            TheBakers<span className='font-extrabold text-purple-500'>Hub</span>
-          </Typography>
+            <span>THE</span>
+            <span className='text-xs text-purple-500'>●</span>
+            <span>BAKERS</span>
+          </button>
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            className='rounded-lg border border-white/15 p-2 text-white'
+          >
+            <List size={20} />
+          </button>
+        </div>
+      </div>
 
-          {isMobile ? (
-            <IconButton
-              color="inherit"
-              onClick={handleMobileMenuOpen}
-              sx={{ ml: 'auto' }}
+      <aside className='relative z-20 hidden w-72 shrink-0 border-r border-white/10 bg-black/70 backdrop-blur-xl md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
+        <div className='flex h-20 items-center justify-center border-b border-white/10 px-6'>
+          <button
+            onClick={() => goTo('/home')}
+            className='inline-flex items-center justify-center gap-2 text-xl font-semibold uppercase tracking-[0.35em] text-white'
+            style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
+          >
+            <span>THE</span>
+            <span className='text-[10px] text-purple-500'>●</span>
+            <span>BAKERS</span>
+          </button>
+        </div>
+        <nav className='flex-1 space-y-2 px-4 py-4'>
+          {navItems.map((item) => (
+            <SidebarItem
+              key={item.label}
+              item={item}
+              pathname={location.pathname}
+              open={openGroups[item.label.toLowerCase()] ?? true}
+              setOpen={(next) =>
+                setOpenGroups((prev) => ({ ...prev, [item.label.toLowerCase()]: next }))
+              }
+              onNavigate={goTo}
+            />
+          ))}
+        </nav>
+        <div className='sticky bottom-0 z-30 border-t border-white/10 bg-black/80 p-4 backdrop-blur-xl'>
+          <button
+            onClick={handleLogout}
+            className='flex w-full items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20'
+          >
+            <SignOut size={18} />
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {isMobileOpen && (
+        <div className='fixed inset-0 z-50 md:hidden'>
+          <button
+            className='absolute inset-0 bg-black/60'
+            onClick={() => setIsMobileOpen(false)}
+            aria-label='Close sidebar backdrop'
+          />
+          <aside className='absolute left-0 top-0 h-full w-[82%] max-w-[320px] border-r border-white/10 bg-black/95 p-4'>
+            <div className='mb-4 flex items-center justify-between'>
+              <button
+                onClick={() => goTo('/home')}
+                className='inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-white'
+                style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
+              >
+                <span>THE</span>
+                <span className='text-[10px] text-purple-500'>●</span>
+                <span>BAKERS</span>
+              </button>
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className='rounded-lg border border-white/15 p-2 text-white'
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className='space-y-2'>
+              {navItems.map((item) => (
+                <SidebarItem
+                  key={`mobile-${item.label}`}
+                  item={item}
+                  pathname={location.pathname}
+                  open={openGroups[item.label.toLowerCase()] ?? true}
+                  setOpen={(next) =>
+                    setOpenGroups((prev) => ({
+                      ...prev,
+                      [item.label.toLowerCase()]: next,
+                    }))
+                  }
+                  onNavigate={goTo}
+                />
+              ))}
+            </nav>
+
+            <button
+              onClick={handleLogout}
+              className='mt-6 flex w-full items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300'
             >
-              <ListIcon size={24} />
-            </IconButton>
-          ) : (
-            <>
-              {/* Finance Menu */}
-              <Button
-                color='inherit'
-                onClick={handleFinanceMenuOpen}
-                startIcon={<CurrencyDollar size={20} />}
-              >
-                Finances
-              </Button>
-              <Menu
-                anchorEl={financeAnchorEl}
-                open={Boolean(financeAnchorEl)}
-                onClose={handleFinanceMenuClose}
-                sx={{
-                  zIndex: 99999,
-                  '& .MuiPaper-root': {
-                    zIndex: 99999,
-                  },
-                  '& .MuiBackdrop-root': {
-                    zIndex: 99998,
-                  },
-                }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: '150px',
-                      zIndex: 99999,
-                      position: 'relative',
-                    },
-                  },
-                }}
-                style={{ zIndex: 99999 }}
-              >
-                <MenuItem
-                  onClick={() => {
-                    navigate('/balance')
-                    handleFinanceMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Coins size={20} />
-                  Balance
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    navigate('/sells')
-                    handleFinanceMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <CurrencyDollar size={20} />
-                  Payments
-                </MenuItem>
-              </Menu>
-
-              {shouldUseNewBalance(userRoles) && (
-                <Button
-                  color='inherit'
-                  onClick={() => navigate('/my-requests')}
-                  startIcon={<User size={20} />}
-                >
-                  My Requests
-                </Button>
-              )}
-
-              {/* Management Menu - Only for CHEFE */}
-              {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
-                <>
-                  <Button
-                    color='inherit'
-                    onClick={handleMenuOpen}
-                    startIcon={<Briefcase size={20} />}
-                  >
-                    Management
-                  </Button>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                    sx={{
-                      zIndex: 99999,
-                      '& .MuiPaper-root': {
-                        zIndex: 99999,
-                      },
-                      '& .MuiBackdrop-root': {
-                        zIndex: 99998,
-                      },
-                    }}
-                    slotProps={{
-                      paper: {
-                        sx: {
-                          width: '150px',
-                          zIndex: 99999,
-                          position: 'relative',
-                        },
-                      },
-                    }}
-                    style={{ zIndex: 99999 }}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/admin')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <Briefcase size={20} />
-                      Admin
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/management-teams')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <UsersFour size={20} />
-                      Teams
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/services')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <CalendarBlank size={20} />
-                      Services
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/requests')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <ClipboardText size={20} />
-                      Requests
-                    </MenuItem>
-                     <MenuItem
-                      onClick={() => {
-                        navigate('/payments')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <CurrencyDollar size={20} />
-                      Gold
-                    </MenuItem> 
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/receipts')
-                        handleMenuClose()
-                      }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                    >
-                      <CurrencyDollar size={20} />
-                      Dolar
-                    </MenuItem>
-                  </Menu>
-                </>
-              )}
-
-              {/* Services Button - Only for M+ */}
-              {hasAccess([import.meta.env.VITE_TEAM_MPLUS]) && !hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
-                <Button
-                  color='inherit'
-                  onClick={() => navigate('/services')}
-                  startIcon={<CalendarBlank size={20} />}
-                >
-                  Services
-                </Button>
-              )}
-
-              {/* Bookings (NA) Dropdown */}
-              {shouldShowBookingsTab(userRoles) && (
-                <Button
-                  color='inherit'
-                  onClick={handleBookingsMenuOpen}
-                  startIcon={<CalendarBlank size={20} />}
-                >
-                  Bookings (NA)
-                </Button>
-              )}
-
-              <Menu
-                anchorEl={bookingsAnchorEl}
-                open={Boolean(bookingsAnchorEl)}
-                onClose={handleBookingsMenuClose}
-                sx={{
-                  zIndex: 99999,
-                  '& .MuiPaper-root': {
-                    zIndex: 99999,
-                  },
-                  '& .MuiBackdrop-root': {
-                    zIndex: 99998,
-                  },
-                }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: '150px',
-                      zIndex: 99999,
-                      position: 'relative',
-                    },
-                  },
-                }}
-                style={{ zIndex: 99999 }}
-              >
-                <MenuItem
-                  onClick={() => {
-                    navigate('/bookings-na')
-                    handleBookingsMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <ListIcon size={20} /> Full Raids
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    navigate('/keys')
-                    handleBookingsMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Key size={20} /> Keys
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    navigate('/leveling')
-                    handleBookingsMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <ArrowFatUp size={20} /> Leveling
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    navigate('/pvp')
-                    handleBookingsMenuClose()
-                  }}
-                  sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Sword size={20} /> PVP
-                </MenuItem>
-              </Menu>
-
-              <Button
-                color='inherit'
-                onClick={handleLogout}
-                startIcon={<SignOut size={20} />}
-              >
-                Logout
-              </Button>
-            </>
-          )}
-        </Toolbar>
-      </AppBar>
-
-      {/* Menu Mobile Flutuante */}
-      <Menu
-        anchorEl={mobileMenuAnchorEl}
-        open={Boolean(mobileMenuAnchorEl)}
-        onClose={handleMobileMenuClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        sx={{
-          '& .MuiPaper-root': {
-            background: 'black',
-            color: 'white',
-            width: 250,
-            mt: 1,
-          },
-          zIndex: 99999,
-        }}
-      >
-        <MenuItem
-          onClick={() => handleMobileNavigation('/home')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-        >
-          <Briefcase size={20} />
-          Home
-        </MenuItem>
-
-        <MenuItem
-          onClick={handleMobileFinanceMenuOpen}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-        >
-          <CurrencyDollar size={20} />
-          Finance
-        </MenuItem>
-
-        {shouldUseNewBalance(userRoles) && (
-          <MenuItem
-            onClick={() => handleMobileNavigation('/my-requests')}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-          >
-            <User size={20} />
-            My Requests
-          </MenuItem>
-        )}
-
-        {/* Management Menu - Only for CHEFE */}
-        {hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
-          <MenuItem
-            onClick={handleMobileManagementMenuOpen}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-          >
-            <Briefcase size={20} />
-            Management
-          </MenuItem>
-        )}
-
-        {/* Services Button - Only for M+ */}
-        {hasAccess([import.meta.env.VITE_TEAM_MPLUS]) && !hasAccess([import.meta.env.VITE_TEAM_CHEFE]) && (
-          <MenuItem
-            onClick={() => handleMobileNavigation('/services')}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-          >
-            <CalendarBlank size={20} />
-            Services
-          </MenuItem>
-        )}
-
-        {shouldShowBookingsTab(userRoles) && (
-          <MenuItem
-            onClick={handleMobileBookingsMenuOpen}
-            sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-          >
-            <CalendarBlank size={20} />
-            Bookings (NA)
-          </MenuItem>
-        )}
-
-        <MenuItem
-          onClick={handleLogout}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: 1.5 }}
-        >
-          <SignOut size={20} />
-          Logout
-        </MenuItem>
-      </Menu>
-
-      {/* Submenu Management Mobile */}
-      <Menu
-        anchorEl={mobileManagementAnchorEl}
-        open={Boolean(mobileManagementAnchorEl)}
-        onClose={handleMobileManagementMenuClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        sx={{
-          '& .MuiPaper-root': {
-            background: 'black',
-            color: 'white',
-            width: 200,
-          },
-          zIndex: 99999,
-        }}
-      >
-        <MenuItem
-          onClick={() => handleMobileNavigation('/admin')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Briefcase size={20} />
-          Admin
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/management-teams')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <UsersFour size={20} />
-          Teams
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/services')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <CalendarBlank size={20} />
-          Services
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/requests')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <ClipboardText size={20} />
-          Requests
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/payments')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <CurrencyDollar size={20} />
-          Payments
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/receipts')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <CurrencyDollar size={20} />
-          Receipts
-        </MenuItem>
-      </Menu>
-
-      {/* Submenu Bookings Mobile */}
-      <Menu
-        anchorEl={mobileBookingsAnchorEl}
-        open={Boolean(mobileBookingsAnchorEl)}
-        onClose={handleMobileBookingsMenuClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        sx={{
-          '& .MuiPaper-root': {
-            background: 'black',
-            color: 'white',
-            width: 200,
-          },
-          zIndex: 99999,
-        }}
-      >
-        <MenuItem
-          onClick={() => handleMobileNavigation('/bookings-na')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <ListIcon size={20} />
-          Full Raids
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/keys')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Key size={20} />
-          Keys
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/leveling')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <ArrowFatUp size={20} />
-          Leveling
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/pvp')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Sword size={20} />
-          PVP
-        </MenuItem>
-      </Menu>
-
-      {/* Submenu Finance Mobile */}
-      <Menu
-        anchorEl={mobileFinanceAnchorEl}
-        open={Boolean(mobileFinanceAnchorEl)}
-        onClose={handleMobileFinanceMenuClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        sx={{
-          '& .MuiPaper-root': {
-            background: 'black',
-            color: 'white',
-            width: 200,
-          },
-          zIndex: 99999,
-        }}
-      >
-        <MenuItem
-          onClick={() => handleMobileNavigation('/balance')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Coins size={20} />
-          Balance
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleMobileNavigation('/sells')}
-          sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <CurrencyDollar size={20} />
-          Sells
-        </MenuItem>
-      </Menu>
+              <SignOut size={18} />
+              Logout
+            </button>
+          </aside>
+        </div>
+      )}
     </>
+  )
+}
+
+function SidebarItem({
+  item,
+  pathname,
+  open,
+  setOpen,
+  onNavigate,
+}: {
+  item: NavItem
+  pathname: string
+  open: boolean
+  setOpen: (next: boolean) => void
+  onNavigate: (path: string) => void
+}) {
+  if (item.children?.length) {
+    return (
+      <div className='rounded-lg border border-white/5 bg-white/[0.02]'>
+        <button
+          onClick={() => setOpen(!open)}
+          className='flex w-full items-center justify-between px-3 py-2 text-left text-sm text-gray-200'
+        >
+          <span className='inline-flex items-center gap-2'>
+            {item.icon}
+            {item.label}
+          </span>
+          <CaretDown
+            size={14}
+            className={`transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+        {open && (
+          <div className='space-y-1 px-2 pb-2'>
+            {item.children.map((child) => {
+              const isActive = child.path ? pathname.startsWith(child.path) : false
+              return (
+                <button
+                  key={child.label}
+                  onClick={() => child.path && onNavigate(child.path)}
+                  className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition ${
+                    isActive
+                      ? 'bg-purple-500/20 text-purple-200'
+                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {child.icon}
+                  {child.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const isActive = item.path ? pathname.startsWith(item.path) : false
+  return (
+    <button
+      onClick={() => item.path && onNavigate(item.path)}
+      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
+        isActive
+          ? 'bg-purple-500/20 text-purple-200'
+          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+      }`}
+    >
+      {item.icon}
+      {item.label}
+    </button>
   )
 }
