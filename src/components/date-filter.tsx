@@ -213,7 +213,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               dateFormat='MM/yyyy'
               showMonthYearPicker
               placeholderText='Month'
-              popperClassName='z-[120] balance-datepicker-popper'
+              popperClassName='z-[99999] balance-datepicker-popper'
               calendarClassName='balance-datepicker'
               wrapperClassName='w-full sm:w-auto'
               customInput={<MonthPickerInput />}
@@ -234,6 +234,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
                 onChange={(value) => handleWeekSelect(Number(value))}
                 options={weekOptions}
                 minWidthClassName='w-full min-w-0 sm:min-w-[260px]'
+                renderInPortal
               />
               <button
                 onClick={handleFilterReset}

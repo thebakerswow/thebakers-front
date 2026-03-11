@@ -159,6 +159,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
           options={weekOptions}
           placeholder='No weeks available'
           minWidthClassName='min-w-[260px]'
+          renderInPortal
         />
       </div>
 

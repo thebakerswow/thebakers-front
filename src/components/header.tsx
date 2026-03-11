@@ -24,6 +24,9 @@ import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/role-utils'
 type NavItem = {
   label: string
   path?: string
+  activePaths?: string[]
+  activeMatchPaths?: string[]
+  activeExactPaths?: string[]
   icon: JSX.Element
   children?: NavItem[]
 }
@@ -126,18 +129,45 @@ export function Header() {
             icon: <CalendarBlank size={18} />,
             children: [
               {
-                label: 'Full Raids',
-                path: '/bookings-na',
+                label: 'Raids',
+                path: '/bookings-na/raids',
+                activeExactPaths: ['/bookings-na/raids'],
+                activeMatchPaths: ['/bookings-na/run'],
+                activePaths: ['/bookings-na/run'],
                 icon: <ListIcon size={18} />,
               },
-              { label: 'Keys', path: '/keys', icon: <Key size={18} /> },
+              {
+                label: 'Keys',
+                path: '/keys',
+                activeExactPaths: ['/keys'],
+                activeMatchPaths: ['/keys', '/bookings-na/key'],
+                activePaths: ['/bookings-na/key'],
+                icon: <Key size={18} />,
+              },
               {
                 label: 'Leveling',
                 path: '/leveling',
+                activeExactPaths: ['/leveling'],
+                activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
+                activePaths: ['/bookings-na/leveling'],
                 icon: <ArrowFatUp size={18} />,
               },
-              { label: 'Delves', path: '/delves', icon: <Sword size={18} /> },
-              { label: 'Achievements', path: '/achievements', icon: <Trophy size={18} /> },
+              {
+                label: 'Delves',
+                path: '/delves',
+                activeExactPaths: ['/delves'],
+                activeMatchPaths: ['/delves', '/bookings-na/delves'],
+                activePaths: ['/bookings-na/delves'],
+                icon: <Sword size={18} />,
+              },
+              {
+                label: 'Achievements',
+                path: '/achievements',
+                activeExactPaths: ['/achievements'],
+                activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
+                activePaths: ['/bookings-na/achievements'],
+                icon: <Trophy size={18} />,
+              },
             ],
           },
         ]
@@ -276,6 +306,26 @@ function SidebarItem({
   setOpen: (next: boolean) => void
   onNavigate: (path: string) => void
 }) {
+  const isPathActive = (
+    path?: string,
+    activePaths?: string[],
+    activeExactPaths?: string[]
+  ) => {
+    if (activeExactPaths && activeExactPaths.length > 0) {
+      const exactMatch = activeExactPaths.some((candidate) => pathname === candidate)
+      if (exactMatch) {
+        return true
+      }
+    }
+
+    if (activePaths && activePaths.length > 0) {
+      return activePaths.some((prefix) => pathname.startsWith(prefix))
+    }
+
+    const prefixes = [path, ...(activePaths || [])].filter(Boolean) as string[]
+    return prefixes.some((prefix) => pathname.startsWith(prefix))
+  }
+
   if (item.children?.length) {
     return (
       <div className='rounded-lg border border-white/10 bg-white/5'>
@@ -295,7 +345,11 @@ function SidebarItem({
         {open && (
           <div className='space-y-1 px-2 pb-2'>
             {item.children.map((child) => {
-              const isActive = child.path ? pathname.startsWith(child.path) : false
+              const isActive = isPathActive(
+                child.path,
+                child.activeMatchPaths ?? child.activePaths,
+                child.activeExactPaths
+              )
               return (
                 <button
                   key={child.label}
@@ -317,7 +371,11 @@ function SidebarItem({
     )
   }
 
-  const isActive = item.path ? pathname.startsWith(item.path) : false
+  const isActive = isPathActive(
+    item.path,
+    item.activeMatchPaths ?? item.activePaths,
+    item.activeExactPaths
+  )
   return (
     <button
       onClick={() => item.path && onNavigate(item.path)}

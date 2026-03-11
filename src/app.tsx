@@ -36,14 +36,7 @@ import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
 import { CheckAccess } from './pages/error-pages/check-access'
 import ManagementServices from './pages/management/management-services'
-import { KeysPage } from './pages/special-runs/keys-page'
-import { KeyDetails } from './pages/special-runs/keys-details-page'
-import { LevelingPage } from './pages/special-runs/leveling-page'
-import { LevelingDetails } from './pages/special-runs/leveling-details-page'
-import { DelvesPage } from './pages/special-runs/delves-page'
-import { DelvesDetails } from './pages/special-runs/delves-details-page'
-import { AchievementsPage } from './pages/special-runs/achievements-page'
-import { AchievementsDetails } from './pages/special-runs/achievements-details-page'
+import { MockSpecialRunDetailsPage } from './pages/special-runs/mock-special-run-details-page'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/management/payments'
@@ -71,17 +64,50 @@ function AppContent() {
   const { isAuthenticated, username, idDiscord } = useAuth()
   const { pathname } = useLocation()
 
+  useEffect(() => {
+    const clearScrollLocks = () => {
+      const html = document.documentElement
+      const body = document.body
+      const isSwalOpen =
+        body.classList.contains('swal2-shown') ||
+        html.classList.contains('swal2-shown')
+
+      html.style.removeProperty('padding-right')
+      html.style.removeProperty('margin-right')
+      body.style.removeProperty('padding-right')
+      body.style.removeProperty('margin-right')
+
+      if (!isSwalOpen) {
+        html.style.removeProperty('overflow')
+        body.style.removeProperty('overflow')
+      }
+    }
+
+    clearScrollLocks()
+    const observer = new MutationObserver(clearScrollLocks)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className='relative isolate flex min-h-screen w-full flex-grow flex-col bg-[#060608]'>
+    <div className='relative isolate flex h-full w-full flex-grow flex-col bg-[#060608]'>
       <PurpleGlowBackground />
-      <div className='relative z-10 flex min-h-screen w-full flex-1'>
+      <div className='relative z-10 flex h-full w-full flex-1 overflow-hidden'>
         {isAuthenticated ? <Header /> : null}
         <main
-          className={`relative flex min-h-screen flex-1 justify-center ${
+          className={`relative flex h-full flex-1 overflow-y-auto overflow-x-hidden ${
             isAuthenticated ? 'pt-[64px] md:pt-0' : ''
           }`}
         >
-          <div className='flex min-h-screen w-full flex-col'>
+          <div className='flex min-h-full w-full min-w-0 flex-col'>
             {isAuthenticated ? (
               <TopInfoBar username={username} idDiscord={idDiscord} pathname={pathname} />
             ) : null}
@@ -107,8 +133,12 @@ function AppContent() {
                 element={<PrivateRoute element={<TeamsManagement />} />}
               />
               <Route
-                path='/bookings-na'
+                path='/bookings-na/raids'
                 element={<PrivateRoute element={<FullRaidsNa />} />}
+              />
+              <Route
+                path='/bookings-na'
+                element={<Navigate to='/bookings-na/raids' replace />}
               />
               <Route
                 path='/bookings-na/run/:id'
@@ -116,19 +146,19 @@ function AppContent() {
               />
               <Route
                 path='/bookings-na/key/:id'
-                element={<PrivateRoute element={<KeyDetails />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Keys' />} />}
               />
               <Route
                 path='/bookings-na/leveling/:id'
-                element={<PrivateRoute element={<LevelingDetails />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Leveling' />} />}
               />
               <Route
                 path='/bookings-na/delves/:id'
-                element={<PrivateRoute element={<DelvesDetails />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Delves' />} />}
               />
               <Route
                 path='/bookings-na/achievements/:id'
-                element={<PrivateRoute element={<AchievementsDetails />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Achievements' />} />}
               />
               <Route
                 path='/admin'
@@ -144,19 +174,19 @@ function AppContent() {
               />
               <Route
                 path='/keys'
-                element={<PrivateRoute element={<KeysPage />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Keys' />} />}
               />
               <Route
                 path='/leveling'
-                element={<PrivateRoute element={<LevelingPage />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Leveling' />} />}
               />
               <Route
                 path='/delves'
-                element={<PrivateRoute element={<DelvesPage />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Delves' />} />}
               />
               <Route
                 path='/achievements'
-                element={<PrivateRoute element={<AchievementsPage />} />}
+                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Achievements' />} />}
               />
               <Route
                 path='/requests'
@@ -221,14 +251,14 @@ function TopInfoBar({
   const screen = getScreenMeta(pathname)
 
   return (
-    <div className='hidden h-20 items-center justify-between border-b border-white/10 bg-black/50 px-6 backdrop-blur-sm md:flex'>
+    <div className='hidden h-20 w-full shrink-0 items-center justify-between border-b border-white/10 bg-black/50 px-6 backdrop-blur-sm md:flex'>
       <div className='flex items-center gap-3'>
         <span className='flex h-11 w-11 items-center justify-center rounded-xl border border-purple-400/25 bg-gradient-to-b from-[#2a1242] to-[#140821] shadow-[0_8px_20px_rgba(76,29,149,0.35)]'>
           <span className='text-purple-300'>{screen.icon}</span>
         </span>
         <div className='flex flex-col'>
           <span className='text-[11px] font-medium uppercase tracking-wide text-neutral-500'>
-            {screen.name}
+            {screen.breadcrumb}
           </span>
           <span className='text-2xl font-semibold leading-tight text-white'>{screen.name}</span>
         </div>
@@ -254,54 +284,103 @@ function TopInfoBar({
 
 function getScreenMeta(pathname: string) {
   if (pathname.startsWith('/admin')) {
-    return { name: 'Admin', icon: <Shield size={20} weight='duotone' /> }
+    return {
+      name: 'Admin',
+      breadcrumb: 'Management / Admin',
+      icon: <Shield size={20} weight='duotone' />,
+    }
   }
   if (pathname.startsWith('/home')) {
-    return { name: 'Home', icon: <House size={20} weight='duotone' /> }
+    return { name: 'Home', breadcrumb: 'Dashboard / Home', icon: <House size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/balance')) {
-    return { name: 'Balance', icon: <Coins size={20} weight='duotone' /> }
+    return { name: 'Balance', breadcrumb: 'Finance / Balance', icon: <Coins size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/management-teams')) {
-    return { name: 'Teams', icon: <UsersFour size={20} weight='duotone' /> }
+    return { name: 'Teams', breadcrumb: 'Management / Teams', icon: <UsersFour size={20} weight='duotone' /> }
+  }
+  if (pathname.startsWith('/bookings-na/key/')) {
+    return {
+      name: 'Keys',
+      breadcrumb: 'Bookings (NA) / Keys',
+      icon: <Key size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/leveling/')) {
+    return {
+      name: 'Leveling',
+      breadcrumb: 'Bookings (NA) / Leveling',
+      icon: <Sword size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/delves/')) {
+    return {
+      name: 'Delves',
+      breadcrumb: 'Bookings (NA) / Delves',
+      icon: <Sword size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/achievements/')) {
+    return {
+      name: 'Achievements',
+      breadcrumb: 'Bookings (NA) / Achievements',
+      icon: <Trophy size={20} weight='duotone' />,
+    }
   }
   if (pathname.startsWith('/bookings-na/run/')) {
-    return { name: 'Run Details', icon: <CalendarBlank size={20} weight='duotone' /> }
+    const runId = pathname.split('/').filter(Boolean).pop() || '-'
+    return {
+      name: `Run ${runId}`,
+      breadcrumb: 'Bookings (NA) / Raids / Run',
+      icon: <CalendarBlank size={20} weight='duotone' />,
+    }
   }
-  if (pathname.startsWith('/bookings-na')) {
-    return { name: 'Bookings', icon: <CalendarBlank size={20} weight='duotone' /> }
+  if (pathname.startsWith('/bookings-na/raids')) {
+    return {
+      name: 'Raids',
+      breadcrumb: 'Bookings (NA) / Raids',
+      icon: <CalendarBlank size={20} weight='duotone' />,
+    }
   }
   if (pathname.startsWith('/keys')) {
-    return { name: 'Keys', icon: <Key size={20} weight='duotone' /> }
+    return { name: 'Keys', breadcrumb: 'Bookings (NA) / Keys', icon: <Key size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/leveling')) {
-    return { name: 'Leveling', icon: <Sword size={20} weight='duotone' /> }
+    return {
+      name: 'Leveling',
+      breadcrumb: 'Bookings (NA) / Leveling',
+      icon: <Sword size={20} weight='duotone' />,
+    }
   }
   if (pathname.startsWith('/delves')) {
-    return { name: 'Delves', icon: <Sword size={20} weight='duotone' /> }
+    return { name: 'Delves', breadcrumb: 'Bookings (NA) / Delves', icon: <Sword size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/achievements')) {
-    return { name: 'Achievements', icon: <Trophy size={20} weight='duotone' /> }
+    return {
+      name: 'Achievements',
+      breadcrumb: 'Bookings (NA) / Achievements',
+      icon: <Trophy size={20} weight='duotone' />,
+    }
   }
   if (pathname.startsWith('/services')) {
-    return { name: 'Services', icon: <Briefcase size={20} weight='duotone' /> }
+    return { name: 'Services', breadcrumb: 'Management / Services', icon: <Briefcase size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/requests')) {
-    return { name: 'Requests', icon: <ClipboardText size={20} weight='duotone' /> }
+    return { name: 'Requests', breadcrumb: 'Requests', icon: <ClipboardText size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/my-requests')) {
-    return { name: 'My Requests', icon: <User size={20} weight='duotone' /> }
+    return { name: 'My Requests', breadcrumb: 'Requests / My Requests', icon: <User size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/payments')) {
-    return { name: 'Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
+    return { name: 'Gold', breadcrumb: 'Finance / Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/receipts')) {
-    return { name: 'Dollar', icon: <CurrencyDollar size={20} weight='duotone' /> }
+    return { name: 'Dollar', breadcrumb: 'Finance / Dollar', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/sells')) {
-    return { name: 'Sells', icon: <CurrencyDollar size={20} weight='duotone' /> }
+    return { name: 'Sells', breadcrumb: 'Finance / Sells', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
-  return { name: 'Dashboard', icon: <House size={20} weight='duotone' /> }
+  return { name: 'Dashboard', breadcrumb: 'Dashboard', icon: <House size={20} weight='duotone' /> }
 }
 
 function AppFooter() {
@@ -331,7 +410,7 @@ function AppFooter() {
 
 export function App() {
   return (
-    <div className='flex min-h-screen'>
+    <div className='flex h-screen w-full overflow-hidden'>
       <Router
         future={{
           v7_startTransition: true,

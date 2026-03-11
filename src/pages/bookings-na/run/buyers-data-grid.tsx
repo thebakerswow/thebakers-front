@@ -60,38 +60,6 @@ const statusPriorities: Record<string, number> = {
   cancelled: 6,
 }
 
-const TEAM_ROLE_IDS = [
-  import.meta.env.VITE_TEAM_PADEIRINHO,
-  import.meta.env.VITE_TEAM_GARCOM,
-  import.meta.env.VITE_TEAM_CONFEITEIROS,
-  import.meta.env.VITE_TEAM_JACKFRUIT,
-  import.meta.env.VITE_TEAM_MILHARAL,
-  import.meta.env.VITE_TEAM_LOSRENEGADOS,
-  import.meta.env.VITE_TEAM_APAE,
-  import.meta.env.VITE_TEAM_DTM,
-  import.meta.env.VITE_TEAM_KFFC,
-  import.meta.env.VITE_TEAM_INSANOS,
-  import.meta.env.VITE_TEAM_GREENSKY,
-  import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
-  import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
-  import.meta.env.VITE_TEAM_ROCKET,
-  import.meta.env.VITE_TEAM_BOOTY_REAPER,
-  import.meta.env.VITE_TEAM_BASTARD,
-  import.meta.env.VITE_TEAM_KIWI,
-]
-function hasPrefeitoTeamAccess(
-  runIdTeam: string,
-  userRoles: string[]
-): boolean {
-  const isPrefeito = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
-  if (!isPrefeito) return false
-  const userTeamRole = TEAM_ROLE_IDS.find((teamId) =>
-    userRoles.includes(teamId)
-  )
-  if (!userTeamRole) return false
-  return runIdTeam === userTeamRole
-}
-
 export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
@@ -107,9 +75,6 @@ export function BuyersDataGrid({
   const isOnlyAdvertiserRole =
     userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER) &&
     userRoles.length === 1
-  const canSeeIdBuyer =
-    userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
-    (runIdTeam && hasPrefeitoTeamAccess(runIdTeam, userRoles))
 
   // Function to check if current user is the advertiser of a buyer
   const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
@@ -858,6 +823,7 @@ export function BuyersDataGrid({
       disabled={runIsLocked || buyer.nameAndRealm === 'Encrypted'}
       minWidthClassName='min-w-[120px]'
       triggerClassName='![background-image:none] !bg-white/10 !backdrop-blur-sm !shadow-none !border-white/25 !text-center text-white'
+      renderInPortal
     />
   )
 
@@ -934,7 +900,6 @@ export function BuyersDataGrid({
       <table className='w-full min-w-[1500px] text-sm'>
         <thead>
           <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>
-            {canSeeIdBuyer && <th className='px-2 py-3 text-center font-semibold'>Id Buyer</th>}
             <th className='px-2 py-3 text-center font-semibold'>Slot</th>
             <th className='px-2 py-3 text-center font-semibold'>Status</th>
             <th className='px-2 py-3 text-center font-semibold'>Name-Realm</th>
@@ -952,7 +917,7 @@ export function BuyersDataGrid({
         <tbody>
           {sortedData.length === 0 ? (
             <tr>
-              <td colSpan={canSeeIdBuyer ? 13 : 12} className='p-6 text-center text-neutral-400'>
+              <td colSpan={12} className='p-6 text-center text-neutral-400'>
                 No Buyers
               </td>
             </tr>
@@ -963,11 +928,6 @@ export function BuyersDataGrid({
                 className='border-b border-white/5'
                 style={getBuyerRowStyle(buyer.status)}
               >
-                {canSeeIdBuyer && (
-                  <td className='px-2 py-2 text-center'>
-                    {buyer.id ?? '-'}
-                  </td>
-                )}
                 <td className='px-2 py-2 text-center'>
                   {index + 1}
                 </td>

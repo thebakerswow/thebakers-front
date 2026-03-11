@@ -36,6 +36,7 @@ export interface RunHistory {
   id: number
   id_run: number
   id_buyer: { Int64: number; Valid: boolean } | null
+  nameAndRealm?: string
   field: string
   old_value: string
   new_value: string

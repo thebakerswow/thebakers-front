@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 interface SelectOption {
   value: string
@@ -16,6 +17,7 @@ interface CustomSelectProps {
   menuClassName?: string
   optionClassName?: string
   activeOptionClassName?: string
+  renderInPortal?: boolean
 }
 
 export function CustomSelect({
@@ -29,14 +31,32 @@ export function CustomSelect({
   menuClassName = '',
   optionClassName = '',
   activeOptionClassName = '',
+  renderInPortal = false,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number
+    left: number
+    width: number
+    maxHeight: number
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    maxHeight: 256,
+  })
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!wrapperRef.current) return
-      if (!wrapperRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      const isInsideWrapper = wrapperRef.current.contains(target)
+      const isInsideMenu = menuRef.current?.contains(target) ?? false
+
+      if (!isInsideWrapper && !isInsideMenu) {
         setIsOpen(false)
       }
     }
@@ -45,11 +65,96 @@ export function CustomSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    if (!isOpen || !renderInPortal || !triggerRef.current) return
+
+    const updateMenuPosition = () => {
+      if (!triggerRef.current) return
+      const rect = triggerRef.current.getBoundingClientRect()
+      const viewportPadding = 8
+      const gap = 8
+      const preferredHeight = 256
+      const estimatedMenuBoxHeight = preferredHeight + 8 // menu body + paddings/border
+      const spaceBelow = window.innerHeight - rect.bottom - viewportPadding
+      const spaceAbove = rect.top - viewportPadding
+      const shouldOpenUp =
+        spaceBelow < estimatedMenuBoxHeight && spaceAbove > spaceBelow
+
+      const maxHeight = Math.max(
+        140,
+        Math.min(preferredHeight, shouldOpenUp ? spaceAbove - gap : spaceBelow - gap)
+      )
+
+      const top = shouldOpenUp
+        ? Math.max(viewportPadding, rect.top - gap - (maxHeight + 8))
+        : rect.bottom + gap
+
+      setMenuPosition({
+        top,
+        left: rect.left,
+        width: rect.width,
+        maxHeight,
+      })
+    }
+
+    updateMenuPosition()
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
+    }
+  }, [isOpen, renderInPortal])
+
   const selectedLabel = options.find((option) => option.value === value)?.label || placeholder
+
+  const menuContent = (
+    <div
+      ref={menuRef}
+      className={`z-[140] overflow-hidden rounded-xl border border-purple-300/25 bg-[#0e0e12] shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${menuClassName}`}
+      style={
+        renderInPortal
+          ? {
+              position: 'fixed',
+              top: menuPosition.top,
+              left: menuPosition.left,
+              width: menuPosition.width,
+              zIndex: 99999,
+            }
+          : undefined
+      }
+    >
+      <div className='overflow-auto p-1' style={{ maxHeight: menuPosition.maxHeight }}>
+        {options.length === 0 ? (
+          <div className='px-3 py-2 text-sm text-neutral-400'>No options available</div>
+        ) : (
+          options.map((option) => (
+            <button
+              key={option.value}
+              type='button'
+              onClick={() => {
+                onChange(option.value)
+                setIsOpen(false)
+              }}
+              className={`mb-1 w-full rounded-md px-3 py-2 text-left text-sm transition last:mb-0 ${
+                option.value === value
+                  ? `border border-purple-400/40 bg-purple-500/20 text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${activeOptionClassName}`
+                  : `text-white/90 hover:bg-white/10 ${optionClassName}`
+              }`}
+            >
+              {option.label}
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <div ref={wrapperRef} className={`relative ${minWidthClassName}`}>
       <button
+        ref={triggerRef}
         type='button'
         disabled={disabled}
         onClick={() => setIsOpen((prev) => !prev)}
@@ -61,35 +166,15 @@ export function CustomSelect({
         ▼
       </span>
 
-      {isOpen && !disabled && (
-        <div
-          className={`absolute left-0 top-[calc(100%+8px)] z-[140] w-full overflow-hidden rounded-xl border border-purple-300/25 bg-[#0e0e12] shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${menuClassName}`}
-        >
-          <div className='max-h-64 overflow-auto p-1'>
-            {options.length === 0 ? (
-              <div className='px-3 py-2 text-sm text-neutral-400'>No options available</div>
-            ) : (
-              options.map((option) => (
-                <button
-                  key={option.value}
-                  type='button'
-                  onClick={() => {
-                    onChange(option.value)
-                    setIsOpen(false)
-                  }}
-                  className={`mb-1 w-full rounded-md px-3 py-2 text-left text-sm transition last:mb-0 ${
-                    option.value === value
-                      ? `border border-purple-400/40 bg-purple-500/20 text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${activeOptionClassName}`
-                      : `text-white/90 hover:bg-white/10 ${optionClassName}`
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {isOpen && !disabled
+        ? renderInPortal
+          ? createPortal(menuContent, document.body)
+          : (
+              <div className='absolute left-0 top-[calc(100%+8px)] w-full'>
+                {menuContent}
+              </div>
+            )
+        : null}
     </div>
   )
 }

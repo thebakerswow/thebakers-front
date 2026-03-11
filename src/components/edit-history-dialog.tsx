@@ -1,11 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CircleNotch, X } from '@phosphor-icons/react'
-import { getRunBuyers, getRunHistory } from '../services/api/runs'
+import { getRunHistory } from '../services/api/runs'
 import { RunHistory } from '../types/runs-interface'
 import dayjs from 'dayjs'
 
 import { EditHistoryDialogProps } from '../types'
-import { BuyerData } from '../types'
 
 export function EditHistoryDialog({
   open,
@@ -14,21 +13,14 @@ export function EditHistoryDialog({
 }: EditHistoryDialogProps) {
   const [filter, setFilter] = useState('')
   const [history, setHistory] = useState<RunHistory[]>([])
-  const [buyerNameById, setBuyerNameById] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open || !idRun) return
     setLoading(true)
-    Promise.all([getRunHistory(idRun.toString()), getRunBuyers(idRun.toString())])
-      .then(([historyData, buyersData]) => {
+    getRunHistory(idRun.toString())
+      .then((historyData) => {
         setHistory(Array.isArray(historyData) ? historyData : [])
-        const buyers = Array.isArray(buyersData) ? (buyersData as BuyerData[]) : []
-        const map = buyers.reduce<Record<string, string>>((acc, buyer) => {
-          acc[String(buyer.id)] = buyer.nameAndRealm
-          return acc
-        }, {})
-        setBuyerNameById(map)
       })
       .finally(() => setLoading(false))
   }, [open, idRun])
@@ -99,11 +91,12 @@ export function EditHistoryDialog({
                   edit.id_buyer && edit.id_buyer.Valid
                     ? edit.id_buyer.Int64.toString()
                     : ''
+                const buyerName = (edit.nameAndRealm || '').trim()
                 const idBuyerText =
-                  idBuyer
-                    ? buyerNameById[idBuyer]
-                      ? `Buyer ${buyerNameById[idBuyer]}`
-                      : `Buyer ${idBuyer}`
+                  buyerName.length > 0
+                    ? `Buyer ${buyerName}`
+                    : idBuyer
+                      ? `Buyer ${idBuyer}`
                     : 'Run'
 
                 const oldValue =

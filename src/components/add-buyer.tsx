@@ -6,6 +6,7 @@ import Swal from 'sweetalert2'
 import { RunData } from '../types/runs-interface'
 import { createBuyer } from '../services/api/buyers'
 import { getGhostUsers } from '../services/api/users'
+import { useAuth } from '../context/auth-context'
 import { ErrorDetails } from './error-display'
 import { CustomSelect } from './custom-select'
 
@@ -29,6 +30,8 @@ export function AddBuyer({
   onBuyerAddedReload,
   onError,
 }: AddBuyerProps) {
+  const { userRoles } = useAuth()
+
   // State to store form data
   const [formData, setFormData] = useState({
     nameAndRealm: '',
@@ -60,6 +63,8 @@ export function AddBuyer({
     'Death Knight',
     'Evoker',
   ].map((cls) => ({ value: cls, label: cls }))
+  const isJuniorAdvertiser = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR)
+  const canEditPaidFull = !isJuniorAdvertiser
 
   // Function to check if Dolar field should be hidden for M+ team runs ou Leveling
   const shouldHideDolarField = (): boolean => {
@@ -69,6 +74,7 @@ export function AddBuyer({
       run.idTeam === import.meta.env.VITE_TEAM_PVP
     )
   }
+  const shouldHideBuyerDolarInput = shouldHideDolarField() || isJuniorAdvertiser
 
   // Function to handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,7 +137,7 @@ export function AddBuyer({
       Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
 
     // If Dolar field is hidden, only validate that Pot is filled
-    if (shouldHideDolarField()) {
+    if (shouldHideBuyerDolarInput) {
       if (!buyerPotFilled) {
         setFormError('Pot field is required.')
         setIsSubmitting(false)
@@ -155,8 +161,10 @@ export function AddBuyer({
       nameAndRealm: formData.nameAndRealm || '',
       playerClass: formData.playerClass || '',
       buyerPot: Number(formData.buyerPot.replace(/,/g, '')) || 0,
-      buyerDolarPot: Number(formData.buyerDolarPot.replace(/,/g, '')) || 0,
-      isPaid: formData.isPaid,
+      buyerDolarPot: shouldHideBuyerDolarInput
+        ? 0
+        : Number(formData.buyerDolarPot.replace(/,/g, '')) || 0,
+      isPaid: canEditPaidFull ? formData.isPaid : false,
       idBuyerAdvertiser: formData.idBuyerAdvertiser || '',
       buyerNote: formData.buyerNote || '',
     }
@@ -296,7 +304,7 @@ export function AddBuyer({
                 }))
               }
               disabled={
-                !shouldHideDolarField() &&
+                !shouldHideBuyerDolarInput &&
                 !!formData.buyerDolarPot &&
                 Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
               }
@@ -304,7 +312,7 @@ export function AddBuyer({
             />
           </div>
 
-          {!shouldHideDolarField() && (
+          {!shouldHideBuyerDolarInput && (
             <div>
               <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
                 Pot (USD)
@@ -368,21 +376,23 @@ export function AddBuyer({
             </div>
           )}
 
-          <label className='col-span-1 inline-flex items-center gap-2 text-sm text-neutral-200 md:col-span-2'>
-            <input
-              id='isPaid'
-              type='checkbox'
-              checked={formData.isPaid}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isPaid: e.target.checked,
-                }))
-              }
-              className='h-4 w-4 rounded border-white/40 bg-transparent accent-purple-500'
-            />
-            Paid Full
-          </label>
+          {canEditPaidFull && (
+            <label className='col-span-1 inline-flex items-center gap-2 text-sm text-neutral-200 md:col-span-2'>
+              <input
+                id='isPaid'
+                type='checkbox'
+                checked={formData.isPaid}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isPaid: e.target.checked,
+                  }))
+                }
+                className='h-4 w-4 rounded border-white/40 bg-transparent accent-purple-500'
+              />
+              Paid Full
+            </label>
+          )}
 
           <div className='col-span-1 flex items-center justify-center gap-3 md:col-span-2'>
             <button

@@ -27,14 +27,17 @@
 /* Prevenir que o SweetAlert2 aplique overflow auto no body */
 body.swal2-shown {
   padding-right: 0 !important;
-  overflow: hidden !important;
-  /* Forçar que o overflow seja hidden, não auto */
+  overflow-y: auto !important;
 }
 
 body.swal2-height-auto {
   height: auto !important;
-  /* Manter overflow hidden mesmo quando height é auto */
-  overflow: hidden !important;
+}
+
+/* Se a classe residual ficar após fechar modal, restaura scroll da página */
+body.swal2-height-auto:not(.swal2-shown),
+html.swal2-height-auto:not(.swal2-shown) {
+  overflow-y: auto !important;
 }
 
 /* Prevenir que o SweetAlert2 adicione padding-right no body */
@@ -65,7 +68,7 @@ body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown) {
 
 /* Prevenir que o SweetAlert2 modifique o scroll da página */
 html.swal2-shown {
-  overflow: hidden !important;
+  overflow-y: auto !important;
 }
 
 /* Garantir que o header permaneça fixo e visível */
@@ -103,7 +106,7 @@ main {
 /* Prevenir que o SweetAlert2 adicione scrollbars desnecessárias */
 body.swal2-shown,
 html.swal2-shown {
-  overflow: hidden !important;
+  overflow-y: auto !important;
   padding-right: 0 !important;
 }
 
