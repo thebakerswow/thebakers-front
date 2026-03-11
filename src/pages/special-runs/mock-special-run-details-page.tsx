@@ -55,8 +55,9 @@ function buildMockBuyers(runType: string): MockBuyer[] {
       goldPot: 1250000,
       runPot: 1250000,
       playerClass: 'Mage',
-      claimed: false,
-      claimedById: null,
+      claimed: true,
+      claimedById: 'Luna',
+      claimedByName: 'Luna',
     },
     {
       id: `${runType.toLowerCase()}-02`,
@@ -72,6 +73,7 @@ function buildMockBuyers(runType: string): MockBuyer[] {
       playerClass: 'Warrior',
       claimed: false,
       claimedById: null,
+      claimedByName: null,
     },
     {
       id: `${runType.toLowerCase()}-03`,
@@ -85,8 +87,9 @@ function buildMockBuyers(runType: string): MockBuyer[] {
       goldPot: 950000,
       runPot: 950000,
       playerClass: 'Priest',
-      claimed: false,
-      claimedById: null,
+      claimed: true,
+      claimedById: 'Sia',
+      claimedByName: 'Sia',
     },
     {
       id: `${runType.toLowerCase()}-04`,
@@ -102,6 +105,7 @@ function buildMockBuyers(runType: string): MockBuyer[] {
       playerClass: 'Druid',
       claimed: true,
       claimedById: 'Rex',
+      claimedByName: 'Rex',
     },
     {
       id: `${runType.toLowerCase()}-05`,
@@ -117,6 +121,7 @@ function buildMockBuyers(runType: string): MockBuyer[] {
       playerClass: 'Rogue',
       claimed: false,
       claimedById: null,
+      claimedByName: null,
     },
   ]
 }
@@ -147,6 +152,7 @@ export function MockSpecialRunDetailsPage({ runType }: MockSpecialRunDetailsPage
   const responsibleUser = username || idDiscord || 'You'
   const responsibleUserId = idDiscord || username || null
   const runInfo = useMemo(() => buildMockRunInfo(runType), [runType])
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [buyers, setBuyers] = useState<MockBuyer[]>(() => buildMockBuyers(runType))
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
 
@@ -195,10 +201,40 @@ export function MockSpecialRunDetailsPage({ runType }: MockSpecialRunDetailsPage
     !buyer.claimed || (responsibleUserId !== null && buyer.claimedById === responsibleUserId)
 
   const handleStatusChange = (buyerId: string, newStatus: string) => {
+    if (!responsibleUserId) return
+
     setBuyers((prev) =>
-      prev.map((buyer) =>
-        buyer.id === buyerId ? { ...buyer, status: newStatus as MockBuyerStatus } : buyer
-      )
+      prev.map((buyer) => {
+        if (buyer.id !== buyerId) return buyer
+
+        const nextStatus = newStatus as MockBuyerStatus
+
+        if (nextStatus === 'group' || nextStatus === 'done') {
+          return {
+            ...buyer,
+            status: nextStatus,
+            claimed: true,
+            paidFull: true,
+            collector: buyer.collector === '-' ? responsibleUser : buyer.collector,
+            claimedById: buyer.claimedById || responsibleUserId,
+            claimedByName: buyer.claimedByName || responsibleUser,
+          }
+        }
+
+        if (nextStatus === 'noshow') {
+          return {
+            ...buyer,
+            status: nextStatus,
+            claimed: false,
+            paidFull: false,
+            collector: '-',
+            claimedById: null,
+            claimedByName: null,
+          }
+        }
+
+        return { ...buyer, status: nextStatus }
+      })
     )
   }
 
@@ -210,7 +246,14 @@ export function MockSpecialRunDetailsPage({ runType }: MockSpecialRunDetailsPage
         buyer.id === buyerId
           ? buyer.claimed
             ? buyer.claimedById === responsibleUserId
-              ? { ...buyer, claimed: false, paidFull: false, collector: '-', claimedById: null }
+              ? {
+                  ...buyer,
+                  claimed: false,
+                  paidFull: false,
+                  collector: '-',
+                  claimedById: null,
+                  claimedByName: null,
+                }
               : buyer
             : {
                 ...buyer,
@@ -218,16 +261,37 @@ export function MockSpecialRunDetailsPage({ runType }: MockSpecialRunDetailsPage
                 paidFull: true,
                 collector: responsibleUser,
                 claimedById: responsibleUserId,
+                claimedByName: responsibleUser,
               }
           : buyer
       )
     )
   }
 
+  const selectedDateLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+      }).format(selectedDate),
+    [selectedDate]
+  )
+
   return (
     <div className='flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl'>
       <div className='mx-2 p-4 pb-20'>
-        <SpecialRunDetails runInfo={runInfo} onOpenAddBuyer={() => setIsAddBuyerOpen(true)} />
+        <SpecialRunDetails
+          selectedDateLabel={selectedDateLabel}
+          onPreviousDate={() =>
+            setSelectedDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1))
+          }
+          onNextDate={() =>
+            setSelectedDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1))
+          }
+          onOpenAddBuyer={() => setIsAddBuyerOpen(true)}
+        />
         <SpecialRunBuyersGrid
           buyers={sortedBuyers}
           statusOptions={statusOptions}

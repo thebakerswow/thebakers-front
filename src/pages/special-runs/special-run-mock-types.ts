@@ -14,6 +14,7 @@ export interface MockBuyer {
   playerClass: string
   claimed: boolean
   claimedById: string | null
+  claimedByName: string | null
 }
 
 export interface MockSumPot {

@@ -45,6 +45,7 @@ export function SpecialRunBuyersGrid({
               <th className='px-2 py-3 text-center font-semibold'>Note</th>
               <th className='px-2 py-3 text-center font-semibold'>Advertiser</th>
               <th className='px-2 py-3 text-center font-semibold'>Collector</th>
+              <th className='px-2 py-3 text-center font-semibold'>Claimed By</th>
               <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
               <th className='px-2 py-3 text-center font-semibold'>Dolar Pot</th>
               <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
@@ -72,6 +73,9 @@ export function SpecialRunBuyersGrid({
                 <td className='px-2 py-2 text-center'>{buyer.note}</td>
                 <td className='px-2 py-2 text-center'>{buyer.advertiser}</td>
                 <td className='px-2 py-2 text-center'>{buyer.collector}</td>
+                <td className='px-2 py-2 text-center'>
+                  {buyer.claimed ? buyer.claimedByName || buyer.claimedById || '-' : '-'}
+                </td>
                 <td className='px-2 py-2 text-center'>
                   <span className='inline-flex rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm'>
                     {buyer.paidFull ? (
@@ -115,6 +119,10 @@ export function SpecialRunBuyersGrid({
                     >
                       {buyer.claimed ? 'Claimed' : 'Claim'}
                     </button>
+                  ) : buyer.status === 'group' || buyer.status === 'done' ? (
+                    <span className='rounded-md border border-emerald-300/60 bg-emerald-500/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]'>
+                      Claimed
+                    </span>
                   ) : (
                     <span className='text-neutral-400'>-</span>
                   )}
