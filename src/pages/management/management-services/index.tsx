@@ -1,29 +1,5 @@
-import { useState, useEffect } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-  IconButton,
-  Paper,
-  Card,
-  CardContent,
-  Grid,
-  Chip,
-} from '@mui/material'
-import EditIcon from '@mui/icons-material/Edit'
-import DeleteIcon from '@mui/icons-material/Delete'
-import CloseIcon from '@mui/icons-material/Close'
-import CategoryIcon from '@mui/icons-material/Category'
+import { useEffect, useState } from 'react'
+import { Fire, FolderSimple, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
@@ -46,29 +22,18 @@ export default function PriceTableManagement() {
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
 
-  // --- CATEGORIAS ---
   const emptyCategoryForm: CategoryForm = { name: '' }
-  const [categoryForm, setCategoryForm] =
-    useState<CategoryForm>(emptyCategoryForm)
-  const [editingCategory, setEditingCategory] =
-    useState<ServiceCategory | null>(null)
+  const [categoryForm, setCategoryForm] = useState<CategoryForm>(emptyCategoryForm)
+  const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null)
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false)
 
-  // --- DIALOGS ---
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null)
   const [isCategoryServicesDialogOpen, setIsCategoryServicesDialogOpen] = useState(false)
   const [openCategories, setOpenCategories] = useState(false)
 
-  // Handle errors
-  const handleError = (errorDetails: ErrorDetails) => {
-    setError(errorDetails)
-  }
+  const handleError = (errorDetails: ErrorDetails) => setError(errorDetails)
+  const clearError = () => setError(null)
 
-  const clearError = () => {
-    setError(null)
-  }
-
-  // Buscar serviços e categorias ao montar
   useEffect(() => {
     fetchServices()
     fetchCategories()
@@ -105,15 +70,11 @@ export default function PriceTableManagement() {
             status: error.response?.status,
           }
         : { message: 'Failed to fetch categories', response: error }
-
       handleError(errorDetails)
     }
   }
 
-  // Handle service operations with new component
-  const handleServiceAdded = () => {
-    fetchServices()
-  }
+  const handleServiceAdded = () => fetchServices()
 
   const handleEditService = (service: Service) => {
     setEditingService(service)
@@ -135,41 +96,35 @@ export default function PriceTableManagement() {
       cancelButtonColor: '#888',
       confirmButtonText: 'Yes, delete it!',
     }).then(async (result: any) => {
-      if (result.isConfirmed) {
-        try {
-          await deleteService(id)
-          setServices((prev) => prev.filter((s) => s.id !== id))
-          Swal.fire('Deleted!', 'Service has been deleted.', 'success')
-        } catch (error) {
-          const errorDetails = axios.isAxiosError(error)
-            ? {
-                message: error.response?.data?.message || error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-
-          handleError(errorDetails)
-        }
+      if (!result.isConfirmed) return
+      try {
+        await deleteService(id)
+        setServices((prev) => prev.filter((s) => s.id !== id))
+        Swal.fire('Deleted!', 'Service has been deleted.', 'success')
+      } catch (error) {
+        const errorDetails = axios.isAxiosError(error)
+          ? {
+              message: error.response?.data?.message || error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+        handleError(errorDetails)
       }
     })
   }
 
-  // Handle category card click
   const handleCategoryClick = (category: ServiceCategory) => {
     setSelectedCategory(category)
     setIsCategoryServicesDialogOpen(true)
   }
 
-  // Handle close category services dialog
   const handleCloseCategoryServicesDialog = () => {
     setIsCategoryServicesDialogOpen(false)
     setSelectedCategory(null)
   }
 
-  const handleOpenCategoryDialog = (
-    category: ServiceCategory | null = null
-  ) => {
+  const handleOpenCategoryDialog = (category: ServiceCategory | null = null) => {
     setEditingCategory(category)
     if (category) {
       setCategoryForm({ name: category.name })
@@ -193,21 +148,15 @@ export default function PriceTableManagement() {
   const handleSaveCategory = async () => {
     const { name } = categoryForm
     if (!name) {
-      const errorDetails = { message: 'Please fill the name', response: null }
-      handleError(errorDetails)
+      handleError({ message: 'Please fill the name', response: null })
       return
     }
     try {
       if (editingCategory) {
-        await updateServiceCategory({
-          id: editingCategory.id,
-          name,
-        })
+        await updateServiceCategory({ id: editingCategory.id, name })
         Swal.fire('Success', 'Category updated!', 'success')
       } else {
-        await createServiceCategory({
-          name,
-        })
+        await createServiceCategory({ name })
         Swal.fire('Success', 'Category added!', 'success')
       }
       handleCloseCategoryDialog()
@@ -220,7 +169,6 @@ export default function PriceTableManagement() {
             status: error.response?.status,
           }
         : { message: 'Unexpected error', response: error }
-
       handleError(errorDetails)
     }
   }
@@ -235,509 +183,287 @@ export default function PriceTableManagement() {
       cancelButtonColor: '#888',
       confirmButtonText: 'Yes, delete it!',
     }).then(async (result: any) => {
-      if (result.isConfirmed) {
-        try {
-          await deleteServiceCategory(id)
-          setCategories((prev) => prev.filter((c) => c.id !== id))
-          Swal.fire('Deleted!', 'Category has been deleted.', 'success')
-        } catch (error) {
-          const errorDetails = axios.isAxiosError(error)
-            ? {
-                message: error.response?.data?.message || error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-              }
-            : { message: 'Unexpected error', response: error }
-
-          handleError(errorDetails)
-        }
+      if (!result.isConfirmed) return
+      try {
+        await deleteServiceCategory(id)
+        setCategories((prev) => prev.filter((c) => c.id !== id))
+        Swal.fire('Deleted!', 'Category has been deleted.', 'success')
+      } catch (error) {
+        const errorDetails = axios.isAxiosError(error)
+          ? {
+              message: error.response?.data?.message || error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+            }
+          : { message: 'Unexpected error', response: error }
+        handleError(errorDetails)
       }
     })
   }
 
-  // Get services for a specific category
-  const getServicesForCategory = (categoryId: number) => {
-    return services.filter(service => service.serviceCategoryId === categoryId)
-  }
+  const getServicesForCategory = (categoryId: number) =>
+    services.filter((service) => service.serviceCategoryId === categoryId)
 
   return (
-    <div className='w-full overflow-auto overflow-x-hidden pr-20'>
-      <div className='m-8 min-h-screen w-full pb-12 text-white'>
-                 <div className='mb-6 flex justify-between'>
-           <Typography variant='h4' fontWeight='bold'>
-             Price Table Management
-           </Typography>
-           <Button
-             variant='contained'
-             color='error'
-             onClick={() => setOpenCategories(true)}
-             sx={{
-               backgroundColor: 'rgb(147, 51, 234)',
-               '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-             }}
-           >
-             Manage Categories
-           </Button>
-         </div>
+    <div className='flex w-full flex-col overflow-auto p-6'>
+      <div className='min-h-full w-full rounded-xl border border-white/10 bg-white/[0.04] p-4 pb-8 text-white shadow-2xl'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end'>
+          <button
+            type='button'
+            onClick={() => setOpenCategories(true)}
+            className='inline-flex h-10 items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm font-medium text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white'
+          >
+            Manage Categories
+          </button>
+        </div>
+        <div className='my-4 h-px w-full bg-gradient-to-r from-transparent via-purple-400/35 to-transparent' />
 
-        {/* Categories Grid */}
         {loadingServices ? (
-          <div className='flex h-40 items-center justify-center'>
+          <div className='flex h-52 items-center justify-center rounded-xl border border-white/10 bg-black/20'>
             <div className='flex flex-col items-center gap-2'>
               <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
               <span className='text-gray-400'>Loading services...</span>
             </div>
           </div>
         ) : (
-          <Grid container spacing={3}>
+          <div className='grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-black/20 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
             {categories.map((category) => {
               const servicesInCategory = getServicesForCategory(category.id)
               const serviceCount = servicesInCategory.length
-              const hotServicesCount = servicesInCategory.filter(s => s.hotItem).length
+              const hotServicesCount = servicesInCategory.filter((s) => s.hotItem).length
 
               return (
-                                 <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
-                   <Card
-                     className='cursor-pointer transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg'
-                     sx={{
-                       bgcolor: '#1a1a1a',
-                       border: '1px solid #333',
-                       height: 200, // Altura fixa para todos os cards
-                       display: 'flex',
-                       flexDirection: 'column',
-                       transition: 'all 0.3s ease-in-out',
-                       '&:hover': {
-                         borderColor: 'rgb(147, 51, 234)',
-                         bgcolor: '#2a2a2a',
-                         transform: 'translateY(-2px)',
-                         boxShadow: '0 8px 25px rgba(147, 51, 234, 0.15)',
-                       },
-                     }}
-                     onClick={() => handleCategoryClick(category)}
-                   >
-                     <CardContent 
-                       className='text-center'
-                       sx={{ 
-                         flexGrow: 1,
-                         display: 'flex',
-                         flexDirection: 'column',
-                         justifyContent: 'space-between',
-                         p: 2
-                       }}
-                     >
-                       <div>
-                         <div className='mb-3 flex justify-center'>
-                           <CategoryIcon 
-                             sx={{ 
-                               fontSize: 40, 
-                               color: 'rgb(147, 51, 234)' 
-                             }} 
-                           />
-                         </div>
-                         <Typography 
-                           variant='h6' 
-                           component='h3'
-                           sx={{ 
-                             color: '#fff',
-                             fontWeight: 'bold',
-                             mb: 1,
-                             fontSize: '1.1rem',
-                             lineHeight: 1.2
-                           }}
-                         >
-                           {category.name}
-                         </Typography>
-                         <Typography 
-                           variant='body2' 
-                           sx={{ 
-                             color: '#b0b0b0',
-                             mb: 1,
-                             fontSize: '0.875rem'
-                           }}
-                         >
-                           {serviceCount} service{serviceCount !== 1 ? 's' : ''} available
-                         </Typography>
-                       </div>
-                       
-                       <div className='flex flex-col gap-1'>
-                         {hotServicesCount > 0 && (
-                           <Chip
-                             label={`${hotServicesCount} 🔥 Hot`}
-                             size='small'
-                             sx={{
-                               bgcolor: 'rgba(147, 51, 234, 0.2)',
-                               color: 'rgb(147, 51, 234)',
-                               border: '1px solid rgb(147, 51, 234)',
-                               alignSelf: 'center',
-                               fontSize: '0.7rem',
-                               height: 20,
-                               '& .MuiChip-label': {
-                                 px: 1,
-                               }
-                             }}
-                           />
-                         )}
-                         <Typography 
-                           variant='caption' 
-                           sx={{ 
-                             color: 'rgb(147, 51, 234)',
-                             fontSize: '0.75rem',
-                             textAlign: 'center'
-                           }}
-                         >
-                           Click to view services
-                         </Typography>
-                       </div>
-                     </CardContent>
-                   </Card>
-                 </Grid>
+                <button
+                  key={category.id}
+                  type='button'
+                  onClick={() => handleCategoryClick(category)}
+                  className='h-[200px] rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-left transition hover:-translate-y-0.5 hover:border-purple-500/40 hover:bg-[#222] hover:shadow-lg'
+                >
+                  <div className='flex h-full flex-col justify-between'>
+                    <div>
+                      <div className='mb-3 flex justify-center text-purple-400'>
+                        <FolderSimple size={40} weight='duotone' />
+                      </div>
+                      <h3 className='mb-1 text-center text-lg font-bold text-white'>{category.name}</h3>
+                      <p className='text-center text-sm text-neutral-400'>
+                        {serviceCount} service{serviceCount !== 1 ? 's' : ''} available
+                      </p>
+                    </div>
+                    <div className='flex flex-col items-center gap-1'>
+                      {hotServicesCount > 0 ? (
+                        <span className='inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400'>
+                          <Fire size={12} />
+                          {hotServicesCount} Hot
+                        </span>
+                      ) : null}
+                      <span className='text-xs text-purple-300'>Click to view services</span>
+                    </div>
+                  </div>
+                </button>
               )
             })}
-          </Grid>
+          </div>
         )}
 
-        {/* Dialog for Category Services */}
-        <Dialog
-          open={isCategoryServicesDialogOpen}
-          onClose={handleCloseCategoryServicesDialog}
-          maxWidth='lg'
-          fullWidth
-          PaperProps={{
-            sx: {
-              maxHeight: '90vh',
-              height: '90vh',
-              marginTop: '64px', // Margem do header (altura padrão do AppBar)
-              marginBottom: '16px',
-            }
-          }}
-        >
-          <DialogContent 
-            sx={{ 
-              bgcolor: '#1a1a1a', 
-              color: '#fff',
-              overflow: 'auto',
-              height: '100%',
-              padding: 0,
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            {selectedCategory && (
-              <>
-                {/* Fixed Header */}
-                <div className='sticky top-0 z-10 bg-[#1a1a1a] p-6 pb-4 border-b border-zinc-700'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <CategoryIcon sx={{ color: 'rgb(147, 51, 234)' }} />
-                      <Typography variant='h5' fontWeight='bold'>
-                        {selectedCategory.name} Services
-                      </Typography>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        variant='contained'
-                        size='small'
-                        onClick={handleAddService}
-                        sx={{
-                          backgroundColor: 'rgb(147, 51, 234)',
-                          '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                          fontSize: '0.875rem',
-                          px: 2,
-                          py: 0.5,
-                        }}
-                      >
-                        Add Service
-                      </Button>
-                      <IconButton
-                        onClick={handleCloseCategoryServicesDialog}
-                        sx={{ color: '#fff' }}
-                      >
-                        <CloseIcon />
-                      </IconButton>
-                    </div>
-                  </div>
+        {isCategoryServicesDialogOpen && selectedCategory ? (
+          <div className='fixed inset-0 z-[210] flex items-center justify-center bg-black/70 p-4'>
+            <div className='flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl'>
+              <div className='flex items-center justify-between border-b border-white/10 p-4'>
+                <div className='flex items-center gap-2'>
+                  <FolderSimple size={22} className='text-purple-400' />
+                  <h2 className='text-xl font-semibold text-white'>{selectedCategory.name} Services</h2>
                 </div>
+                <div className='flex items-center gap-2'>
+                  <button
+                    type='button'
+                    onClick={handleAddService}
+                    className='inline-flex h-9 items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-3 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
+                  >
+                    <Plus size={16} className='mr-1' />
+                    Add Service
+                  </button>
+                  <button
+                    type='button'
+                    onClick={handleCloseCategoryServicesDialog}
+                    className='rounded-md border border-white/10 bg-white/5 p-2 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
 
-                {/* Scrollable Content */}
-                <div className='flex-1 overflow-auto p-6 pt-4'>
-
-                {/* Services Grid */}
+              <div className='flex-1 overflow-auto p-4'>
                 {getServicesForCategory(selectedCategory.id).length === 0 ? (
-                  <div className='flex h-40 items-center justify-center'>
-                    <span className='text-gray-400'>No services in this category</span>
+                  <div className='flex h-40 items-center justify-center text-neutral-400'>
+                    No services in this category
                   </div>
                 ) : (
-                  <Grid container spacing={3}>
+                  <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
                     {getServicesForCategory(selectedCategory.id).map((service) => (
-                      <Grid item xs={12} sm={6} md={4} key={service.id}>
-                        <Card
-                          sx={{
-                            bgcolor: '#2a2a2a',
-                            border: '1px solid #333',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            position: 'relative',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover': {
-                              borderColor: 'rgb(147, 51, 234)',
-                              bgcolor: '#3a3a3a',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 6px 20px rgba(147, 51, 234, 0.1)',
-                            },
-                          }}
-                        >
-                          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                            {/* Hot Badge */}
-                            {service.hotItem && (
-                              <Chip
-                                label='🔥 HOT'
-                                size='small'
-                                sx={{
-                                  position: 'absolute',
-                                  top: 8,
-                                  right: 8,
-                                  bgcolor: 'rgba(147, 51, 234, 0.2)',
-                                  color: 'rgb(147, 51, 234)',
-                                  border: '1px solid rgb(147, 51, 234)',
-                                  fontSize: '0.75rem',
-                                }}
-                              />
-                            )}
-
-                            {/* Service Name */}
-                            <Typography 
-                              variant='h6' 
-                              component='h3'
-                              sx={{ 
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                mb: 2,
-                                pr: service.hotItem ? 6 : 0,
-                              }}
-                            >
-                              {service.name}
-                            </Typography>
-
-                            {/* Service Description */}
-                            <Typography 
-                              variant='body2' 
-                              sx={{ 
-                                color: '#b0b0b0',
-                                mb: 3,
-                                flexGrow: 1,
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              {service.description}
-                            </Typography>
-
-                            {/* Price */}
-                            <Typography 
-                              variant='h5' 
-                              sx={{ 
-                                color: 'rgb(147, 51, 234)',
-                                fontWeight: 'bold',
-                                mb: 2,
-                              }}
-                            >
-                              {service.price
-                                .toLocaleString('en-US', { maximumFractionDigits: 0 })
-                                .replace(/,/g, ',')}g
-                            </Typography>
-
-                            {/* Actions */}
-                            <div className='flex justify-end gap-1'>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleEditService(service)}
-                                sx={{
-                                  color: 'rgb(147, 51, 234)',
-                                  transition: 'all 0.2s ease-in-out',
-                                  '&:hover': { 
-                                    color: 'rgb(168, 85, 247)',
-                                    bgcolor: 'rgba(147, 51, 234, 0.1)',
-                                    transform: 'scale(1.1)',
-                                  },
-                                }}
-                              >
-                                <EditIcon fontSize='small' />
-                              </IconButton>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleDelete(service.id)}
-                                sx={{
-                                  color: '#ef4444',
-                                  transition: 'all 0.2s ease-in-out',
-                                  '&:hover': { 
-                                    color: '#dc2626',
-                                    bgcolor: 'rgba(239, 68, 68, 0.1)',
-                                    transform: 'scale(1.1)',
-                                  },
-                                }}
-                              >
-                                <DeleteIcon fontSize='small' />
-                              </IconButton>
+                      <div
+                        key={service.id}
+                        className='relative flex flex-col rounded-xl border border-white/10 bg-[#262626] p-4 transition hover:-translate-y-0.5 hover:border-purple-500/40'
+                      >
+                        <div className='mb-2 flex items-start gap-2'>
+                          <h3 className='line-clamp-1 flex-1 text-lg font-bold text-white'>{service.name}</h3>
+                          {service.hotItem ? (
+                            <span className='inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400'>
+                              <Fire size={12} />
+                              Hot
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className='mb-4 flex-1 text-sm text-neutral-400'>{service.description}</p>
+                        <div className='border-t border-white/5 pt-3'>
+                          <div className='flex items-end justify-between gap-2'>
+                            <div>
+                              <span className='text-[10px] uppercase tracking-wider text-gray-500'>Price</span>
+                              <p className='text-xl font-bold text-amber-400'>
+                                {service.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                <span className='ml-1 text-xs font-medium text-amber-500/70'>gold</span>
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Grid>
+                            <div className='flex gap-1'>
+                              <button
+                                type='button'
+                                onClick={() => handleEditService(service)}
+                                className='rounded-md p-2 text-purple-300 transition hover:bg-purple-500/15 hover:text-purple-200'
+                              >
+                                <PencilSimple size={16} />
+                              </button>
+                              <button
+                                type='button'
+                                onClick={() => handleDelete(service.id)}
+                                className='rounded-md p-2 text-red-400 transition hover:bg-red-500/15 hover:text-red-300'
+                              >
+                                <Trash size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </Grid>
+                  </div>
                 )}
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
-        {/* Dialog for Categories CRUD */}
-        <Dialog
-          open={openCategories}
-          onClose={() => setOpenCategories(false)}
-          maxWidth='md'
-          fullWidth
-          PaperProps={{
-            sx: {
-              marginTop: '64px', // Margem do header (altura padrão do AppBar)
-              marginBottom: '16px',
-            }
-          }}
-        >
-          <DialogContent>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '24px',
-              }}
-            >
-              <Typography variant='h6' fontWeight='bold'>
-                Category Management
-              </Typography>
-              <Button
-                variant='contained'
-                color='error'
-                onClick={() => handleOpenCategoryDialog()}
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
+        {openCategories ? (
+          <div className='fixed inset-0 z-[220] flex items-center justify-center bg-black/70 p-4'>
+            <div className='w-full max-w-3xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 shadow-2xl'>
+              <div className='mb-4 flex items-center justify-between'>
+                <h2 className='text-lg font-semibold text-white'>Category Management</h2>
+                <button
+                  type='button'
+                  onClick={() => handleOpenCategoryDialog()}
+                  className='inline-flex h-9 items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-3 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
+                >
+                  <Plus size={16} className='mr-1' />
+                  Add Category
+                </button>
+              </div>
+
+              <div className='overflow-hidden rounded-md border border-white/10'>
+                <table className='w-full text-sm'>
+                  <thead className='bg-white/[0.06] text-neutral-300'>
+                    <tr>
+                      <th className='px-3 py-2 text-left font-semibold'>Category</th>
+                      <th className='px-3 py-2 text-right font-semibold'>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map((category) => (
+                      <tr key={category.id} className='border-t border-white/5'>
+                        <td className='px-3 py-2 text-white'>{category.name}</td>
+                        <td className='px-3 py-2 text-right'>
+                          <button
+                            type='button'
+                            onClick={() => handleOpenCategoryDialog(category)}
+                            className='mr-1 rounded-md p-2 text-purple-300 transition hover:bg-purple-500/15 hover:text-purple-200'
+                          >
+                            <PencilSimple size={16} />
+                          </button>
+                          <button
+                            type='button'
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className='rounded-md p-2 text-red-400 transition hover:bg-red-500/15 hover:text-red-300'
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className='mt-4 flex justify-end'>
+                <button
+                  type='button'
+                  onClick={() => setOpenCategories(false)}
+                  className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {openCategoryDialog ? (
+          <div className='fixed inset-0 z-[230] flex items-center justify-center bg-black/70 p-4'>
+            <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 shadow-2xl'>
+              <div className='mb-4 flex items-center justify-between'>
+                <h3 className='text-lg font-semibold text-white'>
+                  {editingCategory ? 'Edit Category' : 'Add Category'}
+                </h3>
+                <button
+                  type='button'
+                  onClick={handleCloseCategoryDialog}
+                  className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSaveCategory()
                 }}
               >
-                Add Category
-              </Button>
+                <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                  Category Name
+                </label>
+                <input
+                  name='name'
+                  required
+                  value={categoryForm.name}
+                  onChange={handleChangeCategory}
+                  className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+                />
+                <div className='mt-4 flex justify-end gap-2'>
+                  <button
+                    type='button'
+                    onClick={handleCloseCategoryDialog}
+                    className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type='submit'
+                    className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
+                  >
+                    {editingCategory ? 'Save' : 'Add'}
+                  </button>
+                </div>
+              </form>
             </div>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Category</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(categories) &&
-                    categories.map((category) => (
-                      <TableRow key={category.id} hover>
-                        <TableCell>{category.name}</TableCell>
-                        <TableCell>
-                          <IconButton
-                            color='error'
-                            onClick={() => handleOpenCategoryDialog(category)}
-                            sx={{
-                              color: 'rgb(147, 51, 234)',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': { 
-                                color: 'rgb(168, 85, 247)',
-                                transform: 'scale(1.1)',
-                              },
-                            }}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            color='error'
-                            onClick={() => handleDeleteCategory(category.id)}
-                            sx={{
-                              color: 'rgb(147, 51, 234)',
-                              transition: 'all 0.2s ease-in-out',
-                              '&:hover': { 
-                                color: 'rgb(168, 85, 247)',
-                                transform: 'scale(1.1)',
-                              },
-                            }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {/* Dialog interno para Add/Edit Category */}
-            <Dialog
-              open={openCategoryDialog}
-              onClose={handleCloseCategoryDialog}
-            >
-              <DialogTitle className='relative'>
-                {editingCategory ? 'Edit Category' : 'Add Category'}
-                <IconButton
-                  aria-label='close'
-                  onClick={handleCloseCategoryDialog}
-                  sx={{ position: 'absolute', right: 8, top: 8 }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </DialogTitle>
-              <DialogContent sx={{ minWidth: 350 }}>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSaveCategory()
-                  }}
-                >
-                  <TextField
-                    margin='dense'
-                    label='Category Name'
-                    name='name'
-                    required
-                    fullWidth
-                    value={categoryForm.name}
-                    onChange={handleChangeCategory}
-                  />
-                  {error && (
-                    <ErrorComponent error={error} onClose={clearError} />
-                  )}
-                </form>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseCategoryDialog} color='inherit'>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveCategory}
-                  color='error'
-                  variant='contained'
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  }}
-                >
-                  {editingCategory ? 'Save' : 'Add'}
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenCategories(false)} color='inherit'>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </div>
+        ) : null}
 
-        {/* AddService Component */}
-        {isAddServiceOpen && (
+        {isAddServiceOpen ? (
           <AddService
             open={isAddServiceOpen}
             onClose={() => {
@@ -748,7 +474,9 @@ export default function PriceTableManagement() {
             onError={handleError}
             editingService={editingService}
           />
-        )}
+        ) : null}
+
+        {error ? <ErrorComponent error={error} onClose={clearError} /> : null}
       </div>
     </div>
   )

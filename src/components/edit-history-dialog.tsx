@@ -50,14 +50,14 @@ export function EditHistoryDialog({
   if (!open) return null
 
   return (
-    <div className='fixed inset-0 z-[2200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
-      <div className='w-full max-w-6xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5 shadow-[0_24px_50px_rgba(0,0,0,0.45)]'>
-        <div className='mb-4 flex items-center justify-between border-b border-white/10 pb-3'>
-          <h3 className='text-lg font-semibold text-purple-100'>Edit History</h3>
+    <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+      <div className='w-full max-w-6xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
+        <div className='mb-4 flex items-center justify-between'>
+          <h3 className='text-lg font-semibold text-white'>Edit History</h3>
           <button
             type='button'
             onClick={onClose}
-            className='rounded-md p-1 text-purple-200/70 hover:bg-purple-400/15 hover:text-purple-100'
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
           >
             <X size={18} />
           </button>
@@ -74,7 +74,7 @@ export function EditHistoryDialog({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder='Filter edits'
-          className='balance-filter-control mb-3 h-11 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 text-sm text-purple-100 outline-none placeholder:text-purple-200/50'
+          className='mb-3 h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none placeholder:text-neutral-500 transition focus:border-purple-400/50'
         />
 
         <div className='max-h-[60vh] overflow-auto rounded-md border border-white/10 bg-white/[0.03] p-3'>

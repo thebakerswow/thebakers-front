@@ -14,7 +14,6 @@ import {
   Sword,
   Trophy,
   User,
-  UsersFour,
   X,
   ClipboardText,
 } from '@phosphor-icons/react'
@@ -83,11 +82,6 @@ export function Header() {
             icon: <Briefcase size={18} />,
             children: [
               { label: 'Admin', path: '/admin', icon: <Briefcase size={18} /> },
-              {
-                label: 'Teams',
-                path: '/management-teams',
-                icon: <UsersFour size={18} />,
-              },
               {
                 label: 'Services',
                 path: '/services',

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
-import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
+import { UserPlus, ClipboardText, UsersFour, X } from '@phosphor-icons/react'
 import { AddRun } from './components/add-run'
 import { useAuth } from '../../context/auth-context'
 import { getRuns, createRun } from '../../services/api/runs'
@@ -437,16 +437,16 @@ export function FullRaidsNa() {
 
         {isBulkAddOpen &&
           createPortal(
-            <div className='fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
-              <div className='w-full max-w-3xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5'>
+            <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+              <div className='w-full max-w-3xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
                 <div className='mb-4 flex items-center justify-between'>
-                  <h3 className='text-lg font-semibold text-purple-100'>Add Multiple Runs</h3>
+                  <h3 className='text-lg font-semibold text-white'>Add Multiple Runs</h3>
                   <button
                     aria-label='close'
                     onClick={handleCloseBulkAddDialog}
-                    className='rounded-md p-1 text-purple-200/70 hover:bg-purple-400/15 hover:text-purple-100'
+                    className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
                   >
-                    ×
+                    <X size={18} />
                   </button>
                 </div>
                 <textarea
@@ -454,21 +454,21 @@ export function FullRaidsNa() {
                   placeholder='Paste runs data here (JSON format)'
                   value={bulkRunsData}
                   onChange={(e) => handleBulkRunsDataChange(e.target.value)}
-                  className='w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] p-3 font-mono text-sm text-purple-100 outline-none placeholder:text-purple-200/50 focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+                  className='w-full rounded-md border border-white/15 bg-white/[0.05] p-3 font-mono text-sm text-white outline-none placeholder:text-neutral-500 transition focus:border-purple-400/50'
                 />
                 <div className='mt-4 flex justify-end gap-2'>
                   <button
-                    onClick={handleBulkAddRuns}
-                    disabled={isSubmitting}
-                    className='balance-action-btn h-10 rounded-md border border-green-400/40 bg-green-600/80 px-4 text-sm font-semibold text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60'
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Runs'}
-                  </button>
-                  <button
                     onClick={handleCloseBulkAddDialog}
-                    className='balance-action-btn px-4'
+                    className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={handleBulkAddRuns}
+                    disabled={isSubmitting}
+                    className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Runs'}
                   </button>
                 </div>
               </div>

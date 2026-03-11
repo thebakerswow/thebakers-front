@@ -166,14 +166,14 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   }
 
   const baseFieldClass =
-    'balance-filter-control h-12 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 text-left text-base shadow-none outline-none transition focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+    'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
   const dateTriggerClass =
-    'balance-filter-control h-12 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 pr-9 text-left text-base shadow-none outline-none transition focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+    'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 pr-9 text-left text-sm text-white shadow-none outline-none transition focus:border-purple-400/50'
   const baseSelectClass = `${baseFieldClass} appearance-none ![background-image:none] text-white`
   const dateTimeFieldClass = `${baseFieldClass} ![color-scheme:dark] text-white`
   const isMythic = formData.difficulty === 'Mythic'
   const customSelectTriggerClass =
-    'h-12 border-purple-300/25 !bg-[rgba(14,10,28,0.9)] ![background-image:none] !shadow-none text-base'
+    'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
   const nameOptions = [
     'Nerub-ar Palace',
     'Liberation of Undermine',
@@ -297,15 +297,15 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
   }
 
   return (
-    <div className='fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
-      <div className='w-full max-w-3xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5'>
+    <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+      <div className='w-full max-w-3xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
         {!isSuccess && (
-          <div className='mb-4 flex items-center justify-between border-b border-white/10 pb-3'>
+          <div className='mb-4 flex items-center justify-between'>
             <h2 className='text-lg font-semibold text-white'>Edit Run</h2>
             <button
               type='button'
               onClick={onClose}
-              className='rounded-md p-1 text-white/75 hover:bg-white/10 hover:text-white'
+              className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
             >
               <X size={18} />
             </button>
@@ -327,6 +327,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
               placeholder='Select name'
               minWidthClassName='min-w-full'
               triggerClassName={customSelectTriggerClass}
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
             />
           </div>
 
@@ -462,6 +465,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 options={runTypeOptions}
                 minWidthClassName='min-w-full'
                 triggerClassName={customSelectTriggerClass}
+                menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                optionClassName='text-white/90 hover:bg-white/10'
+                renderInPortal
               />
             </div>
           )}
@@ -475,6 +481,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 options={difficultyOptions}
                 minWidthClassName='min-w-full'
                 triggerClassName={customSelectTriggerClass}
+                menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                optionClassName='text-white/90 hover:bg-white/10'
+                renderInPortal
               />
             </div>
           )}
@@ -494,6 +503,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 placeholder='Select Mythic cut'
                 minWidthClassName='min-w-full'
                 triggerClassName={customSelectTriggerClass}
+                menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                optionClassName='text-white/90 hover:bg-white/10'
+                renderInPortal
               />
             </div>
           )}
@@ -507,6 +519,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 options={teamOptions}
                 minWidthClassName='min-w-full'
                 triggerClassName={customSelectTriggerClass}
+                menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                optionClassName='text-white/90 hover:bg-white/10'
+                renderInPortal
               />
             </div>
           )}
@@ -525,7 +540,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
 
           <div className='col-span-1 flex flex-col md:col-span-2'>
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Raid Leader</label>
-            <div className='max-h-[190px] w-full overflow-y-auto rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 py-3'>
+            <div className='max-h-[190px] w-full overflow-y-auto rounded-md border border-white/15 bg-white/[0.05] px-4 py-3'>
               <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
                 {apiOptions.map((option) => {
                   const optionValue = `${option.id};${option.username}`
@@ -534,7 +549,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                   return (
                     <label
                       key={option.username}
-                      className='flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-purple-100 hover:bg-purple-500/10'
+                      className='flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10'
                     >
                       <input
                         type='checkbox'
@@ -542,7 +557,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                         onChange={(event) =>
                           handleRaidLeaderChange(optionValue, event.target.checked)
                         }
-                        className='h-4 w-4 cursor-pointer rounded border-purple-300/40 bg-[rgba(14,10,28,0.9)] accent-purple-500'
+                        className='h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.05] accent-purple-500'
                       />
                       <span>{option.global_name}</span>
                     </label>
@@ -573,6 +588,9 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
                 options={lootOptions}
                 minWidthClassName='min-w-full'
                 triggerClassName={customSelectTriggerClass}
+                menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                optionClassName='text-white/90 hover:bg-white/10'
+                renderInPortal
               />
             </div>
           )}
@@ -586,21 +604,25 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
             />
           </div>
 
-          <div className='col-span-1 flex items-center justify-center gap-3 md:col-span-2'>
+          <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
+            >
+              Cancel
+            </button>
             <button
               type='submit'
               disabled={isSubmitting}
-              className='balance-action-btn balance-action-btn--primary inline-flex min-w-[170px] items-center justify-center gap-2 px-5 disabled:cursor-not-allowed disabled:opacity-60'
+              className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
               {isSubmitting ? (
-                <span className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></span>
+                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
               ) : (
-                <Pencil size={20} />
+                <Pencil size={18} />
               )}
               {isSubmitting ? 'Editing...' : 'Edit Run'}
-            </button>
-            <button type='button' onClick={onClose} className='balance-action-btn px-4'>
-              Cancel
             </button>
           </div>
         </form>

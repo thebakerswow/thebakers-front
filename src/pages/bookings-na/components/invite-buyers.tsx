@@ -85,17 +85,17 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
   const formattedInviteData = inviteData ? formatInviteData(inviteData) : ''
 
   return (
-    <div className='fixed inset-0 z-[2200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
-      <div className='w-full max-w-md rounded-xl border border-white/15 bg-neutral-900 p-4 text-white shadow-2xl'>
+    <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+      <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
         <div className='mb-3 flex items-center justify-between'>
           <h2 className='text-lg font-semibold'>Invite Buyers</h2>
           <button
             type='button'
             onClick={onClose}
-            className='rounded-md p-1 text-white/80 transition hover:bg-white/10 hover:text-white'
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
             aria-label='Close invite buyers modal'
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -106,16 +106,16 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
             </div>
           ) : (
             <>
-              <div className='max-h-96 overflow-y-auto rounded-md border border-white/10 bg-black/20 p-4'>
+              <div className='max-h-96 overflow-y-auto rounded-md border border-white/15 bg-white/[0.05] p-4'>
                 <pre className='whitespace-pre-wrap text-sm text-neutral-100'>
                   {formattedInviteData}
                 </pre>
               </div>
-              <div className='flex justify-center'>
+              <div className='flex justify-end'>
                 <button
                   type='button'
                   onClick={handleCopy}
-                  className='balance-action-btn balance-action-btn--primary inline-flex items-center justify-center gap-2 px-4'
+                  className='inline-flex items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
                 >
                   <Copy size={18} />
                   {copied ? 'Copied!' : 'Copy'}

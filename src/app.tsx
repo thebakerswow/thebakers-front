@@ -11,7 +11,6 @@ import {
   Sword,
   Trophy,
   User,
-  UsersFour,
 } from '@phosphor-icons/react'
 import {
   BrowserRouter as Router,
@@ -23,7 +22,6 @@ import {
 import { Header } from './components/header'
 import { HomePage } from './pages/home'
 import { BalancePageRouter } from './pages/balance'
-import TeamsManagement from './pages/management/teams'
 import { FullRaidsNa } from './pages/bookings-na'
 import { RunDetails } from './pages/bookings-na/run'
 import { Login } from './pages/login'
@@ -127,10 +125,6 @@ function AppContent() {
               <Route
                 path='/balance'
                 element={<PrivateRoute element={<BalancePageRouter />} />}
-              />
-              <Route
-                path='/management-teams'
-                element={<PrivateRoute element={<TeamsManagement />} />}
               />
               <Route
                 path='/bookings-na/raids'
@@ -295,9 +289,6 @@ function getScreenMeta(pathname: string) {
   }
   if (pathname.startsWith('/balance')) {
     return { name: 'Balance', breadcrumb: 'Finance / Balance', icon: <Coins size={20} weight='duotone' /> }
-  }
-  if (pathname.startsWith('/management-teams')) {
-    return { name: 'Teams', breadcrumb: 'Management / Teams', icon: <UsersFour size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/bookings-na/key/')) {
     return {

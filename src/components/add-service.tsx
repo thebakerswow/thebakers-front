@@ -1,20 +1,9 @@
-import { useState, useEffect } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-  IconButton,
-  Select,
-  MenuItem,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
+import { ChangeEvent, useEffect, useState } from 'react'
+import { X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 import { ErrorDetails } from './error-display'
+import { CustomSelect } from './custom-select'
 import {
 
   createService,
@@ -106,16 +95,15 @@ export function AddService({
     return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
-  ) => {
-    const { name, value, checked } = e.target as any
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    const checked = 'checked' in e.target ? e.target.checked : false
     if (name === 'price') {
-      setForm({ ...form, [name]: formatPriceInput(value as string) })
+      setForm({ ...form, [name]: formatPriceInput(value) })
     } else if (name === 'hotItem') {
       setForm({ ...form, hotItem: checked })
     } else {
-      setForm({ ...form, [name as string]: value as string })
+      setForm({ ...form, [name]: value })
     }
   }
 
@@ -176,114 +164,125 @@ export function AddService({
     }
   }, [editingService, open])
 
+  if (!open) return null
+
+  const categoryOptions = categories.map((cat) => ({
+    value: String(cat.id),
+    label: cat.name,
+  }))
+
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle className='relative'>
-        {editingService ? 'Edit Service' : 'Add Service'}
-        <IconButton
-          aria-label='close'
-          onClick={handleClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ minWidth: 350 }}>
+    <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+      <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
+        <div className='mb-4 flex items-center justify-between'>
+          <h3 className='text-lg font-semibold'>
+            {editingService ? 'Edit Service' : 'Add Service'}
+          </h3>
+          <button
+            type='button'
+            aria-label='close'
+            onClick={handleClose}
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+          >
+            <X size={18} />
+          </button>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault()
             handleSave()
           }}
+          className='space-y-3'
         >
-          <TextField
-            margin='dense'
-            label='Service Name'
-            name='name'
-            required
-            fullWidth
-            value={form.name}
-            onChange={handleChange}
-          />
-          <TextField
-            margin='dense'
-            label='Description'
-            required
-            name='description'
-            fullWidth
-            value={form.description}
-            onChange={handleChange}
-          />
-          <TextField
-            margin='dense'
-            label='Price'
-            name='price'
-            type='text'
-            required
-            fullWidth
-            value={form.price}
-            onChange={handleChange}
-            inputProps={{ inputMode: 'numeric', pattern: '[0-9,]*' }}
-          />
           <div>
-            <Typography variant='subtitle2' sx={{ color: '#b0b0b0' }}>
-              Category *
-            </Typography>
-            <Select
-              name='serviceCategoryId'
-              value={form.serviceCategoryId}
-              required
-              onChange={(event) => {
-                const { name, value } = event.target as {
-                  name: string
-                  value: string
-                }
-                setForm({ ...form, [name]: value })
-              }}
-              style={{
-                width: '100%',
-              }}
-            >
-              <MenuItem value='' disabled>
-                Select a category
-              </MenuItem>
-              {categories.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </div>
-          <div style={{ marginTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type='checkbox'
-                name='hotItem'
-                checked={form.hotItem}
-                onChange={handleChange}
-                style={{ accentColor: '#d32f2f', width: 18, height: 18 }}
-              />
-              <span>Hot Item</span>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Service Name *
             </label>
+            <input
+              name='name'
+              required
+              value={form.name}
+              onChange={handleChange}
+              className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Description *
+            </label>
+            <input
+              name='description'
+              required
+              value={form.description}
+              onChange={handleChange}
+              className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Price *
+            </label>
+            <input
+              name='price'
+              type='text'
+              required
+              value={form.price}
+              onChange={handleChange}
+              inputMode='numeric'
+              pattern='[0-9,]*'
+              className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Category *
+            </label>
+            <CustomSelect
+              value={form.serviceCategoryId}
+              options={categoryOptions}
+              onChange={(value) => setForm((prev) => ({ ...prev, serviceCategoryId: value }))}
+              placeholder='Select a category'
+              minWidthClassName='min-w-0'
+              triggerClassName='h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
+            />
+          </div>
+
+          <label className='mt-1 inline-flex items-center gap-2 text-sm text-neutral-200'>
+            <input
+              type='checkbox'
+              name='hotItem'
+              checked={form.hotItem}
+              onChange={handleChange}
+              className='h-4 w-4 accent-purple-500'
+            />
+            Hot Item
+          </label>
+
+          <div className='mt-4 flex justify-end gap-2'>
+            <button
+              type='button'
+              onClick={handleClose}
+              className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
+            >
+              Cancel
+            </button>
+            <button
+              type='submit'
+              disabled={loading}
+              className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {loading ? 'Saving...' : editingService ? 'Save' : 'Add'}
+            </button>
           </div>
         </form>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color='inherit'>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          color='error'
-          variant='contained'
-          disabled={loading}
-          sx={{
-            backgroundColor: 'rgb(147, 51, 234)',
-            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-          }}
-        >
-          {loading ? 'Saving...' : editingService ? 'Save' : 'Add'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </div>
+    </div>
   )
 }
