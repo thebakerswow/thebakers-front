@@ -1,27 +1,13 @@
 import axios from 'axios'
-import { useState, useEffect, useCallback } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
+import { X } from '@phosphor-icons/react'
+import { format, parse } from 'date-fns'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import { ErrorDetails } from '../../components/error-display'
+import { CustomSelect } from '../../components/custom-select'
 import { getCurrentUserDate } from '../../utils/timezone-utils'
-import {
-  getBalanceDaily,
-  updateNick,
-} from '../../services/api/balance'
-import {
-  Select,
-  MenuItem,
-  FormControl,
-  SelectChangeEvent,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  Box,
-  Typography,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
+import { getBalanceDaily, updateNick } from '../../services/api/balance'
 
 type BalanceControlTableNewProps = {
   selectedTeam: string
@@ -34,6 +20,30 @@ type BalanceControlTableNewProps = {
   allowedTeams: string[]
   hideTeamSelector?: boolean
 }
+
+const teamOptions = [
+  { id: import.meta.env.VITE_TEAM_MPLUS, label: 'M+' },
+  { id: import.meta.env.VITE_TEAM_LEVELING, label: 'Leveling' },
+  { id: import.meta.env.VITE_TEAM_GARCOM, label: 'Garcom' },
+  { id: import.meta.env.VITE_TEAM_CONFEITEIROS, label: 'Confeiteiros' },
+  { id: import.meta.env.VITE_TEAM_JACKFRUIT, label: 'Jackfruit' },
+  { id: import.meta.env.VITE_TEAM_INSANOS, label: 'Insanos' },
+  { id: import.meta.env.VITE_TEAM_APAE, label: 'APAE' },
+  { id: import.meta.env.VITE_TEAM_LOSRENEGADOS, label: 'Los Renegados' },
+  { id: import.meta.env.VITE_TEAM_PADEIRINHO, label: 'Padeirinho' },
+  { id: import.meta.env.VITE_TEAM_MILHARAL, label: 'Milharal' },
+]
+
+const DatePickerInput = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void; className: string; placeholder?: string }
+>(({ value, onClick, className, placeholder = 'dd/mm/aaaa' }, ref) => (
+  <button ref={ref} type='button' onClick={onClick} className={className}>
+    <span className={value ? 'text-white' : 'text-white/60'}>{value || placeholder}</span>
+  </button>
+))
+
+DatePickerInput.displayName = 'DatePickerInput'
 
 export function BalanceControlTableNew({
   selectedTeam,
@@ -48,26 +58,52 @@ export function BalanceControlTableNew({
 }: BalanceControlTableNewProps) {
   const [users, setUsers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
+    null
+  )
+  const [isNickModalOpen, setIsNickModalOpen] = useState(false)
   const [newNick, setNewNick] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [isFreelancerDialogOpen, setIsFreelancerDialogOpen] = useState(false)
+  const selectTriggerClass =
+    'h-10 ![background-image:none] !border-white/15 !bg-[#0f0f12] px-3 pr-9 text-sm !text-white !shadow-none focus:!border-purple-400/50 focus:!ring-0'
+  const selectMenuClass =
+    'z-[240] !border-white/15 !bg-[#1a1a1a] !bg-none !shadow-[0_20px_40px_rgba(0,0,0,0.45)]'
+  const selectOptionClass = 'text-white/90 hover:bg-white/10'
+  const selectActiveOptionClass = 'shadow-[0_0_0_1px_rgba(216,180,254,0.35)_inset]'
+  const dateTriggerClass =
+    'h-10 w-full rounded-md border border-white/15 bg-[#0f0f12] px-3 pr-9 text-left text-sm text-white shadow-none outline-none transition focus:border-purple-400/50'
 
-  const sortedUsers = Array.isArray(users)
-    ? [...users].sort((a, b) => {
-        if (!sortConfig) return 0
-        const { key, direction } = sortConfig
-        const order = direction === 'asc' ? 1 : -1
+  const showNickButton = [
+    import.meta.env.VITE_TEAM_ADVERTISER,
+    import.meta.env.VITE_TEAM_FREELANCER,
+  ].includes(selectedTeam)
 
-        if (key === 'username') {
-          return a.username.localeCompare(b.username) * order
-        } else if (key === 'balance_total') {
-          return (Number(a.balance_total) - Number(b.balance_total)) * order
-        }
-        return 0
-      })
-    : []
+  const sortedUsers = useMemo(() => {
+    if (!Array.isArray(users)) return []
+    return [...users].sort((a, b) => {
+      if (!sortConfig) return 0
+      const { key, direction } = sortConfig
+      const order = direction === 'asc' ? 1 : -1
+
+      if (key === 'username') return a.username.localeCompare(b.username) * order
+      if (key === 'balance_total') return (Number(a.balance_total) - Number(b.balance_total)) * order
+      return 0
+    })
+  }, [users, sortConfig])
+
+  const filteredTeamOptions = useMemo(
+    () =>
+      teamOptions
+        .filter((team) => allowedTeams.includes(team.id))
+        .map((team) => ({ value: team.id, label: team.label })),
+    [allowedTeams]
+  )
+
+  const parsedSelectedDate = useMemo(() => {
+    if (!selectedDate) return null
+    const parsedDate = parse(selectedDate, 'yyyy-MM-dd', new Date())
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+  }, [selectedDate])
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -81,55 +117,50 @@ export function BalanceControlTableNew({
   const getTeamColor = (team: string) => {
     switch (team) {
       case import.meta.env.VITE_TEAM_CHEFE:
-        return '#DC2626'
+        return 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
       case import.meta.env.VITE_TEAM_MPLUS:
-        return '#7C3AED'
+        return 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))'
       case import.meta.env.VITE_TEAM_LEVELING:
-        return '#059669'
+        return 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))'
       case import.meta.env.VITE_TEAM_GARCOM:
-        return '#2563EB'
+        return 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))'
       case import.meta.env.VITE_TEAM_CONFEITEIROS:
-        return '#EC4899'
+        return 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))'
       case import.meta.env.VITE_TEAM_JACKFRUIT:
-        return '#16A34A'
+        return 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))'
       case import.meta.env.VITE_TEAM_INSANOS:
-        return '#1E40AF'
+        return 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))'
       case import.meta.env.VITE_TEAM_APAE:
-        return '#F87171'
+        return 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))'
       case import.meta.env.VITE_TEAM_LOSRENEGADOS:
-        return '#F59E0B'
+        return 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))'
       case import.meta.env.VITE_TEAM_DTM:
-        return '#8B5CF6'
+        return 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))'
       case import.meta.env.VITE_TEAM_KFFC:
-        return '#047857'
+        return 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))'
       case import.meta.env.VITE_TEAM_GREENSKY:
-        return '#BE185D'
+        return 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))'
       case import.meta.env.VITE_TEAM_GUILD_AZRALON_1:
-        return '#0D9488'
+        return 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))'
       case import.meta.env.VITE_TEAM_GUILD_AZRALON_2:
-        return '#1D4ED8'
+        return 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))'
       case import.meta.env.VITE_TEAM_ROCKET:
-        return '#B91C1C'
+        return 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
       case import.meta.env.VITE_TEAM_BOOTY_REAPER:
-        return '#4C1D95'
+        return 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))'
       case import.meta.env.VITE_TEAM_PADEIRINHO:
-        return '#EA580C'
+        return 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))'
       case import.meta.env.VITE_TEAM_MILHARAL:
-        return '#FEF08A'
-      case import.meta.env.VITE_TEAM_ADVERTISER:
-        return '#9CA3AF'
-      case import.meta.env.VITE_TEAM_FREELANCER:
-        return '#86EFAC'
+        return 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))'
       case import.meta.env.VITE_TEAM_BASTARD:
-        return '#D97706'
+        return 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))'
       case import.meta.env.VITE_TEAM_KIWI:
-        return '#84CC16'
+        return 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))'
       default:
-        return '#DC2626'
+        return 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
     }
   }
 
-  // Set default date
   useEffect(() => {
     if (!selectedDate) {
       const todayLocal = getCurrentUserDate().toISOString().split('T')[0]
@@ -165,19 +196,16 @@ export function BalanceControlTableNew({
   )
 
   useEffect(() => {
-    if (selectedTeam && selectedDate) {
-      fetchBalance(true, isDolar)
-    }
+    if (selectedTeam && selectedDate) fetchBalance(true, isDolar)
   }, [fetchBalance, selectedTeam, selectedDate, isDolar])
 
-  // Calculator column removed
-
-  const handleOpenDialog = (userId: string) => {
+  const handleOpenNickModal = (userId: string) => {
     setSelectedUserId(userId)
-    setIsDialogOpen(true)
+    setIsNickModalOpen(true)
   }
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
+
+  const handleCloseNickModal = () => {
+    setIsNickModalOpen(false)
     setNewNick('')
     setSelectedUserId(null)
   }
@@ -186,7 +214,7 @@ export function BalanceControlTableNew({
     if (!selectedUserId || !newNick.trim()) return
     try {
       await updateNick({ nick: newNick.trim(), id_discord: selectedUserId })
-      fetchBalance()
+      await fetchBalance()
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
         ? {
@@ -197,279 +225,169 @@ export function BalanceControlTableNew({
         : { message: 'Unexpected error', response: error }
       if (onError) onError(errorDetails)
     } finally {
-      handleCloseDialog()
+      handleCloseNickModal()
     }
   }
 
-  const handleCloseFreelancerDialog = () => setIsFreelancerDialogOpen(false)
-
-  const isTeamAllowed = (team: string) => allowedTeams.includes(team)
-
   return (
     <>
-      <div className='h-full w-full overflow-y-auto rounded-md'>
-        <div className='top-0 flex gap-4 bg-zinc-400 p-2'>
+      <div className='h-full w-full overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]'>
+        <div className='flex flex-wrap items-center gap-3 border-b border-white/10 bg-black/25 p-3'>
           {!hideTeamSelector && (
-            <FormControl className='w-[200px]' size='small' data-tutorial="team-selector">
-              <Select
-                value={selectedTeam}
-                onChange={(e: SelectChangeEvent<string>) => setSelectedTeam(e.target.value)}
-                displayEmpty
-                className='bg-zinc-100 text-black'
-                sx={{
-                  backgroundColor: 'white',
-                  height: '40px',
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  boxShadow: 'none',
-                }}
-              >
-                <MenuItem value='' disabled hidden>
-                  <em>Team</em>
-                </MenuItem>
-                {isTeamAllowed(import.meta.env.VITE_TEAM_MPLUS) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_MPLUS} style={{ backgroundColor: '#7C3AED', color: 'white' }}>
-                    M+
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_LEVELING) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_LEVELING} style={{ backgroundColor: '#059669', color: 'white' }}>
-                    Leveling
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_GARCOM) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_GARCOM} style={{ backgroundColor: '#2563EB', color: 'white' }}>
-                    Garçom
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_CONFEITEIROS) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS} style={{ backgroundColor: '#EC4899', color: 'white' }}>
-                    Confeiteiros
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_JACKFRUIT) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT} style={{ backgroundColor: '#16A34A', color: 'white' }}>
-                    Jackfruit
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_INSANOS) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_INSANOS} style={{ backgroundColor: '#1E40AF', color: 'white' }}>
-                    Insanos
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_APAE) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_APAE} style={{ backgroundColor: '#F87171', color: 'white' }}>
-                    APAE
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_LOSRENEGADOS) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS} style={{ backgroundColor: '#F59E0B', color: 'black' }}>
-                    Los Renegados
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_PADEIRINHO) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO} style={{ backgroundColor: '#EA580C', color: 'white' }}>
-                    Padeirinho
-                  </MenuItem>
-                )}
-                {isTeamAllowed(import.meta.env.VITE_TEAM_MILHARAL) && (
-                  <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL} style={{ backgroundColor: '#FEF08A', color: 'black' }}>
-                    Milharal
-                  </MenuItem>
-                )}
-              </Select>
-            </FormControl>
+            <CustomSelect
+              value={selectedTeam}
+              onChange={setSelectedTeam}
+              options={filteredTeamOptions}
+              placeholder='Team'
+              minWidthClassName='min-w-[180px]'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
+              renderInPortal
+            />
           )}
-          <input
-            type='date'
-            className='w-[200px] rounded-md bg-zinc-100 p-1 px-2 text-black'
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            data-tutorial="date-filter"
-          />
-          <Button
-            variant='contained'
-            sx={{
-              height: '40px',
-              minWidth: '80px',
-              backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-              color: isDolar ? '#fff' : '#000',
-              '&:hover': { backgroundColor: isDolar ? '#dc2626' : '#FFC300' },
-            }}
+          <div className='relative min-w-[180px]'>
+            <DatePicker
+              selected={parsedSelectedDate}
+              onChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : '')}
+              dateFormat='dd/MM/yyyy'
+              placeholderText='dd/mm/aaaa'
+              popperClassName='z-[240] balance-datepicker-popper'
+              calendarClassName='balance-datepicker add-run-datepicker'
+              wrapperClassName='w-full'
+              customInput={<DatePickerInput className={dateTriggerClass} />}
+            />
+            <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+              ▼
+            </span>
+          </div>
+          <button
+            className={`inline-flex h-10 min-w-[110px] items-center justify-center rounded-md border px-4 text-sm font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 ${
+              isDolar
+                ? 'border-purple-300/55 bg-purple-500/30 text-purple-100 hover:border-purple-300/70 hover:bg-purple-500/40'
+                : 'border-purple-400/40 bg-purple-500/20 text-purple-100 hover:border-purple-300/55 hover:bg-purple-500/30'
+            }`}
             onClick={() => setIsDolar(!isDolar)}
-            data-tutorial="currency-toggle"
           >
             {isDolar ? 'U$' : 'Gold'}
-          </Button>
-          {/* Calculator bulk send removed */}
+          </button>
         </div>
 
-        <table className='w-full border-collapse'>
-          <thead className='sticky top-0 z-10 bg-zinc-200 text-gray-700'>
-            <tr className='text-md text-black'>
-              {[
-                import.meta.env.VITE_TEAM_ADVERTISER,
-                import.meta.env.VITE_TEAM_FREELANCER,
-              ].includes(selectedTeam) && <th className='h-14 w-[50px] border p-2'>Nick</th>}
-              <th className='h-14 w-[150px] cursor-pointer border p-2' onClick={() => handleSort('username')}>
-                Player {sortConfig?.key === 'username' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th className='w-[150px] border p-2'>Gold Cut</th>
-              <th className='w-[150px] border p-2'>Gold Collected</th>
-              <th className='w-[150px] border p-2'>Daily Balance</th>
-              <th className='w-[150px] cursor-pointer border p-2' onClick={() => handleSort('balance_total')}>
-                Balance Total {sortConfig?.key === 'balance_total' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              {/* Calculator column removed */}
-            </tr>
-          </thead>
-          <tbody className='bg-white text-sm font-medium text-zinc-900'>
-            {isLoading ? (
-              <tr>
-                <td colSpan={[import.meta.env.VITE_TEAM_ADVERTISER, import.meta.env.VITE_TEAM_FREELANCER].includes(selectedTeam) ? 6 : 5} className='h-full p-4 text-center'>
-                  <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent'></span>
-                  <p>Loading...</p>
-                </td>
+        <div className='h-[calc(100%-65px)] overflow-auto'>
+          <table className='w-full border-collapse text-sm text-white/90'>
+            <thead className='sticky top-0 z-10 bg-[#121217]'>
+              <tr className='text-left text-xs uppercase tracking-wide text-white/60'>
+                {showNickButton ? <th className='px-3 py-4'>Nick</th> : null}
+                <th className='w-[170px] cursor-pointer px-3 py-4' onClick={() => handleSort('username')}>
+                  Player {sortConfig?.key === 'username' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th className='px-3 py-4 text-center'>Gold Cut</th>
+                <th className='px-3 py-4 text-center'>Gold Collected</th>
+                <th className='px-3 py-4 text-center'>Daily Balance</th>
+                <th className='cursor-pointer px-3 py-4 text-center' onClick={() => handleSort('balance_total')}>
+                  Balance Total {sortConfig?.key === 'balance_total' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                </th>
               </tr>
-            ) : sortedUsers.length === 0 ? (
-              <tr>
-                <td colSpan={[import.meta.env.VITE_TEAM_ADVERTISER, import.meta.env.VITE_TEAM_FREELANCER].includes(selectedTeam) ? 6 : 5} className='p-4 text-center'>No data available</td>
-              </tr>
-            ) : (
-              sortedUsers.map((user) => (
-                <tr key={user.idDiscord} className='border border-gray-300'>
-                  {[
-                    import.meta.env.VITE_TEAM_ADVERTISER,
-                    import.meta.env.VITE_TEAM_FREELANCER,
-                  ].includes(selectedTeam) && (
-                    <td className='py-4 px-2 text-center' data-tutorial="transaction-actions">
-                      <Button variant='contained' size='small' onClick={() => handleOpenDialog(user.idDiscord)}>
-                        Add
-                      </Button>
-                    </td>
-                  )}
-                  <td
-                    className='py-4 px-2 text-center'
-                    style={{
-                      backgroundColor: getTeamColor(selectedTeam),
-                      color: [
-                        import.meta.env.VITE_TEAM_MILHARAL,
-                        import.meta.env.VITE_TEAM_LOSRENEGADOS,
-                      ].includes(selectedTeam)
-                        ? 'black'
-                        : 'white',
-                    }}
-                  >
-                    {user.username}
-                    {(selectedTeam === import.meta.env.VITE_TEAM_FREELANCER || selectedTeam === import.meta.env.VITE_TEAM_ADVERTISER) && user.nick ? (
-                      <>
-                        <br />
-                        <span className='text-sm text-gray-600'>({user.nick})</span>
-                      </>
-                    ) : null}
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={showNickButton ? 6 : 5} className='px-3 py-8 text-center text-white/70'>
+                    <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-white/20 border-t-purple-400' />
+                    <p className='mt-2'>Loading...</p>
                   </td>
-                  <td className='py-4 px-2 text-center'>
-                    {Math.round(Number(user.gold)).toLocaleString('en-US')}
-                  </td>
-                  <td className='py-4 px-2 text-center'>
-                    {Math.round(Number(user.gold_collect)).toLocaleString('en-US')}
-                  </td>
-                  <td className='py-4 px-2 text-center'>
-                    {Math.round(Number(user.sum_day)).toLocaleString('en-US')}
-                  </td>
-                  <td className='py-4 px-2 text-center'>
-                    {isDolar
-                      ? Math.abs(Number(user.balance_total)) === 0
-                        ? '0.00'
-                        : Number(user.balance_total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                      : Math.abs(Math.round(Number(user.balance_total))) === 0
-                        ? '0'
-                        : Math.round(Number(user.balance_total)).toLocaleString('en-US')}
-                  </td>
-                  {/* Calculator cell removed */}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : sortedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={showNickButton ? 6 : 5} className='px-3 py-8 text-center text-white/70'>
+                    No data available
+                  </td>
+                </tr>
+              ) : (
+                sortedUsers.map((user) => (
+                  <tr key={user.idDiscord} className='border-t border-white/10'>
+                    {showNickButton ? (
+                      <td className='px-3 py-4 text-center'>
+                        <button
+                          className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-1 text-xs font-medium text-purple-200 transition hover:bg-purple-500/30'
+                          onClick={() => handleOpenNickModal(user.idDiscord)}
+                        >
+                          Add
+                        </button>
+                      </td>
+                    ) : null}
+                    <td
+                      className='w-[170px] max-w-[170px] px-3 py-4 align-top'
+                      style={{
+                        background: getTeamColor(selectedTeam),
+                        color: [import.meta.env.VITE_TEAM_MILHARAL, import.meta.env.VITE_TEAM_LOSRENEGADOS].includes(selectedTeam)
+                          ? 'black'
+                          : 'white',
+                      }}
+                    >
+                      <span className='block truncate' title={user.username}>
+                        {user.username}
+                      </span>
+                      {showNickButton && user.nick ? <span className='block text-xs text-black/70'>({user.nick})</span> : null}
+                    </td>
+                    <td className='px-3 py-4 text-center'>{Math.round(Number(user.gold)).toLocaleString('en-US')}</td>
+                    <td className='px-3 py-4 text-center'>
+                      {Math.round(Number(user.gold_collect)).toLocaleString('en-US')}
+                    </td>
+                    <td className='px-3 py-4 text-center'>{Math.round(Number(user.sum_day)).toLocaleString('en-US')}</td>
+                    <td className='px-3 py-4 text-center'>
+                      {isDolar
+                        ? Math.abs(Number(user.balance_total)) === 0
+                          ? '0.00'
+                          : Number(user.balance_total).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                        : Math.abs(Math.round(Number(user.balance_total))) === 0
+                          ? '0'
+                          : Math.round(Number(user.balance_total)).toLocaleString('en-US')}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle className='relative'>
-          Update Nick
-          <IconButton aria-label='close' onClick={handleCloseDialog} sx={{ position: 'absolute', right: 8, top: 12 }}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin='dense'
-            label='Nick'
-            type='text'
-            fullWidth
-            value={newNick}
-            onChange={(e) => setNewNick(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSaveNick()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSaveNick} color='primary'>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={isFreelancerDialogOpen} onClose={handleCloseFreelancerDialog} maxWidth='xs' fullWidth>
-        <DialogTitle className='relative text-center'>
-          {selectedTeam === import.meta.env.VITE_TEAM_FREELANCER ? 'Freelancer Payout' : 'Advertiser Payout'}
-          <IconButton aria-label='close' onClick={handleCloseFreelancerDialog} sx={{ position: 'absolute', right: 8, top: 8 }}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box className='flex flex-col gap-4'>
-            {sortedUsers.filter((user) => Number(user.balance_total) > 0).length > 0 ? (
-              <>
-                <Box className='max-h-96 overflow-y-auto rounded border p-4'>
-                  <Typography component='pre' className='whitespace-pre-wrap text-sm'>
-                    {sortedUsers
-                      .filter((user) => Number(user.balance_total) > 0)
-                      .map(
-                        (user) => `${user.nick}, ${Math.abs(Math.round(Number(user.balance_total))) === 0 ? '0' : Math.round(Number(user.balance_total))}`
-                      )
-                      .join('\n')}
-                  </Typography>
-                </Box>
-                <Box className='flex justify-center'>
-                  <Button
-                    variant='contained'
-                    onClick={() => {
-                      const payoutData = sortedUsers
-                        .filter((user) => Number(user.balance_total) > 0)
-                        .map(
-                          (user) => `${user.nick}, ${Math.abs(Math.round(Number(user.balance_total))) === 0 ? '0' : Math.round(Number(user.balance_total))}`
-                        )
-                        .join('\n')
-                      navigator.clipboard.writeText(payoutData)
-                    }}
-                    sx={{ backgroundColor: 'rgb(147, 51, 234)', '&:hover': { backgroundColor: 'rgb(168, 85, 247)' } }}
-                  >
-                    Copy
-                  </Button>
-                </Box>
-              </>
-            ) : (
-              <Box className='flex justify-center'>
-                <Typography>No data found.</Typography>
-              </Box>
-            )}
-          </Box>
-        </DialogContent>
-      </Dialog>
+      {isNickModalOpen ? (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4'>
+          <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#101014] p-5 shadow-2xl'>
+            <div className='mb-4 flex items-center justify-between'>
+              <h3 className='text-lg font-semibold text-white'>Update Nick</h3>
+              <button
+                className='rounded-md border border-white/15 p-1 text-white/80 transition hover:text-white'
+                onClick={handleCloseNickModal}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <input
+              autoFocus
+              type='text'
+              placeholder='Nick'
+              value={newNick}
+              onChange={(e) => setNewNick(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveNick()}
+              className='w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none transition focus:border-purple-400'
+            />
+            <div className='mt-4 flex justify-end'>
+              <button
+                onClick={handleSaveNick}
+                className='rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-500'
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   )
 }
-
-

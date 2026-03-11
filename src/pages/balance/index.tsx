@@ -6,6 +6,7 @@ import { WeekRangeFilter } from './components/week-range-filter'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/role-utils'
+import { NewBalancePage } from '../balance-new'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
@@ -104,5 +105,16 @@ export function BalancePage() {
 
 // Wrapper que decide entre balance antigo e novo com base nos cargos
 export function BalancePageRouter() {
-  return <BalancePage />
+  const { userRoles = [], loading } = useAuth()
+  const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+
+  if (loading) {
+    return (
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
+      </div>
+    )
+  }
+
+  return isChefe ? <BalancePage /> : <NewBalancePage />
 }

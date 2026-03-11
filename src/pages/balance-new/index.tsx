@@ -1,20 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { CircularProgress } from '@mui/material'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { getTrackedTeamRoles, shouldShowBalanceFilter } from '../../utils/role-utils'
 import { GBankListNew } from './gbank-list-new'
 import { BalanceControlTableNew } from './balance-control-table-new'
-import { TutorialOverlay } from './components/tutorial-overlay'
-import { TutorialButton } from './components/tutorial-button'
-import { balanceTutorialSteps } from './components/tutorial-steps'
 
 export function NewBalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [isDolar, setIsDolar] = useState<boolean>(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(false)
   
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
 
@@ -64,78 +59,42 @@ export function NewBalancePage() {
 
   const handleError = useCallback((error: ErrorDetails | null) => setError(error), [])
 
-  const handleTutorialOpen = useCallback(() => {
-    // Fecha todos os accordions de GBank antes de abrir o tutorial
-    const accordionSummaries = document.querySelectorAll('[data-tutorial="gbank-expand"]')
-    
-    accordionSummaries.forEach(summary => {
-      const accordion = summary.closest('.MuiAccordion-root') as HTMLElement
-      if (accordion) {
-        // Verifica se o accordion está expandido usando múltiplas formas
-        const ariaExpanded = accordion.getAttribute('aria-expanded') === 'true'
-        const hasExpandedClass = accordion.classList.contains('Mui-expanded')
-        const expandIcon = summary.querySelector('.MuiAccordionSummary-expandIconWrapper')
-        const iconStyle = expandIcon ? window.getComputedStyle(expandIcon) : null
-        const iconRotated = iconStyle ? iconStyle.transform.includes('rotate(180deg)') : false
-        
-        // Se qualquer indicação mostra que está expandido, fecha
-        if (ariaExpanded || hasExpandedClass || iconRotated) {
-          ;(summary as HTMLElement).click()
-        }
-      }
-    })
-    
-    // Aguarda um pouco para o fechamento completar antes de abrir o tutorial
-    setTimeout(() => {
-      setIsTutorialOpen(true)
-    }, 200)
-  }, [])
-  const handleTutorialClose = useCallback(() => setIsTutorialOpen(false), [])
-
   const isLoading = authLoading
 
   if (isLoading) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
-        <CircularProgress />
+        <span className='inline-block h-10 w-10 animate-spin rounded-full border-4 border-purple-300/30 border-t-purple-400' />
       </div>
     )
   }
 
   return (
-    <div className='flex w-full flex-col overflow-auto px-10 pb-10'>
+    <div className='flex h-full min-h-0 w-full flex-col px-6 pb-8 pt-6 md:px-10'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      <div className='mx-4 mt-8 flex flex-wrap items-center justify-between'>
-        <div className='flex items-center gap-2'>{/* Header controls trimmed; table owns its toggles */}</div>
+      <div className='mb-4 flex flex-wrap items-center justify-between gap-2 px-1'>
+        <h2 className='text-lg font-semibold text-white'>Balance</h2>
       </div>
-        <div className='flex w-full gap-6 px-4' style={{ height: 'calc(100vh - 180px)' }}>
-          <div className='basis-2/3 h-full' data-tutorial="balance-table">
-            {selectedTeam && (
-              <BalanceControlTableNew
-                selectedTeam={selectedTeam}
-                selectedDate={selectedDate}
-                setSelectedTeam={setSelectedTeam}
-                setSelectedDate={setSelectedDate}
-                isDolar={isDolar}
-                setIsDolar={setIsDolar}
-                onError={handleError}
-                allowedTeams={allowedTeams}
-                hideTeamSelector={!shouldShowFilter}
-              />
-            )}
-          </div>
-        <div className='basis-1/3 h-full' data-tutorial="gbank-list">
+      <div className='grid min-h-0 w-full flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
+        <div className='min-h-0 h-full lg:col-span-2'>
+          {selectedTeam && (
+            <BalanceControlTableNew
+              selectedTeam={selectedTeam}
+              selectedDate={selectedDate}
+              setSelectedTeam={setSelectedTeam}
+              setSelectedDate={setSelectedDate}
+              isDolar={isDolar}
+              setIsDolar={setIsDolar}
+              onError={handleError}
+              allowedTeams={allowedTeams}
+              hideTeamSelector={!shouldShowFilter}
+            />
+          )}
+        </div>
+        <div className='min-h-0 h-full'>
           <GBankListNew onError={handleError} selectedTeam={selectedTeam} />
         </div>
       </div>
-
-      {/* Tutorial Components */}
-      <TutorialButton onClick={handleTutorialOpen} />
-      <TutorialOverlay
-        isOpen={isTutorialOpen}
-        onClose={handleTutorialClose}
-        steps={balanceTutorialSteps}
-      />
     </div>
   )
 }

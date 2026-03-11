@@ -1,68 +1,40 @@
 import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
-import {
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  Paper,
-  Typography,
-  Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-} from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import CloseIcon from '@mui/icons-material/Close'
+import { CaretDown, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-
 import { ErrorDetails } from '../../components/error-display'
-import {
-  createGBank,
-  createTransactionRequest,
-  getUserGbanks,
-} from '../../services/api/gbanks'
+import { createGBank, createTransactionRequest, getUserGbanks } from '../../services/api/gbanks'
 import { useAuth } from '../../context/auth-context'
 import { GBank } from '../../types'
 
-// Mapeamento de IDs dos times para cores
 const teamIdToColorMap: Record<string, string> = {
-  [import.meta.env.VITE_TEAM_CHEFE]: '#DC2626', // Chefe de cozinha
-  [import.meta.env.VITE_TEAM_MPLUS]: '#7C3AED', // M+
-  [import.meta.env.VITE_TEAM_LEVELING]: '#059669', // Leveling
-  [import.meta.env.VITE_TEAM_GARCOM]: '#2563EB', // Garçom
-  [import.meta.env.VITE_TEAM_CONFEITEIROS]: '#EC4899', // Confeiteiros
-  [import.meta.env.VITE_TEAM_JACKFRUIT]: '#16A34A', // Jackfruit
-  [import.meta.env.VITE_TEAM_INSANOS]: '#1E40AF', // Insanos
-  [import.meta.env.VITE_TEAM_APAE]: '#F87171', // APAE
-  [import.meta.env.VITE_TEAM_LOSRENEGADOS]: '#F59E0B', // Los Renegados
-  [import.meta.env.VITE_TEAM_DTM]: '#8B5CF6', // DTM
-  [import.meta.env.VITE_TEAM_KFFC]: '#06B6D4', // KFFC
-  [import.meta.env.VITE_TEAM_GREENSKY]: '#10B981', // Greensky
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: '#F97316', // Guild Azralon BR#1
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: '#EF4444', // Guild Azralon BR#2
-  [import.meta.env.VITE_TEAM_ROCKET]: '#8B5A2B', // Rocket
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: '#6B7280', // Booty Reaper
-  [import.meta.env.VITE_TEAM_PADEIRINHO]: '#EA580C', // Padeirinho
-  [import.meta.env.VITE_TEAM_MILHARAL]: '#FEF08A', // Milharal
-  [import.meta.env.VITE_TEAM_BASTARD]: '#D97706', // Bastard Munchen
-  [import.meta.env.VITE_TEAM_KIWI]: '#84CC16', // Kiwi
+  [import.meta.env.VITE_TEAM_CHEFE]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
+  [import.meta.env.VITE_TEAM_MPLUS]: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))',
+  [import.meta.env.VITE_TEAM_LEVELING]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
+  [import.meta.env.VITE_TEAM_GARCOM]: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))',
+  [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))',
+  [import.meta.env.VITE_TEAM_JACKFRUIT]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
+  [import.meta.env.VITE_TEAM_INSANOS]: 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))',
+  [import.meta.env.VITE_TEAM_APAE]: 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))',
+  [import.meta.env.VITE_TEAM_LOSRENEGADOS]: 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))',
+  [import.meta.env.VITE_TEAM_DTM]: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))',
+  [import.meta.env.VITE_TEAM_KFFC]: 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))',
+  [import.meta.env.VITE_TEAM_GREENSKY]: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))',
+  [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))',
+  [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))',
+  [import.meta.env.VITE_TEAM_ROCKET]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
+  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
+  [import.meta.env.VITE_TEAM_PADEIRINHO]: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))',
+  [import.meta.env.VITE_TEAM_MILHARAL]: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))',
+  [import.meta.env.VITE_TEAM_BASTARD]: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))',
+  [import.meta.env.VITE_TEAM_KIWI]: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
 }
 
 const priorityOrder = [
   'Chefe de cozinha',
   'M+',
   'Leveling',
-  'Garçom',
+  'Garcom',
   'Confeiteiros',
   'Jackfruit',
   'Insanos',
@@ -82,29 +54,28 @@ const priorityOrder = [
 ]
 
 const colorOptions = [
-
-  { value: '#DC2626', label: 'Chefe de cozinha' },
-  { value: '#7C3AED', label: 'M+' },
-  { value: '#059669', label: 'Leveling' },
-  { value: '#2563EB', label: 'Garçom' },
-  { value: '#EC4899', label: 'Confeiteiros' },
-  { value: '#16A34A', label: 'Jackfruit' },
-  { value: '#1E40AF', label: 'Insanos' },
-  { value: '#F87171', label: 'APAE' },
-  { value: '#F59E0B', label: 'Los Renegados' },
-  { value: '#8B5CF6', label: 'DTM' },
-  { value: '#047857', label: 'KFFC' },
-  { value: '#BE185D', label: 'Greensky' },
-  { value: '#0D9488', label: 'Guild Azralon BR#1' },
-  { value: '#1D4ED8', label: 'Guild Azralon BR#2' },
-  { value: '#B91C1C', label: 'Rocket' },
-  { value: '#4C1D95', label: 'Booty Reaper' },
-  { value: '#EA580C', label: 'Padeirinho' },
-  { value: '#FEF08A', label: 'Milharal' },
+  { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Chefe de cozinha' },
+  { value: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))', label: 'M+' },
+  { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Leveling' },
+  { value: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))', label: 'Garcom' },
+  { value: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))', label: 'Confeiteiros' },
+  { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Jackfruit' },
+  { value: 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))', label: 'Insanos' },
+  { value: 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))', label: 'APAE' },
+  { value: 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))', label: 'Los Renegados' },
+  { value: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))', label: 'DTM' },
+  { value: 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))', label: 'KFFC' },
+  { value: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))', label: 'Greensky' },
+  { value: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))', label: 'Guild Azralon BR#1' },
+  { value: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))', label: 'Guild Azralon BR#2' },
+  { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Rocket' },
+  { value: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))', label: 'Booty Reaper' },
+  { value: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))', label: 'Padeirinho' },
+  { value: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))', label: 'Milharal' },
   { value: '#9CA3AF', label: 'Advertiser' },
   { value: '#86EFAC', label: 'Freelancer' },
-  { value: '#D97706', label: 'Bastard Munchen' },
-  { value: '#84CC16', label: 'Kiwi' },
+  { value: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))', label: 'Bastard Munchen' },
+  { value: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))', label: 'Kiwi' },
 ]
 
 const compareByPriority = (aLabel: string, bLabel: string) => {
@@ -126,17 +97,15 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [newGBankName, setNewGBankName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const canCreateGBank = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+
   const selectedTeamLabel = useMemo(() => {
     if (!selectedTeam) return '-'
     const selectedColor = teamIdToColorMap[selectedTeam]
-    return (
-      colorOptions.find((option) => option.value === selectedColor)?.label ||
-      selectedTeam
-    )
+    return colorOptions.find((option) => option.value === selectedColor)?.label || selectedTeam
   }, [selectedTeam])
 
   const handleError = (error: unknown, defaultMessage: string) => {
@@ -153,7 +122,6 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
     }
   }
 
-  // Formata o valor da calculadora para exibir números corretamente
   const formatCalculatorValue = (value: string) => {
     const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
     if (rawValue === '-') return '-'
@@ -161,49 +129,63 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
     return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
   }
 
-
-
-  // Função para mostrar SweetAlert com upload de imagem
   const showUploadModal = (gbank: GBank, value: string) => {
     let uploadedImage: string | null = null
     let fileInput: HTMLInputElement | null = null
+    const convertFileToWebpDataUrl = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const source = reader.result as string
+          const image = new Image()
+          image.onload = () => {
+            const canvas = document.createElement('canvas')
+            canvas.width = image.naturalWidth || image.width
+            canvas.height = image.naturalHeight || image.height
+            const ctx = canvas.getContext('2d')
+
+            if (!ctx) {
+              reject(new Error('Unable to process image'))
+              return
+            }
+
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+            const webpDataUrl = canvas.toDataURL('image/webp', 0.9)
+            resolve(webpDataUrl)
+          }
+          image.onerror = () => reject(new Error('Invalid image file'))
+          image.src = source
+        }
+        reader.onerror = () => reject(new Error('Failed to read image file'))
+        reader.readAsDataURL(file)
+      })
 
     Swal.fire({
       title: `Confirm value for ${gbank.name}`,
       html: `
-        <div style="text-align: center; margin: 20px 0;">
-          <p style="font-size: 18px; margin-bottom: 20px;">
+        <div style="text-align:center;margin:16px 0;">
+          <p style="font-size:16px;margin-bottom:16px;color:#e5e7eb;">
             Value: <strong>${value}</strong>
           </p>
           <div id="upload-area" style="
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 40px;
-            margin: 20px 0;
-            cursor: pointer;
-            background-color: #f9f9f9;
-            transition: all 0.2s ease;
-          ">
+            border:1px dashed rgba(192,132,252,0.45);border-radius:10px;padding:30px 16px;margin:12px 0;
+            cursor:pointer;background:rgba(255,255,255,0.03);transition:all 0.2s ease;">
             <div id="upload-content">
-              <p style="margin: 0; color: #666;">📷 Click here or drag an image</p>
-              <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">or paste with Ctrl+V</p>
+              <p style="margin:0;color:#d1d5db;">Click here or drag an image</p>
+              <p style="margin:6px 0 0 0;font-size:12px;color:#9ca3af;">or paste with Ctrl+V</p>
             </div>
-            <div id="image-preview" style="display: none;">
-              <img id="preview-img" style="max-width: 100%; max-height: 200px; border-radius: 4px;" />
+            <div id="image-preview" style="display:none;">
+              <img id="preview-img" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);" />
               <button type="button" id="remove-image" style="
-                margin-top: 10px;
-                padding: 5px 10px;
-                background: #ff4444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-              ">Remove</button>
+                margin-top:10px;padding:6px 12px;background:rgba(239,68,68,0.2);color:#fecaca;border:1px solid rgba(248,113,113,0.45);
+                border-radius:8px;cursor:pointer;">Remove</button>
             </div>
           </div>
-          <input type="file" id="file-input" accept="image/*" style="display: none;" />
+          <input type="file" id="file-input" accept="image/*" style="display:none;" />
         </div>
       `,
+      background: '#101014',
+      color: '#f3f4f6',
       showCancelButton: true,
       confirmButtonText: 'Confirm',
       cancelButtonText: 'Cancel',
@@ -217,66 +199,44 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
         const previewImg = document.getElementById('preview-img') as HTMLImageElement
         const removeBtn = document.getElementById('remove-image')
         fileInput = document.getElementById('file-input') as HTMLInputElement
-
         if (!uploadArea || !uploadContent || !imagePreview || !previewImg || !removeBtn || !fileInput) return
 
-        // Função para processar arquivo de imagem
-        const processImageFile = (file: File) => {
+        const processImageFile = async (file: File) => {
           if (!file.type.startsWith('image/')) {
             Swal.showValidationMessage('Please select only image files')
             return
           }
-
-          const reader = new FileReader()
-          reader.onload = (e) => {
-            uploadedImage = e.target?.result as string
+          try {
+            uploadedImage = await convertFileToWebpDataUrl(file)
             previewImg.src = uploadedImage
             uploadContent.style.display = 'none'
             imagePreview.style.display = 'block'
+          } catch {
+            Swal.showValidationMessage('Failed to process image file')
           }
-          reader.readAsDataURL(file)
         }
 
-        // Click para selecionar arquivo
-        uploadArea.addEventListener('click', () => {
-          fileInput?.click()
-        })
-
-        // Drag & Drop
+        uploadArea.addEventListener('click', () => fileInput?.click())
         uploadArea.addEventListener('dragover', (e) => {
           e.preventDefault()
-          uploadArea.style.borderColor = '#9333EA'
-          uploadArea.style.backgroundColor = '#f0f0ff'
+          uploadArea.style.borderColor = 'rgba(196,132,252,0.85)'
+          uploadArea.style.background = 'rgba(168,85,247,0.18)'
         })
-
         uploadArea.addEventListener('dragleave', (e) => {
           e.preventDefault()
-          uploadArea.style.borderColor = '#ccc'
-          uploadArea.style.backgroundColor = '#f9f9f9'
+          uploadArea.style.borderColor = 'rgba(192,132,252,0.45)'
+          uploadArea.style.background = 'rgba(255,255,255,0.03)'
         })
-
         uploadArea.addEventListener('drop', (e) => {
           e.preventDefault()
-          uploadArea.style.borderColor = '#ccc'
-          uploadArea.style.backgroundColor = '#f9f9f9'
-          
-          if (e.dataTransfer) {
-            const files = Array.from(e.dataTransfer.files)
-            if (files.length > 0) {
-              processImageFile(files[0])
-            }
-          }
+          uploadArea.style.borderColor = 'rgba(192,132,252,0.45)'
+          uploadArea.style.background = 'rgba(255,255,255,0.03)'
+          if (e.dataTransfer && e.dataTransfer.files.length > 0) processImageFile(e.dataTransfer.files[0])
         })
-
-        // Seleção de arquivo
         fileInput.addEventListener('change', (e) => {
           const files = (e.target as HTMLInputElement).files
-          if (files && files.length > 0) {
-            processImageFile(files[0])
-          }
+          if (files && files.length > 0) processImageFile(files[0])
         })
-
-        // Remover imagem
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation()
           uploadedImage = null
@@ -285,31 +245,22 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
           if (fileInput) fileInput.value = ''
         })
 
-        // Paste (Ctrl+V)
         const handlePaste = (e: ClipboardEvent) => {
           const items = e.clipboardData?.items
-          if (items) {
-            for (let i = 0; i < items.length; i++) {
-              if (items[i].type.startsWith('image/')) {
-                const file = items[i].getAsFile()
-                if (file) {
-                  processImageFile(file)
-                }
-                break
-              }
+          if (!items) return
+          for (let i = 0; i < items.length; i += 1) {
+            if (items[i].type.startsWith('image/')) {
+              const file = items[i].getAsFile()
+              if (file) processImageFile(file)
+              break
             }
           }
         }
-
         document.addEventListener('paste', handlePaste)
-        
-        // Cleanup
-        const cleanup = () => {
-          document.removeEventListener('paste', handlePaste)
-        }
-        
-        // Store cleanup function for later use
-        ;(Swal as any).cleanup = cleanup
+        ;(Swal as any).cleanup = () => document.removeEventListener('paste', handlePaste)
+      },
+      willClose: () => {
+        if ((Swal as any).cleanup) (Swal as any).cleanup()
       },
       preConfirm: () => {
         if (!uploadedImage) {
@@ -317,50 +268,37 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
           return false
         }
         return { value, image: uploadedImage }
-      }
+      },
     }).then(async (result) => {
-      if (result.isConfirmed && result.value && result.value.image) {
-        // Process the value and image here
-        console.log('Value confirmed:', result.value.value)
-        console.log('Image:', result.value.image)
-        
-        try {
-          // Show loading
-          Swal.fire({
-            title: 'Processing...',
-            text: 'Please wait while we process your request',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading()
-            }
-          })
+      if (!(result.isConfirmed && result.value && result.value.image)) return
+      try {
+        Swal.fire({
+          title: 'Processing...',
+          text: 'Please wait while we process your request',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading(),
+        })
 
-          // Make the POST request to create transaction request
-          await createTransactionRequest({
-            idGbank: gbank.id,
-            value: Number(result.value.value.replace(/,/g, '')),
-            image: result.value.image
-          })
+        await createTransactionRequest({
+          idGbank: gbank.id,
+          value: Number(result.value.value.replace(/,/g, '')),
+          image: result.value.image,
+        })
 
-          // Success message
-          Swal.fire({
-            title: 'Success!',
-            text: 'Transaction request created successfully and sent for approval',
-            icon: 'success',
-            confirmButtonText: 'OK'
-          })
-
-        } catch (error) {
-          // Error message
-          Swal.fire({
-            title: 'Error!',
-            text: 'Failed to create transaction request',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          })
-          
-          handleError(error, 'Error creating transaction request')
-        }
+        Swal.fire({
+          title: 'Success!',
+          text: 'Transaction request created successfully and sent for approval',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        })
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to create transaction request',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        })
+        handleError(error, 'Error creating transaction request')
       }
     })
   }
@@ -369,12 +307,13 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
     if (showLoading) setIsLoading(true)
     try {
       const response = await getUserGbanks()
-      const formattedGBanks = response?.map((gbank: any) => ({
-        ...gbank,
-        calculatorValue: gbank.calculatorValue
-          ? formatCalculatorValue(gbank.calculatorValue.toString())
-          : '',
-      })) || []
+      const formattedGBanks =
+        response?.map((gbank: any) => ({
+          ...gbank,
+          calculatorValue: gbank.calculatorValue
+            ? formatCalculatorValue(gbank.calculatorValue.toString())
+            : '',
+        })) || []
       const sorted = formattedGBanks.sort((a: GBank, b: GBank) => b.balance - a.balance)
       setGbanks(sorted)
     } catch (error) {
@@ -392,7 +331,9 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
 
   const grouped = useMemo(() => {
     const byColor = gbanks.reduce((acc, g) => {
-      const color = teamIdToColorMap[g.idTeam] || '#DC2626'
+      const color =
+        teamIdToColorMap[g.idTeam] ||
+        'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
       const label = colorOptions.find((o) => o.value === color)?.label || 'Chefe de cozinha'
       if (!acc[color]) acc[color] = { color, label, items: [] as GBank[] }
       acc[color].items.push(g)
@@ -418,21 +359,14 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
 
   const handleCreateGBank = async () => {
     if (!selectedTeam) {
-      handleError(
-        { message: 'No selected team for G-Bank creation' },
-        'Error adding G-Bank'
-      )
+      handleError({ message: 'No selected team for G-Bank creation' }, 'Error adding G-Bank')
       return
     }
-
     setIsSubmitting(true)
     try {
-      await createGBank({
-        name: newGBankName,
-        idTeam: selectedTeam,
-      })
+      await createGBank({ name: newGBankName, idTeam: selectedTeam })
       setNewGBankName('')
-      setAddGBankModalOpen(false)
+      setIsCreateModalOpen(false)
       await fetchGBanks(false)
     } catch (error) {
       handleError(error, 'Error adding G-Bank')
@@ -442,169 +376,151 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
   }
 
   return (
-    <div className='flex h-full w-full flex-col overflow-y-auto rounded-md'>
-      {canCreateGBank && (
-        <div className='mb-2'>
-          <Button
-            variant='contained'
-            onClick={() => setAddGBankModalOpen(true)}
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-            }}
-          >
-            Add G-Bank
-          </Button>
+    <>
+      <div className='flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]'>
+        {canCreateGBank ? (
+          <div className='border-b border-white/10 p-3'>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className='inline-flex h-10 min-w-[120px] items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
+            >
+              Add G-Bank
+            </button>
+          </div>
+        ) : null}
+
+        <div className='flex-1 overflow-y-auto p-2'>
+          {isLoading ? (
+            <div className='rounded-md border border-white/10 bg-black/25 p-4 text-center text-white/70'>
+              <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-white/20 border-t-purple-400' />
+              <p className='mt-2'>Loading...</p>
+            </div>
+          ) : grouped.length === 0 ? (
+            <div className='rounded-md border border-white/10 bg-black/25 p-4 text-center text-white/70'>
+              No G-Bank found
+            </div>
+          ) : (
+            <div className='space-y-2'>
+              {grouped.map((group) => {
+                const expanded = expandedGroups.has(group.color)
+                return (
+                  <div key={group.color} className='overflow-hidden rounded-md border border-white/10'>
+                    <button
+                      className='flex w-full items-center justify-between px-3 py-3 text-left'
+                      style={{
+                        background: group.color,
+                        color: group.label === 'Milharal' ? '#000' : '#fff',
+                      }}
+                      onClick={() => toggleGroupExpansion(group.color)}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <span className='text-sm font-semibold'>{group.label}</span>
+                        <span className='text-xs'>({group.items.length} item{group.items.length !== 1 ? 's' : ''})</span>
+                      </div>
+                      <CaretDown size={16} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {expanded ? (
+                      <div className='overflow-x-auto bg-[#101014]'>
+                        <table className='w-full border-collapse text-sm text-white/90'>
+                          <thead className='bg-[#17171d] text-xs uppercase tracking-wide text-white/60'>
+                            <tr>
+                              <th className='px-3 py-3 text-left'>Name</th>
+                              <th className='px-3 py-3 text-center'>Total</th>
+                              <th className='px-3 py-3 text-center'>Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.items.map((g) => (
+                              <tr key={g.id} className='border-t border-white/10'>
+                                <td className='px-3 py-3'>{g.name}</td>
+                                <td className='px-3 py-3 text-center'>
+                                  {Math.round(Number(g.balance)).toLocaleString('en-US')}
+                                </td>
+                                <td className='px-3 py-3 text-center'>
+                                  <input
+                                    className='h-9 min-w-[120px] rounded-md border border-white/15 bg-black/30 px-2 text-center text-sm text-white outline-none transition focus:border-purple-400'
+                                    type='text'
+                                    value={g.calculatorValue}
+                                    onChange={(e) => {
+                                      const formatted = formatCalculatorValue(e.target.value)
+                                      setGbanks((prev) =>
+                                        prev.map((gbank) =>
+                                          gbank.id === g.id ? { ...gbank, calculatorValue: formatted } : gbank
+                                        )
+                                      )
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault()
+                                        const value = e.currentTarget.value
+                                        if (value.trim()) showUploadModal(g, value)
+                                      }
+                                    }}
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {addGBankModalOpen && (
-        <Dialog open={addGBankModalOpen} onClose={() => setAddGBankModalOpen(false)}>
-          <DialogTitle className='relative text-center'>
-            Add New G-Bank
-            <IconButton
-              aria-label='close'
-              onClick={() => setAddGBankModalOpen(false)}
-              sx={{ position: 'absolute', right: 8, top: 8 }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <TextField
-              fullWidth
-              margin='dense'
-              variant='outlined'
-              label='Team'
-              value={selectedTeamLabel}
-              InputProps={{ readOnly: true }}
-            />
-            <TextField
-              fullWidth
-              margin='dense'
-              variant='outlined'
-              label='Name'
-              value={newGBankName}
-              onChange={(e) => setNewGBankName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions sx={{ justifyContent: 'center' }}>
-            <Button
-              variant='contained'
-              onClick={handleCreateGBank}
-              disabled={isSubmitting}
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-            >
-              {isSubmitting ? 'Adding...' : 'Save'}
-            </Button>
-            <Button variant='outlined' onClick={() => setAddGBankModalOpen(false)}>
-              Cancel
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-
-      <div className='flex-1 overflow-y-auto'>
-        {isLoading ? (
-          <div className='bg-white p-4 text-center rounded-md'>
-            <div className='flex flex-col items-center gap-2'>
-              <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
-              <Typography>Loading...</Typography>
+      {isCreateModalOpen ? (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4'>
+          <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#101014] p-5 shadow-2xl'>
+            <div className='mb-4 flex items-center justify-between'>
+              <h3 className='text-lg font-semibold text-white'>Add New G-Bank</h3>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className='rounded-md border border-white/15 p-1 text-white/80 transition hover:text-white'
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className='space-y-3'>
+              <div>
+                <label className='mb-1 block text-xs uppercase tracking-wide text-white/60'>Team</label>
+                <input
+                  readOnly
+                  value={selectedTeamLabel}
+                  className='w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/80'
+                />
+              </div>
+              <div>
+                <label className='mb-1 block text-xs uppercase tracking-wide text-white/60'>Name</label>
+                <input
+                  value={newGBankName}
+                  onChange={(e) => setNewGBankName(e.target.value)}
+                  className='w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none transition focus:border-purple-400'
+                />
+              </div>
+            </div>
+            <div className='mt-5 flex justify-end gap-2'>
+              <button
+                className='rounded-md border border-white/15 px-3 py-2 text-sm text-white/80 transition hover:bg-white/5'
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className='rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-60'
+                onClick={handleCreateGBank}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Adding...' : 'Save'}
+              </button>
             </div>
           </div>
-        ) : grouped.length === 0 ? (
-          <div className='bg-white p-4 text-center rounded-md'>
-            <Typography variant='body1' color='textSecondary'>
-              No G-Bank found
-            </Typography>
-          </div>
-        ) : (
-          grouped.map((group) => (
-            <Accordion
-              key={group.color}
-              expanded={expandedGroups.has(group.color)}
-              onChange={() => toggleGroupExpansion(group.color)}
-              sx={{ '&:before': { display: 'none' }, boxShadow: 'none', border: 'none', mb: 1 }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                sx={{
-                  backgroundColor: group.color,
-                  color: group.label === 'Milharal' ? '#000' : (group.color === '#DC2626' ? '#fff' : '#fff'),
-                  '&:hover': { backgroundColor: group.color, opacity: 0.9 },
-                }}
-                data-tutorial="gbank-expand"
-              >
-                <Box display='flex' alignItems='center' gap={2} width='100%'>
-                  <Typography variant='subtitle1' fontWeight='bold'>
-                    {group.label}
-                  </Typography>
-                  <Typography variant='body2'>
-                    ({group.items.length} item{group.items.length !== 1 ? 's' : ''})
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 'none' }}>
-                  <Table size='small' sx={{ border: 'none', '& .MuiTableCell-root': { border: 'none' } }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5', height: '56px', fontSize: '1rem' }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5', height: '56px', fontSize: '1rem' }} align='center'>Total</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5', height: '56px', fontSize: '1rem' }} align='center'>Value</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {group.items.map((g) => (
-                        <TableRow key={g.id}>
-                          <TableCell sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>{g.name}</TableCell>
-                          <TableCell align='center' sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>{Math.round(Number(g.balance)).toLocaleString('en-US')}</TableCell>
-                          <TableCell align='center' sx={{ py: 3, fontSize: '0.875rem', fontWeight: 'medium' }}>
-                            <div className="flex flex-col items-center gap-1">
-                              <input
-                                className="rounded-sm bg-zinc-100 p-2 border border-gray-400 focus:outline-none focus:border-black"
-                                style={{ fontSize: '1rem', height: '40px', minWidth: '120px' }}
-                                type='text'
-                                value={g.calculatorValue}
-                                onChange={(e) => {
-                                  const formatted = formatCalculatorValue(e.target.value)
-                                  
-                                  setGbanks((prev) =>
-                                    prev.map((gbank) =>
-                                      gbank.id === g.id
-                                        ? { ...gbank, calculatorValue: formatted }
-                                        : gbank
-                                    )
-                                  )
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    const value = e.currentTarget.value
-                                    if (value.trim()) {
-                                      showUploadModal(g, value)
-                                    }
-                                  }
-                                }}
-                                data-tutorial="gbank-transactions"
-                              />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-          ))
-        )}
-      </div>
-    </div>
+        </div>
+      ) : null}
+    </>
   )
 }
-
-
