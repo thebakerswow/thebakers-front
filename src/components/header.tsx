@@ -148,7 +148,7 @@ export function Header() {
 
   return (
     <>
-      <div className='fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-black/80 px-4 py-3 backdrop-blur-xl md:hidden'>
+      <div className='fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-[#060608]/90 px-4 py-3 backdrop-blur-xl md:hidden'>
         <div className='flex items-center justify-between'>
           <button
             onClick={() => goTo('/home')}
@@ -161,14 +161,14 @@ export function Header() {
           </button>
           <button
             onClick={() => setIsMobileOpen(true)}
-            className='rounded-lg border border-white/15 p-2 text-white'
+            className='rounded-md border border-white/10 bg-white/5 p-2 text-white transition hover:border-purple-500/40 hover:text-purple-300'
           >
             <List size={20} />
           </button>
         </div>
       </div>
 
-      <aside className='relative z-20 hidden w-72 shrink-0 border-r border-white/10 bg-black/70 backdrop-blur-xl md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
+      <aside className='relative z-20 hidden w-64 shrink-0 border-r border-white/10 bg-[#060608]/85 backdrop-blur-sm md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
         <div className='flex h-20 items-center justify-center border-b border-white/10 px-6'>
           <button
             onClick={() => goTo('/home')}
@@ -180,7 +180,7 @@ export function Header() {
             <span>BAKERS</span>
           </button>
         </div>
-        <nav className='flex-1 space-y-2 px-4 py-4'>
+        <nav className='font-space-grotesk flex-1 space-y-2 px-4 py-4'>
           {navItems.map((item) => (
             <SidebarItem
               key={item.label}
@@ -194,10 +194,10 @@ export function Header() {
             />
           ))}
         </nav>
-        <div className='sticky bottom-0 z-30 border-t border-white/10 bg-black/80 p-4 backdrop-blur-xl'>
+        <div className='sticky bottom-0 z-30 border-t border-white/10 bg-[#060608]/90 p-4 backdrop-blur-sm'>
           <button
             onClick={handleLogout}
-            className='flex w-full items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20'
+            className='flex w-full items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20'
           >
             <SignOut size={18} />
             Logout
@@ -212,7 +212,7 @@ export function Header() {
             onClick={() => setIsMobileOpen(false)}
             aria-label='Close sidebar backdrop'
           />
-          <aside className='absolute left-0 top-0 h-full w-[82%] max-w-[320px] border-r border-white/10 bg-black/95 p-4'>
+          <aside className='absolute left-0 top-0 h-full w-[82%] max-w-[320px] border-r border-white/10 bg-[#060608]/95 p-4 backdrop-blur-sm'>
             <div className='mb-4 flex items-center justify-between'>
               <button
                 onClick={() => goTo('/home')}
@@ -225,13 +225,13 @@ export function Header() {
               </button>
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className='rounded-lg border border-white/15 p-2 text-white'
+                className='rounded-md border border-white/10 bg-white/5 p-2 text-white transition hover:border-purple-500/40 hover:text-purple-300'
               >
                 <X size={18} />
               </button>
             </div>
 
-            <nav className='space-y-2'>
+            <nav className='font-space-grotesk space-y-2'>
               {navItems.map((item) => (
                 <SidebarItem
                   key={`mobile-${item.label}`}
@@ -251,7 +251,7 @@ export function Header() {
 
             <button
               onClick={handleLogout}
-              className='mt-6 flex w-full items-center gap-2 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300'
+              className='mt-6 flex w-full items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300'
             >
               <SignOut size={18} />
               Logout
@@ -278,10 +278,10 @@ function SidebarItem({
 }) {
   if (item.children?.length) {
     return (
-      <div className='rounded-lg border border-white/5 bg-white/[0.02]'>
+      <div className='rounded-lg border border-white/10 bg-white/5'>
         <button
           onClick={() => setOpen(!open)}
-          className='flex w-full items-center justify-between px-3 py-2 text-left text-sm text-gray-200'
+          className='flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-200 transition hover:bg-white/5 hover:text-white'
         >
           <span className='inline-flex items-center gap-2'>
             {item.icon}
@@ -300,10 +300,10 @@ function SidebarItem({
                 <button
                   key={child.label}
                   onClick={() => child.path && onNavigate(child.path)}
-                  className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition ${
+                  className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm transition ${
                     isActive
-                      ? 'bg-purple-500/20 text-purple-200'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      ? 'border-purple-500/30 bg-purple-500/20 text-purple-200'
+                      : 'border-transparent text-gray-300 hover:translate-x-[3px] hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {child.icon}
@@ -321,10 +321,10 @@ function SidebarItem({
   return (
     <button
       onClick={() => item.path && onNavigate(item.path)}
-      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
+      className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${
         isActive
-          ? 'bg-purple-500/20 text-purple-200'
-          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+          ? 'border-purple-500/30 bg-purple-500/20 text-purple-200'
+          : 'border-transparent text-gray-300 hover:translate-x-[3px] hover:bg-white/5 hover:text-white'
       }`}
     >
       {item.icon}

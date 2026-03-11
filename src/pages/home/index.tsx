@@ -172,7 +172,7 @@ export function HomePage() {
   if (!isAuthenticated) return null
 
   return (
-    <div className='relative flex min-h-screen w-full flex-col bg-[#050505] text-white'>
+    <div className='relative flex min-h-screen w-full flex-col bg-transparent text-white'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
 
       {shouldShowRestrictedHome(userRoles) ? (

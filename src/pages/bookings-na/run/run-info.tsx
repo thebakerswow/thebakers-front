@@ -297,7 +297,7 @@ export function RunInfo({
   const collectorColSpanClass =
     hasGoldCollectors && hasDolarCollectors ? 'lg:col-span-2' : 'lg:col-span-3'
   const actionButtonClass =
-    'balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-lg disabled:cursor-not-allowed disabled:!opacity-100 disabled:!bg-zinc-700/60 disabled:!border-zinc-500/60 disabled:!text-zinc-300 disabled:!shadow-none'
+    'inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 disabled:cursor-not-allowed disabled:border-zinc-500/60 disabled:bg-zinc-700/60 disabled:text-zinc-300 disabled:shadow-none'
 
   return (
     <div className='m-4'>
@@ -420,7 +420,7 @@ export function RunInfo({
                 </button>
                 <button
                   onClick={() => setIsEditHistoryOpen(true)}
-                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
+                  className={actionButtonClass}
                 >
                   <Clock size={18} />
                   History
@@ -437,7 +437,7 @@ export function RunInfo({
                 )}
                 <button
                   onClick={handleToggleRunLock}
-                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
+                  className={actionButtonClass}
                 >
                   {isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />}
                   {isRunLocked ? 'Unlock Run' : 'Lock Run'}

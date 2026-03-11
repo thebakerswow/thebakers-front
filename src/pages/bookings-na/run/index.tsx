@@ -52,7 +52,6 @@ export function RunDetails() {
     info: Array<{ idDiscord: string; username: string; percentage: number }>
   }>({ info: [] })
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [isActive, setIsActive] = useState(true)
   const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
   const { userRoles, idDiscord } = useAuth()
   const [showDetails, setShowDetails] = useState(false)
@@ -63,6 +62,11 @@ export function RunDetails() {
 
   const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
+  const buyersRequestInFlightRef = useRef(false)
+  const runRequestInFlightRef = useRef(false)
+  const buyersSnapshotRef = useRef('')
+  const runSnapshotRef = useRef('')
+  const isUserActiveRef = useRef(true)
   const [isChatOpen, setIsChatOpen] = useState(true)
   const [wsConnected, setWsConnected] = useState(false)
 
@@ -95,13 +99,24 @@ export function RunDetails() {
 
   // Função para buscar os dados da run
   async function fetchRunData() {
+    if (!id || runRequestInFlightRef.current) {
+      return
+    }
+
+    runRequestInFlightRef.current = true
     try {
       const data = await getRun(id!)
-      setRunData({
+      const normalizedRunData = {
         ...data,
         slotAvailable: Number(data.slotAvailable),
         maxBuyers: Number(data.maxBuyers),
-      })
+      }
+      const nextSnapshot = JSON.stringify(normalizedRunData)
+
+      if (runSnapshotRef.current !== nextSnapshot) {
+        runSnapshotRef.current = nextSnapshot
+        setRunData(normalizedRunData)
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -117,17 +132,29 @@ export function RunDetails() {
         })
       }
     } finally {
+      runRequestInFlightRef.current = false
       setIsLoadingRun(false)
     }
   }
 
   // Função para buscar os dados dos buyers
-  async function fetchBuyersData() {
-    try {
-      setIsLoadingBuyers(false)
-      const data = await getRunBuyers(id!)
+  async function fetchBuyersData(showLoading = true) {
+    if (!id || buyersRequestInFlightRef.current) {
+      return
+    }
 
-      setRows(data)
+    buyersRequestInFlightRef.current = true
+    try {
+      if (showLoading) {
+        setIsLoadingBuyers(true)
+      }
+      const data = await getRunBuyers(id!)
+      const nextSnapshot = JSON.stringify(data)
+
+      if (buyersSnapshotRef.current !== nextSnapshot) {
+        buyersSnapshotRef.current = nextSnapshot
+        setRows(data)
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorDetails = {
@@ -143,7 +170,10 @@ export function RunDetails() {
         })
       }
     } finally {
-      setIsLoadingBuyers(false)
+      buyersRequestInFlightRef.current = false
+      if (showLoading) {
+        setIsLoadingBuyers(false)
+      }
     }
   }
 
@@ -170,19 +200,20 @@ export function RunDetails() {
 
     // Função para resetar o temporizador
     const resetActivityTimer = () => {
-      setIsActive(true)
+      isUserActiveRef.current = true
       clearTimeout(inactivityTimeout)
       inactivityTimeout = setTimeout(() => {
-        setIsActive(false)
+        isUserActiveRef.current = false
       }, 5000)
     }
 
     // Função para monitorar a visibilidade da página
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setIsActive(false)
+        isUserActiveRef.current = false
       } else {
-        setIsActive(true)
+        isUserActiveRef.current = true
+        resetActivityTimer()
       }
     }
 
@@ -197,29 +228,40 @@ export function RunDetails() {
     window.addEventListener('keydown', handleMouseOrKeyActivity)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // Intervalo para fetchBuyersData (2 segundos)
-    const buyersInterval = setInterval(() => {
-      if (isActive) {
-        fetchBuyersData()
-      }
-    }, 2000)
+    // Inicia como ativo e ajusta com os eventos de interação
+    resetActivityTimer()
 
-    // Intervalo para fetchRunData (por exemplo, 10 segundos)
-    const runInterval = setInterval(() => {
-      if (isActive) {
+    let buyersTimer: ReturnType<typeof setTimeout>
+    let runTimer: ReturnType<typeof setTimeout>
+
+    const scheduleBuyersPoll = () => {
+      const buyersDelay = isUserActiveRef.current ? 2000 : 12000
+      buyersTimer = setTimeout(() => {
+        fetchBuyersData(false)
+        scheduleBuyersPoll()
+      }, buyersDelay)
+    }
+
+    const scheduleRunPoll = () => {
+      const runDelay = isUserActiveRef.current ? 10000 : 30000
+      runTimer = setTimeout(() => {
         fetchRunData()
-      }
-    }, 10000)
+        scheduleRunPoll()
+      }, runDelay)
+    }
+
+    scheduleBuyersPoll()
+    scheduleRunPoll()
 
     return () => {
-      clearInterval(buyersInterval)
-      clearInterval(runInterval)
+      clearTimeout(buyersTimer)
+      clearTimeout(runTimer)
       clearTimeout(inactivityTimeout)
       window.removeEventListener('mousemove', handleMouseOrKeyActivity)
       window.removeEventListener('keydown', handleMouseOrKeyActivity)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [id, isActive]) // Adicione isActive às dependências
+  }, [id])
 
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
@@ -272,8 +314,6 @@ export function RunDetails() {
 
   useEffect(() => {
     if (id) {
-      fetchRunData()
-      fetchBuyersData()
       fetchAttendanceData()
     }
   }, [id])
@@ -641,7 +681,7 @@ export function RunDetails() {
                         hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
                         <button
                           onClick={handleOpenInviteBuyersModal}
-                          className='balance-action-btn balance-action-btn--primary inline-flex min-w-[140px] items-center justify-center gap-2 px-4'
+                          className='inline-flex h-10 min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
                         >
                           <UserPlus size={18} />
                           Invite Buyers
@@ -649,16 +689,16 @@ export function RunDetails() {
                       )}
                     <button
                       onClick={toggleDetailsVisibility}
-                      className={`balance-action-btn balance-action-btn--primary inline-flex min-w-[160px] items-center justify-center px-4 ${
+                      className={`inline-flex h-10 min-w-[160px] items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 ${
                         canViewAttendance && hasAttendanceAccess ? 'inline-flex' : 'hidden'
                       }`}
                     >
                       {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                     </button>
                     {/* Informativo de status */}
-                    <span className='inline-flex h-10 min-w-[190px] items-center justify-center rounded-md border border-white/15 bg-white/[0.08] px-4 text-sm font-semibold text-neutral-200'>
-                      Waiting: <strong className='ml-1 mr-3 text-yellow-300'>{waitingCount}</strong>
-                      Group: <strong className='ml-1 text-sky-300'>{groupCount}</strong>
+                    <span className='inline-flex h-10 min-w-[190px] items-center justify-center rounded-md border border-white/15 bg-white/[0.08] px-4 text-sm font-normal text-neutral-200'>
+                      Waiting: <span className='ml-1 mr-3 text-yellow-300'>{waitingCount}</span>
+                      Group: <span className='ml-1 text-sky-300'>{groupCount}</span>
                     </span>
                   </div>
                   <BuyersDataGrid

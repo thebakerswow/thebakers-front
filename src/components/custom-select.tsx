@@ -79,7 +79,7 @@ export function CustomSelect({
                   }}
                   className={`mb-1 w-full rounded-md px-3 py-2 text-left text-sm transition last:mb-0 ${
                     option.value === value
-                      ? `bg-[linear-gradient(180deg,rgba(168,85,247,0.95),rgba(147,51,234,0.95))] text-white ${activeOptionClassName}`
+                      ? `border border-purple-400/40 bg-purple-500/20 text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${activeOptionClassName}`
                       : `text-white/90 hover:bg-white/10 ${optionClassName}`
                   }`}
                 >

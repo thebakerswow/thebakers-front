@@ -37,7 +37,6 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
   const [selectedWeek, setSelectedWeek] = useState<number>(0) // Inicializa com 0 para garantir que sempre tenha um valor
   const [weeksInMonth, setWeeksInMonth] = useState<Date[][]>([])
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
   useEffect(() => {
     const monthStart = startOfMonth(selectedMonth)
@@ -96,7 +95,6 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
     if (date) {
       setSelectedMonth(date)
       setSelectedWeek(0) // Reset to 0 when changing month
-      setIsCalendarOpen(false)
     }
   }
 
@@ -141,10 +139,6 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
             dateFormat='MM/yyyy'
             showMonthYearPicker
             placeholderText='Select Month'
-            open={isCalendarOpen}
-            onClickOutside={() => setIsCalendarOpen(false)}
-            onSelect={() => setIsCalendarOpen(false)}
-            onFocus={() => setIsCalendarOpen(true)}
             popperClassName='z-[120] balance-datepicker-popper'
             calendarClassName='balance-datepicker'
             customInput={<MonthPickerInput />}
@@ -172,7 +166,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
         <label className='invisible mb-1 text-sm text-white'>Reset</label>
         <button
           onClick={resetToCurrentWeek}
-          className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
+          className='inline-flex h-10 min-w-[100px] items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
         >
           Reset
         </button>

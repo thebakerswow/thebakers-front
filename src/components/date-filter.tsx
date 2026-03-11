@@ -25,7 +25,7 @@ const MonthPickerInput = forwardRef<
     ref={ref}
     type='button'
     onClick={onClick}
-    className='balance-filter-control h-10 min-w-[220px] rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35'
+    className='balance-filter-control h-10 w-full min-w-0 rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35 sm:min-w-[220px]'
   >
     {value || 'Month'}
   </button>
@@ -200,13 +200,13 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   }
 
   return (
-    <div className='mt-10 flex flex-col items-center gap-4'>
-      <div className='flex flex-wrap items-end gap-6'>
-        <div className='flex flex-col'>
+    <div className='mt-10 flex w-[90%] max-w-5xl flex-col gap-4'>
+      <div className='flex w-full flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-6'>
+        <div className='flex w-full flex-col sm:w-auto'>
           <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
             Select Month
           </label>
-          <div className='relative'>
+          <div className='relative w-full sm:w-auto'>
             <DatePicker
               selected={selectedMonth}
               onChange={handleMonthChange}
@@ -215,6 +215,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               placeholderText='Month'
               popperClassName='z-[120] balance-datepicker-popper'
               calendarClassName='balance-datepicker'
+              wrapperClassName='w-full sm:w-auto'
               customInput={<MonthPickerInput />}
             />
             <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
@@ -223,20 +224,20 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
           </div>
         </div>
         {weeks.length > 0 && (
-          <div className='flex flex-col'>
+          <div className='flex w-full flex-col sm:w-auto'>
             <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
               Select Week
             </label>
-            <div className='flex gap-3'>
+            <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row'>
               <CustomSelect
                 value={String(selectedWeekIndex)}
                 onChange={(value) => handleWeekSelect(Number(value))}
                 options={weekOptions}
-                minWidthClassName='min-w-[260px]'
+                minWidthClassName='w-full min-w-0 sm:min-w-[260px]'
               />
               <button
                 onClick={handleFilterReset}
-                className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
+                className='inline-flex h-10 w-full min-w-[100px] items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 sm:w-auto'
               >
                 Reset
               </button>
@@ -250,20 +251,20 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
           <label className='mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-400'>
             Select Day
           </label>
-          <div className='flex flex-wrap gap-2'>
+          <div className='grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
             {days.map((day) => (
               <button
-                className={`h-10 rounded-md px-4 text-sm font-medium transition ${
+                className={`h-10 w-full rounded-md px-3 text-xs transition sm:px-4 sm:text-sm ${
                   filterDay &&
                   format(startOfDay(day), 'yyyy-MM-dd') ===
                     format(startOfDay(filterDay), 'yyyy-MM-dd')
-                    ? 'border border-purple-300/50 bg-[linear-gradient(180deg,rgba(168,85,247,0.9)_0%,rgba(126,34,206,0.9)_100%)] text-white'
+                    ? 'border border-purple-400/40 bg-purple-500/20 text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)]'
                     : 'border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] text-white/90 hover:border-purple-300/45'
                 }`}
                 key={day.toISOString()}
                 onClick={() => handleDaySelect(day)}
               >
-                {format(day, 'EEEE, dd MMM')}
+                {format(day, 'EEE, dd MMM')}
               </button>
             ))}
           </div>

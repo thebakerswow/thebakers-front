@@ -49,6 +49,7 @@ import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/management/payments'
 import { ReceiptsPage } from './pages/receipts'
 import { SellsPage } from './pages/sells'
+import { PurpleGlowBackground } from './components/purple-glow-background'
 import './styles/global.css'
 
 // Componente para proteger rotas privadas
@@ -71,40 +72,12 @@ function AppContent() {
   const { pathname } = useLocation()
 
   return (
-    <div className='relative flex min-h-screen w-full flex-grow flex-col bg-[#050505]'>
-      <div
-        className='pointer-events-none fixed bottom-0 left-0 top-0 z-[5] overflow-hidden'
-        style={{ right: 'calc(100vw - 100%)' }}
-      >
-        <div
-          className='absolute -top-20 left-1/2 h-[700px] w-[1000px] -translate-x-1/2 rounded-full blur-[180px]'
-          style={{ backgroundColor: 'rgba(147, 51, 234, 0.15)' }}
-        />
-        <div
-          className='absolute -right-40 top-[30%] h-[500px] w-[600px] rounded-full blur-[150px]'
-          style={{ backgroundColor: 'rgba(139, 92, 246, 0.10)' }}
-        />
-        <div
-          className='absolute -left-32 top-[55%] h-[450px] w-[550px] rounded-full blur-[140px]'
-          style={{ backgroundColor: 'rgba(162, 28, 175, 0.10)' }}
-        />
-        <div
-          className='absolute bottom-[10%] left-1/2 h-[400px] w-[700px] -translate-x-1/3 rounded-full blur-[160px]'
-          style={{ backgroundColor: 'rgba(147, 51, 234, 0.08)' }}
-        />
-        <div
-          className='absolute right-1/4 top-[15%] h-[300px] w-[400px] rounded-full blur-[120px]'
-          style={{ backgroundColor: 'rgba(167, 139, 250, 0.08)' }}
-        />
-        <div
-          className='absolute bottom-[40%] left-1/4 h-[350px] w-[450px] rounded-full blur-[130px]'
-          style={{ backgroundColor: 'rgba(168, 85, 247, 0.07)' }}
-        />
-      </div>
-      <div className='flex min-h-screen w-full flex-1'>
+    <div className='relative isolate flex min-h-screen w-full flex-grow flex-col bg-[#060608]'>
+      <PurpleGlowBackground />
+      <div className='relative z-10 flex min-h-screen w-full flex-1'>
         {isAuthenticated ? <Header /> : null}
         <main
-          className={`relative flex min-h-screen flex-1 justify-center bg-[#050505] ${
+          className={`relative flex min-h-screen flex-1 justify-center ${
             isAuthenticated ? 'pt-[64px] md:pt-0' : ''
           }`}
         >

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
@@ -29,6 +29,9 @@ export function FullRaidsNa() {
   const [selectedLoot, setSelectedLoot] = useState<string>('All')
   const [selectedRunType, setSelectedRunType] = useState<string>('All')
   const { userRoles } = useAuth()
+  const runsRequestInFlightRef = useRef(false)
+  const runsSnapshotRef = useRef('')
+  const isUserActiveRef = useRef(true)
   const teamOptions = useMemo(
     () => [
       { value: 'All', label: 'All' },
@@ -219,22 +222,33 @@ export function FullRaidsNa() {
 
   // Busca os dados das corridas na API
   const fetchRuns = async (isUserRequest: boolean) => {
+    if (runsRequestInFlightRef.current) {
+      return
+    }
+
     if (isUserRequest && selectedDate) setIsLoading(true)
+    runsRequestInFlightRef.current = true
 
     try {
       if (!selectedDate) {
-        setRows([])
+        if (runsSnapshotRef.current !== '[]') {
+          runsSnapshotRef.current = '[]'
+          setRows([])
+        }
         return
       }
 
       const data = await getRuns(format(selectedDate, 'yyyy-MM-dd'))
+      const mappedRows = (data || []).map((run: any) => ({
+        ...run,
+        buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
+      }))
+      const nextSnapshot = JSON.stringify(mappedRows)
 
-      setRows(
-        (data || []).map((run: any) => ({
-          ...run,
-          buyersCount: `${run.maxBuyers - run.slotAvailable}/${run.maxBuyers}`,
-        }))
-      )
+      if (runsSnapshotRef.current !== nextSnapshot) {
+        runsSnapshotRef.current = nextSnapshot
+        setRows(mappedRows)
+      }
       setError(null) // Clear any previous errors
     } catch (error) {
       const errorDetails = axios.isAxiosError(error)
@@ -247,6 +261,7 @@ export function FullRaidsNa() {
       console.error('Error:', errorDetails)
       setError(errorDetails)
     } finally {
+      runsRequestInFlightRef.current = false
       if (isUserRequest) setIsLoading(false)
     }
   }
@@ -275,8 +290,51 @@ export function FullRaidsNa() {
   useEffect(() => {
     fetchRuns(true)
 
-    const interval = setInterval(() => fetchRuns(false), 20000)
-    return () => clearInterval(interval)
+    let inactivityTimeout: ReturnType<typeof setTimeout>
+    let pollingTimeout: ReturnType<typeof setTimeout>
+
+    const resetActivityTimer = () => {
+      isUserActiveRef.current = true
+      clearTimeout(inactivityTimeout)
+      inactivityTimeout = setTimeout(() => {
+        isUserActiveRef.current = false
+      }, 5000)
+    }
+
+    const handleMouseOrKeyActivity = () => {
+      resetActivityTimer()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isUserActiveRef.current = false
+      } else {
+        isUserActiveRef.current = true
+        resetActivityTimer()
+      }
+    }
+
+    const schedulePolling = () => {
+      const delay = isUserActiveRef.current ? 20000 : 45000
+      pollingTimeout = setTimeout(() => {
+        fetchRuns(false)
+        schedulePolling()
+      }, delay)
+    }
+
+    window.addEventListener('mousemove', handleMouseOrKeyActivity)
+    window.addEventListener('keydown', handleMouseOrKeyActivity)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    resetActivityTimer()
+    schedulePolling()
+
+    return () => {
+      clearTimeout(pollingTimeout)
+      clearTimeout(inactivityTimeout)
+      window.removeEventListener('mousemove', handleMouseOrKeyActivity)
+      window.removeEventListener('keydown', handleMouseOrKeyActivity)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [selectedDate])
 
   return (
@@ -287,23 +345,23 @@ export function FullRaidsNa() {
       <div className='mx-auto mt-6 flex w-[90%] flex-col gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm'>
         <div className='mb-2 flex flex-wrap items-end justify-between gap-4'>
           {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
-            <div className='flex gap-2'>
+            <div className='flex flex-wrap gap-3'>
               <button
-                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[120px] items-center justify-center gap-2 px-4'
+                className='inline-flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
                 onClick={() => setIsAddRunOpen(true)}
               >
                 <UserPlus size={18} />
                 Add Run
               </button>
               <button
-                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[130px] items-center justify-center gap-2 px-4'
+                className='inline-flex h-10 min-w-[130px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
                 onClick={copyRunsToClipboard}
               >
                 <ClipboardText size={18} />
                 {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
               </button>
               <button
-                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[170px] items-center justify-center gap-2 px-4'
+                className='inline-flex h-10 min-w-[170px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
                 onClick={() => setIsBulkAddOpen(true)}
               >
                 <UsersFour size={18} />
@@ -370,7 +428,7 @@ export function FullRaidsNa() {
                 setSelectedLoot('All')
                 setSelectedRunType('All')
               }}
-              className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
+              className='inline-flex h-10 min-w-[100px] items-center justify-center rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
             >
               Reset
             </button>
