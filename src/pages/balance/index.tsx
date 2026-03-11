@@ -1,46 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { BalanceDataGrid } from './balance-data-grid'
 import { BalanceTeamFilter } from '../../components/balance-team-filter'
 import { WeekRangeFilter } from '../../components/week-range-filter'
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
 import { useAuth } from '../../context/auth-context'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { shouldShowBalanceFilter, shouldShowUsGoldButton, shouldUseNewBalance } from '../../utils/role-utils'
-import { NewBalancePage } from '../balance-new'
-import { createGBank } from '../../services/api/gbanks'
-
-const teamIdToLabelMap: Record<string, string> = {
-  [import.meta.env.VITE_TEAM_CHEFE]: 'Chefe de cozinha',
-  [import.meta.env.VITE_TEAM_MPLUS]: 'M+',
-  [import.meta.env.VITE_TEAM_LEVELING]: 'Leveling',
-  [import.meta.env.VITE_TEAM_GARCOM]: 'Garcom',
-  [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'Confeiteiros',
-  [import.meta.env.VITE_TEAM_JACKFRUIT]: 'Jackfruit',
-  [import.meta.env.VITE_TEAM_INSANOS]: 'Insanos',
-  [import.meta.env.VITE_TEAM_APAE]: 'APAE',
-  [import.meta.env.VITE_TEAM_LOSRENEGADOS]: 'Los Renegados',
-  [import.meta.env.VITE_TEAM_DTM]: 'DTM',
-  [import.meta.env.VITE_TEAM_KFFC]: 'KFFC',
-  [import.meta.env.VITE_TEAM_GREENSKY]: 'Greensky',
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: 'Guild Azralon BR#1',
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: 'Guild Azralon BR#2',
-  [import.meta.env.VITE_TEAM_ROCKET]: 'Rocket',
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'Booty Reaper',
-  [import.meta.env.VITE_TEAM_PADEIRINHO]: 'Padeirinho',
-  [import.meta.env.VITE_TEAM_MILHARAL]: 'Milharal',
-  [import.meta.env.VITE_TEAM_BASTARD]: 'Bastard Munchen',
-  [import.meta.env.VITE_TEAM_KIWI]: 'Kiwi',
-}
+import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/role-utils'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
@@ -49,15 +14,7 @@ export function BalancePage() {
   >(undefined)
   const [isDolar, setIsDolar] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
-  const [addGBankModalOpen, setAddGBankModalOpen] = useState(false)
-  const [newGBankName, setNewGBankName] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
-  const canCreateGBank = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
-  const selectedTeamLabel = useMemo(
-    () => (selectedTeam ? teamIdToLabelMap[selectedTeam] || selectedTeam : '-'),
-    [selectedTeam]
-  )
 
   // Determina se deve mostrar o filtro baseado nas regras especificadas
   const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
@@ -88,145 +45,64 @@ export function BalancePage() {
     setDateRange(range)
   }, [])
 
-  const handleCreateGBank = async () => {
-    if (!selectedTeam) {
-      handleError({ message: 'No selected team for G-Bank creation' })
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      await createGBank({
-        name: newGBankName,
-        idTeam: selectedTeam,
-      })
-      setNewGBankName('')
-      setAddGBankModalOpen(false)
-    } catch (error) {
-      handleError({ message: 'Error adding G-Bank', response: error })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   // Loading mais simples: só mostra se auth está carregando
   const isLoading = authLoading
 
   if (isLoading) {
     return (
       <div className='flex min-h-[400px] items-center justify-center'>
-        <CircularProgress />
+        <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
       </div>
     )
   }
 
   return (
-    <div className='flex w-full flex-col overflow-auto px-10 pb-10'>
+    <motion.div
+      className='flex w-full flex-col gap-6 px-6 pb-10 pt-6 md:px-10'
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+    >
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      <div className='mx-4 mt-8 flex flex-wrap items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <BalanceTeamFilter
-            selectedTeam={selectedTeam}
-            onChange={handleTeamChange}
-            onError={handleError}
-          />
-          {shouldShowUsGoldButtonValue && (
-            <Button
-              variant='contained'
-              sx={{
-                height: '40px',
-                minWidth: '80px',
-                marginTop: '16px',
-                backgroundColor: isDolar ? '#ef4444' : '#FFD700',
-                color: isDolar ? '#fff' : '#000',
-                '&:hover': {
-                  backgroundColor: isDolar ? '#dc2626' : '#FFC300',
-                },
-              }}
-              onClick={() => setIsDolar((prev) => !prev)}
-            >
-              {isDolar ? 'U$' : 'Gold'}
-            </Button>
-          )}
-          {canCreateGBank && (
-            <Button
-              variant='contained'
-              sx={{
-                height: '40px',
-                minWidth: '120px',
-                marginTop: '16px',
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-              onClick={() => setAddGBankModalOpen(true)}
-            >
-              Add G-Bank
-            </Button>
-          )}
+
+      <section className='relative z-30 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm md:p-6'>
+        <div className='flex flex-wrap items-center justify-between gap-4'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <BalanceTeamFilter
+              selectedTeam={selectedTeam}
+              onChange={handleTeamChange}
+              onError={handleError}
+            />
+            {shouldShowUsGoldButtonValue && (
+              <button
+                className={`balance-action-btn mt-4 min-w-[90px] px-4 ${
+                  isDolar
+                    ? 'balance-action-btn--active-dollar'
+                    : 'balance-action-btn--active-gold'
+                }`}
+                onClick={() => setIsDolar((prev) => !prev)}
+              >
+                {isDolar ? 'U$' : 'Gold'}
+              </button>
+            )}
+          </div>
+          <WeekRangeFilter onChange={handleDateRangeChange} />
         </div>
-        <WeekRangeFilter onChange={handleDateRangeChange} />
-      </div>
-      {addGBankModalOpen && (
-        <Dialog open={addGBankModalOpen} onClose={() => setAddGBankModalOpen(false)}>
-          <DialogTitle className='relative text-center'>
-            Add New G-Bank
-            <IconButton
-              aria-label='close'
-              onClick={() => setAddGBankModalOpen(false)}
-              sx={{ position: 'absolute', right: 8, top: 8 }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <TextField
-              fullWidth
-              margin='dense'
-              variant='outlined'
-              label='Team'
-              value={selectedTeamLabel}
-              InputProps={{ readOnly: true }}
-            />
-            <TextField
-              fullWidth
-              margin='dense'
-              variant='outlined'
-              label='Name'
-              value={newGBankName}
-              onChange={(e) => setNewGBankName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions sx={{ justifyContent: 'center' }}>
-            <Button
-              variant='contained'
-              onClick={handleCreateGBank}
-              disabled={isSubmitting}
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-            >
-              {isSubmitting ? 'Adding...' : 'Save'}
-            </Button>
-            <Button variant='outlined' onClick={() => setAddGBankModalOpen(false)}>
-              Cancel
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      <BalanceDataGrid
-        selectedTeam={selectedTeam}
-        dateRange={dateRange}
-        is_dolar={isDolar}
-        onError={handleError}
-      />
-    </div>
+      </section>
+
+      <section className='relative z-10 rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-sm md:p-4'>
+        <BalanceDataGrid
+          selectedTeam={selectedTeam}
+          dateRange={dateRange}
+          is_dolar={isDolar}
+          onError={handleError}
+        />
+      </section>
+    </motion.div>
   )
 }
 
 // Wrapper que decide entre balance antigo e novo com base nos cargos
 export function BalancePageRouter() {
-  const { userRoles = [] } = useAuth()
-  const useNew = useMemo(() => shouldUseNewBalance(userRoles), [userRoles])
-  return useNew ? <NewBalancePage /> : <BalancePage />
+  return <BalancePage />
 }

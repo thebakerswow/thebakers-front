@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material'
 import axios from 'axios'
 import { getBalanceTeams } from '../services/api/teams'
 import { ErrorDetails } from './error-display'
 import { useAuth } from '../context/auth-context'
 import { shouldShowBalanceFilter, getUserTeamsForFilter } from '../utils/role-utils'
+import { CustomSelect } from './custom-select'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null
@@ -137,14 +137,10 @@ export function BalanceTeamFilter({
   }, [shouldShowFilter, teams.length, isLoadingTeams, userTeams.length, userRoles])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
-  const options = useMemo(
-    () =>
-      teams.map((team) => (
-        <MenuItem key={team.id_discord} value={team.id_discord}>
-          {team.team_name}
-        </MenuItem>
-      )),
-    [teams]
+  const options = useMemo(() => teams, [teams])
+  const customSelectOptions = useMemo(
+    () => options.map((team) => ({ value: team.id_discord, label: team.team_name })),
+    [options]
   )
 
   // Define o time inicial apenas para usuários que devem ver o filtro quando teams são carregados
@@ -160,54 +156,21 @@ export function BalanceTeamFilter({
     }
   }, [shouldShowFilter, selectedTeam, teams.length, isLoadingTeams, onChange])
 
-  const handleSelectChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value
-    onChange(value || null)
-  }
-
   // Para usuários que não devem ver o filtro, não mostra o componente
   if (!shouldShowFilter) {
     return null
   }
 
   return (
-    <FormControl className='relative'>
-      <Select
-        label='team-filter-label'
-        value={selectedTeam || ''} // Usa o time selecionado
-        onChange={handleSelectChange}
+    <div className='relative mt-4'>
+      <CustomSelect
+        value={selectedTeam || ''}
+        options={customSelectOptions}
+        onChange={(value) => onChange(value || null)}
         disabled={isLoadingTeams}
-        className='mt-4 text-black'
-        displayEmpty
-        sx={{
-          backgroundColor: 'white',
-          height: '40px', // Define uma altura menor para o Select
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // Remove a borda ao focar
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // Remove a borda padrão
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            border: 'none', // Remove a borda ao passar o mouse
-          },
-          boxShadow: 'none', // Remove qualquer sombra
-        }}
-        MenuProps={{
-          PaperProps: {
-            style: {
-              boxShadow: 'none', // Remove sombra do menu dropdown
-            },
-          },
-        }}
-      >
-        {teams.length === 0 && (
-          <MenuItem value='' disabled>
-            {isLoadingTeams ? 'Loading teams...' : 'No teams available'}
-          </MenuItem>
-        )}
-        {options}
-      </Select>
-    </FormControl>
+        placeholder={isLoadingTeams ? 'Loading teams...' : 'No teams available'}
+        minWidthClassName='min-w-[220px]'
+      />
+    </div>
   )
 }

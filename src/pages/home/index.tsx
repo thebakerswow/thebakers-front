@@ -174,44 +174,6 @@ export function HomePage() {
   return (
     <div className='relative flex min-h-screen w-full flex-col bg-[#050505] text-white'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      <div
-        className='pointer-events-none fixed bottom-0 left-0 top-0 overflow-hidden'
-        style={{ right: 'calc(100vw - 100%)' }}
-      >
-        <div
-          className='absolute -top-20 left-1/2 h-[700px] w-[1000px] -translate-x-1/2 rounded-full blur-[180px]'
-          style={{ backgroundColor: 'rgba(147, 51, 234, 0.15)' }}
-        />
-        <div
-          className='absolute -right-40 top-[30%] h-[500px] w-[600px] rounded-full blur-[150px]'
-          style={{ backgroundColor: 'rgba(139, 92, 246, 0.10)' }}
-        />
-        <div
-          className='absolute -left-32 top-[55%] h-[450px] w-[550px] rounded-full blur-[140px]'
-          style={{ backgroundColor: 'rgba(162, 28, 175, 0.10)' }}
-        />
-        <div
-          className='absolute bottom-[10%] left-1/2 h-[400px] w-[700px] -translate-x-1/3 rounded-full blur-[160px]'
-          style={{ backgroundColor: 'rgba(147, 51, 234, 0.08)' }}
-        />
-        <div
-          className='absolute right-1/4 top-[15%] h-[300px] w-[400px] rounded-full blur-[120px]'
-          style={{ backgroundColor: 'rgba(167, 139, 250, 0.08)' }}
-        />
-        <div
-          className='absolute bottom-[40%] left-1/4 h-[350px] w-[450px] rounded-full blur-[130px]'
-          style={{ backgroundColor: 'rgba(168, 85, 247, 0.07)' }}
-        />
-      </div>
-      <div
-        className='pointer-events-none fixed bottom-0 left-0 top-0 opacity-[0.02]'
-        style={{
-          right: 'calc(100vw - 100%)',
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }}
-      />
 
       {shouldShowRestrictedHome(userRoles) ? (
         <div className='relative z-10 mx-auto flex min-h-screen w-full max-w-[1720px] items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>

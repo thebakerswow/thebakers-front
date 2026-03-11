@@ -4,18 +4,6 @@ import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
 import { getBalance, updateBalanceColor } from '../../services/api/balance'
 import { getTextColorForBackground } from '../../components/color-selector'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material'
 import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
 
 import {
@@ -49,6 +37,23 @@ export function BalanceDataGrid({
   const [playerStyles, setPlayerStyles] = useState<{
     [key: string]: { background: string; text: string }
   }>({})
+  const [openPlayerClassMenu, setOpenPlayerClassMenu] = useState<string | null>(null)
+
+  const classOptions = [
+    { name: 'Death Knight', color: '#C41E3A' },
+    { name: 'Demon Hunter', color: '#A330C9' },
+    { name: 'Druid', color: '#FF7C0A' },
+    { name: 'Evoker', color: '#33937F' },
+    { name: 'Hunter', color: '#AAD372' },
+    { name: 'Mage', color: '#3FC7EB' },
+    { name: 'Monk', color: '#00FF98' },
+    { name: 'Paladin', color: '#F48CBA' },
+    { name: 'Priest', color: '#FFFFFF' },
+    { name: 'Rogue', color: '#FFF468' },
+    { name: 'Shaman', color: '#0070DD' },
+    { name: 'Warlock', color: '#8788EE' },
+    { name: 'Warrior', color: '#C69B6D' },
+  ]
 
   // Atualiza os estilos dos jogadores com base nos dados de balanceamento
   useEffect(() => {
@@ -247,117 +252,90 @@ export function BalanceDataGrid({
   }
 
   return (
-    <div className='px-4 py-8'>
+    <div className='px-1 py-1 md:px-0 md:py-0'>
       {isLoadingBalance || !hasInitialDataLoaded ? (
         <div className='flex min-h-[400px] items-center justify-center'>
-          <CircularProgress />
+          <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
         </div>
       ) : (
-        <TableContainer
-          className='relative'
-          component={Paper}
-          style={{
-            fontSize: '1rem',
-            overflow: 'hidden',
-          }}
-        >
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  align='center'
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: '#ECEBEE',
-                  }}
-                >
+        <div className='relative rounded-lg bg-transparent'>
+          <div className='overflow-x-auto'>
+            <table className='w-full min-w-max text-sm'>
+            <thead>
+              <tr className='border-b border-white/10 text-gray-400'>
+                <th className='py-3 pr-3 text-left font-medium'>
                   Player
-                </TableCell>
-                <TableCell
-                  align='center'
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: '#ECEBEE',
-                  }}
-                >
+                </th>
+                <th className='py-3 px-3 text-center font-medium'>
                   Total Balance
-                </TableCell>
+                </th>
                 {getSortedDates().map((date) => (
-                  <TableCell
+                  <th
                     key={date}
-                    align='center'
-                    style={{
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      backgroundColor: '#ECEBEE',
-                    }}
+                    className='py-3 px-3 text-center font-medium whitespace-nowrap'
                   >
                     {formatDayHeader(date)}
-                  </TableCell>
+                  </th>
                 ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {(balanceData.balance_total?.length || 0) === 0 ? ( // Check if balance_total is null or empty
-                <TableRow>
-                  <TableCell
+              </tr>
+            </thead>
+            <tbody>
+              {(balanceData.balance_total?.length || 0) === 0 ? (
+                <tr>
+                  <td
                     colSpan={getSortedDates().length + 2}
-                    align='center'
+                    className='py-10 text-center text-gray-500'
                   >
                     No data yet
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : (
                 processBalanceData().map((player) => (
-                  <TableRow key={player.id}>
-                    <TableCell
-                      align='center'
-                      style={{
-                        backgroundColor:
-                          playerStyles[player.id]?.background || 'transparent',
-                        color: 'black',
-                      }}
-                    >
-                      <Select
-                        value={playerStyles[player.id]?.background || ''}
-                        onChange={(e) =>
-                          handleBackgroundChange(player.id, e.target.value)
-                        }
-                        displayEmpty
-                        style={{
-                          backgroundColor:
-                            playerStyles[player.id]?.background ||
-                            'transparent',
-                          color: 'black',
-                          cursor: 'pointer',
-                          fontSize: '0.75rem',
-                          padding: '2px 8px',
-                          minWidth: '80px',
-                          height: '30px',
-                        }}
-                        renderValue={() => player.username}
-                      >
-                        <MenuItem value='' disabled>
-                          Select Class
-                        </MenuItem>
-                        <MenuItem value='#C41E3A'>Death Knight</MenuItem>
-                        <MenuItem value='#A330C9'>Demon Hunter</MenuItem>
-                        <MenuItem value='#FF7C0A'>Druid</MenuItem>
-                        <MenuItem value='#33937F'>Evoker</MenuItem>
-                        <MenuItem value='#AAD372'>Hunter</MenuItem>
-                        <MenuItem value='#3FC7EB'>Mage</MenuItem>
-                        <MenuItem value='#00FF98'>Monk</MenuItem>
-                        <MenuItem value='#F48CBA'>Paladin</MenuItem>
-                        <MenuItem value='#FFFFFF'>Priest</MenuItem>
-                        <MenuItem value='#FFF468'>Rogue</MenuItem>
-                        <MenuItem value='#0070DD'>Shaman</MenuItem>
-                        <MenuItem value='#8788EE'>Warlock</MenuItem>
-                        <MenuItem value='#C69B6D'>Warrior</MenuItem>
-                      </Select>
-                    </TableCell>
-                    <TableCell align='center'>
+                  <tr key={player.id} className='border-b border-white/5'>
+                    <td className='py-3 pr-3'>
+                      <div className='relative inline-block'>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setOpenPlayerClassMenu((prev) =>
+                              prev === player.id ? null : player.id
+                            )
+                          }
+                          className='inline-flex h-10 w-48 items-center justify-center rounded-md border border-white/10 px-3 text-sm font-medium transition hover:brightness-110'
+                          style={{
+                            backgroundColor:
+                              playerStyles[player.id]?.background || 'rgba(255,255,255,0.05)',
+                            color: playerStyles[player.id]?.text || '#fff',
+                          }}
+                        >
+                          {player.username}
+                        </button>
+
+                        {openPlayerClassMenu === player.id && (
+                          <div className='absolute left-0 top-11 z-20 w-[196px] rounded-md border border-white/10 bg-[#111115] p-2 shadow-2xl'>
+                            <div className='grid grid-cols-5 gap-2'>
+                              {classOptions.map((option) => (
+                                <button
+                                  key={option.name}
+                                  type='button'
+                                  title={option.name}
+                                  aria-label={option.name}
+                                  onClick={() => {
+                                    handleBackgroundChange(player.id, option.color)
+                                    setOpenPlayerClassMenu(null)
+                                  }}
+                                  className='h-7 w-7 rounded border border-white/15 transition hover:scale-105'
+                                  style={{
+                                    backgroundColor: option.color,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className='py-3 px-3 text-center text-white'>
                       {is_dolar
                         ? Math.abs(Number(player.balance_total)) === 0
                           ? '0.00'
@@ -371,12 +349,15 @@ export function BalanceDataGrid({
                         : Math.abs(Math.round(Number(player.balance_total))) ===
                             0
                           ? '0'
-                          : Math.round(
-                              Number(player.balance_total)
-                            ).toLocaleString('en-US')}
-                    </TableCell>
+                          : Math.round(Number(player.balance_total)).toLocaleString(
+                              'en-US'
+                            )}
+                    </td>
                     {getSortedDates().map((date) => (
-                      <TableCell key={`${player.id}-${date}`} align='center'>
+                      <td
+                        key={`${player.id}-${date}`}
+                        className='py-3 px-3 text-center text-white/90'
+                      >
                         {player.dailyValues[date] !== undefined
                           ? is_dolar
                             ? Math.abs(Number(player.dailyValues[date])) === 0
@@ -398,14 +379,15 @@ export function BalanceDataGrid({
                                   }
                                 )
                           : '-'}
-                      </TableCell>
+                      </td>
                     ))}
-                  </TableRow>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   )

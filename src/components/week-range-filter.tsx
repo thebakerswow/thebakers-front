@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { forwardRef, useState, useEffect, useMemo } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
@@ -11,11 +11,27 @@ import {
   getWeek,
   startOfWeek,
 } from 'date-fns'
-import { Select, MenuItem, Button } from '@mui/material'
+import { CustomSelect } from './custom-select'
 
 interface WeekRangeFilterProps {
   onChange: (range: { start: string; end: string }) => void
 }
+
+const MonthPickerInput = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void }
+>(({ value, onClick }, ref) => (
+  <button
+    ref={ref}
+    type='button'
+    onClick={onClick}
+    className='balance-filter-control h-10 min-w-[220px] rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35'
+  >
+    {value || 'Select Month'}
+  </button>
+))
+
+MonthPickerInput.displayName = 'MonthPickerInput'
 
 export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
@@ -103,85 +119,63 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
     }
   }
 
+  const weekOptions = useMemo(
+    () =>
+      weeksInMonth.map((week, index) => ({
+        value: String(index),
+        label: `Week ${index + 1} (${format(week[0], 'dd/MM')} - ${format(week[1], 'dd/MM')})`,
+      })),
+    [weeksInMonth]
+  )
+
   return (
-    <div className='flex items-center gap-10 text-black'>
+    <div className='flex flex-wrap items-end gap-4 text-white'>
       <div className='flex flex-col'>
-        <label className='mb-1 text-sm text-white'>Month</label>
-        <div className='relative'>
+        <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+          Month
+        </label>
+        <div className='relative z-40'>
           <DatePicker
             selected={selectedMonth}
             onChange={handleMonthChange}
             dateFormat='MM/yyyy'
             showMonthYearPicker
-            className='rounded-sm border border-gray-300 py-1 pl-4 pr-8 font-normal text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black'
             placeholderText='Select Month'
             open={isCalendarOpen}
             onClickOutside={() => setIsCalendarOpen(false)}
             onSelect={() => setIsCalendarOpen(false)}
             onFocus={() => setIsCalendarOpen(true)}
-            popperClassName='z-50' // Added this line
+            popperClassName='z-[120] balance-datepicker-popper'
+            calendarClassName='balance-datepicker'
+            customInput={<MonthPickerInput />}
           />
+          <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+            ▼
+          </span>
         </div>
       </div>
 
       <div className='flex flex-col'>
-        <label className='mb-1 text-sm text-white'>Week</label>
-        <div className='relative'>
-          <Select
-            value={selectedWeek}
-            onChange={(e) => setSelectedWeek(Number(e.target.value))}
-            displayEmpty
-            className='bg-white text-zinc-900'
-            style={{ minWidth: 200, height: 36 }} // Reduced height
-            sx={{
-              backgroundColor: 'white',
-              height: '40px', // Define uma altura menor para o Select
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                border: 'none', // Remove a borda ao focar
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                border: 'none', // Remove a borda padrão
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                border: 'none', // Remove a borda ao passar o mouse
-              },
-              boxShadow: 'none', // Remove qualquer sombra
-            }}
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  boxShadow: 'none', // Remove sombra do menu dropdown
-                },
-              },
-            }}
-          >
-            {weeksInMonth.length === 0 && (
-              <MenuItem value={0} disabled>
-                No weeks available
-              </MenuItem>
-            )}
-            {weeksInMonth.map((week, index) => (
-              <MenuItem key={index} value={index}>
-                Week {index + 1} ({format(week[0], 'dd/MM')} -{' '}
-                {format(week[1], 'dd/MM')})
-              </MenuItem>
-            ))}
-          </Select>
-        </div>
+        <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+          Week
+        </label>
+        <CustomSelect
+          value={String(selectedWeek)}
+          onChange={(value) => setSelectedWeek(Number(value))}
+          options={weekOptions}
+          placeholder='No weeks available'
+          minWidthClassName='min-w-[260px]'
+        />
       </div>
 
       <div className='flex flex-col'>
         <label className='invisible mb-1 text-sm text-white'>Reset</label>
-        <Button
+        <button
           onClick={resetToCurrentWeek}
-          variant='contained'
-          sx={{
-            backgroundColor: 'rgb(147, 51, 234)',
-            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-          }}
+          className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
         >
           Reset
-        </Button>
+        </button>
       </div>
     </div>
   )
