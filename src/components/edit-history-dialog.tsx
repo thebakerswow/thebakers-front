@@ -1,25 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  TextField,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
-import { getRunHistory } from '../services/api/runs'
+import { CircleNotch, X } from '@phosphor-icons/react'
+import { getRunBuyers, getRunHistory } from '../services/api/runs'
 import { RunHistory } from '../types/runs-interface'
 import dayjs from 'dayjs'
 
 import { EditHistoryDialogProps } from '../types'
+import { BuyerData } from '../types'
 
 export function EditHistoryDialog({
   open,
@@ -28,13 +14,22 @@ export function EditHistoryDialog({
 }: EditHistoryDialogProps) {
   const [filter, setFilter] = useState('')
   const [history, setHistory] = useState<RunHistory[]>([])
+  const [buyerNameById, setBuyerNameById] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open || !idRun) return
     setLoading(true)
-    getRunHistory(idRun.toString())
-      .then((data) => setHistory(Array.isArray(data) ? data : []))
+    Promise.all([getRunHistory(idRun.toString()), getRunBuyers(idRun.toString())])
+      .then(([historyData, buyersData]) => {
+        setHistory(Array.isArray(historyData) ? historyData : [])
+        const buyers = Array.isArray(buyersData) ? (buyersData as BuyerData[]) : []
+        const map = buyers.reduce<Record<string, string>>((acc, buyer) => {
+          acc[String(buyer.id)] = buyer.nameAndRealm
+          return acc
+        }, {})
+        setBuyerNameById(map)
+      })
       .finally(() => setLoading(false))
   }, [open, idRun])
 
@@ -60,103 +55,117 @@ export function EditHistoryDialog({
     })
   }, [filter, history])
 
+  if (!open) return null
+
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth='lg' 
-      fullWidth
-      slotProps={{
-        paper: {
-          sx: {
-            maxHeight: '90vh', // Limita a altura máxima a 90% da altura da viewport
-            height: 'auto',
-            marginTop: '64px', // Margem do header (altura padrão do AppBar)
-            marginBottom: '16px',
-          }
-        }
-      }}
-    >
-      <DialogTitle>
-        Edit History
-        <IconButton
-          aria-label='close'
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ p: 2 }}>
+    <div className='fixed inset-0 z-[2200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
+      <div className='w-full max-w-6xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5 shadow-[0_24px_50px_rgba(0,0,0,0.45)]'>
+        <div className='mb-4 flex items-center justify-between border-b border-white/10 pb-3'>
+          <h3 className='text-lg font-semibold text-purple-100'>Edit History</h3>
+          <button
+            type='button'
+            onClick={onClose}
+            className='rounded-md p-1 text-purple-200/70 hover:bg-purple-400/15 hover:text-purple-100'
+          >
+            <X size={18} />
+          </button>
+        </div>
+
         {!idRun ? (
-          <Box color='error.main' mb={2}>
+          <div className='mb-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300'>
             No run id provided
-          </Box>
+          </div>
         ) : null}
-        <TextField
-          label='Filter edits'
-          variant='outlined'
-          size='small'
-          fullWidth
-          sx={{ mt: 1, mb: 2 }}
+
+        <input
+          type='text'
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
+          placeholder='Filter edits'
+          className='balance-filter-control mb-3 h-11 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 text-sm text-purple-100 outline-none placeholder:text-purple-200/50'
         />
-        <Box mt={2}>
-          <TableContainer 
-            component={Paper}
-            sx={{
-              maxHeight: '60vh', // Limita a altura da tabela a 60% da viewport
-              overflow: 'auto', // Adiciona scroll interno
-            }}
-          >
-            <Table size='small' stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Id Buyer</TableCell>
-                  <TableCell>Field</TableCell>
-                  <TableCell>Old Value</TableCell>
-                  <TableCell>New Value</TableCell>
-                  <TableCell>Author</TableCell>
-                  <TableCell>Time</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={9} align='center'>
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredHistory.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} align='center'>
-                      No history found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredHistory.map((edit, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        {edit.id_buyer && edit.id_buyer.Valid
-                          ? edit.id_buyer.Int64.toString()
-                          : '-'}
-                      </TableCell>
-                      <TableCell>{edit.field}</TableCell>
-                      <TableCell>{edit.old_value}</TableCell>
-                      <TableCell>{edit.new_value}</TableCell>
-                      <TableCell>{edit.name_edited_by}</TableCell>
-                      <TableCell>
-                        {dayjs(edit.created_at).format('HH:mm - MM/DD/YYYY')}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      </DialogContent>
-    </Dialog>
+
+        <div className='max-h-[60vh] overflow-auto rounded-md border border-white/10 bg-white/[0.03] p-3'>
+          {loading ? (
+            <div className='py-8 text-center'>
+              <CircleNotch className='mx-auto animate-spin text-purple-300' size={22} />
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className='py-6 text-center text-neutral-400'>No history found</div>
+          ) : (
+            <div className='space-y-2'>
+              {filteredHistory.map((edit, idx) => {
+                const idBuyer =
+                  edit.id_buyer && edit.id_buyer.Valid
+                    ? edit.id_buyer.Int64.toString()
+                    : ''
+                const idBuyerText =
+                  idBuyer
+                    ? buyerNameById[idBuyer]
+                      ? `Buyer ${buyerNameById[idBuyer]}`
+                      : `Buyer ${idBuyer}`
+                    : 'Run'
+
+                const oldValue =
+                  edit.old_value && edit.old_value.trim().length > 0
+                    ? edit.old_value
+                    : '(vazio)'
+                const newValue =
+                  edit.new_value && edit.new_value.trim().length > 0
+                    ? edit.new_value
+                    : '(vazio)'
+                const normalizedField = edit.field.trim().toLowerCase()
+                const isCreatedEvent = normalizedField === 'created'
+                const isDeletedEvent =
+                  normalizedField === 'delete' || normalizedField === 'deleted'
+                const timeLabel = dayjs(edit.created_at).format('HH:mm - MM/DD/YYYY')
+
+                return (
+                  <p
+                    key={idx}
+                    className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-neutral-100'
+                  >
+                    {isCreatedEvent ? (
+                      <>
+                        <span className='font-semibold text-purple-200'>{idBuyerText}</span>{' '}
+                        was created by{' '}
+                        <span className='font-semibold text-neutral-200'>
+                          {edit.name_edited_by}
+                        </span>{' '}
+                        at <span className='text-neutral-300'>{timeLabel}</span>.
+                      </>
+                    ) : isDeletedEvent ? (
+                      <>
+                        <span className='font-semibold text-purple-200'>{idBuyerText}</span>{' '}
+                        was deleted by{' '}
+                        <span className='font-semibold text-neutral-200'>
+                          {edit.name_edited_by}
+                        </span>{' '}
+                        at <span className='text-neutral-300'>{timeLabel}</span>.
+                      </>
+                    ) : (
+                      <>
+                        <span className='font-semibold text-purple-200'>{idBuyerText}</span>{' '}
+                        had field{' '}
+                        <span className='font-semibold text-purple-200'>{edit.field}</span>{' '}
+                        changed from{' '}
+                        <span className='font-medium text-rose-300'>{oldValue}</span>{' '}
+                        to{' '}
+                        <span className='font-medium text-emerald-300'>{newValue}</span>{' '}
+                        by{' '}
+                        <span className='font-semibold text-neutral-200'>
+                          {edit.name_edited_by}
+                        </span>{' '}
+                        at <span className='text-neutral-300'>{timeLabel}</span>.
+                      </>
+                    )}
+                  </p>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

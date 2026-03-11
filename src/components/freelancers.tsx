@@ -6,27 +6,9 @@ import {
   deleteFreelancer,
   updateFreelancerAttendance,
 } from '../services/api/users'
-import { CircleNotch } from '@phosphor-icons/react'
+import { CircleNotch, Trash } from '@phosphor-icons/react'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from './error-display'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  CircularProgress,
-  Select,
-  MenuItem,
-  Autocomplete,
-  TextField,
-  Button, // Import Button from Material-UI
-} from '@mui/material'
-import { Delete as DeleteIcon } from '@mui/icons-material'
-import { Modal, Modal as MuiModal, Box } from '@mui/material'
 
 import { User, FreelancersProps } from '../types'
 
@@ -36,6 +18,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [search, setSearch] = useState('')
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // For adding freelancers
   const [isLoadingFreelancers, setIsLoadingFreelancers] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -164,258 +147,171 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   )
 
   const renderSelect = (idDiscord: string, percentage: number | undefined) => (
-    <Select
+    <select
       value={percentage || 0}
       onChange={(e) => handleAttendanceClick(idDiscord, Number(e.target.value))}
-      disabled={runIsLocked} // Disable attendance selection if runIsLocked
-      style={{
-        backgroundColor: getColorForPercentage(percentage || 0),
-        color: 'white',
-        height: '30px',
-        fontSize: '14px',
-      }}
+      disabled={runIsLocked}
+      className='h-9 rounded-md border border-white/20 px-2 text-sm text-white outline-none disabled:cursor-not-allowed disabled:opacity-60'
+      style={{ backgroundColor: getColorForPercentage(percentage || 0) }}
     >
       {[...Array(11)].map((_, i) => {
         const value = i * 10
         return (
-          <MenuItem key={value} value={value}>
+          <option key={value} value={value} className='bg-neutral-900 text-white'>
             {value}%
-          </MenuItem>
+          </option>
         )
       })}
-    </Select>
+    </select>
   )
 
-  if (error) {
-    return (
-      <MuiModal open={!!error} onClose={() => setError(null)}>
-        <Box className='absolute left-1/2 top-1/2 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-gray-400 p-4 shadow-lg'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </Box>
-      </MuiModal>
-    )
-  }
-
-  const textFieldStyles = {
-    inputLabel: { style: { color: 'gray' } },
-    input: { style: { color: '#000', backgroundColor: '#FFF' } }, // Background set to white
-    sx: {
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': { borderColor: '#ECEBEE' },
-        '&:hover fieldset': { borderColor: '#ECEBEE' },
-        '&.Mui-focused fieldset': { borderColor: '#ECEBEE' },
-        '& input': { backgroundColor: '#FFF' }, // Background set to white
-      },
-    },
-  }
+  const selectedFreelancerName = freelancerToDelete
+    ? freelancers.find((f) => f.id_discord === freelancerToDelete)?.username
+    : null
 
   return (
-    <div className='w-[40%]'>
-      <div className='flex flex-col items-center'>
-        <div className='relative mb-2 flex w-full items-center gap-2'>
-          <Autocomplete
-            options={filteredUsers}
-            getOptionLabel={(option) => option.username}
-            value={selectedUser}
-            onChange={(_, newValue) => {
-              setSelectedUser(newValue)
-              setSearch(newValue ? newValue.username : '')
-            }}
-            inputValue={search}
-            onInputChange={(_, newInputValue) => setSearch(newInputValue)}
-            disabled={runIsLocked} // Disable search when runIsLocked
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                placeholder='Freelancer' // Use placeholder instead of label
-                variant='outlined'
-                size='small'
-                slotProps={{
-                  input: {
-                    ...params.InputProps,
-                    ...textFieldStyles.input,
-                  },
-                  inputLabel: {
-                    shrink: false, // Ensure placeholder does not move
-                  },
-                }}
-                sx={{
-                  ...textFieldStyles.sx,
-                  width: '300px', // Increased width
-                }}
-              />
-            )}
-          />
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleAddFreelancer}
-            startIcon={
-              isSubmitting ? <CircleNotch className='animate-spin' /> : null
-            }
-            disabled={runIsLocked || isSubmitting} // Disable add button if runIsLocked
-            sx={{
-              textTransform: 'none',
-              padding: '6px 16px',
-              fontSize: '14px',
-              height: '40px',
-              minWidth: '100px', // Ensure button width remains consistent
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-            }}
-          >
-            {isSubmitting ? 'Adding...' : 'ADD'}
-          </Button>
-        </div>
-        <TableContainer
-          component={Paper}
-          style={{
-            backgroundColor: 'white',
-            overflow: 'hidden', // Alterado para garantir o borderRadius
-            borderRadius: '6px',
-          }} // Ensure no scrollbars are added
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  align='center'
-                  style={{ backgroundColor: '#ECEBEE' }}
-                >
-                  Freelancer
-                </TableCell>
-                <TableCell
-                  align='center'
-                  style={{ backgroundColor: '#ECEBEE' }}
-                >
-                  Attendance
-                </TableCell>
-                <TableCell
-                  align='center'
-                  style={{ backgroundColor: '#ECEBEE' }}
-                >
-                  Delete
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoadingFreelancers ? (
-                <TableRow>
-                  <TableCell align='center' sx={{ padding: '8px' }}>
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : freelancers.length === 0 ? (
-                <TableRow sx={{ height: '50px' }}>
-                  <TableCell
-                    align='center'
-                    colSpan={3}
-                    sx={{ padding: '4px', textAlign: 'center' }}
+    <div className='w-full'>
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
+
+      <div className='rounded-xl border border-white/10 bg-black/30 p-3 text-white'>
+        <div className='mb-3 flex flex-wrap items-center gap-2'>
+          <div className='relative min-w-[280px] flex-1'>
+            <input
+              type='text'
+              value={search}
+              onChange={(e) => {
+                const value = e.target.value
+                setSearch(value)
+                setIsAutocompleteOpen(true)
+                const normalizedValue = value.trim().toLowerCase()
+                const matchedUser =
+                  users.find(
+                    (user) => user.username.trim().toLowerCase() === normalizedValue
+                  ) || null
+                setSelectedUser(matchedUser)
+              }}
+              onFocus={() => setIsAutocompleteOpen(true)}
+              onBlur={() => setTimeout(() => setIsAutocompleteOpen(false), 120)}
+              placeholder='Freelancer'
+              disabled={runIsLocked}
+              className='balance-filter-control h-10 w-full rounded-md border border-white/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 text-sm text-white/95 outline-none disabled:cursor-not-allowed disabled:opacity-60'
+            />
+
+            {isAutocompleteOpen && search.trim() && filteredUsers.length > 0 && (
+              <div className='absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-56 overflow-auto rounded-md border border-white/15 bg-neutral-900/95 p-1 shadow-xl backdrop-blur-sm'>
+                {filteredUsers.slice(0, 8).map((user) => (
+                  <button
+                    key={user.id_discord}
+                    type='button'
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setSelectedUser(user)
+                      setSearch(user.username)
+                      setIsAutocompleteOpen(false)
+                    }}
+                    className='w-full rounded-md px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10'
                   >
+                    {user.username}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type='button'
+            onClick={handleAddFreelancer}
+            disabled={runIsLocked || isSubmitting || !selectedUser}
+            className='balance-action-btn balance-action-btn--primary inline-flex h-10 min-w-[100px] items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            {isSubmitting && <CircleNotch className='animate-spin' size={16} />}
+            {isSubmitting ? 'Adding...' : 'Add'}
+          </button>
+        </div>
+
+        <div className='overflow-hidden rounded-md border border-white/10 bg-white/[0.03]'>
+          <table className='w-full text-sm'>
+            <thead>
+              <tr className='border-b border-white/10 text-neutral-300'>
+                <th className='px-3 py-2 text-left font-semibold'>Freelancer</th>
+                <th className='px-3 py-2 text-center font-semibold'>Attendance</th>
+                <th className='px-3 py-2 text-center font-semibold'>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoadingFreelancers ? (
+                <tr>
+                  <td colSpan={3} className='px-3 py-8 text-center'>
+                    <CircleNotch className='mx-auto animate-spin text-purple-300' size={22} />
+                  </td>
+                </tr>
+              ) : freelancers.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className='px-3 py-4 text-center text-neutral-400'>
                     No Freelancer
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : (
                 freelancers.map((user) => (
-                  <TableRow key={user.id_discord} sx={{ height: '40px' }}>
-                    <TableCell align='center' sx={{ padding: '4px' }}>
-                      {user.username}
-                    </TableCell>
-                    <TableCell align='center' sx={{ padding: '4px' }}>
+                  <tr key={user.id_discord} className='border-b border-white/5 last:border-b-0'>
+                    <td className='px-3 py-2 text-left'>{user.username}</td>
+                    <td className='px-3 py-2 text-center'>
                       {renderSelect(user.id_discord, user.percentage)}
-                    </TableCell>
-                    <TableCell align='center' sx={{ padding: '4px' }}>
-                      <IconButton
+                    </td>
+                    <td className='px-3 py-2 text-center'>
+                      <button
+                        type='button'
                         onClick={() => handleOpenDeleteDialog(user.id_discord)}
-                        disabled={
-                          runIsLocked ||
-                          deletingFreelancerId === user.id_discord
-                        } // Disable delete button if runIsLocked
+                        disabled={runIsLocked || deletingFreelancerId === user.id_discord}
+                        className='rounded-md p-1 text-red-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
                       >
-                        {deletingFreelancerId === user.id_discord ? ( // Show loading only for the row being deleted
-                          <CircularProgress size={20} />
+                        {deletingFreelancerId === user.id_discord ? (
+                          <CircleNotch className='animate-spin' size={18} />
                         ) : (
-                          <DeleteIcon />
+                          <Trash size={18} />
                         )}
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
+                      </button>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        aria-labelledby='delete-modal-title'
-        aria-describedby='delete-modal-description'
-        className='flex items-center justify-center'
-      >
-        <div
-          className='w-96 rounded-lg bg-white p-4 shadow-lg'
-          style={{
-            width: '400px',
-            borderRadius: '8px',
-            padding: '16px',
-            backgroundColor: 'white',
-            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          {error ? (
-            <ErrorComponent error={error} onClose={() => setError(null)} />
-          ) : (
-            <>
-              <h2
-                id='delete-modal-title'
-                className='mb-4 text-lg font-semibold'
+      {deleteDialogOpen && (
+        <div className='fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4'>
+          <div className='w-full max-w-md rounded-xl border border-white/15 bg-neutral-900 p-4 text-white shadow-2xl'>
+            <h2 className='mb-3 text-lg font-semibold'>Confirm Deletion</h2>
+            <p className='mb-4 text-sm text-neutral-300'>
+              Are you sure you want to delete{' '}
+              <span className='font-semibold text-white'>{selectedFreelancerName}</span>?
+            </p>
+            <div className='flex justify-end gap-2'>
+              <button
+                type='button'
+                onClick={handleCloseDeleteDialog}
+                disabled={deletingFreelancerId !== null}
+                className='rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50'
               >
-                Confirm Deletion
-              </h2>
-              <p id='delete-modal-description' className='mb-4 text-sm'>
-                Are you sure you want to delete{' '}
-                <span className='font-bold'>
-                  {
-                    freelancers.find((f) => f.id_discord === freelancerToDelete)
-                      ?.username
-                  }
-                </span>
-                ?
-              </p>
-              <div className='flex gap-2'>
-                <Button
-                  variant='contained'
-                  color='inherit'
-                  onClick={handleCloseDeleteDialog}
-                  disabled={deletingFreelancerId !== null} // Disable cancel button during deletion
-                  sx={{ textTransform: 'none', fontSize: '14px' }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant='contained'
-                  color='error'
-                  disabled={deletingFreelancerId !== null} // Disable delete button during deletion
-                  onClick={handleConfirmDeleteFreelancer}
-                  sx={{ textTransform: 'none', fontSize: '14px' }}
-                >
-                  {deletingFreelancerId !== null ? (
-                    <div className='flex gap-4'>
-                      <CircularProgress size={20} />
-                      Deleting...
-                    </div>
-                  ) : (
-                    'Delete'
-                  )}
-                </Button>
-              </div>
-            </>
-          )}
+                Cancel
+              </button>
+              <button
+                type='button'
+                onClick={handleConfirmDeleteFreelancer}
+                disabled={deletingFreelancerId !== null}
+                className='inline-flex min-w-[96px] items-center justify-center gap-2 rounded-md border border-red-400/40 bg-red-500/80 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50'
+              >
+                {deletingFreelancerId !== null && (
+                  <CircleNotch className='animate-spin' size={16} />
+                )}
+                {deletingFreelancerId !== null ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
-      </Modal>
+      )}
     </div>
   )
 }

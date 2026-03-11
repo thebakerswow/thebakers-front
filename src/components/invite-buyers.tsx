@@ -1,15 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Button,
-  IconButton,
-  Box,
-  Typography,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
-import { Copy } from '@phosphor-icons/react'
+import { CircleNotch, Copy, X } from '@phosphor-icons/react'
 import { getInviteBuyers } from '../services/api/buyers'
 import { ErrorDetails } from './error-display'
 
@@ -22,6 +12,7 @@ interface InviteBuyersProps {
 export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
   const [inviteData, setInviteData] = useState<string>('')
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     async function fetchInviteBuyersData() {
@@ -48,151 +39,92 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
     fetchInviteBuyersData()
   }, [runId, onError])
 
-  function handleCopy() {
-    if (inviteData) {
-      let formattedData = ''
+  function formatInviteData(rawData: string): string {
+    try {
+      const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData
 
-      try {
-        const parsedData =
-          typeof inviteData === 'string' ? JSON.parse(inviteData) : inviteData
-
-        // Se o parsedData for diretamente um array
-        if (Array.isArray(parsedData)) {
-          formattedData = parsedData
-            .map((name: any) => {
-              if (typeof name === 'string') {
-                return name.trim()
-              }
-              return String(name).trim()
-            })
-            .filter((name: string) => name.length > 0)
-            .join('\n\n')
-        } else if (parsedData.info && Array.isArray(parsedData.info)) {
-          formattedData = parsedData.info
-            .map((name: any) => {
-              if (typeof name === 'string') {
-                return name.trim()
-              }
-              return String(name).trim()
-            })
-            .filter((name: string) => name.length > 0)
-            .join('\n\n')
-        } else {
-          formattedData =
-            typeof inviteData === 'string'
-              ? inviteData
-              : JSON.stringify(inviteData)
-        }
-      } catch {
-        // Se não conseguir fazer parse, tenta limpar a string diretamente
-        formattedData =
-          typeof inviteData === 'string'
-            ? inviteData
-                .replace(/[\[\]{}",]/g, '')
-                .replace(/info:/g, '')
-                .split(/\s+/)
-                .filter((item: string) => item.length > 0)
-                .join('\n\n')
-            : JSON.stringify(inviteData)
+      if (Array.isArray(parsedData)) {
+        return parsedData
+          .map((name: unknown) => String(name).trim())
+          .filter((name: string) => name.length > 0)
+          .join('\n')
       }
 
-      navigator.clipboard.writeText(formattedData)
+      if (
+        parsedData &&
+        typeof parsedData === 'object' &&
+        'info' in parsedData &&
+        Array.isArray((parsedData as { info: unknown[] }).info)
+      ) {
+        return (parsedData as { info: unknown[] }).info
+          .map((name: unknown) => String(name).trim())
+          .filter((name: string) => name.length > 0)
+          .join('\n')
+      }
+
+      return typeof rawData === 'string' ? rawData : JSON.stringify(rawData, null, 2)
+    } catch {
+      return rawData
+        .replace(/[\[\]{}",]/g, '')
+        .replace(/info:/g, '')
+        .split(/\s+/)
+        .filter((item: string) => item.length > 0)
+        .join('\n')
     }
   }
 
+  function handleCopy() {
+    if (inviteData) {
+      const formattedData = formatInviteData(inviteData).replace(/\n/g, '\n\n')
+      navigator.clipboard.writeText(formattedData)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    }
+  }
+
+  const formattedInviteData = inviteData ? formatInviteData(inviteData) : ''
+
   return (
-    <Dialog open={true} onClose={onClose} maxWidth='xs' fullWidth>
-      <DialogTitle className='relative text-center'>
-        Invite Buyers
-        <IconButton
-          aria-label='close'
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <Box className='flex flex-col gap-4'>
+    <div className='fixed inset-0 z-[2200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
+      <div className='w-full max-w-md rounded-xl border border-white/15 bg-neutral-900 p-4 text-white shadow-2xl'>
+        <div className='mb-3 flex items-center justify-between'>
+          <h2 className='text-lg font-semibold'>Invite Buyers</h2>
+          <button
+            type='button'
+            onClick={onClose}
+            className='rounded-md p-1 text-white/80 transition hover:bg-white/10 hover:text-white'
+            aria-label='Close invite buyers modal'
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className='flex flex-col gap-4'>
           {loading ? (
-            <Box className='flex justify-center'>
-              <Typography>Loading...</Typography>
-            </Box>
+            <div className='flex min-h-[120px] items-center justify-center'>
+              <CircleNotch className='animate-spin text-purple-300' size={24} />
+            </div>
           ) : (
             <>
-              <Box className='max-h-96 overflow-y-auto rounded border p-4'>
-                <Typography
-                  component='pre'
-                  className='whitespace-pre-wrap text-sm'
-                >
-                  {(() => {
-                    try {
-                      const parsedData =
-                        typeof inviteData === 'string'
-                          ? JSON.parse(inviteData)
-                          : inviteData
-
-                      // Se o parsedData for diretamente um array
-                      if (Array.isArray(parsedData)) {
-                        return parsedData
-                          .map((name: any) => {
-                            if (typeof name === 'string') {
-                              return name.trim()
-                            }
-                            return String(name).trim()
-                          })
-                          .filter((name: string) => name.length > 0)
-                          .join('\n')
-                      }
-
-                      if (parsedData.info && Array.isArray(parsedData.info)) {
-                        return parsedData.info
-                          .map((name: any) => {
-                            if (typeof name === 'string') {
-                              return name.trim()
-                            }
-                            return String(name).trim()
-                          })
-                          .filter((name: string) => name.length > 0)
-                          .join('\n')
-                      }
-
-                      return typeof inviteData === 'string'
-                        ? inviteData
-                        : JSON.stringify(inviteData, null, 2)
-                    } catch {
-                      // Se não conseguir fazer parse, tenta limpar a string diretamente
-                      const cleanData =
-                        typeof inviteData === 'string'
-                          ? inviteData
-                              .replace(/[\[\]{}",]/g, '')
-                              .replace(/info:/g, '')
-                              .split(/\s+/)
-                              .filter((item: string) => item.length > 0)
-                              .join('\n')
-                          : JSON.stringify(inviteData, null, 2)
-                      return cleanData
-                    }
-                  })()}
-                </Typography>
-              </Box>
-              <Box className='flex justify-center'>
-                <Button
-                  variant='contained'
-                  startIcon={<Copy size={20} />}
+              <div className='max-h-96 overflow-y-auto rounded-md border border-white/10 bg-black/20 p-4'>
+                <pre className='whitespace-pre-wrap text-sm text-neutral-100'>
+                  {formattedInviteData}
+                </pre>
+              </div>
+              <div className='flex justify-center'>
+                <button
+                  type='button'
                   onClick={handleCopy}
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  }}
+                  className='balance-action-btn balance-action-btn--primary inline-flex items-center justify-center gap-2 px-4'
                 >
-                  Copy
-                </Button>
-              </Box>
+                  <Copy size={18} />
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
             </>
           )}
-        </Box>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   )
 }

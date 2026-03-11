@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import { RiMegaphoneLine } from 'react-icons/ri'
-import omega from '../../../assets/omega.png'
 import { AddBuyer } from '../../../components/add-buyer'
 import { EditRun } from '../../../components/edit-run'
 import { useAuth } from '../../../context/auth-context'
@@ -274,205 +273,217 @@ export function RunInfo({
     setCooldownMegaphone(false)
   }
 
+  const visibleRaidLeaders =
+    run.raidLeaders
+      ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
+      .map((raidLeader) => raidLeader.username)
+      .join(', ') || '-'
+
+  const canManageRun =
+    hasPrefeitoTeamAccess(run, userRoles) ||
+    userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const hasGoldCollectors = Boolean(
+    run.sumPot?.some((item) => item.type === 'gold' && item.sumPot !== 0)
+  )
+  const hasDolarCollectors = Boolean(
+    run.sumPot?.some((item) => item.type === 'dolar' && item.sumPot !== 0)
+  )
+  const mainCardColSpanClass =
+    hasGoldCollectors && hasDolarCollectors
+      ? 'lg:col-span-8'
+      : hasGoldCollectors || hasDolarCollectors
+        ? 'lg:col-span-9'
+        : 'lg:col-span-12'
+  const collectorColSpanClass =
+    hasGoldCollectors && hasDolarCollectors ? 'lg:col-span-2' : 'lg:col-span-3'
+  const actionButtonClass =
+    'balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-lg disabled:cursor-not-allowed disabled:!opacity-100 disabled:!bg-zinc-700/60 disabled:!border-zinc-500/60 disabled:!text-zinc-300 disabled:!shadow-none'
+
   return (
-    <div className='m-4 flex gap-2 rounded-md'>
-      <img
-        className='min-h-[220px] max-w-[400px] rounded-md'
-        src={omega}
-        alt='Run Cover'
-      />
-      {run.sumPot?.some(
-        (item) => item.type === 'gold' && item.sumPot !== 0
-      ) && (
-        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md border border-white/10 bg-white/[0.04] p-4 text-center text-white'>
-          <h2 className='text-lg font-semibold'>Gold Collectors</h2>
-          <div className='mt-2 overflow-hidden rounded-md border border-white/10 bg-black/20'>
-            {!attendanceAccessDenied && (
-              <table className='w-full text-sm'>
-                <tbody>
-                  {run.sumPot
-                    ?.filter(
-                      (item) => item.type === 'gold' && item.sumPot !== 0
-                    )
-                    .map((item) => (
-                      <tr key={item.idDiscord} className='border-b border-white/5'>
-                        <td className='px-3 py-2 text-left'>
-                          {item.username}
-                        </td>
-                        <td className='px-3 py-2 text-right'>
-                          {Math.round(Number(item.sumPot)).toLocaleString(
-                            'en-US'
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-      {/* Exibe Dolar Collectors apenas se houver pelo menos um item do tipo dolar */}
-      {run.sumPot?.some(
-        (item) => item.type === 'dolar' && item.sumPot !== 0
-      ) && (
-        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md border border-white/10 bg-white/[0.04] p-4 text-center text-white'>
-          <h2 className='text-lg font-semibold'>Dolar Collectors</h2>
-          <div className='mt-2 overflow-hidden rounded-md border border-white/10 bg-black/20'>
-            {!attendanceAccessDenied && (
-              <table className='w-full text-sm'>
-                <tbody>
-                  {run.sumPot
-                    ?.filter(
-                      (item) => item.type === 'dolar' && item.sumPot !== 0
-                    )
-                    .map((item) => (
-                      <tr key={item.idDiscord} className='border-b border-white/5'>
-                        <td className='px-3 py-2 text-left'>
-                          {item.username}
-                        </td>
-                        <td className='px-3 py-2 text-right'>
-                          {Number(item.sumPot).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className='grid min-w-[1000px] flex-1 grid-cols-4 items-center rounded-md border border-white/10 bg-white/[0.04] text-left text-white'>
-        <div className='col-span-3 mb-6 ml-10 flex flex-col p-4'>
-          <h1 className='text-center text-lg font-semibold'>
-            {run.raid} {run.difficulty} @ {run.time ? (
-               <>
-                 {formatTo12HourEST(run.time)} EST
-               </>
-             ) : (
-               <span>-</span>
-             )}
-          </h1>
-
-          <div className='mt-8 grid grid-cols-3 gap-4 text-left'>
-            <p className='text-left font-semibold text-yellow-300'>
-              <span className='text-base font-bold text-white'>
-                Loot Type:{' '}
-              </span>
-              {run.loot}
-            </p>
-            <p className='text-left font-semibold text-red-300'>
-              <span className='text-base font-bold text-white'>
-                Max Buyers:{' '}
-              </span>
-              {run.maxBuyers}
-            </p>
-            <p className='text-left'>
-              <span className='text-base font-bold'>
-                Slots Available:{' '}
-                <span className='font-normal'>{run.slotAvailable}</span>
-              </span>
-            </p>
-            <p className='text-left'>
-              <span className='text-base font-bold'>
-                Backups: <span className='font-normal'>{run.backups}</span>
-              </span>
-            </p>
-            {run.raidLeaders &&
-              run.raidLeaders.length > 0 &&
-              run.raidLeaders.some(
-                (leader) => leader.username !== 'Encrypted'
-              ) && (
-                <p className='text-left'>
-                  <span className='text-base font-bold'>Raid Leader(s): </span>
-                  {run.raidLeaders
-                    .filter((raidLeader) => raidLeader.username !== 'Encrypted')
-                    .map((raidLeader) => raidLeader.username)
-                    .join(', ')}
-                </p>
-              )}
-            {/* Gold Pot e Dolar Pot em linhas separadas, Gold Pot em negrito, sem "Run Pot" */}
-            <p className='text-left'>
-              {run.actualPot != null && (
-                <span className='font-bold'>
-                  Run Gold Pot:{' '}
-                  <span className='font-normal'>
-                    {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
-                  </span>
-                </span>
-              )}
-              {run.actualPot != null && run.actualPotDolar != null && <br />}
-              {run.actualPotDolar != null && (
-                <span className='font-bold'>
-                  Run Dolar Pot:{' '}
-                  <span className='font-normal'>
-                    {Math.round(Number(run.actualPotDolar)).toLocaleString(
-                      'en-US'
-                    )}
-                  </span>
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-        <div className='m-4 flex flex-col items-center justify-center gap-2'>
-          <button
-            onClick={handleOpenAddBuyer}
-            disabled={isRunLocked}
-            className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
+    <div className='m-4'>
+      <div className='grid grid-cols-1 gap-3 lg:grid-cols-12'>
+        {hasGoldCollectors && (
+          <div
+            className={`rounded-xl border border-white/10 bg-white/[0.04] p-3 text-white ${collectorColSpanClass}`}
           >
-            <UserPlus size={18} />
-            Add Buyer
-          </button>
-          {hasPrefeitoTeamAccess(run, userRoles) ||
-          userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ? (
-            <>
-              <button
-                onClick={handleOpenEditModal}
-                disabled={isRunLocked}
-                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
-              >
-                <Pencil size={18} />
-                Edit Raid
-              </button>
-              <button
-                onClick={() => setIsEditHistoryOpen(true)}
-                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
-              >
-                <Clock size={18} />
-                History
-              </button>
-              {canSeeMegaphoneButton() && (
-                <button
-                  onClick={handleSendMessageToAllAdvertisers}
-                  disabled={isRunLocked || cooldownMegaphone}
-                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                  <RiMegaphoneLine size={18} />
-                  Message Advertisers
-                </button>
+            <h2 className='text-base font-semibold'>Gold Collectors</h2>
+            <div className='mt-2 max-h-[260px] overflow-y-auto rounded-md border border-white/10 bg-black/20'>
+              {!attendanceAccessDenied && (
+                <table className='w-full text-sm'>
+                  <tbody>
+                    {run.sumPot
+                      ?.filter(
+                        (item) => item.type === 'gold' && item.sumPot !== 0
+                      )
+                      .map((item) => (
+                        <tr key={item.idDiscord} className='border-b border-white/5'>
+                          <td className='px-3 py-2 text-left'>{item.username}</td>
+                          <td className='px-3 py-2 text-right'>
+                            {Math.round(Number(item.sumPot)).toLocaleString('en-US')}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               )}
-              <button
-                onClick={handleToggleRunLock}
-                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
-              >
-                {isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />}
-                {isRunLocked ? 'Unlock Run' : 'Lock Run'}
-              </button>
-            </>
-          ) : (
-            isRunLocked && (
-              <p className='text-center font-semibold text-purple-500'>
-                This run is currently locked. You do not have permission to
-                unlock it.
-              </p>
-            )
-          )}
+            </div>
+          </div>
+        )}
+
+        <div
+          className={`rounded-xl border border-white/10 bg-white/[0.04] p-3 text-white ${mainCardColSpanClass}`}
+        >
+          <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
+          <div className='flex-1'>
+            <h1 className='text-2xl font-semibold text-white'>
+              {run.raid} {run.difficulty}
+            </h1>
+            <p className='mt-1 text-sm text-neutral-300'>
+              {run.time ? `${formatTo12HourEST(run.time)} EST` : '-'}
+            </p>
+
+            <dl className='mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 xl:grid-cols-3'>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Loot Type
+                </dt>
+                <dd className='mt-1 font-medium text-yellow-300'>{run.loot || '-'}</dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Max Buyers
+                </dt>
+                <dd className='mt-1 font-medium text-red-300'>{run.maxBuyers}</dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Slots Available
+                </dt>
+                <dd className='mt-1 font-medium'>{run.slotAvailable}</dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Backups
+                </dt>
+                <dd className='mt-1 font-medium'>{run.backups}</dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Raid Leader(s)
+                </dt>
+                <dd className='mt-1 font-medium break-words'>{visibleRaidLeaders}</dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Run Gold Pot
+                </dt>
+                <dd className='mt-1 font-medium'>
+                  {run.actualPot != null
+                    ? Math.round(Number(run.actualPot)).toLocaleString('en-US')
+                    : '-'}
+                </dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Run Dolar Pot
+                </dt>
+                <dd className='mt-1 font-medium'>
+                  {run.actualPotDolar != null
+                    ? Number(run.actualPotDolar).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : '-'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className='grid w-full gap-2 lg:w-[320px]'>
+            <button
+              onClick={handleOpenAddBuyer}
+              disabled={isRunLocked}
+              className={actionButtonClass}
+            >
+              <UserPlus size={18} />
+              Add Buyer
+            </button>
+            {canManageRun ? (
+              <>
+                <button
+                  onClick={handleOpenEditModal}
+                  disabled={isRunLocked}
+                  className={actionButtonClass}
+                >
+                  <Pencil size={18} />
+                  Edit Raid
+                </button>
+                <button
+                  onClick={() => setIsEditHistoryOpen(true)}
+                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
+                >
+                  <Clock size={18} />
+                  History
+                </button>
+                {canSeeMegaphoneButton() && (
+                  <button
+                    onClick={handleSendMessageToAllAdvertisers}
+                    disabled={isRunLocked || cooldownMegaphone}
+                    className={actionButtonClass}
+                  >
+                    <RiMegaphoneLine size={18} />
+                    Message Advertisers
+                  </button>
+                )}
+                <button
+                  onClick={handleToggleRunLock}
+                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
+                >
+                  {isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />}
+                  {isRunLocked ? 'Unlock Run' : 'Lock Run'}
+                </button>
+              </>
+            ) : (
+              isRunLocked && (
+                <p className='rounded-md border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-center text-sm font-semibold text-purple-300'>
+                  This run is currently locked. You do not have permission to unlock it.
+                </p>
+              )
+            )}
+          </div>
         </div>
+        </div>
+
+        {hasDolarCollectors && (
+          <div
+            className={`rounded-xl border border-white/10 bg-white/[0.04] p-3 text-white ${collectorColSpanClass}`}
+          >
+            <h2 className='text-base font-semibold'>Dolar Collectors</h2>
+            <div className='mt-2 max-h-[260px] overflow-y-auto rounded-md border border-white/10 bg-black/20'>
+              {!attendanceAccessDenied && (
+                <table className='w-full text-sm'>
+                  <tbody>
+                    {run.sumPot
+                      ?.filter(
+                        (item) => item.type === 'dolar' && item.sumPot !== 0
+                      )
+                      .map((item) => (
+                        <tr key={item.idDiscord} className='border-b border-white/5'>
+                          <td className='px-3 py-2 text-left'>{item.username}</td>
+                          <td className='px-3 py-2 text-right'>
+                            {Number(item.sumPot).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {isAddBuyerOpen && (

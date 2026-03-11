@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CheckFat, Pencil, Trash, XCircle } from '@phosphor-icons/react'
+import { CheckFat, Pencil, Trash, X } from '@phosphor-icons/react'
 import {
   RiWifiOffLine,
   RiZzzFill,
@@ -10,19 +10,6 @@ import {
   RiSwordLine,
   RiArrowDownLine,
 } from 'react-icons/ri'
-import DeathKnight from '../../../assets/class_icons/deathknight.png'
-import DemonHunter from '../../../assets/class_icons/demonhunter.png'
-import Druid from '../../../assets/class_icons/druid.png'
-import Evoker from '../../../assets/class_icons/evoker.png'
-import Hunter from '../../../assets/class_icons/hunter.png'
-import Mage from '../../../assets/class_icons/mage.png'
-import Monk from '../../../assets/class_icons/monk.png'
-import Paladin from '../../../assets/class_icons/paladin.png'
-import Priest from '../../../assets/class_icons/priest.png'
-import Rogue from '../../../assets/class_icons/rogue.png'
-import Shaman from '../../../assets/class_icons/shaman.png'
-import Warlock from '../../../assets/class_icons/warlock.png'
-import Warrior from '../../../assets/class_icons/warrior.png'
 import axios from 'axios'
 import { BuyerData } from '../../../types/buyer-interface'
 import {
@@ -870,6 +857,7 @@ export function BuyersDataGrid({
       }))}
       disabled={runIsLocked || buyer.nameAndRealm === 'Encrypted'}
       minWidthClassName='min-w-[120px]'
+      triggerClassName='![background-image:none] !bg-white/10 !backdrop-blur-sm !shadow-none !border-white/25 !text-center text-white'
     />
   )
 
@@ -883,26 +871,15 @@ export function BuyersDataGrid({
         handleTogglePaid(buyer.id)
       }
       disabled={runIsLocked || globalCooldown || cooldownPaid[buyer.id]}
-      className='rounded-md bg-white p-1 disabled:cursor-not-allowed disabled:opacity-50'
+      className='rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50'
     >
       {buyer.isPaid ? (
         <CheckFat className='text-green-500' size={22} weight='fill' />
       ) : (
-        <XCircle className='text-red-600' size={22} weight='fill' />
+        <X className='text-red-600' size={22} weight='bold' />
       )}
     </button>
   )
-
-  const renderClassImage = (className: string) => {
-    const image = getClassImage(className)
-    return image ? (
-      <img src={image} alt={className} className='h-6 w-6' />
-    ) : (
-      <div className='flex h-6 w-6 items-center justify-center rounded bg-gray-300'>
-        ?
-      </div>
-    )
-  }
 
   // Função para ordenar os dados com base na prioridade do status
   const sortedData = Array.isArray(data)
@@ -913,63 +890,48 @@ export function BuyersDataGrid({
       })
     : []
 
-  function getClassImage(className: string): string {
-    switch (className) {
-      case 'Warrior':
-        return Warrior
-      case 'Paladin':
-        return Paladin
-      case 'Hunter':
-        return Hunter
-      case 'Rogue':
-        return Rogue
-      case 'Priest':
-        return Priest
-      case 'Shaman':
-        return Shaman
-      case 'Mage':
-        return Mage
-      case 'Warlock':
-        return Warlock
-      case 'Monk':
-        return Monk
-      case 'Druid':
-        return Druid
-      case 'Demon Hunter':
-        return DemonHunter
-      case 'Death Knight':
-        return DeathKnight
-      case 'Evoker':
-        return Evoker
-      default:
-        return ''
-    }
-  }
-
-  function getBuyerColor(status: string): string {
+  function getBuyerRowStyle(status: string): { background: string } {
     switch (status) {
       case 'waiting':
-        return 'bg-gradient-to-r from-yellow-200 to-yellow-300'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(252,211,77,0.68), rgba(245,158,11,0.58))',
+        }
       case 'backup':
-        return 'bg-gradient-to-r from-purple-300 to-purple-400'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(167,139,250,0.68), rgba(139,92,246,0.58))',
+        }
       case 'group':
-        return 'bg-gradient-to-r from-blue-300 to-blue-400'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(96,165,250,0.68), rgba(29,78,216,0.58))',
+        }
       case 'done':
-        return 'bg-gradient-to-r from-green-300 to-green-400'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(34,197,94,0.68), rgba(22,163,74,0.58))',
+        }
       case 'noshow':
-        return 'bg-gradient-to-r from-red-500 to-red-600'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(248,113,113,0.7), rgba(185,28,28,0.58))',
+        }
       case 'cancelled':
-        return 'bg-gradient-to-r from-zinc-400 to-zinc-500'
-      case '':
-        return 'bg-gradient-to-r from-white to-gray-100'
+        return {
+          background:
+            'linear-gradient(90deg, rgba(161,161,170,0.62), rgba(82,82,91,0.54))',
+        }
       default:
-        return 'bg-gradient-to-r from-white to-gray-100'
+        return {
+          background: 'linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))',
+        }
     }
   }
 
   return (
     <div className='overflow-x-auto rounded-xl border border-white/10 bg-black/30'>
-      <table className='w-full min-w-[1700px] text-sm'>
+      <table className='w-full min-w-[1500px] text-sm'>
         <thead>
           <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>
             {canSeeIdBuyer && <th className='px-2 py-3 text-center font-semibold'>Id Buyer</th>}
@@ -998,7 +960,8 @@ export function BuyersDataGrid({
             sortedData.map((buyer, index) => (
               <tr
                 key={buyer.id}
-                className={getBuyerColor(buyer.status)}
+                className='border-b border-white/5'
+                style={getBuyerRowStyle(buyer.status)}
               >
                 {canSeeIdBuyer && (
                   <td className='px-2 py-2 text-center'>
@@ -1094,20 +1057,15 @@ export function BuyersDataGrid({
                   )}
                 </td>
                 <td className='px-2 py-2 text-center'>
-                  <div className='flex items-center justify-center gap-2'>
-                    {buyer.playerClass === 'Encrypted' ? (
-                      <i>Encrypted</i>
-                    ) : (
-                      <>
-                        {buyer.playerClass}
-                        {renderClassImage(buyer.playerClass)}
-                      </>
-                    )}
-                  </div>
+                  {buyer.playerClass === 'Encrypted' ? (
+                    <i>Encrypted</i>
+                  ) : (
+                    buyer.playerClass || null
+                  )}
                 </td>
                 <td className='px-2 py-2 text-center'>
                   {buyer.nameAndRealm === 'Encrypted' ? null : (
-                    <div className='flex justify-center gap-1'>
+                    <div className='mx-auto grid max-w-[136px] grid-cols-2 justify-items-center gap-1 min-[1750px]:max-w-[196px] min-[1750px]:grid-cols-3 min-[2300px]:flex min-[2300px]:max-w-none min-[2300px]:justify-center'>
                       {canSeeRaidLeaderButtons() && (
                         <>
                           <button

@@ -1,27 +1,13 @@
 import { UserPlus } from '@phosphor-icons/react'
-import CloseIcon from '@mui/icons-material/Close'
+import { X } from '@phosphor-icons/react'
 import axios from 'axios'
 import { useState, useEffect, useCallback } from 'react'
 import Swal from 'sweetalert2'
-
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Checkbox,
-  FormControlLabel,
-  Button,
-  IconButton,
-} from '@mui/material'
 import { RunData } from '../types/runs-interface'
 import { createBuyer } from '../services/api/buyers'
 import { getGhostUsers } from '../services/api/users'
 import { ErrorDetails } from './error-display'
+import { CustomSelect } from './custom-select'
 
 interface AddBuyerProps {
   run: RunData
@@ -57,6 +43,23 @@ export function AddBuyer({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const baseFieldClass =
+    'balance-filter-control h-12 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 text-left text-base shadow-none outline-none transition focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+  const classOptions = [
+    'Warrior',
+    'Paladin',
+    'Hunter',
+    'Rogue',
+    'Priest',
+    'Shaman',
+    'Mage',
+    'Warlock',
+    'Monk',
+    'Druid',
+    'Demon Hunter',
+    'Death Knight',
+    'Evoker',
+  ].map((cls) => ({ value: cls, label: cls }))
 
   // Function to check if Dolar field should be hidden for M+ team runs ou Leveling
   const shouldHideDolarField = (): boolean => {
@@ -229,73 +232,61 @@ export function AddBuyer({
   }, [fetchAdvertisers])
 
   return (
-    <Dialog open={true} onClose={onClose}>
-      {!isSuccess && (
-        <DialogTitle className='relative text-center'>
-          Add Buyer
-          <IconButton
-            aria-label='close'
-            onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-      )}
-      <DialogContent>
-        <div className='flex w-full max-w-[95vw] flex-col overflow-y-auto overflow-x-hidden'>
-          <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-2 gap-4'>
-            <TextField
+    <div className='fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
+      <div className='w-full max-w-3xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5'>
+        {!isSuccess && (
+          <div className='mb-4 flex items-center justify-between border-b border-white/10 pb-3'>
+            <h2 className='text-lg font-semibold text-white'>Add Buyer</h2>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-md p-1 text-white/75 hover:bg-white/10 hover:text-white'
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Buyer Name-Realm
+            </label>
+            <input
               id='nameAndRealm'
-              label='Buyer Name-Realm'
               required
+              maxLength={255}
               value={formData.nameAndRealm}
               onChange={handleTextFieldChange}
-              variant='outlined'
-              fullWidth
-              slotProps={{ input: { inputProps: { maxLength: 255 } } }}
+              className={baseFieldClass}
             />
-            <FormControl fullWidth variant='outlined'>
-              <InputLabel id='playerClass-label'>Class</InputLabel>
-              <Select
-                id='playerClass'
-                labelId='playerClass-label'
-                value={formData.playerClass}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    playerClass: e.target.value,
-                  }))
-                }
-                label='Class'
-              >
-                <MenuItem value='' disabled>
-                  Select Class
-                </MenuItem>
-                {[
-                  'Warrior',
-                  'Paladin',
-                  'Hunter',
-                  'Rogue',
-                  'Priest',
-                  'Shaman',
-                  'Mage',
-                  'Warlock',
-                  'Monk',
-                  'Druid',
-                  'Demon Hunter',
-                  'Death Knight',
-                  'Evoker',
-                ].map((cls) => (
-                  <MenuItem key={cls} value={cls}>
-                    {cls}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Class
+            </label>
+            <CustomSelect
+              value={formData.playerClass}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  playerClass: value,
+                }))
+              }
+              options={classOptions}
+              placeholder='Select Class'
+              minWidthClassName='min-w-full'
+              triggerClassName='h-12 border-purple-300/25 !bg-[rgba(14,10,28,0.9)] ![background-image:none] !shadow-none text-base'
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Gold Pot
+            </label>
+            <input
               id='buyerPot'
-              label='Gold Pot'
               required
               value={formData.buyerPot}
               onChange={(e) =>
@@ -304,18 +295,22 @@ export function AddBuyer({
                   buyerPot: formatBuyerPot(e.target.value),
                 }))
               }
-              variant='outlined'
-              fullWidth
               disabled={
                 !shouldHideDolarField() &&
                 !!formData.buyerDolarPot &&
                 Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
               }
+              className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
             />
-            {!shouldHideDolarField() && (
-              <TextField
+          </div>
+
+          {!shouldHideDolarField() && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Pot (USD)
+              </label>
+              <input
                 id='buyerDolarPot'
-                label='Pot (USD)'
                 required
                 value={formData.buyerDolarPot}
                 onChange={(e) =>
@@ -324,90 +319,90 @@ export function AddBuyer({
                     buyerDolarPot: formatBuyerDolarPot(e.target.value),
                   }))
                 }
-                variant='outlined'
-                fullWidth
                 disabled={
                   !!formData.buyerPot &&
                   Number(formData.buyerPot.replace(/,/g, '')) > 0
                 }
+                className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
               />
-            )}
-            {formError && (
-              <div className='col-span-2 text-center font-semibold text-red-600'>
-                {formError}
-              </div>
-            )}
-            <FormControl fullWidth variant='outlined'>
-              <InputLabel id='idBuyerAdvertiser-label'>Advertiser</InputLabel>
-              <Select
-                id='idBuyerAdvertiser'
-                labelId='idBuyerAdvertiser-label'
-                value={formData.idBuyerAdvertiser}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    idBuyerAdvertiser: e.target.value,
-                  }))
-                }
-                label='Advertiser'
-              >
-                <MenuItem value='' disabled>
-                  Select Advertiser
-                </MenuItem>
-                {advertisers.map((advertiser) => (
-                  <MenuItem key={advertiser.id} value={advertiser.id_discord}>
-                    {advertiser.username}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
+            </div>
+          )}
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Advertiser
+            </label>
+            <CustomSelect
+              value={formData.idBuyerAdvertiser}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  idBuyerAdvertiser: value,
+                }))
+              }
+              options={advertisers.map((advertiser) => ({
+                value: advertiser.id_discord,
+                label: advertiser.username,
+              }))}
+              placeholder='Select Advertiser'
+              minWidthClassName='min-w-full'
+              triggerClassName='h-12 border-purple-300/25 !bg-[rgba(14,10,28,0.9)] ![background-image:none] !shadow-none text-base'
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Note
+            </label>
+            <input
               id='buyerNote'
-              label='Note'
               value={formData.buyerNote}
               onChange={handleInputChange}
-              variant='outlined'
-              fullWidth
+              className={baseFieldClass}
             />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  id='isPaid'
-                  checked={formData.isPaid}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isPaid: e.target.checked,
-                    }))
-                  }
-                  color='primary'
-                />
+          </div>
+
+          {formError && (
+            <div className='col-span-1 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-center font-semibold text-red-300 md:col-span-2'>
+              {formError}
+            </div>
+          )}
+
+          <label className='col-span-1 inline-flex items-center gap-2 text-sm text-neutral-200 md:col-span-2'>
+            <input
+              id='isPaid'
+              type='checkbox'
+              checked={formData.isPaid}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  isPaid: e.target.checked,
+                }))
               }
-              label='Paid Full'
+              className='h-4 w-4 rounded border-white/40 bg-transparent accent-purple-500'
             />
-            <Button
+            Paid Full
+          </label>
+
+          <div className='col-span-1 flex items-center justify-center gap-3 md:col-span-2'>
+            <button
               type='submit'
-              variant='contained'
-              fullWidth
               disabled={isSubmitting}
-              startIcon={
-                isSubmitting ? (
-                  <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
-                ) : (
-                  <UserPlus size={20} />
-                )
-              }
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              }}
-              className='col-span-2'
+              className='balance-action-btn balance-action-btn--primary inline-flex min-w-[170px] items-center justify-center gap-2 px-5 disabled:cursor-not-allowed disabled:opacity-60'
             >
+              {isSubmitting ? (
+                <span className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></span>
+              ) : (
+                <UserPlus size={20} />
+              )}
               {isSubmitting ? 'Creating...' : 'Add Buyer'}
-            </Button>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </button>
+            <button type='button' onClick={onClose} className='balance-action-btn px-4'>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }

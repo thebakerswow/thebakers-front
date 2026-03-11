@@ -605,12 +605,12 @@ export function RunDetails() {
       {error && <ErrorComponent error={error} onClose={handleErrorClose} />}
 
       <div
-        className={`flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl ${
+        className={`flex min-h-[70vh] w-full flex-col overflow-x-hidden rounded-xl text-gray-100 shadow-2xl ${
           isLoadingRun || !runData ? 'items-center justify-center' : ''
         }`}
       >
         {isLoadingRun ? (
-          <div className='flex flex-col items-center'>
+          <div className='flex flex-1 items-center justify-center py-20'>
             <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
           </div>
         ) : (
@@ -630,12 +630,12 @@ export function RunDetails() {
 
             <div className='p-4'>
               {isLoadingBuyers ? (
-                <div className='mt-40 flex flex-col items-center'>
+                <div className='flex min-h-[220px] items-center justify-center'>
                   <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
                 </div>
               ) : (
                 <>
-                  <div className='mb-4 flex items-center gap-3'>
+                  <div className='mb-4 flex flex-wrap items-center gap-3'>
                     {runData &&
                       (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
                         hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
@@ -649,15 +649,16 @@ export function RunDetails() {
                       )}
                     <button
                       onClick={toggleDetailsVisibility}
-                      className={`balance-action-btn balance-action-btn--primary min-w-[160px] px-4 ${
+                      className={`balance-action-btn balance-action-btn--primary inline-flex min-w-[160px] items-center justify-center px-4 ${
                         canViewAttendance && hasAttendanceAccess ? 'inline-flex' : 'hidden'
                       }`}
                     >
                       {showDetails ? 'Hide Attendance' : 'Show Attendance'}
                     </button>
                     {/* Informativo de status */}
-                    <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
-                      Waiting: {waitingCount} | Group: {groupCount}
+                    <span className='inline-flex h-10 min-w-[190px] items-center justify-center rounded-md border border-white/15 bg-white/[0.08] px-4 text-sm font-semibold text-neutral-200'>
+                      Waiting: <strong className='ml-1 mr-3 text-yellow-300'>{waitingCount}</strong>
+                      Group: <strong className='ml-1 text-sky-300'>{groupCount}</strong>
                     </span>
                   </div>
                   <BuyersDataGrid
@@ -675,7 +676,7 @@ export function RunDetails() {
               )}
             </div>
             {runData && hasAttendanceAccess && showDetails && (
-              <div className='mx-4 mt-8 flex justify-center gap-40'>
+              <div className='mt-8 grid w-full grid-cols-1 gap-4 px-4 xl:grid-cols-2'>
                 <Attendance
                   attendance={attendance}
                   markAllAsFull={markAllAsFull}

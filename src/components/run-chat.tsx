@@ -1,17 +1,12 @@
 import { useState, useRef, FormEvent, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ChatTeardropText,
+  CircleNotch,
   PaperPlaneRight,
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
-import {
-  Button,
-  TextField,
-  IconButton,
-  CircularProgress,
-  Badge,
-} from '@mui/material'
 import Swal from 'sweetalert2'
 import { ChatMessage, RunChatProps } from '../types'
 
@@ -72,63 +67,44 @@ export function RunChat({
 
   const connectionStatus = getConnectionStatus()
 
-  return (
-    <div className='fixed bottom-6 right-12 z-[1000]'>
+  const chatNode = (
+    <div className='fixed bottom-4 right-4 z-[2200] sm:bottom-6 sm:right-6'>
       {!open ? (
-        <Badge
-          color='error'
-          invisible={unreadCount === 0}
-          badgeContent={unreadCount > 0 ? unreadCount : undefined}
-          overlap='circular'
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        >
-          <Button
+        <div className='relative'>
+          <button
             onClick={() => setIsChatOpen(true)}
-            variant='contained'
-            sx={{
-              minWidth: 0,
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              backgroundColor: 'rgb(147, 51, 234)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              p: 0,
-            }}
+            className='flex h-16 w-16 items-center justify-center rounded-full border border-purple-300/30 bg-purple-600 shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition hover:bg-purple-500'
             aria-label='Open run chat'
           >
             <ChatTeardropText size={28} color='#fff' />
-          </Button>
-        </Badge>
+          </button>
+          {unreadCount > 0 && (
+            <span className='absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white'>
+              {unreadCount}
+            </span>
+          )}
+        </div>
       ) : (
-        <div className='flex h-[500px] w-[400px] flex-col overflow-hidden rounded-2xl bg-zinc-900 shadow-2xl'>
-          <div className='flex items-center justify-between bg-purple-500 px-4 py-3 text-white'>
+        <div className='flex h-[65vh] min-h-[380px] w-[calc(100vw-2rem)] max-h-[560px] max-w-[430px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl'>
+          <div className='flex items-center justify-between border-b border-white/10 bg-[linear-gradient(180deg,rgba(147,51,234,0.95)_0%,rgba(126,34,206,0.95)_100%)] px-4 py-3 text-white'>
             <div className='flex items-center gap-2'>
               <span className='font-semibold'>Run Chat</span>
-              <span className={`text-xs ${connectionStatus.color}`}>
+              <span className={`text-xs font-medium ${connectionStatus.color}`}>
                 {connectionStatus.text}
               </span>
             </div>
-            <IconButton
+            <button
               onClick={() => setIsChatOpen(false)}
-              size='small'
-              sx={{
-                color: '#fff',
-                background: 'none',
-                '&:hover': { background: 'rgba(255,255,255,0.08)' },
-              }}
+              className='rounded-md p-1 text-white transition hover:bg-white/10'
               aria-label='Fechar chat'
             >
               <X size={22} />
-            </IconButton>
+            </button>
           </div>
-          <div
-            className='custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto p-4'
-            style={{ background: 'none' }}
-          >
+          <div className='custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto bg-black/20 p-4'>
             {loading ? (
               <div className='flex h-full items-center justify-center'>
-                <CircularProgress sx={{ color: '#8b5cf6' }} />
+                <CircleNotch className='animate-spin text-purple-300' size={24} />
               </div>
             ) : (
               <>
@@ -149,8 +125,8 @@ export function RunChat({
                         <div
                           className={`max-w-[75%] cursor-pointer overflow-hidden whitespace-pre-wrap break-words rounded-lg px-3 py-2 ${
                             isOwnMessage
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-zinc-700 text-gray-200'
+                              ? 'bg-purple-500 text-white shadow-[0_6px_20px_rgba(126,34,206,0.35)]'
+                              : 'border border-white/10 bg-zinc-800/95 text-gray-200'
                           }`}
                           title={
                             isOwnMessage ? 'Click to select this message' : ''
@@ -191,57 +167,34 @@ export function RunChat({
           </div>
           {/* Removendo o botão que aparecia embaixo */}
           <form
-            className='flex gap-2 border-t border-zinc-700 bg-zinc-900 px-2 py-2'
+            className='flex gap-2 border-t border-white/10 bg-zinc-900 px-3 py-3'
             onSubmit={handleSendMessage}
           >
-            <TextField
+            <input
+              type='text'
               placeholder='Type your message...'
-              size='small'
-              fullWidth
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              inputProps={{ autoComplete: 'off' }}
-              sx={{
-                input: {
-                  color: '#fff',
-                  background: '#18181b',
-                  borderRadius: 1,
-                },
-                fieldset: { border: 'none' },
-                background: '#18181b',
-                borderRadius: 1,
-              }}
-              InputProps={{
-                style: {
-                  color: '#fff',
-                  background: '#18181b',
-                  borderRadius: 8,
-                },
-              }}
+              autoComplete='off'
+              className='h-10 flex-1 rounded-md border border-white/15 bg-zinc-800 px-3 text-sm text-white outline-none placeholder:text-neutral-400 focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/30'
               disabled={inputDisabled}
             />
-            <Button
+            <button
               type='submit'
-              variant='contained'
               disabled={!input.trim() || inputDisabled}
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                borderRadius: 2,
-                fontWeight: 600,
-                px: 2,
-                minWidth: 0,
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                '&.Mui-disabled': {
-                  backgroundColor: 'rgba(147, 51, 234, 0.5)',
-                  cursor: 'not-allowed',
-                },
-              }}
+              className='inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-purple-300/35 bg-purple-600 px-3 text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:bg-purple-700/50'
             >
               <PaperPlaneRight size={20} />
-            </Button>
+            </button>
           </form>
         </div>
       )}
     </div>
   )
+
+  if (typeof document === 'undefined') {
+    return chatNode
+  }
+
+  return createPortal(chatNode, document.body)
 }
