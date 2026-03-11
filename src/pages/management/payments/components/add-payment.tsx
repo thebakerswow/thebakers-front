@@ -18,11 +18,11 @@ import {
   CircularProgress,
   Autocomplete,
 } from '@mui/material'
-import { ErrorDetails } from './error-display'
+import { ErrorDetails } from '../../../../components/error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
 import { AddPaymentDate } from './add-payment-date'
 import { EditBuyerName } from './edit-buyer-name'
-import { getPayers, getPaymentDates, createSale, type Payer, type PaymentDate } from '../services/api'
+import { getPayers, getPaymentDates, createSale, type Payer, type PaymentDate } from '../../../../services/api'
 
 interface AddPaymentProps {
   onClose: () => void

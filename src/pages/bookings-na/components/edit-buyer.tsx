@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { updateBuyer } from '../services/api/buyers'
-import { ErrorDetails, ErrorComponent } from './error-display'
+import { updateBuyer } from '../../../services/api/buyers'
+import { ErrorDetails, ErrorComponent } from '../../../components/error-display'
 import {
   Button,
   TextField,

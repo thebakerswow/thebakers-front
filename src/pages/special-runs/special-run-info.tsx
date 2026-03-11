@@ -87,7 +87,8 @@ export function SpecialRunInfo({
       traditional: 'Traditional',
       keys: 'Keys',
       leveling: 'Leveling',
-      pvp: 'PVP',
+      delves: 'Delves',
+      achievements: 'Achievements',
     }
 
     try {
@@ -140,7 +141,7 @@ export function SpecialRunInfo({
         />
       ) : (
         <div className='flex min-h-[220px] min-w-[300px] max-w-[400px] items-center justify-center rounded-md bg-zinc-800 text-2xl font-bold text-white'>
-          PVP
+          Special Run
         </div>
       )}
       {run.sumPot?.some((item) => item.type === 'gold' && item.sumPot !== 0) && (

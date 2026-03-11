@@ -4,8 +4,8 @@ import { checkAdminAccess } from '../../../services/api/auth'
 import { BalanceControlTable } from './balance-control-table'
 import { GBanksTable } from './gbanks-table'
 import { VerifyTable } from './verify-table'
-import LatestTransactions from '../../../components/latest-transactions'
-import RunWithoutAttendanceTable from '../../../components/run-without-attendance-table'
+import LatestTransactions from './components/latest-transactions'
+import RunWithoutAttendanceTable from './components/run-without-attendance-table'
 import { ErrorDetails, ErrorComponent } from '../../../components/error-display'
 
 export function AdminPage() {

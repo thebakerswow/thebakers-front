@@ -10,9 +10,9 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material'
-import { getLatestTransactions } from '../services/api/gbanks'
+import { getLatestTransactions } from '../../../../services/api/gbanks'
 
-import { Transaction } from '../types'
+import { Transaction } from '../../../../types'
 
 export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)

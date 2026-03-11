@@ -12,6 +12,7 @@ import {
   List,
   SignOut,
   Sword,
+  Trophy,
   User,
   UsersFour,
   X,
@@ -135,7 +136,8 @@ export function Header() {
                 path: '/leveling',
                 icon: <ArrowFatUp size={18} />,
               },
-              { label: 'PVP', path: '/pvp', icon: <Sword size={18} /> },
+              { label: 'Delves', path: '/delves', icon: <Sword size={18} /> },
+              { label: 'Achievements', path: '/achievements', icon: <Trophy size={18} /> },
             ],
           },
         ]

@@ -13,8 +13,8 @@ import {
   Paper,
   Button,
 } from '@mui/material'
-import { getGbanks, getGbankLogs } from '../services/api/gbanks'
-import { ErrorComponent, ErrorDetails } from './error-display'
+import { getGbanks, getGbankLogs } from '../../../../services/api/gbanks'
+import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 
 export function GbankExtract() {

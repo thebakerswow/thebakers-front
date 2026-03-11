@@ -1,4 +1,4 @@
-import { PencilSimple } from '@phosphor-icons/react'
+import { UserPlus } from '@phosphor-icons/react'
 import CloseIcon from '@mui/icons-material/Close'
 import { useState } from 'react'
 import Swal from 'sweetalert2'
@@ -11,20 +11,18 @@ import {
   Button,
   IconButton,
 } from '@mui/material'
-import { updatePayer, type Payer } from '../services/api'
+import { createPayer } from '../../../../services/api'
 
-interface EditBuyerNameProps {
-  buyer: Payer
+interface AddBuyerToListProps {
   onClose: () => void
-  onBuyerUpdated: (updatedBuyer: Payer) => void
+  onBuyerAdded: (buyerName: string, buyerId: string | number) => void
 }
 
-export function EditBuyerName({
-  buyer,
+export function AddBuyerToList({
   onClose,
-  onBuyerUpdated,
-}: EditBuyerNameProps) {
-  const [buyerName, setBuyerName] = useState(buyer.name)
+  onBuyerAdded,
+}: AddBuyerToListProps) {
+  const [buyerName, setBuyerName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,36 +40,21 @@ export function EditBuyerName({
       return
     }
 
-    if (buyerName.trim() === buyer.name) {
-      Swal.fire({
-        icon: 'info',
-        title: 'No changes',
-        text: 'The name is the same as before.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
-      // Chama API para atualizar o payer
-      const updatedPayer = await updatePayer({ 
-        id: buyer.id, 
-        name: buyerName.trim() 
-      })
+      // Chama API para criar o payer
+      const newPayer = await createPayer({ name: buyerName.trim() })
       
       // Atualiza a lista no componente pai e fecha o modal
-      onBuyerUpdated(updatedPayer)
+      onBuyerAdded(newPayer.name, newPayer.id)
       onClose()
       
       // Mostra mensagem de sucesso após fechar o modal
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',
-          text: 'Buyer updated successfully!',
+          text: 'Buyer added to list!',
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
@@ -80,11 +63,11 @@ export function EditBuyerName({
         })
       }, 100)
     } catch (error) {
-      console.error('Error updating buyer:', error)
+      console.error('Error adding buyer:', error)
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Failed to update buyer.',
+        text: 'Failed to add buyer.',
         confirmButtonColor: 'rgb(147, 51, 234)',
         background: '#2a2a2a',
         color: 'white',
@@ -97,7 +80,7 @@ export function EditBuyerName({
   return (
     <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle className='relative text-center'>
-        Edit Buyer Name
+        Add Buyer to List
         <IconButton
           aria-label='close'
           onClick={onClose}
@@ -128,7 +111,7 @@ export function EditBuyerName({
               isSubmitting ? (
                 <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
               ) : (
-                <PencilSimple size={20} />
+                <UserPlus size={20} />
               )
             }
             sx={{
@@ -137,7 +120,7 @@ export function EditBuyerName({
               mt: 2,
             }}
           >
-            {isSubmitting ? 'Updating...' : 'Update'}
+            {isSubmitting ? 'Adding...' : 'Add to List'}
           </Button>
         </form>
       </DialogContent>

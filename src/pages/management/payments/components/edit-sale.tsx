@@ -16,7 +16,7 @@ import {
   FormControl,
   CircularProgress,
 } from '@mui/material'
-import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../services/api'
+import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../../../../services/api'
 
 interface Sale {
   id: number

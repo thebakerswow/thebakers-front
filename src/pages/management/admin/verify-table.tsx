@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { getGbanksGeneral } from '../../../services/api/gbanks'
 import { ErrorDetails } from '../../../components/error-display'
-import { TransactionExtract } from '../../../components/transaction-extract'
-import { GbankExtract } from '../../../components/gbank-extract'
+import { TransactionExtract } from './components/transaction-extract'
+import { GbankExtract } from './components/gbank-extract'
 import {
   Table,
   TableBody,

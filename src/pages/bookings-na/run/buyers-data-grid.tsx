@@ -20,7 +20,7 @@ import {
 import { getRun, getRunBuyers } from '../../../services/api/runs'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorDetails } from '../../../components/error-display'
-import { EditBuyer } from '../../../components/edit-buyer'
+import { EditBuyer } from '../components/edit-buyer'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
 import CryptoJS from 'crypto-js'

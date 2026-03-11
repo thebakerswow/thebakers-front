@@ -5,12 +5,12 @@ import {
   createFreelancer,
   deleteFreelancer,
   updateFreelancerAttendance,
-} from '../services/api/users'
+} from '../../../services/api/users'
 import { CircleNotch, Trash } from '@phosphor-icons/react'
 import axios from 'axios'
-import { ErrorComponent, ErrorDetails } from './error-display'
+import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 
-import { User, FreelancersProps } from '../types'
+import { User, FreelancersProps } from '../../../types'
 
 export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [freelancers, setFreelancers] = useState<User[]>([])

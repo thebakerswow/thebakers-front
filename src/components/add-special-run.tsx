@@ -19,7 +19,7 @@ interface AddSpecialRunProps {
   onClose: () => void
   onRunAddedReload: () => void
   onError?: (error: ErrorDetails) => void
-  variant: 'keys' | 'leveling' | 'pvp'
+  variant: 'keys' | 'leveling' | 'delves' | 'achievements'
 }
 
 const getVariantConfig = (variant: AddSpecialRunProps['variant']) => {
@@ -33,9 +33,14 @@ const getVariantConfig = (variant: AddSpecialRunProps['variant']) => {
       runTypeLabel: 'Leveling',
     }
   }
-  if (variant === 'pvp') {
+  if (variant === 'delves') {
     return {
-      runTypeLabel: 'PVP',
+      runTypeLabel: 'Delves',
+    }
+  }
+  if (variant === 'achievements') {
+    return {
+      runTypeLabel: 'Achievements',
     }
   }
   return {

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import axios from 'axios'
-import { getBalanceTeams } from '../services/api/teams'
-import { ErrorDetails } from './error-display'
-import { useAuth } from '../context/auth-context'
-import { shouldShowBalanceFilter, getUserTeamsForFilter } from '../utils/role-utils'
-import { CustomSelect } from './custom-select'
+import { getBalanceTeams } from '../../../services/api/teams'
+import { ErrorDetails } from '../../../components/error-display'
+import { useAuth } from '../../../context/auth-context'
+import { shouldShowBalanceFilter, getUserTeamsForFilter } from '../../../utils/role-utils'
+import { CustomSelect } from '../../../components/custom-select'
 
 interface BalanceTeamFilterProps {
   selectedTeam: string | null

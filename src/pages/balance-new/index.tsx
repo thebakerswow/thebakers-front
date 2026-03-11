@@ -5,9 +5,9 @@ import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { getTrackedTeamRoles, shouldShowBalanceFilter } from '../../utils/role-utils'
 import { GBankListNew } from './gbank-list-new'
 import { BalanceControlTableNew } from './balance-control-table-new'
-import { TutorialOverlay } from '../../components/tutorial-overlay'
-import { TutorialButton } from '../../components/tutorial-button'
-import { balanceTutorialSteps } from '../../components/tutorial-steps'
+import { TutorialOverlay } from './components/tutorial-overlay'
+import { TutorialButton } from './components/tutorial-button'
+import { balanceTutorialSteps } from './components/tutorial-steps'
 
 export function NewBalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)

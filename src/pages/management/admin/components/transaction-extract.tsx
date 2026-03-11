@@ -15,9 +15,9 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
-import { getPlayers } from '../services/api/users'
-import { getTransactionLogs } from '../services/api/balance'
-import { ErrorComponent, ErrorDetails } from './error-display'
+import { getPlayers } from '../../../../services/api/users'
+import { getTransactionLogs } from '../../../../services/api/balance'
+import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
 import { Modal as MuiModal, Box } from '@mui/material'
 
 export function TransactionExtract() {

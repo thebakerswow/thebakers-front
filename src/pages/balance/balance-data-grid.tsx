@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react'
 import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
 import { getBalance, updateBalanceColor } from '../../services/api/balance'
-import { getTextColorForBackground } from '../../components/color-selector'
+import { getTextColorForBackground } from './components/color-selector'
 import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
 
 import {

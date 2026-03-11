@@ -11,7 +11,7 @@ import {
   getWeek,
   startOfWeek,
 } from 'date-fns'
-import { CustomSelect } from './custom-select'
+import { CustomSelect } from '../../../components/custom-select'
 
 interface WeekRangeFilterProps {
   onChange: (range: { start: string; end: string }) => void

@@ -9,6 +9,7 @@ import {
   Key,
   Shield,
   Sword,
+  Trophy,
   User,
   UsersFour,
 } from '@phosphor-icons/react'
@@ -39,11 +40,13 @@ import { KeysPage } from './pages/special-runs/keys-page'
 import { KeyDetails } from './pages/special-runs/keys-details-page'
 import { LevelingPage } from './pages/special-runs/leveling-page'
 import { LevelingDetails } from './pages/special-runs/leveling-details-page'
-import { PvpPage } from './pages/special-runs/pvp-page'
-import { PvpDetails } from './pages/special-runs/pvp-details-page'
+import { DelvesPage } from './pages/special-runs/delves-page'
+import { DelvesDetails } from './pages/special-runs/delves-details-page'
+import { AchievementsPage } from './pages/special-runs/achievements-page'
+import { AchievementsDetails } from './pages/special-runs/achievements-details-page'
 import { RequestsPage } from './pages/requests'
 import { MyRequestsPage } from './pages/my-requests'
-import { PaymentsPage } from './pages/payments'
+import { PaymentsPage } from './pages/management/payments'
 import { ReceiptsPage } from './pages/receipts'
 import { SellsPage } from './pages/sells'
 import './styles/global.css'
@@ -147,8 +150,12 @@ function AppContent() {
                 element={<PrivateRoute element={<LevelingDetails />} />}
               />
               <Route
-                path='/bookings-na/pvp/:id'
-                element={<PrivateRoute element={<PvpDetails />} />}
+                path='/bookings-na/delves/:id'
+                element={<PrivateRoute element={<DelvesDetails />} />}
+              />
+              <Route
+                path='/bookings-na/achievements/:id'
+                element={<PrivateRoute element={<AchievementsDetails />} />}
               />
               <Route
                 path='/admin'
@@ -171,8 +178,12 @@ function AppContent() {
                 element={<PrivateRoute element={<LevelingPage />} />}
               />
               <Route
-                path='/pvp'
-                element={<PrivateRoute element={<PvpPage />} />}
+                path='/delves'
+                element={<PrivateRoute element={<DelvesPage />} />}
+              />
+              <Route
+                path='/achievements'
+                element={<PrivateRoute element={<AchievementsPage />} />}
               />
               <Route
                 path='/requests'
@@ -293,8 +304,11 @@ function getScreenMeta(pathname: string) {
   if (pathname.startsWith('/leveling')) {
     return { name: 'Leveling', icon: <Sword size={20} weight='duotone' /> }
   }
-  if (pathname.startsWith('/pvp')) {
-    return { name: 'PVP', icon: <Sword size={20} weight='duotone' /> }
+  if (pathname.startsWith('/delves')) {
+    return { name: 'Delves', icon: <Sword size={20} weight='duotone' /> }
+  }
+  if (pathname.startsWith('/achievements')) {
+    return { name: 'Achievements', icon: <Trophy size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/services')) {
     return { name: 'Services', icon: <Briefcase size={20} weight='duotone' /> }

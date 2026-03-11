@@ -18,7 +18,7 @@ import {
   Button,
 } from '@mui/material'
 import { Wallet, CopySimple } from '@phosphor-icons/react'
-import { ErrorDetails } from '../../components/error-display'
+import { ErrorDetails } from '../../../components/error-display'
 import { 
   getPaymentManagement, 
   getPaymentManagementDates, 
@@ -27,9 +27,9 @@ import {
   updatePaymentManagementDebit,
   PaymentManagementTeam,
   PaymentDate as PaymentDateType 
-} from '../../services/api/payments'
-import { getBalanceTeams } from '../../services/api/teams'
-import { teamOrder } from '../../types/team-interface'
+} from '../../../services/api/payments'
+import { getBalanceTeams } from '../../../services/api/teams'
+import { teamOrder } from '../../../types/team-interface'
 import Swal from 'sweetalert2'
 
 interface PaymentRow {

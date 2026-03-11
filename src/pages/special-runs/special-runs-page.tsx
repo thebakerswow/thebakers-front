@@ -110,7 +110,8 @@ export function SpecialRunsPage({
         const runTypeByScreen: Record<string, string> = {
           keys: 'Keys',
           leveling: 'Leveling',
-          pvp: 'PVP',
+          delves: 'Delves',
+          achievements: 'Achievements',
         }
 
         await createSpecialRun(

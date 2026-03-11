@@ -6,7 +6,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { SellsTab } from './sells-tab'
 import { PaymentsTab } from './payments-tab'
 

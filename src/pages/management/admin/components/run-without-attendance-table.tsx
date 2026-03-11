@@ -10,9 +10,9 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material'
-import { api } from '../services/axiosConfig'
+import { api } from '../../../../services/axiosConfig'
 
-import { RunWithoutAttendance } from '../types'
+import { RunWithoutAttendance } from '../../../../types'
 
 function extractUrl(text: string): string | null {
   const match = text.match(/https?:\/\/\S+/)

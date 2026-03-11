@@ -4,7 +4,8 @@ export const RUN_SCREEN_FLAGS = {
   TRADITIONAL: 'traditional',
   KEYS: 'keys',
   LEVELING: 'leveling',
-  PVP: 'pvp',
+  DELVES: 'delves',
+  ACHIEVEMENTS: 'achievements',
 } as const
 
 export type RunScreenFlag =
