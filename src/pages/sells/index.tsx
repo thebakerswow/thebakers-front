@@ -1,17 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import {
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  Paper,
-  Typography,
-  CircularProgress,
-  Box,
-  Button,
-} from '@mui/material'
+import { CircleNotch } from '@phosphor-icons/react'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { getPaymentsResume, PaymentsResumeResponse, PaymentResumeItem } from '../../services/api/payments'
 
@@ -198,7 +186,7 @@ export function SellsPage() {
         <div className='m-8 min-h-screen w-full pb-12 text-white'>
           <div className='flex h-40 items-center justify-center'>
             <div className='flex flex-col items-center gap-2'>
-              <CircularProgress size={32} sx={{ color: 'rgb(147, 51, 234)' }} />
+              <CircleNotch size={32} className='animate-spin text-purple-400' />
               <span className='text-gray-400'>Loading...</span>
             </div>
           </div>
@@ -212,73 +200,41 @@ export function SellsPage() {
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
         {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
         
-        <div className='mb-6 flex justify-between items-center'>
-          <Typography variant='h4' fontWeight='bold'>
-            Payments
-          </Typography>
-        </div>
-
         {/* Status Filter */}
-        <Box sx={{ mb: 3, display: 'flex', gap: 1, alignItems: 'center' }}>
-
-          <Button
-            variant={statusFilter === 'pending' ? 'contained' : 'outlined'}
+        <div className='mb-4 flex items-center gap-2'>
+          <button
+            type='button'
             onClick={() => setStatusFilter('pending')}
-            sx={{
-              backgroundColor: statusFilter === 'pending' ? '#f59e0b' : 'transparent',
-              borderColor: '#f59e0b',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: statusFilter === 'pending' ? '#fbbf24' : 'rgba(245, 158, 11, 0.1)',
-                borderColor: '#fbbf24',
-              },
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              py: 1
+            className='rounded-md border px-4 py-2 text-sm font-semibold transition'
+            style={{
+              borderColor: statusFilter === 'pending' ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.15)',
+              color: statusFilter === 'pending' ? '#fcd34d' : '#d4d4d8',
+              backgroundColor: statusFilter === 'pending' ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.03)',
             }}
           >
             Pending
-          </Button>
-          <Button
-            variant={statusFilter === 'completed' ? 'contained' : 'outlined'}
+          </button>
+          <button
+            type='button'
             onClick={() => setStatusFilter('completed')}
-            sx={{
-              backgroundColor: statusFilter === 'completed' ? '#10b981' : 'transparent',
-              borderColor: '#10b981',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: statusFilter === 'completed' ? '#34d399' : 'rgba(16, 185, 129, 0.1)',
-                borderColor: '#34d399',
-              },
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              py: 1
+            className='rounded-md border px-4 py-2 text-sm font-semibold transition'
+            style={{
+              borderColor: statusFilter === 'completed' ? 'rgba(16,185,129,0.65)' : 'rgba(255,255,255,0.15)',
+              color: statusFilter === 'completed' ? '#6ee7b7' : '#d4d4d8',
+              backgroundColor: statusFilter === 'completed' ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.03)',
             }}
           >
             Completed
-          </Button>
-        </Box>
+          </button>
+        </div>
 
         {salesByDate.length === 0 ? (
-          <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
-            <Typography variant="h6" color="textSecondary">
-              No payments found
-            </Typography>
-          </Paper>
+          <div className='rounded-xl border border-white/15 bg-white/[0.08] p-4 text-center'>
+            <p className='text-neutral-400'>No payments found</p>
+          </div>
         ) : (
-          <TableContainer
-            component={Paper}
-            sx={{
-              bgcolor: '#2a2a2a',
-              border: '1px solid #333',
-              '& .MuiTableCell-root': {
-                borderColor: '#333',
-              },
-            }}
-          >
-            <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
+          <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.05]'>
+            <table className='w-full' style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '120px' }} />
                 {statusFilter === 'pending' && <col style={{ width: '150px' }} />}
@@ -289,82 +245,74 @@ export function SellsPage() {
                 <col style={{ width: '150px' }} />
                 <col style={{ width: '150px' }} />
               </colgroup>
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#1a1a1a' }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+              <thead>
+                <tr className='bg-white/[0.06]'>
+                  <th className='px-4 py-4 text-left text-sm font-bold text-white'>
                     Payment Date
-                  </TableCell>
+                  </th>
                   {statusFilter === 'pending' && (
-                    <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                    <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                       Balance Gold
-                    </TableCell>
+                    </th>
                   )}
-                  <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                  <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                     Gold Sold
-                  </TableCell>
-                  <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                  </th>
+                  <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                     Avg M
-                  </TableCell>
-                  <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                  </th>
+                  <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                     Gold In $
-                  </TableCell>
+                  </th>
                   {statusFilter === 'pending' && (
-                    <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                    <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                       Balance Dolar
-                    </TableCell>
+                    </th>
                   )}
-                  <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                  <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                     Shop Dolar
-                  </TableCell>
-                  <TableCell align='right' sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', px: 2 }}>
+                  </th>
+                  <th className='px-4 py-4 text-right text-sm font-bold text-white'>
                     Total
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {salesByDate.map((dateData) => (
-                  <TableRow
-                    key={dateData.date}
-                    sx={{
-                      '&:hover': {
-                        bgcolor: '#3a3a3a',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                    }}
-                  >
-                    <TableCell sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 'medium', px: 2 }}>
+                  <tr key={dateData.date} className='border-t border-white/10 transition hover:bg-white/[0.03]'>
+                    <td className='px-4 py-3 text-left text-sm font-medium text-white'>
                       {dateData.paymentDate}
-                    </TableCell>
+                    </td>
                     {statusFilter === 'pending' && (
-                      <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                      <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>
                         {dateData.balanceGold !== null ? formatGold(dateData.balanceGold) + 'g' : '-'}
-                      </TableCell>
+                      </td>
                     )}
-                    <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                    <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>
                       {dateData.type === 'dolar' ? '-' : `${formatGold(dateData.goldSold)}g`}
-                    </TableCell>
-                    <TableCell align='right' sx={{ color: '#a78bfa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                    </td>
+                    <td className='px-4 py-3 text-right text-sm font-semibold text-violet-300'>
                       {dateData.type === 'dolar' ? '-' : formatDollar(dateData.avgM)}
-                    </TableCell>
-                    <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                    </td>
+                    <td className='px-4 py-3 text-right text-sm font-semibold text-emerald-300'>
                       {dateData.type === 'dolar' ? '-' : formatDollar(dateData.goldInDollar)}
-                    </TableCell>
+                    </td>
                     {statusFilter === 'pending' && (
-                      <TableCell align='right' sx={{ color: '#60a5fa', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                      <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>
                         {dateData.balanceDolar !== null ? formatDollar(dateData.balanceDolar) : '-'}
-                      </TableCell>
+                      </td>
                     )}
-                    <TableCell align='right' sx={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                    <td className='px-4 py-3 text-right text-sm font-semibold text-emerald-300'>
                       {dateData.type === 'gold' ? '-' : formatDollar(dateData.shopDolar)}
-                    </TableCell>
-                    <TableCell align='right' sx={{ color: '#f59e0b', fontSize: '0.9rem', fontWeight: 600, px: 2 }}>
+                    </td>
+                    <td className='px-4 py-3 text-right text-sm font-semibold text-amber-400'>
                       {formatDollar(dateData.total)}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

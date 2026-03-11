@@ -513,15 +513,15 @@ export function SellsTab({ onError }: SellsTabProps) {
                 <table className='w-full min-w-[1100px] text-sm'>
                   <thead>
                     <tr className='border-b border-white/10 bg-white/[0.06] text-neutral-200'>
-                      <th className='px-3 py-3 text-center font-semibold'>Note</th>
-                      <th className='px-3 py-3 text-center font-semibold'>Buyer</th>
-                      <th className='px-3 py-3 text-right font-semibold'>Value Gold</th>
-                      <th className='px-3 py-3 text-right font-semibold'>Dollar $</th>
-                      <th className='px-3 py-3 text-right font-semibold'>M Value in $</th>
-                      <th className='px-3 py-3 text-center font-semibold'>Date</th>
-                      <th className='px-3 py-3 text-center font-semibold'>Payment Date</th>
-                      <th className='px-3 py-3 text-center font-semibold'>Status</th>
-                      <th className='px-3 py-3 text-center font-semibold'>Actions</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Note</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Buyer</th>
+                      <th className='px-4 py-4 text-right font-semibold'>Value Gold</th>
+                      <th className='px-4 py-4 text-right font-semibold'>Dollar $</th>
+                      <th className='px-4 py-4 text-right font-semibold'>M Value in $</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Date</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Payment Date</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Status</th>
+                      <th className='px-4 py-4 text-center font-semibold'>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -530,22 +530,22 @@ export function SellsTab({ onError }: SellsTabProps) {
                         className='border-b border-white/5 transition hover:bg-white/[0.05]'
                         key={payment.id}
                       >
-                        <td className='px-3 py-2 text-center text-sm text-white/90'>
+                        <td className='px-4 py-3 text-center text-sm text-white/90'>
                           {payment.note}
                         </td>
-                        <td className='px-3 py-2 text-center text-sm font-medium text-white/90'>
+                        <td className='px-4 py-3 text-center text-sm font-medium text-white/90'>
                           {payment.buyerName}
                         </td>
-                        <td className='px-3 py-2 text-right text-sm font-semibold text-blue-300'>
+                        <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>
                           {formatValueForDisplay(payment.valueGold)}g
                         </td>
-                        <td className='px-3 py-2 text-right text-sm font-semibold text-emerald-300'>
+                        <td className='px-4 py-3 text-right text-sm font-semibold text-emerald-300'>
                           {formatDollar(payment.dollar)}
                         </td>
-                        <td className='px-3 py-2 text-right text-sm font-semibold text-violet-300'>
+                        <td className='px-4 py-3 text-right text-sm font-semibold text-violet-300'>
                           {formatDollar(payment.mValue)}
                         </td>
-                        <td className='px-3 py-2 text-center text-sm text-neutral-400'>
+                        <td className='px-4 py-3 text-center text-sm text-neutral-400'>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <p style={{ fontSize: '0.85rem', color: 'white' }}>
                               {formatCreatedAt(payment.createdAt).date}
@@ -555,14 +555,14 @@ export function SellsTab({ onError }: SellsTabProps) {
                             </p>
                           </div>
                         </td>
-                        <td className='px-3 py-2 text-center text-sm text-neutral-400'>
+                        <td className='px-4 py-3 text-center text-sm text-neutral-400'>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <p style={{ fontSize: '0.85rem', color: 'white' }}>
                               {getPaymentDateLabel(payment.paymentDate)}
                             </p>
                           </div>
                         </td>
-                        <td className='px-3 py-2 text-center'>
+                        <td className='px-4 py-3 text-center'>
                           <span
                             className='inline-flex rounded-full border px-2 py-0.5 text-xs'
                             style={{ fontWeight: 'bold', fontSize: '0.75rem', ...getStatusBadgeStyle(payment.status) }}
@@ -570,7 +570,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                             {getStatusLabel(payment.status)}
                           </span>
                         </td>
-                        <td className='px-3 py-2 text-center'>
+                        <td className='px-4 py-3 text-center'>
                           {payment.status !== 'completed' ? (
                             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                               <span title='Edit'>
