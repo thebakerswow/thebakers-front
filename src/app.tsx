@@ -357,13 +357,13 @@ function getScreenMeta(pathname: string) {
     return { name: 'Services', breadcrumb: 'Management / Services', icon: <Briefcase size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/requests')) {
-    return { name: 'Requests', breadcrumb: 'Requests', icon: <ClipboardText size={20} weight='duotone' /> }
+    return { name: 'Requests', breadcrumb: 'Management / Requests', icon: <ClipboardText size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/my-requests')) {
     return { name: 'My Requests', breadcrumb: 'Requests / My Requests', icon: <User size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/payments')) {
-    return { name: 'Gold', breadcrumb: 'Finance / Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
+    return { name: 'Gold', breadcrumb: 'Management / Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/receipts')) {
     return { name: 'Dollar', breadcrumb: 'Finance / Dollar', icon: <CurrencyDollar size={20} weight='duotone' /> }

@@ -1,23 +1,8 @@
-import { UserPlus, Plus, PencilSimple } from '@phosphor-icons/react'
-import CloseIcon from '@mui/icons-material/Close'
-import { useState, useEffect } from 'react'
+import { UserPlus, Plus, PencilSimple, X } from '@phosphor-icons/react'
+import { useState, useEffect, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Button,
-  IconButton,
-  Box,
-  CircularProgress,
-  Autocomplete,
-} from '@mui/material'
+import { CustomSelect } from '../../../../components/custom-select'
 import { ErrorDetails } from '../../../../components/error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
 import { AddPaymentDate } from './add-payment-date'
@@ -180,17 +165,7 @@ export function AddPayment({
     return formattedValue
   }
 
-  const handleTextFieldChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setFormError(null)
@@ -322,113 +297,103 @@ export function AddPayment({
     }))
   }
 
+  const baseFieldClass =
+    'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+  const customSelectTriggerClass =
+    'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+  const buyerOptions = buyers.map((buyer) => ({
+    value: buyer.name,
+    label: buyer.name,
+  }))
+  const paymentDateSelectOptions = paymentDateOptions.map((paymentDate) => ({
+    value: paymentDate.name,
+    label: paymentDate.name,
+  }))
+  const selectedBuyer = buyers.find((buyer) => buyer.name === formData.buyer) || null
+
   return (
     <>
-      <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle className='relative text-center'>
-          Add Payment
-          <IconButton
-            aria-label='close'
-            onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <div className='flex w-full flex-col overflow-y-auto overflow-x-hidden'>
-            <form onSubmit={handleSubmit} className='mt-4 grid grid-cols-2 gap-4'>
-              <TextField
+      <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+        <div className='w-full max-w-2xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
+          <div className='mb-4 flex items-center justify-between'>
+            <h2 className='text-xl font-semibold text-white'>Add Sale</h2>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+            <div className='md:col-span-2'>
+              <label htmlFor='note' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Note / Description
+              </label>
+              <textarea
                 id='note'
-                label='Note/Description'
                 required
                 value={formData.note}
-                onChange={handleTextFieldChange}
-                variant='outlined'
-                fullWidth
-                multiline
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    note: e.target.value,
+                  }))
+                }
                 rows={2}
-                className='col-span-2'
+                className={`${baseFieldClass} h-auto min-h-12 resize-none overflow-hidden py-3`}
               />
+            </div>
 
-              <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <Autocomplete
-                  fullWidth
-                  id='buyer'
-                  options={buyers}
-                  getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                  value={buyers.find(b => b.name === formData.buyer) || null}
-                  onChange={(_, newValue) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      buyer: newValue ? newValue.name : '',
-                    }))
-                  }}
-                  disabled={isLoadingBuyers}
-                  loading={isLoadingBuyers}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label='Buyer'
-                      required
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {isLoadingBuyers ? <CircularProgress size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
-                  renderOption={(props, buyer) => (
-                    <li {...props} key={buyer.id}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        width: '100%',
-                        gap: 1,
-                      }}>
-                        <span>{buyer.name}</span>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingBuyer(buyer)
-                          }}
-                          sx={{
-                            padding: '4px',
-                            color: 'rgb(147, 51, 234)',
-                            '&:hover': {
-                              backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                            },
-                          }}
-                        >
-                          <PencilSimple size={16} />
-                        </IconButton>
-                      </Box>
-                    </li>
-                  )}
-                />
-                <Button
-                  variant='contained'
+            <div className='md:col-span-2'>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Buyer *</label>
+              <div className='flex gap-2'>
+                <div className='flex-1'>
+                  <CustomSelect
+                    value={formData.buyer}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        buyer: value,
+                      }))
+                    }
+                    options={buyerOptions}
+                    placeholder={isLoadingBuyers ? 'Loading buyers...' : 'Select a Buyer'}
+                    disabled={isLoadingBuyers}
+                    minWidthClassName='min-w-full'
+                    triggerClassName={customSelectTriggerClass}
+                    menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                    optionClassName='text-white/90 hover:bg-white/10'
+                    renderInPortal
+                  />
+                </div>
+                <button
+                  type='button'
                   onClick={() => setIsAddBuyerOpen(true)}
-                  startIcon={<Plus size={20} />}
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                    minWidth: '120px',
-                  }}
+                  className='inline-flex min-w-[84px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
                 >
+                  <Plus size={16} />
                   New
-                </Button>
-              </Box>
+                </button>
+                <button
+                  type='button'
+                  onClick={() => selectedBuyer && setEditingBuyer(selectedBuyer)}
+                  disabled={!selectedBuyer}
+                  className='inline-flex min-w-[84px] items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
+                >
+                  <PencilSimple size={16} />
+                  Edit
+                </button>
+              </div>
+            </div>
 
-              <TextField
+            <div>
+              <label htmlFor='valueGold' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Gold Value
+              </label>
+              <input
                 id='valueGold'
-                label='Gold Value'
                 required
                 value={formData.valueGold}
                 onChange={(e) =>
@@ -437,14 +402,17 @@ export function AddPayment({
                     valueGold: formatGoldValue(e.target.value),
                   }))
                 }
-                variant='outlined'
-                fullWidth
+                className={baseFieldClass}
                 placeholder='0'
               />
+            </div>
 
-              <TextField
+            <div>
+              <label htmlFor='dollar' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Dollar Value ($)
+              </label>
+              <input
                 id='dollar'
-                label='Dollar Value ($)'
                 required
                 value={formData.dollar}
                 onChange={(e) =>
@@ -453,90 +421,77 @@ export function AddPayment({
                     dollar: formatDollarValue(e.target.value),
                   }))
                 }
-                variant='outlined'
-                fullWidth
+                className={baseFieldClass}
                 placeholder='0.00'
               />
+            </div>
 
-              <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <FormControl fullWidth variant='outlined' required>
-                  <InputLabel id='payment-date-label'>Payment Date </InputLabel>
-                  <Select
-                    id='paymentDate'
-                    labelId='payment-date-label'
+            <div className='md:col-span-2'>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Payment Date</label>
+              <div className='flex gap-2'>
+                <div className='flex-1'>
+                  <CustomSelect
                     value={formData.paymentDate}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setFormData((prev) => ({
                         ...prev,
-                        paymentDate: e.target.value,
+                        paymentDate: value,
                       }))
                     }
-                    label='Payment Date'
-                    required
+                    options={paymentDateSelectOptions}
+                    placeholder={isLoadingPaymentDates ? 'Loading payment dates...' : 'Select a Payment Date'}
                     disabled={isLoadingPaymentDates}
-                    startAdornment={
-                      isLoadingPaymentDates ? (
-                        <CircularProgress size={20} sx={{ ml: 1 }} />
-                      ) : null
-                    }
-                  >
-                    <MenuItem value='' disabled>
-                      {isLoadingPaymentDates ? 'Loading payment dates...' : 'Select a Payment Date'}
-                    </MenuItem>
-                    {paymentDateOptions && paymentDateOptions.map((paymentDate) => (
-                      <MenuItem key={paymentDate.id} value={paymentDate.name}>
-                        {paymentDate.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Button
-                  variant='contained'
+                    minWidthClassName='min-w-full'
+                    triggerClassName={customSelectTriggerClass}
+                    menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                    optionClassName='text-white/90 hover:bg-white/10'
+                    renderInPortal
+                  />
+                </div>
+                <button
+                  type='button'
                   onClick={(e) => {
                     setPaymentDateAnchorEl(e.currentTarget)
-                    setPaymentDatePickerKey(prev => prev + 1) // Força remontagem
+                    setPaymentDatePickerKey((prev) => prev + 1)
                   }}
-                  startIcon={<Plus size={20} />}
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                    minWidth: '120px',
-                  }}
+                  className='inline-flex min-w-[84px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
                 >
+                  <Plus size={16} />
                   New
-                </Button>
-              </Box>
+                </button>
+              </div>
+            </div>
 
-              {formError && (
-                <div className='col-span-2 text-center font-semibold text-red-600'>
-                  {formError}
-                </div>
-              )}
+            {formError && (
+              <div className='col-span-1 text-center font-semibold text-red-500 md:col-span-2'>
+                {formError}
+              </div>
+            )}
 
-              <Button
-                type='submit'
-                variant='contained'
-                fullWidth
-                disabled={isSubmitting}
-                startIcon={
-                  isSubmitting ? (
-                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
-                  ) : (
-                    <UserPlus size={20} />
-                  )
-                }
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                }}
-                className='col-span-2'
+            <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>
+              <button
+                type='button'
+                onClick={onClose}
+                className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
               >
-                {isSubmitting ? 'Adding...' : 'Add Payment'}
-              </Button>
-            </form>
-          </div>
-        </DialogContent>
-      </Dialog>
+                Cancel
+              </button>
+              <button
+                type='submit'
+                disabled={isSubmitting}
+                className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+              >
+                {isSubmitting ? (
+                  <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
+                ) : (
+                  <UserPlus size={18} />
+                )}
+                {isSubmitting ? 'Adding...' : 'Add Sale'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       {isAddBuyerOpen && (
         <AddBuyerToList

@@ -1,21 +1,8 @@
-import { PencilSimple } from '@phosphor-icons/react'
-import CloseIcon from '@mui/icons-material/Close'
-import { useState, useEffect } from 'react'
+import { PencilSimple, X } from '@phosphor-icons/react'
+import { useEffect, useState, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
+import { CustomSelect } from '../../../../components/custom-select'
 
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Button,
-  IconButton,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  CircularProgress,
-} from '@mui/material'
 import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../../../../services/api'
 
 interface Sale {
@@ -159,7 +146,7 @@ export function EditSale({
     return formattedValue
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     setIsSubmitting(true)
@@ -223,160 +210,163 @@ export function EditSale({
     }
   }
 
-  return (
-    <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle className='relative text-center'>
-        Edit Sale
-        <IconButton
-          aria-label='close'
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <form onSubmit={handleSubmit} className='mt-4 grid grid-cols-2 gap-4'>
-          <TextField
-            id='note'
-            label='Note/Description'
-            required
-            value={formData.note}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                note: e.target.value,
-              }))
-            }
-            variant='outlined'
-            fullWidth
-            multiline
-            rows={2}
-            className='col-span-2'
-          />
+  const baseFieldClass =
+    'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+  const baseSelectClass = `${baseFieldClass} appearance-none ![background-image:none]`
+  const customSelectTriggerClass =
+    'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+  const paymentDateSelectOptions = paymentDateOptions.map((paymentDate) => ({
+    value: String(paymentDate.id),
+    label: paymentDate.name,
+  }))
 
-          <FormControl fullWidth variant='outlined' className='col-span-2'>
-            <InputLabel id='buyer-label'>Buyer *</InputLabel>
-            <Select
+  return (
+    <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+      <div className='w-full max-w-2xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
+        <div className='mb-4 flex items-center justify-between'>
+          <h2 className='text-xl font-semibold text-white'>Edit Sale</h2>
+          <button
+            type='button'
+            onClick={onClose}
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div className='md:col-span-2'>
+            <label htmlFor='note' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Note / Description
+            </label>
+            <textarea
+              id='note'
+              required
+              value={formData.note}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  note: e.target.value,
+                }))
+              }
+              rows={2}
+              className={`${baseFieldClass} h-auto min-h-12 resize-none overflow-hidden py-3`}
+            />
+          </div>
+
+          <div className='md:col-span-2'>
+            <label htmlFor='buyer' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Buyer *
+            </label>
+            <select
               id='buyer'
-              labelId='buyer-label'
               value={formData.idPayer}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  idPayer: e.target.value as number,
+                  idPayer: Number(e.target.value),
                 }))
               }
-              label='Buyer *'
               required
               disabled={isLoadingBuyers}
-              startAdornment={
-                isLoadingBuyers ? (
-                  <CircularProgress size={20} sx={{ ml: 1 }} />
-                ) : null
-              }
+              className={baseSelectClass}
             >
-              <MenuItem value={0} disabled>
+              <option value={0} disabled>
                 {isLoadingBuyers ? 'Loading buyers...' : 'Select a Buyer'}
-              </MenuItem>
+              </option>
               {buyers.map((buyer) => (
-                <MenuItem key={buyer.id} value={Number(buyer.id)}>
+                <option key={buyer.id} value={Number(buyer.id)}>
                   {buyer.name}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
-          </FormControl>
+            </select>
+          </div>
 
-          <TextField
-            id='valueGold'
-            label='Gold Value'
-            required
-            value={formData.valueGold}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                valueGold: formatGoldValue(e.target.value),
-              }))
-            }
-            variant='outlined'
-            fullWidth
-            placeholder='0'
-          />
-
-          <TextField
-            id='dollar'
-            label='Dollar Value ($)'
-            required
-            value={formData.dollar}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                dollar: formatDollarValue(e.target.value),
-              }))
-            }
-            variant='outlined'
-            fullWidth
-            placeholder='0.00'
-          />
-
-          <FormControl fullWidth variant='outlined' className='col-span-2' required>
-            <InputLabel id='payment-date-label'>Payment Date</InputLabel>
-            <Select
-              id='paymentDate'
-              labelId='payment-date-label'
-              value={formData.idPaymentDate}
+          <div>
+            <label htmlFor='valueGold' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Gold Value
+            </label>
+            <input
+              id='valueGold'
+              required
+              value={formData.valueGold}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  idPaymentDate: e.target.value as number,
+                  valueGold: formatGoldValue(e.target.value),
                 }))
               }
-              label='Payment Date'
+              className={baseFieldClass}
+              placeholder='0'
+            />
+          </div>
+
+          <div>
+            <label htmlFor='dollar' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Dollar Value ($)
+            </label>
+            <input
+              id='dollar'
               required
-              disabled={isLoadingPaymentDates}
-              startAdornment={
-                isLoadingPaymentDates ? (
-                  <CircularProgress size={20} sx={{ ml: 1 }} />
-                ) : null
+              value={formData.dollar}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  dollar: formatDollarValue(e.target.value),
+                }))
               }
+              className={baseFieldClass}
+              placeholder='0.00'
+            />
+          </div>
+
+          <div className='md:col-span-2'>
+            <label htmlFor='paymentDate' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Payment Date
+            </label>
+            <CustomSelect
+              value={formData.idPaymentDate ? String(formData.idPaymentDate) : ''}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  idPaymentDate: Number(value),
+                }))
+              }
+              options={paymentDateSelectOptions}
+              placeholder={isLoadingPaymentDates ? 'Loading payment dates...' : 'Select a Payment Date'}
+              disabled={isLoadingPaymentDates}
+              minWidthClassName='min-w-full'
+              triggerClassName={customSelectTriggerClass}
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
+            />
+          </div>
+
+          <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
             >
-              <MenuItem value={0} disabled>
-                {isLoadingPaymentDates ? 'Loading payment dates...' : 'Select a Payment Date'}
-              </MenuItem>
-              {paymentDateOptions.map((paymentDate) => (
-                <MenuItem key={paymentDate.id} value={Number(paymentDate.id)}>
-                  {paymentDate.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-        
-
-          <Button
-            type='submit'
-            variant='contained'
-            fullWidth
-            disabled={isSubmitting}
-            startIcon={
-              isSubmitting ? (
-                <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+              Cancel
+            </button>
+            <button
+              type='submit'
+              disabled={isSubmitting}
+              className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {isSubmitting ? (
+                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
               ) : (
-                <PencilSimple size={20} />
-              )
-            }
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              mt: 2,
-            }}
-            className='col-span-2'
-          >
-            {isSubmitting ? 'Updating...' : 'Update Sale'}
-          </Button>
+                <PencilSimple size={18} />
+              )}
+              {isSubmitting ? 'Updating...' : 'Update Sale'}
+            </button>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }
 

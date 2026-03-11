@@ -1,25 +1,5 @@
-import { useState, useEffect } from 'react'
-import {
-  Button,
-  Typography,
-  Box,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Autocomplete,
-  TextField,
-} from '@mui/material'
-import Grid from '@mui/material/Grid2'
-import { Plus, Trash, PencilSimple } from '@phosphor-icons/react'
+import { useMemo, useState, useEffect, type CSSProperties } from 'react'
+import { CircleNotch, Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ErrorDetails } from '../../../components/error-display'
@@ -47,20 +27,49 @@ interface SellsTabProps {
   onError?: (error: ErrorDetails | null) => void
 }
 
+const normalizePaymentDateValue = (dateValue: string): string => {
+  if (!dateValue) return dateValue
+
+  const trimmedDate = dateValue.trim()
+
+  const yyyyMmDdMatch = trimmedDate.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
+  if (yyyyMmDdMatch) {
+    const month = Number(yyyyMmDdMatch[1])
+    const day = Number(yyyyMmDdMatch[2])
+    return `${month}/${day}`
+  }
+
+  const mmDdMatch = trimmedDate.match(/^(\d{1,2})\/(\d{1,2})$/)
+  if (mmDdMatch) {
+    const month = Number(mmDdMatch[1])
+    const day = Number(mmDdMatch[2])
+    return `${month}/${day}`
+  }
+
+  return trimmedDate
+}
+
+const getSortableDateValue = (dateValue: string): number => {
+  const normalizedDate = normalizePaymentDateValue(dateValue)
+  const match = normalizedDate.match(/^(\d{1,2})\/(\d{1,2})$/)
+  if (!match) return 0
+  return Number(match[1]) * 100 + Number(match[2])
+}
+
 export function SellsTab({ onError }: SellsTabProps) {
   const [payments, setPayments] = useState<PaymentDisplay[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [paymentDateFilter, setPaymentDateFilter] = useState<string | null>(null)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'pending' | 'completed'>('pending')
   const [currentPage, setCurrentPage] = useState(1)
-  const [autocompleteOpen, setAutocompleteOpen] = useState(false)
-  const [autocompleteInputValue, setAutocompleteInputValue] = useState('')
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
   const [isLoadingPayments, setIsLoadingPayments] = useState(true)
   const [editingSale, setEditingSale] = useState<PaymentDisplay | null>(null)
   const [paymentDateOptions, setPaymentDateOptions] = useState<PaymentDate[]>([])
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryResponse | null>(null)
   const [isLoadingSummary, setIsLoadingSummary] = useState(false)
+  const [isPaymentDateAutocompleteOpen, setIsPaymentDateAutocompleteOpen] = useState(false)
+  const [paymentDateSearch, setPaymentDateSearch] = useState('')
 
   // Função para formatar valor para exibição
   const formatValueForDisplay = (value: number): string => {
@@ -94,13 +103,7 @@ export function SellsTab({ onError }: SellsTabProps) {
 
   // Função para converter data de YYYY-MM-DD para MM/DD
   const formatSummaryDate = (dateStr: string) => {
-    const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-    if (match) {
-      const month = match[1]
-      const day = match[2]
-      return `${month}/${day}`
-    }
-    return dateStr
+    return normalizePaymentDateValue(dateStr)
   }
 
   const fetchPayments = async () => {
@@ -131,31 +134,10 @@ export function SellsTab({ onError }: SellsTabProps) {
         paymentDatesMap.set(Number(paymentDate.id), paymentDate.name)
       })
       
-      // Função auxiliar para converter data de YYYY-MM-DD para MM/DD
-      // Padroniza removendo zeros à esquerda para garantir consistência
-      const convertDateToMMDD = (dateStr: string): string => {
-        if (!dateStr) return dateStr
-        // Tenta formato YYYY-MM-DD
-        const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-        if (match) {
-          const month = parseInt(match[1], 10).toString()
-          const day = parseInt(match[2], 10).toString()
-          return `${month}/${day}`
-        }
-        // Se já estiver em formato MM/DD, retorna como está (mas remove zeros à esquerda se houver)
-        const mmddMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/)
-        if (mmddMatch) {
-          const month = parseInt(mmddMatch[1], 10).toString()
-          const day = parseInt(mmddMatch[2], 10).toString()
-          return `${month}/${day}`
-        }
-        return dateStr
-      }
-      
       // Mapeia os dados da API para o formato de exibição
       const mappedPayments: PaymentDisplay[] = validSalesData.map((sale: Sale) => {
         const rawPaymentDate = paymentDatesMap.get(sale.id_payment_date) || sale.payment_date
-        const formattedPaymentDate = convertDateToMMDD(rawPaymentDate)
+        const formattedPaymentDate = normalizePaymentDateValue(rawPaymentDate)
         
         return {
           id: sale.id,
@@ -199,7 +181,7 @@ export function SellsTab({ onError }: SellsTabProps) {
     setCurrentPage(1)
   }
 
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+  const handlePageChange = (_event: unknown, page: number) => {
     setCurrentPage(page)
   }
 
@@ -256,34 +238,16 @@ export function SellsTab({ onError }: SellsTabProps) {
         const paymentDatesData = await getPaymentDates()
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
         
-        // Converte datas de YYYY-MM-DD para MM/DD
-        // Padroniza removendo zeros à esquerda para garantir consistência
-        const convertedDates = validPaymentDatesData.map(date => {
-          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-          if (match) {
-            const month = parseInt(match[1], 10).toString()
-            const day = parseInt(match[2], 10).toString()
-            return { ...date, name: `${month}/${day}` }
-          }
-          return date
-        })
+        const convertedDates = validPaymentDatesData.map(date => ({
+          ...date,
+          name: normalizePaymentDateValue(date.name),
+        }))
         
         // Ordenar datas por data parseada (cronologicamente)
         const sortedDates = [...convertedDates].sort((dateA, dateB) => {
-          // Função para parsear data no formato MM/DD
-          const parseDateString = (dateStr: string) => {
-            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
-            if (match) {
-              const month = parseInt(match[1])
-              const day = parseInt(match[2])
-              return month * 100 + day
-            }
-            return 0
-          }
-          
           // PRIORIDADE 1: Tenta parsear como data MM/DD
-          const dateValueA = parseDateString(dateA.name)
-          const dateValueB = parseDateString(dateB.name)
+          const dateValueA = getSortableDateValue(dateA.name)
+          const dateValueB = getSortableDateValue(dateB.name)
           
           if (dateValueA && dateValueB) {
             return dateValueA - dateValueB
@@ -341,15 +305,6 @@ export function SellsTab({ onError }: SellsTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentDateFilter, paymentStatusFilter])
 
-  // Sincronizar inputValue com paymentDateFilter quando mudar externamente
-  useEffect(() => {
-    if (paymentDateFilter) {
-      setAutocompleteInputValue(paymentDateFilter)
-    } else {
-      setAutocompleteInputValue('')
-    }
-  }, [paymentDateFilter])
-
   const getPaymentDateLabel = (paymentDate: string) => {
     if (!paymentDate) return '-'
     // Format payment dates nicely
@@ -360,440 +315,374 @@ export function SellsTab({ onError }: SellsTabProps) {
     return formatSummaryDate(paymentDate).toUpperCase()
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'warning'
-      case 'completed':
-        return 'success'
-      default:
-        return 'default'
-    }
-  }
-
   const getStatusLabel = (status: string) => {
     if (!status) return '-'
     return status.toUpperCase()
   }
 
+  const getStatusBadgeStyle = (status: string): CSSProperties => {
+    const normalized = status?.toLowerCase()
+
+    if (normalized === 'completed') {
+      return {
+        color: '#6ee7b7',
+        borderColor: 'rgba(16,185,129,0.45)',
+        backgroundColor: 'rgba(16,185,129,0.16)',
+      }
+    }
+
+    if (normalized === 'pending') {
+      return {
+        color: '#fcd34d',
+        borderColor: 'rgba(245,158,11,0.45)',
+        backgroundColor: 'rgba(245,158,11,0.16)',
+      }
+    }
+
+    return {
+      color: '#e5e7eb',
+      borderColor: 'rgba(255,255,255,0.15)',
+      backgroundColor: 'rgba(255,255,255,0.04)',
+    }
+  }
+
+  const filteredPayments = useMemo(() => {
+    const normalizedFilterDate = paymentDateFilter?.trim() || null
+    const normalizedStatus = paymentStatusFilter.toLowerCase()
+
+    return payments.filter((payment) => {
+      const matchesDate = !normalizedFilterDate || payment.paymentDate?.trim() === normalizedFilterDate
+      const matchesStatus = payment.status?.toLowerCase() === normalizedStatus
+      return matchesDate && matchesStatus
+    })
+  }, [paymentDateFilter, paymentStatusFilter, payments])
+
+  const paymentDateNames = useMemo(
+    () => (paymentDateOptions?.map((date) => date.name) || []).filter(Boolean),
+    [paymentDateOptions]
+  )
+
+  const filteredPaymentDateOptions = useMemo(() => {
+    const search = paymentDateSearch.trim().toLowerCase()
+    if (!search) return paymentDateNames
+    return paymentDateNames.filter((option) => option.toLowerCase().includes(search))
+  }, [paymentDateNames, paymentDateSearch])
+
   return (
     <>
       {/* Filters */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           {/* Payment Date Filter */}
-          <Autocomplete
-            size="small"
-            options={paymentDateOptions?.map(date => date.name) || []}
-            value={paymentDateFilter}
-            open={autocompleteOpen}
-            onOpen={() => {
-              // Só abre se houver texto digitado
-              if (autocompleteInputValue.trim().length > 0) {
-                setAutocompleteOpen(true)
-              }
-            }}
-            onClose={() => setAutocompleteOpen(false)}
-            onInputChange={(_event, newInputValue) => {
-              setAutocompleteInputValue(newInputValue)
-              // Abre o dropdown apenas se houver texto digitado
-              if (newInputValue.trim().length > 0) {
-                setAutocompleteOpen(true)
-              } else {
-                setAutocompleteOpen(false)
-              }
-            }}
-            onChange={(_event, newValue) => {
-              handlePaymentDateFilter(newValue || null)
-              setAutocompleteOpen(false)
-            }}
-            inputValue={autocompleteInputValue}
-            getOptionLabel={(option) => option}
-            isOptionEqualToValue={(option, value) => option === value}
-            filterOptions={(options, params) => {
-              const filtered = options.filter(option => {
-                const searchValue = params.inputValue.toLowerCase()
-                return option.toLowerCase().includes(searchValue)
-              })
-              return filtered
-            }}
-            sx={{
-              minWidth: 200,
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                backgroundColor: '#2a2a2a',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.23)',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgb(147, 51, 234)',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: 'rgba(255, 255, 255, 0.7)',
-                '&.Mui-focused': {
-                  color: 'rgb(147, 51, 234)',
-                },
-              },
-              '& .MuiAutocomplete-input': {
-                color: 'white',
-              },
-              '& .MuiAutocomplete-popupIndicator': {
-                color: 'white',
-              },
-              '& .MuiAutocomplete-clearIndicator': {
-                color: 'white',
-              },
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Payment Date"
-                placeholder="Type to search..."
-                sx={{
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    '&.Mui-focused': {
-                      color: 'rgb(147, 51, 234)',
-                    },
-                  },
-                }}
-              />
+          <div className='relative min-w-[220px]'>
+            <label className='mb-1 block text-xs text-white/70'>Payment Date</label>
+            <input
+              type='text'
+              value={paymentDateSearch}
+              onChange={(e) => {
+                const nextValue = e.target.value
+                setPaymentDateSearch(nextValue)
+                const hasSearch = Boolean(nextValue.trim())
+                setIsPaymentDateAutocompleteOpen(hasSearch)
+                if (!hasSearch) handlePaymentDateFilter(null)
+              }}
+              onFocus={() => setIsPaymentDateAutocompleteOpen(false)}
+              onBlur={() => setTimeout(() => setIsPaymentDateAutocompleteOpen(false), 120)}
+              placeholder='All dates'
+              className='h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-9 text-sm text-white outline-none transition focus:border-purple-400/60'
+            />
+            <CaretDown
+              size={16}
+              className='pointer-events-none absolute right-3 top-[33px] text-white/60'
+            />
+            {isPaymentDateAutocompleteOpen && paymentDateSearch.trim() && (
+              <div className='absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-white/10 bg-[#1a1a1a] py-1 shadow-lg'>
+                {filteredPaymentDateOptions.length > 0 ? (
+                  filteredPaymentDateOptions.map((option) => (
+                    <button
+                      key={option}
+                      type='button'
+                      onMouseDown={() => {
+                        setPaymentDateSearch(option)
+                        handlePaymentDateFilter(option)
+                        setIsPaymentDateAutocompleteOpen(false)
+                      }}
+                      className='block w-full px-3 py-2 text-left text-sm text-neutral-200 transition hover:bg-white/10'
+                    >
+                      {option}
+                    </button>
+                  ))
+                ) : (
+                  <div className='px-3 py-2 text-sm text-neutral-500'>No options</div>
+                )}
+              </div>
             )}
-            ListboxProps={{
-              sx: {
-                backgroundColor: '#2a2a2a',
-                border: '1px solid #333',
-                '& .MuiAutocomplete-option': {
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#3a3a3a',
-                  },
-                  '&[aria-selected="true"]': {
-                    backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.3)',
-                    },
-                  },
-                },
-              },
-            }}
-          />
+          </div>
 
           {/* Status Filter Buttons */}
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Typography sx={{ color: '#9ca3af', fontSize: '0.875rem', mr: 1 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginRight: 8, margin: 0 }}>
               Status:
-            </Typography>
-            <Button
-              variant={paymentStatusFilter === 'pending' ? 'contained' : 'outlined'}
-              onClick={() => handlePaymentStatusFilter('pending')}
-              size="medium"
-              sx={{
-                ...(paymentStatusFilter === 'pending' ? {
-                  backgroundColor: '#f59e0b',
-                  '&:hover': { backgroundColor: '#d97706' },
-                  color: 'white',
-                } : {
-                  borderColor: '#f59e0b',
-                  color: '#f59e0b',
-                  '&:hover': {
-                    borderColor: '#d97706',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                  },
-                }),
-                textTransform: 'none',
-                minWidth: '110px',
-                padding: '8px 20px',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-              }}
-            >
-              Pending
-            </Button>
-            <Button
-              variant={paymentStatusFilter === 'completed' ? 'contained' : 'outlined'}
-              onClick={() => handlePaymentStatusFilter('completed')}
-              size="medium"
-              sx={{
-                ...(paymentStatusFilter === 'completed' ? {
-                  backgroundColor: '#10b981',
-                  '&:hover': { backgroundColor: '#059669' },
-                  color: 'white',
-                } : {
-                  borderColor: '#10b981',
-                  color: '#10b981',
-                  '&:hover': {
-                    borderColor: '#059669',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  },
-                }),
-                textTransform: 'none',
-                minWidth: '120px',
-                padding: '8px 20px',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-              }}
-            >
-              Completed
-            </Button>
-          </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant='contained'
-            startIcon={<Plus size={20} />}
-            onClick={() => setIsAddPaymentOpen(true)}
-            sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-              padding: '10px 20px',
-              boxShadow: 3,
-            }}
-          >
-            Add Sale
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Layout com duas colunas: Tabela Principal e Resumo */}
-      <Grid container spacing={3}>
-        {/* Coluna da Tabela Principal */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {isLoadingPayments ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-              <CircularProgress size={40} sx={{ color: 'rgb(147, 51, 234)' }} />
-            </Box>
-          ) : payments.filter(p => {
-            // Normaliza as strings para comparação (remove espaços)
-            const normalizedFilterDate = paymentDateFilter?.trim() || null
-            const normalizedPaymentDate = p.paymentDate?.trim() || ''
-            const matchesDate = !normalizedFilterDate || normalizedPaymentDate === normalizedFilterDate
-            const matchesStatus = p.status?.toLowerCase() === paymentStatusFilter?.toLowerCase()
-            return matchesDate && matchesStatus
-          }).length === 0 ? (
-            <Paper sx={{ bgcolor: '#3a3a3a', border: '1px solid #555', p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" color="textSecondary">
-                No payments found
-              </Typography>
-            </Paper>
-          ) : (
-            <>
-              <TableContainer 
-                component={Paper}
-                sx={{
-                  bgcolor: '#2a2a2a',
-                  border: '1px solid #333',
-                  '& .MuiTableCell-root': {
-                    borderColor: '#333',
-                  },
+            </p>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button
+                type='button'
+                onClick={() => handlePaymentStatusFilter('pending')}
+                className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
+                style={{
+                  borderColor:
+                    paymentStatusFilter === 'pending' ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.12)',
+                  color: paymentStatusFilter === 'pending' ? '#fcd34d' : '#d4d4d8',
+                  backgroundColor:
+                    paymentStatusFilter === 'pending' ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.03)',
+                  minWidth: '110px',
+                  padding: '8px 20px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
                 }}
               >
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: '#1a1a1a' }}>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Note</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Buyer</TableCell>
-                      <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Value Gold</TableCell>
-                      <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Dollar $</TableCell>
-                      <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>M Value in $</TableCell>
-                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Date</TableCell>
-                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Payment Date</TableCell>
-                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>Status</TableCell>
-                      <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', width: 100 }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {payments
-                      .filter(p => {
-                        // Normaliza as strings para comparação (remove espaços)
-                        const normalizedFilterDate = paymentDateFilter?.trim() || null
-                        const normalizedPaymentDate = p.paymentDate?.trim() || ''
-                        const matchesDate = !normalizedFilterDate || normalizedPaymentDate === normalizedFilterDate
-                        const matchesStatus = p.status?.toLowerCase() === paymentStatusFilter?.toLowerCase()
-                        return matchesDate && matchesStatus
-                      })
-                      .map((payment) => (
-                      <TableRow
+                <span className='inline-flex items-center gap-2'>Pending</span>
+              </button>
+              <button
+                type='button'
+                onClick={() => handlePaymentStatusFilter('completed')}
+                className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
+                style={{
+                  borderColor:
+                    paymentStatusFilter === 'completed' ? 'rgba(16,185,129,0.65)' : 'rgba(255,255,255,0.12)',
+                  color: paymentStatusFilter === 'completed' ? '#6ee7b7' : '#d4d4d8',
+                  backgroundColor:
+                    paymentStatusFilter === 'completed' ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.03)',
+                  minWidth: '120px',
+                  padding: '8px 20px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                }}
+              >
+                <span className='inline-flex items-center gap-2'>Completed</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
+          <button
+            type='button'
+            onClick={() => setIsAddPaymentOpen(true)}
+            className='rounded-md border border-purple-400/50 bg-purple-500/20 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-500/25 disabled:opacity-50'
+            style={{
+              height: 40,
+              padding: '8px 20px',
+              boxShadow: 'none',
+            }}
+          >
+            <span className='inline-flex items-center gap-2'>
+              <Plus size={20} />
+              Add Sale
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Layout com duas colunas: Tabela Principal e Resumo */}
+      <div className='grid grid-cols-1 gap-3 lg:grid-cols-12' style={{ gap: '24px' }}>
+        {/* Coluna da Tabela Principal */}
+        <div className='col-span-1 lg:col-span-8'>
+          {isLoadingPayments ? (
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
+              <CircleNotch size={40} className='animate-spin' style={{ color: 'rgb(147, 51, 234)' }} />
+            </div>
+          ) : filteredPayments.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                padding: 32,
+                textAlign: 'center',
+                borderRadius: '12px',
+                boxShadow: 'none',
+              }}
+            >
+              <p style={{ color: '#9ca3af' }}>
+                No payments found
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.05]'>
+                <table className='w-full min-w-[1100px] text-sm'>
+                  <thead>
+                    <tr className='border-b border-white/10 bg-white/[0.06] text-neutral-200'>
+                      <th className='px-3 py-3 text-center font-semibold'>Note</th>
+                      <th className='px-3 py-3 text-center font-semibold'>Buyer</th>
+                      <th className='px-3 py-3 text-right font-semibold'>Value Gold</th>
+                      <th className='px-3 py-3 text-right font-semibold'>Dollar $</th>
+                      <th className='px-3 py-3 text-right font-semibold'>M Value in $</th>
+                      <th className='px-3 py-3 text-center font-semibold'>Date</th>
+                      <th className='px-3 py-3 text-center font-semibold'>Payment Date</th>
+                      <th className='px-3 py-3 text-center font-semibold'>Status</th>
+                      <th className='px-3 py-3 text-center font-semibold'>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPayments.map((payment) => (
+                      <tr
+                        className='border-b border-white/5 transition hover:bg-white/[0.05]'
                         key={payment.id}
-                        sx={{
-                          '&:hover': {
-                            bgcolor: '#3a3a3a',
-                          },
-                          transition: 'all 0.2s ease-in-out',
-                        }}
                       >
-                        <TableCell sx={{ color: 'white', fontSize: '0.85rem' }}>
+                        <td className='px-3 py-2 text-center text-sm text-white/90'>
                           {payment.note}
-                        </TableCell>
-                        <TableCell sx={{ color: 'white', fontSize: '0.85rem', fontWeight: 500 }}>
+                        </td>
+                        <td className='px-3 py-2 text-center text-sm font-medium text-white/90'>
                           {payment.buyerName}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600 }}>
+                        </td>
+                        <td className='px-3 py-2 text-right text-sm font-semibold text-blue-300'>
                           {formatValueForDisplay(payment.valueGold)}g
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}>
+                        </td>
+                        <td className='px-3 py-2 text-right text-sm font-semibold text-emerald-300'>
                           {formatDollar(payment.dollar)}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: '#a78bfa', fontSize: '0.85rem', fontWeight: 600 }}>
+                        </td>
+                        <td className='px-3 py-2 text-right text-sm font-semibold text-violet-300'>
                           {formatDollar(payment.mValue)}
-                        </TableCell>
-                        <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '0.85rem' }}>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Typography variant="body2" sx={{ fontSize: '0.85rem', color: 'white' }}>
+                        </td>
+                        <td className='px-3 py-2 text-center text-sm text-neutral-400'>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'white' }}>
                               {formatCreatedAt(payment.createdAt).date}
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontSize: '0.75rem', color: '#9ca3af', fontFamily: 'monospace' }}>
+                            </p>
+                            <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontFamily: 'monospace' }}>
                               {formatCreatedAt(payment.createdAt).time}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '0.85rem' }}>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Typography variant="body2" sx={{ fontSize: '0.85rem', color: 'white' }}>
+                            </p>
+                          </div>
+                        </td>
+                        <td className='px-3 py-2 text-center text-sm text-neutral-400'>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'white' }}>
                               {getPaymentDateLabel(payment.paymentDate)}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={getStatusLabel(payment.status)}
-                            color={getStatusColor(payment.status) as any}
-                            size="small"
-                            sx={{
-                              fontWeight: 'bold',
-                              fontSize: '0.75rem',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
+                            </p>
+                          </div>
+                        </td>
+                        <td className='px-3 py-2 text-center'>
+                          <span
+                            className='inline-flex rounded-full border px-2 py-0.5 text-xs'
+                            style={{ fontWeight: 'bold', fontSize: '0.75rem', ...getStatusBadgeStyle(payment.status) }}
+                          >
+                            {getStatusLabel(payment.status)}
+                          </span>
+                        </td>
+                        <td className='px-3 py-2 text-center'>
                           {payment.status !== 'completed' ? (
-                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                              <Tooltip title="Edit" placement="top">
-                                <IconButton
-                                  size="small"
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                              <span title='Edit'>
+                                <button
+                                  type='button'
                                   onClick={() => setEditingSale(payment)}
-                                  sx={{
+                                  className='rounded-md bg-white/[0.03] p-1.5 text-white transition hover:bg-purple-500/15'
+                                  style={{
                                     color: 'rgb(147, 51, 234)',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                                    },
+                                    borderRadius: '8px',
                                   }}
                                 >
                                   <PencilSimple size={18} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Delete" placement="top">
-                                <IconButton
-                                  size="small"
+                                </button>
+                              </span>
+                              <span title='Delete'>
+                                <button
+                                  type='button'
                                   onClick={() => handleDeleteSale(payment)}
-                                  sx={{
+                                  className='rounded-md bg-white/[0.03] p-1.5 text-white transition hover:bg-purple-500/15'
+                                  style={{
                                     color: '#ef4444',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    },
+                                    borderRadius: '8px',
                                   }}
                                 >
                                   <Trash size={18} />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
+                                </button>
+                              </span>
+                            </div>
                           ) : (
-                            <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                            <p style={{ color: '#9ca3af' }}>
                               -
-                            </Typography>
+                            </p>
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                  </tbody>
+                </table>
+              </div>
 
-              {/* Pagination */}
+              {/* Page controls */}
               {totalPages > 1 && (
-                <Box sx={{ 
+                <div style={{
                   display: 'flex', 
                   justifyContent: 'center', 
-                  mt: 4,
-                  mb: 2
+                  marginTop: 32,
+                  marginBottom: 16
                 }}>
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    size="large"
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        color: 'white',
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid #333',
-                        '&:hover': {
-                          backgroundColor: '#3a3a3a',
-                        },
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgb(147, 51, 234)',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgb(168, 85, 247)',
-                          },
-                        },
-                        '&.MuiPaginationItem-previousNext': {
-                          backgroundColor: '#2a2a2a',
-                          border: '1px solid #333',
-                          '&:hover': {
-                            backgroundColor: '#3a3a3a',
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </Box>
+                  <div className='flex items-center gap-2'>
+                    <button
+                      type='button'
+                      onClick={() => handlePageChange(null, Math.max(1, currentPage - 1))}
+                      disabled={currentPage <= 1}
+                      className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
+                    >
+                      Prev
+                    </button>
+                    <span className='text-sm text-neutral-300'>
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => handlePageChange(null, Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage >= totalPages}
+                      className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}
-        </Grid>
+        </div>
 
         {/* Coluna da Tabela de Resumo */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Paper
-            sx={{
-              bgcolor: '#2a2a2a',
-              border: '1px solid #333',
-              p: 3,
+        <div className='col-span-1 lg:col-span-4'>
+          <div
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: '12px',
+              boxShadow: 'none',
+              padding: 24,
               position: 'sticky',
               top: 20,
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{
+            <p
+              style={{
                 color: 'white',
                 fontWeight: 'bold',
-                mb: 3,
+                marginBottom: 24,
                 textAlign: 'center',
-                borderBottom: '2px solid rgb(147, 51, 234)',
-                pb: 1,
+                borderBottom: '1px solid rgba(168,85,247,0.45)',
+                paddingBottom: 8,
               }}
             >
               Pending Sales Summary
-            </Typography>
+            </p>
 
             {/* Loading State */}
             {isLoadingSummary ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress size={40} sx={{ color: 'rgb(147, 51, 234)' }} />
-              </Box>
+              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
+                <CircleNotch size={40} className='animate-spin' style={{ color: 'rgb(147, 51, 234)' }} />
+              </div>
             ) : (
               <>
                 {/* Summary por data */}
                 {paymentSummary && paymentSummary.info.summary && Array.isArray(paymentSummary.info.summary) && paymentSummary.info.summary.length > 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 16 }}>
                 {[...paymentSummary.info.summary]
                   .sort((a, b) => {
                     // Ordena da data mais antiga para a mais atual
@@ -807,324 +696,212 @@ export function SellsTab({ onError }: SellsTabProps) {
                   const hasEnoughGoldForDate = goldMissing >= 0
                   
                   return (
-                    <Paper
+                    <div
                       key={dateData.date}
-                      sx={{
-                        bgcolor: '#1a1a1a',
-                        border: '1px solid #444',
-                        p: 2,
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                        borderRadius: '10px',
+                        padding: 16,
                         transition: 'all 0.3s ease-in-out',
-                        '&:hover': {
-                          borderColor: 'rgb(147, 51, 234)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 4px 12px rgba(147, 51, 234, 0.2)',
-                        },
                       }}
                     >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Chip
-                          label={formatSummaryDate(dateData.date).toUpperCase()}
-                          color="info"
-                          size="small"
-                          sx={{
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            '& .MuiChip-label': {
-                              color: 'white',
-                            },
-                          }}
-                        />
-                        <Typography
-                          variant="h6"
-                          sx={{
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <span className='inline-flex rounded-full border border-white/15 px-2 py-0.5 text-xs' style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>
+                          {formatSummaryDate(dateData.date).toUpperCase()}
+                        </span>
+                        <p
+                          style={{
                             color: 'white',
                             fontWeight: 'bold',
                           }}
                         >
                           {dateData.total_payments} {dateData.total_payments === 1 ? 'payment' : 'payments'}
-                        </Typography>
-                      </Box>
+                        </p>
+                      </div>
 
                       {/* Informações do Status Pending */}
                       {dateData.status_breakdown && dateData.status_breakdown.length > 0 && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                           {dateData.status_breakdown
                             .filter((statusData) => statusData.status.toLowerCase() === 'pending')
                             .map((statusData) => (
-                              <Box key={statusData.status} sx={{ 
-                                bgcolor: '#2a2a2a', 
-                                p: 1.5, 
+                              <div key={statusData.status} style={{
+                                backgroundColor: 'rgba(255,255,255,0.03)', 
+                                padding: 12, 
                                 borderRadius: 1,
-                                border: '1px solid #333'
+                                border: '1px solid rgba(255,255,255,0.10)'
                               }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                  <Chip
-                                    label={statusData.status.toUpperCase()}
-                                    color={getStatusColor(statusData.status.toLowerCase()) as any}
-                                    size="small"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      fontSize: '0.7rem',
-                                    }}
-                                  />
-                                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                  <span
+                                    className='inline-flex rounded-full border px-2 py-0.5 text-xs'
+                                    style={{ fontWeight: 'bold', fontSize: '0.7rem', ...getStatusBadgeStyle(statusData.status) }}
+                                  >
+                                    {statusData.status.toUpperCase()}
+                                  </span>
+                                  <p style={{ color: 'white', fontWeight: 600 }}>
                                     {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
-                                  </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                                       Gold:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                    </p>
+                                    <p style={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
                                       {formatValueForDisplay(statusData.gold_amount)}g
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                                    </p>
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                                       Dollar:
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
+                                    </p>
+                                    <p style={{ color: 'white', fontWeight: 600, fontSize: '0.75rem' }}>
                                       {formatDollar(statusData.m_total_value)}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             ))}
-                        </Box>
+                        </div>
                       )}
 
                       {/* Gold Control - Para cada data */}
-                      <Box 
-                        sx={{ 
-                          mt: 2, 
-                          pt: 2, 
-                          borderTop: '2px solid #444',
+                      <div
+                        style={{ 
+                          marginTop: 16, 
+                          paddingTop: 16, 
+                          borderTop: '1px solid rgba(255,255,255,0.10)',
                           display: 'flex', 
                           flexDirection: 'column', 
                           gap: 1 
                         }}
                       >
                         {/* Gold Total */}
-                        <Tooltip
-                          title="Total gold available in the players balance system for this payment date"
-                          arrow
-                          placement="top-start"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: 'white',
-                                fontSize: '0.75rem',
-                                maxWidth: 250,
-                                mt: '4px !important',
-                              },
-                            },
-                            arrow: {
-                              sx: {
-                                color: '#1a1a1a',
-                              },
-                            },
-                            popper: {
-                              modifiers: [
-                                {
-                                  name: 'offset',
-                                  options: {
-                                    offset: [-8, -4],
-                                  },
-                                },
-                              ],
-                            },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                        <span title='Total gold available in the players balance system for this payment date'>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                               Gold Balance Total:
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                            </p>
+                            <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
                               {formatValueForDisplay(goldTotalGeral)}g
-                            </Typography>
-                          </Box>
-                        </Tooltip>
+                            </p>
+                          </div>
+                        </span>
 
                         {/* Estoque de Gold */}
-                        <Tooltip
-                          title="Quantity of gold in stock available for this payment date (Gbank - Sold)"
-                          arrow
-                          placement="top-start"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: 'white',
-                                fontSize: '0.75rem',
-                                maxWidth: 250,
-                                mt: '4px !important',
-                              },
-                            },
-                            arrow: {
-                              sx: {
-                                color: '#1a1a1a',
-                              },
-                            },
-                            popper: {
-                              modifiers: [
-                                {
-                                  name: 'offset',
-                                  options: {
-                                    offset: [-8, -4],
-                                  },
-                                },
-                              ],
-                            },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                        <span title='Quantity of gold in stock available for this payment date (Gbank - Sold)'>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
                               Gold in Stock:
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                            </p>
+                            <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
                               {formatValueForDisplay(goldInStock)}g
-                            </Typography>
-                          </Box>
-                        </Tooltip>
+                            </p>
+                          </div>
+                        </span>
 
                         {/* Gold Missing Date */}
-                        <Tooltip
+                        <span
                           title={hasEnoughGoldForDate 
                             ? "Surplus: quantity of gold that remains after meeting all pending payments for this date" 
                             : "Missing: quantity of gold that is still needed to complete all pending payments for this date"}
-                          arrow
-                          placement="top-start"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: '#1a1a1a',
-                                border: '1px solid #333',
-                                color: 'white',
-                                fontSize: '0.75rem',
-                                maxWidth: 250,
-                                mt: '4px !important',
-                              },
-                            },
-                            arrow: {
-                              sx: {
-                                color: '#1a1a1a',
-                              },
-                            },
-                            popper: {
-                              modifiers: [
-                                {
-                                  name: 'offset',
-                                  options: {
-                                    offset: [-8, -4],
-                                  },
-                                },
-                              ],
-                            },
-                          }}
                         >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
                               {hasEnoughGoldForDate ? 'Surplus:' : 'Missing:'}
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
+                            </p>
+                            <p
+                              style={{ 
                                 color: hasEnoughGoldForDate ? '#10b981' : '#ef4444', 
                                 fontWeight: 700,
                                 fontSize: '0.75rem'
                               }}
                             >
                               {formatValueForDisplay(goldMissing)}g
-                            </Typography>
-                          </Box>
-                        </Tooltip>
-                      </Box>
-                    </Paper>
+                            </p>
+                          </div>
+                        </span>
+                      </div>
+                    </div>
                   )
                 })}
-              </Box>
+              </div>
             )}
 
             {/* Total Geral */}
             {paymentSummary && paymentSummary.info.totals ? (
-              <Paper
-                  sx={{
-                    bgcolor: '#1a1a1a',
-                    border: '2px solid rgb(147, 51, 234)',
-                    p: 2.5,
-                    mt: 2,
+              <div
+                  style={{
+                    backgroundColor: 'rgba(147,51,234,0.16)',
+                    border: '1px solid rgba(168,85,247,0.45)',
+                    borderRadius: '10px',
+                    padding: 20,
+                    marginTop: 16,
                   }}
                 >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      color: 'rgb(147, 51, 234)',
+                  <p
+                    style={{
+                      color: '#e9d5ff',
                       fontWeight: 'bold',
-                      mb: 2,
+                      marginBottom: 16,
                       textAlign: 'center',
                     }}
                   >
                    TOTAL
-                  </Typography>
+                  </p>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ color: '#9ca3af' }}>
                         Payments:
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        sx={{
+                      </p>
+                      <p
+                        style={{
                           color: 'white',
                           fontWeight: 'bold',
                         }}
                       >
                         {paymentSummary.info.totals.total_payments}
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ color: '#9ca3af' }}>
                         Total Gold:
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
+                      </p>
+                      <p
+                        style={{
                           color: 'white',
                           fontWeight: 700,
                         }}
                       >
                         {formatValueForDisplay(paymentSummary.info.totals.total_gold)}g
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ color: '#9ca3af' }}>
                         Total Dollar:
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
+                      </p>
+                      <p
+                        style={{
                           color: 'white',
                           fontWeight: 700,
                         }}
                       >
                         {formatDollar(paymentSummary.info.totals.m_total_value)}
-                      </Typography>
-                    </Box>
-                  </Box>
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Total Agrupado por Status */}
                   {paymentSummary.info.totals.by_status && paymentSummary.info.totals.by_status.length > 0 && (
-                    <Box sx={{ mt: 2, pt: 2, borderTop: '2px solid rgb(147, 51, 234)' }}>
-                      <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.85rem', mb: 2, fontWeight: 600 }}>
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(168,85,247,0.45)' }}>
+                      <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: 16, fontWeight: 600 }}>
                         By Status:
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {[...paymentSummary.info.totals.by_status]
                           .sort((a, b) => {
                             // Pending sempre em cima
@@ -1133,60 +910,57 @@ export function SellsTab({ onError }: SellsTabProps) {
                             return 0
                           })
                           .map((statusData) => (
-                          <Box key={statusData.status} sx={{ 
-                            bgcolor: '#2a2a2a', 
-                            p: 2, 
+                          <div key={statusData.status} style={{
+                            backgroundColor: 'rgba(255,255,255,0.03)', 
+                            padding: 16, 
                             borderRadius: 1,
-                            border: '1px solid #444'
+                            border: '1px solid rgba(255,255,255,0.10)'
                           }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                              <Chip
-                                label={statusData.status.toUpperCase()}
-                                color={getStatusColor(statusData.status.toLowerCase()) as any}
-                                size="small"
-                                sx={{
-                                  fontWeight: 'bold',
-                                  fontSize: '0.75rem',
-                                }}
-                              />
-                              <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                              <span
+                                className='inline-flex rounded-full border px-2 py-0.5 text-xs'
+                                style={{ fontWeight: 'bold', fontSize: '0.75rem', ...getStatusBadgeStyle(statusData.status) }}
+                              >
+                                {statusData.status.toUpperCase()}
+                              </span>
+                              <p style={{ color: 'white', fontWeight: 700 }}>
                                 {statusData.payments_count} {statusData.payments_count === 1 ? 'payment' : 'payments'}
-                              </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
                                   Gold:
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
+                                </p>
+                                <p style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
                                   {formatValueForDisplay(statusData.gold_amount)}g
-                                </Typography>
-                              </Box>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+                                </p>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
                                   Dollar:
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
+                                </p>
+                                <p style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>
                                   {formatDollar(statusData.m_total_value)}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </Box>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
-                      </Box>
-                    </Box>
+                      </div>
+                    </div>
                   )}
-                </Paper>
+                </div>
             ) : (
-              <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', py: 4 }}>
+              <p style={{ color: '#9ca3af', textAlign: 'center', paddingTop: 32, paddingBottom: 32 }}>
                 No summary data available
-              </Typography>
+              </p>
             )}
               </>
             )}
-          </Paper>
-        </Grid>
-      </Grid>
+          </div>
+        </div>
+      </div>
 
       {/* Add Payment Dialog */}
       {isAddPaymentOpen && (

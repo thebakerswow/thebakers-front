@@ -1,23 +1,5 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import {
-  Box,
-  FormControl,
-  Select,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  CircularProgress,
-  Checkbox,
-  InputLabel,
-  Typography,
-  Button,
-} from '@mui/material'
-import { Wallet, CopySimple } from '@phosphor-icons/react'
+import { useState, useEffect, useMemo, useCallback, useRef, type CSSProperties, type ReactNode } from 'react'
+import { CircleNotch, Wallet, CopySimple } from '@phosphor-icons/react'
 import { ErrorDetails } from '../../../components/error-display'
 import { 
   getPaymentManagement, 
@@ -53,6 +35,187 @@ interface PaymentRow {
 interface PaymentsTabProps {
   onError?: (error: ErrorDetails | null) => void
 }
+
+const sxToStyle = (sx?: Record<string, unknown>): CSSProperties => {
+  if (!sx) return {}
+  const style: Record<string, string | number> = {}
+  const spacingToPx = (value: unknown) => (typeof value === 'number' ? `${value * 8}px` : value)
+  Object.entries(sx).forEach(([key, value]) => {
+    if (key === 'bgcolor') {
+      if (typeof value === 'string') style.backgroundColor = value
+      return
+    }
+    if (key === 'p') {
+      style.padding = spacingToPx(value) as string
+      return
+    }
+    if (key === 'px') {
+      style.paddingLeft = spacingToPx(value) as string
+      style.paddingRight = spacingToPx(value) as string
+      return
+    }
+    if (key === 'py') {
+      style.paddingTop = spacingToPx(value) as string
+      style.paddingBottom = spacingToPx(value) as string
+      return
+    }
+    if (key === 'pt' || key === 'pr' || key === 'pb' || key === 'pl' || key === 'mt' || key === 'mr' || key === 'mb' || key === 'ml') {
+      const map: Record<string, string> = {
+        pt: 'paddingTop',
+        pr: 'paddingRight',
+        pb: 'paddingBottom',
+        pl: 'paddingLeft',
+        mt: 'marginTop',
+        mr: 'marginRight',
+        mb: 'marginBottom',
+        ml: 'marginLeft',
+      }
+      style[map[key]] = spacingToPx(value) as string
+      return
+    }
+    if (key.startsWith('&')) return
+    if (typeof value === 'string' || typeof value === 'number') {
+      style[key] = value
+    }
+  })
+  return style as CSSProperties
+}
+
+const Box = ({ sx, children, ...rest }: { sx?: Record<string, unknown>; children: ReactNode; [key: string]: unknown }) => (
+  <div style={sxToStyle(sx)} {...rest}>
+    {children}
+  </div>
+)
+
+const Paper = ({ sx, children, ...rest }: { sx?: Record<string, unknown>; children: ReactNode; [key: string]: unknown }) => (
+  <div style={sxToStyle(sx)} {...rest}>
+    {children}
+  </div>
+)
+
+const Typography = ({
+  sx,
+  children,
+  ...rest
+}: {
+  sx?: Record<string, unknown>
+  children: ReactNode
+  variant?: string
+  color?: string
+  [key: string]: unknown
+}) => (
+  <p style={sxToStyle(sx)} {...rest}>
+    {children}
+  </p>
+)
+
+const Button = ({
+  sx,
+  onClick,
+  children,
+  startIcon,
+  disabled,
+  ...rest
+}: {
+  sx?: Record<string, unknown>
+  onClick?: () => void
+  children: ReactNode
+  startIcon?: ReactNode
+  disabled?: boolean
+  [key: string]: unknown
+}) => (
+  <button
+    type='button'
+    onClick={onClick}
+    disabled={disabled}
+    className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
+    style={sxToStyle(sx)}
+    {...rest}
+  >
+    <span className='inline-flex items-center gap-2'>
+      {startIcon}
+      {children}
+    </span>
+  </button>
+)
+
+const CircularProgress = ({ size = 24, sx }: { size?: number; sx?: Record<string, unknown> }) => (
+  <CircleNotch size={size} className='animate-spin' style={sxToStyle(sx)} />
+)
+
+const TableContainer = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode; component?: unknown }) => (
+  <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.04]' style={sxToStyle(sx)}>
+    {children}
+  </div>
+)
+const Table = ({ children }: { children: ReactNode }) => <table className='min-w-full text-sm'>{children}</table>
+const TableHead = ({ children }: { children: ReactNode }) => <thead>{children}</thead>
+const TableBody = ({ children }: { children: ReactNode }) => <tbody>{children}</tbody>
+const TableRow = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode }) => (
+  <tr className='transition hover:bg-purple-500/10' style={sxToStyle(sx)}>
+    {children}
+  </tr>
+)
+const TableCell = ({
+  sx,
+  align,
+  children,
+}: {
+  sx?: Record<string, unknown>
+  align?: 'left' | 'right' | 'center'
+  children: ReactNode
+}) => (
+  <td className='border-b border-white/10 px-3 py-2' style={{ textAlign: align, ...sxToStyle(sx) }}>
+    {children}
+  </td>
+)
+
+const Checkbox = ({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: (event: { target: { checked: boolean } }) => void
+  sx?: Record<string, unknown>
+}) => (
+  <input type='checkbox' checked={checked} onChange={(e) => onChange({ target: { checked: e.target.checked } })} />
+)
+
+const FormControl = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode; size?: string }) => (
+  <div style={sxToStyle(sx)}>{children}</div>
+)
+
+const InputLabel = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode }) => (
+  <label className='mb-1 block text-xs text-white/70' style={sxToStyle(sx)}>
+    {children}
+  </label>
+)
+
+const MenuItem = ({ value, children }: { value: string; children: ReactNode; key?: string }) => (
+  <option value={value}>{children}</option>
+)
+
+const Select = ({
+  value,
+  onChange,
+  children,
+  sx,
+}: {
+  value: string
+  onChange: (event: { target: { value: string } }) => void
+  children: ReactNode
+  sx?: Record<string, unknown>
+  [key: string]: unknown
+}) => (
+  <select
+    value={value}
+    onChange={(e) => onChange({ target: { value: e.target.value } })}
+    className='h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition focus:border-purple-400/60'
+    style={sxToStyle(sx)}
+  >
+    {children}
+  </select>
+)
 
 export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([])
@@ -790,7 +953,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             key={row.id}
             sx={{
               '&:hover': {
-                bgcolor: '#3a3a3a',
+                bgcolor: 'rgba(147, 51, 234, 0.08)',
               },
               transition: 'all 0.2s ease-in-out',
             }}
@@ -834,7 +997,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
                   padding: '8px 12px',
                   borderRadius: '4px',
                   border: '1px solid rgba(255, 255, 255, 0.23)',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: 'rgba(255,255,255,0.03)',
                   color: row.binanceId ? 'white' : '#9ca3af',
                   fontSize: '1rem',
                   transition: 'all 0.2s ease-in-out',
@@ -842,8 +1005,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
                   display: 'flex',
                   alignItems: 'center',
                   '&:hover': {
-                    borderColor: 'rgb(147, 51, 234)',
-                    backgroundColor: '#2a2a2a',
+                    borderColor: 'rgba(168,85,247,0.6)',
+                    backgroundColor: 'rgba(147,51,234,0.12)',
                   },
                 }}
               >
@@ -874,16 +1037,18 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       <TableContainer
         component={Paper}
         sx={{
-          bgcolor: '#2a2a2a',
-          border: '1px solid #333',
+          bgcolor: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: '12px',
+          boxShadow: 'none',
           '& .MuiTableCell-root': {
-            borderColor: '#333',
+            borderColor: 'rgba(255,255,255,0.08)',
           },
         }}
       >
         <Table>
           <TableHead>
-            <TableRow sx={{ bgcolor: '#1a1a1a' }}>
+            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
               <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 180 }}>Player</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Total</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Sold</TableCell>
@@ -920,38 +1085,38 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             label="Team"
             sx={{
               color: 'white',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: 'rgba(255,255,255,0.04)',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
+                borderColor: 'rgba(255,255,255,0.10)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
+                borderColor: 'rgba(168,85,247,0.45)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgb(147, 51, 234)',
+                borderColor: 'rgba(168,85,247,0.65)',
               },
               '& .MuiSvgIcon-root': {
                 color: 'white',
               },
               '& .MuiSelect-select': {
                 color: 'white',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: 'rgba(255,255,255,0.04)',
               },
             }}
             MenuProps={{
               PaperProps: {
                 sx: {
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid #333',
+                  backgroundColor: '#1a1a1a',
+                  border: '1px solid rgba(255,255,255,0.10)',
                   '& .MuiMenuItem-root': {
                     color: 'white',
                     '&:hover': {
-                      backgroundColor: '#3a3a3a',
+                      backgroundColor: 'rgba(147,51,234,0.10)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                      backgroundColor: 'rgba(147, 51, 234, 0.20)',
                       '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.28)',
                       },
                     },
                   },
@@ -982,38 +1147,38 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             label="Payment Date"
             sx={{
               color: 'white',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: 'rgba(255,255,255,0.04)',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
+                borderColor: 'rgba(255,255,255,0.10)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
+                borderColor: 'rgba(168,85,247,0.45)',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgb(147, 51, 234)',
+                borderColor: 'rgba(168,85,247,0.65)',
               },
               '& .MuiSvgIcon-root': {
                 color: 'white',
               },
               '& .MuiSelect-select': {
                 color: 'white',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: 'rgba(255,255,255,0.04)',
               },
             }}
             MenuProps={{
               PaperProps: {
                 sx: {
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid #333',
+                  backgroundColor: '#1a1a1a',
+                  border: '1px solid rgba(255,255,255,0.10)',
                   '& .MuiMenuItem-root': {
                     color: 'white',
                     '&:hover': {
-                      backgroundColor: '#3a3a3a',
+                      backgroundColor: 'rgba(147,51,234,0.10)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                      backgroundColor: 'rgba(147, 51, 234, 0.20)',
                       '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.28)',
                       },
                     },
                   },
@@ -1036,10 +1201,10 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               color: '#10b981',
               fontSize: '0.875rem',
               fontWeight: 600,
-              backgroundColor: '#1a1a1a',
+              backgroundColor: 'rgba(16,185,129,0.10)',
               padding: '6px 12px',
               borderRadius: '4px',
-              border: '1px solid #10b981',
+              border: '1px solid rgba(16,185,129,0.45)',
               display: 'flex',
               alignItems: 'center',
               gap: 0.5,
@@ -1053,13 +1218,15 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
-            variant="contained"
+            variant="outlined"
             size="medium"
             startIcon={<CopySimple size={16} />}
             onClick={handleCopyBinanceTemplate}
             sx={{
-              backgroundColor: 'rgb(147, 51, 234)',
-              '&:hover': { backgroundColor: 'rgb(126, 34, 206)' },
+              borderColor: 'rgba(168,85,247,0.45)',
+              color: '#e9d5ff',
+              backgroundColor: 'rgba(147,51,234,0.16)',
+              '&:hover': { backgroundColor: 'rgba(147,51,234,0.24)', borderColor: 'rgba(168,85,247,0.7)' },
               fontSize: '0.875rem',
               textTransform: 'none',
               height: '40px',
@@ -1070,13 +1237,15 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           </Button>
           
           <Button
-            variant="contained"
+            variant="outlined"
             size="medium"
             startIcon={<Wallet size={16} />}
             onClick={handleDebitG}
             sx={{
-              backgroundColor: '#60a5fa',
-              '&:hover': { backgroundColor: '#3b82f6' },
+              borderColor: 'rgba(96,165,250,0.45)',
+              color: '#bfdbfe',
+              backgroundColor: 'rgba(59,130,246,0.16)',
+              '&:hover': { backgroundColor: 'rgba(59,130,246,0.24)', borderColor: 'rgba(96,165,250,0.7)' },
               fontSize: '0.875rem',
               textTransform: 'none',
               height: '40px',
