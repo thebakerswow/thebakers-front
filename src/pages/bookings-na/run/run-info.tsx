@@ -8,17 +8,6 @@ import { useAuth } from '../../../context/auth-context'
 import { RunData } from '../../../types/runs-interface'
 import { BuyerData } from '../../../types/buyer-interface'
 import {
-  Button,
-  Card,
-  CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Paper,
-} from '@mui/material'
-import {
   getRunAttendance,
   toggleRunLock as toggleRunLockService,
 } from '../../../services/api/runs'
@@ -295,73 +284,70 @@ export function RunInfo({
       {run.sumPot?.some(
         (item) => item.type === 'gold' && item.sumPot !== 0
       ) && (
-        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
+        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md border border-white/10 bg-white/[0.04] p-4 text-center text-white'>
           <h2 className='text-lg font-semibold'>Gold Collectors</h2>
-          <TableContainer component={Paper}>
+          <div className='mt-2 overflow-hidden rounded-md border border-white/10 bg-black/20'>
             {!attendanceAccessDenied && (
-              <Table>
-                <TableBody>
+              <table className='w-full text-sm'>
+                <tbody>
                   {run.sumPot
                     ?.filter(
                       (item) => item.type === 'gold' && item.sumPot !== 0
                     )
                     .map((item) => (
-                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                        <TableCell style={{ padding: '10px' }}>
+                      <tr key={item.idDiscord} className='border-b border-white/5'>
+                        <td className='px-3 py-2 text-left'>
                           {item.username}
-                        </TableCell>
-                        <TableCell align='right' style={{ padding: '10px' }}>
+                        </td>
+                        <td className='px-3 py-2 text-right'>
                           {Math.round(Number(item.sumPot)).toLocaleString(
                             'en-US'
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             )}
-          </TableContainer>
+          </div>
         </div>
       )}
       {/* Exibe Dolar Collectors apenas se houver pelo menos um item do tipo dolar */}
       {run.sumPot?.some(
         (item) => item.type === 'dolar' && item.sumPot !== 0
       ) && (
-        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md bg-gray-100 p-4 text-center text-black'>
+        <div className='min-w-[200px] max-w-[400px] flex-1 rounded-md border border-white/10 bg-white/[0.04] p-4 text-center text-white'>
           <h2 className='text-lg font-semibold'>Dolar Collectors</h2>
-          <TableContainer component={Paper}>
+          <div className='mt-2 overflow-hidden rounded-md border border-white/10 bg-black/20'>
             {!attendanceAccessDenied && (
-              <Table>
-                <TableBody>
+              <table className='w-full text-sm'>
+                <tbody>
                   {run.sumPot
                     ?.filter(
                       (item) => item.type === 'dolar' && item.sumPot !== 0
                     )
                     .map((item) => (
-                      <TableRow key={item.idDiscord} style={{ height: '20px' }}>
-                        <TableCell style={{ padding: '10px' }}>
+                      <tr key={item.idDiscord} className='border-b border-white/5'>
+                        <td className='px-3 py-2 text-left'>
                           {item.username}
-                        </TableCell>
-                        <TableCell align='right' style={{ padding: '10px' }}>
+                        </td>
+                        <td className='px-3 py-2 text-right'>
                           {Number(item.sumPot).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             )}
-          </TableContainer>
+          </div>
         </div>
       )}
 
-      <Card
-        className='grid flex-1 grid-cols-4 items-center text-left text-zinc-900'
-        style={{ minWidth: '1000px', backgroundColor: '#f3f4f6' }}
-      >
-        <CardContent className='col-span-3 mb-6 ml-10 flex flex-col'>
+      <div className='grid min-w-[1000px] flex-1 grid-cols-4 items-center rounded-md border border-white/10 bg-white/[0.04] text-left text-white'>
+        <div className='col-span-3 mb-6 ml-10 flex flex-col p-4'>
           <h1 className='text-center text-lg font-semibold'>
             {run.raid} {run.difficulty} @ {run.time ? (
                <>
@@ -373,14 +359,14 @@ export function RunInfo({
           </h1>
 
           <div className='mt-8 grid grid-cols-3 gap-4 text-left'>
-            <p className='text-left font-semibold text-yellow-500'>
-              <span className='text-base font-bold text-zinc-900'>
+            <p className='text-left font-semibold text-yellow-300'>
+              <span className='text-base font-bold text-white'>
                 Loot Type:{' '}
               </span>
               {run.loot}
             </p>
-            <p className='text-left font-semibold text-red-500'>
-              <span className='text-base font-bold text-zinc-900'>
+            <p className='text-left font-semibold text-red-300'>
+              <span className='text-base font-bold text-white'>
                 Max Buyers:{' '}
               </span>
               {run.maxBuyers}
@@ -432,105 +418,51 @@ export function RunInfo({
               )}
             </p>
           </div>
-        </CardContent>
-        <CardContent className='m-4 flex flex-col items-center justify-center gap-2'>
-          <Button
-            variant='contained'
-            startIcon={<UserPlus size={18} />}
-            fullWidth
+        </div>
+        <div className='m-4 flex flex-col items-center justify-center gap-2'>
+          <button
             onClick={handleOpenAddBuyer}
-            disabled={isRunLocked} // Disable button if run is locked
-            sx={{
-              backgroundColor: isRunLocked
-                ? 'rgb(209, 213, 219)'
-                : 'rgb(147, 51, 234)', // Gray if disabled
-              '&:hover': {
-                backgroundColor: isRunLocked
-                  ? 'rgb(209, 213, 219)'
-                  : 'rgb(168, 85, 247)', // Gray if disabled
-              },
-            }}
+            disabled={isRunLocked}
+            className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
           >
+            <UserPlus size={18} />
             Add Buyer
-          </Button>
-          {/* Permissoes prefeito, chefe de cozinha */}
+          </button>
           {hasPrefeitoTeamAccess(run, userRoles) ||
           userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ? (
             <>
-              <Button
-                variant='contained'
-                startIcon={<Pencil size={18} />}
-                fullWidth
+              <button
                 onClick={handleOpenEditModal}
-                disabled={isRunLocked} // Disable button if run is locked
-                sx={{
-                  backgroundColor: isRunLocked
-                    ? 'rgb(209, 213, 219)'
-                    : 'rgb(147, 51, 234)', // Gray if disabled
-                  '&:hover': {
-                    backgroundColor: isRunLocked
-                      ? 'rgb(209, 213, 219)'
-                      : 'rgb(168, 85, 247)', // Gray if disabled
-                  },
-                }}
+                disabled={isRunLocked}
+                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
               >
+                <Pencil size={18} />
                 Edit Raid
-              </Button>
-              {/* Edit History Button */}
-              <Button
-                variant='contained'
-                startIcon={<Clock size={18} />}
-                fullWidth
+              </button>
+              <button
                 onClick={() => setIsEditHistoryOpen(true)}
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': {
-                    backgroundColor: 'rgb(168, 85, 247)',
-                  },
-                }}
+                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
               >
+                <Clock size={18} />
                 History
-              </Button>
-              {/* Send Message to All Advertisers Button */}
+              </button>
               {canSeeMegaphoneButton() && (
-                <Button
-                  variant='contained'
-                  startIcon={<RiMegaphoneLine size={18} />}
-                  fullWidth
+                <button
                   onClick={handleSendMessageToAllAdvertisers}
                   disabled={isRunLocked || cooldownMegaphone}
-                  sx={{
-                    backgroundColor:
-                      isRunLocked || cooldownMegaphone
-                        ? 'rgb(209, 213, 219)'
-                        : 'rgb(147, 51, 234)',
-                    '&:hover': {
-                      backgroundColor:
-                        isRunLocked || cooldownMegaphone
-                          ? 'rgb(209, 213, 219)'
-                          : 'rgb(168, 85, 247)',
-                    },
-                  }}
+                  className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
                 >
+                  <RiMegaphoneLine size={18} />
                   Message Advertisers
-                </Button>
+                </button>
               )}
-              <Button
-                variant='contained'
-                startIcon={
-                  isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />
-                }
-                fullWidth
+              <button
                 onClick={handleToggleRunLock}
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': {
-                    backgroundColor: 'rgb(168, 85, 247)',
-                  },
-                }}
+                className='balance-action-btn balance-action-btn--primary inline-flex w-full items-center justify-center gap-2 px-4'
               >
+                {isRunLocked ? <LockOpen size={18} /> : <Lock size={18} />}
                 {isRunLocked ? 'Unlock Run' : 'Lock Run'}
-              </Button>
+              </button>
             </>
           ) : (
             isRunLocked && (
@@ -540,8 +472,8 @@ export function RunInfo({
               </p>
             )
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {isAddBuyerOpen && (
         <AddBuyer

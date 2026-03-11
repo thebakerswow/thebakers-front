@@ -34,22 +34,10 @@ import { getRun, getRunBuyers } from '../../../services/api/runs'
 import { sendDiscordMessage } from '../../../services/api/discord'
 import { ErrorDetails } from '../../../components/error-display'
 import { EditBuyer } from '../../../components/edit-buyer'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  IconButton,
-  Tooltip,
-} from '@mui/material'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../context/auth-context'
 import CryptoJS from 'crypto-js'
+import { CustomSelect } from '../../../components/custom-select'
 
 interface BuyersGridProps {
   data: BuyerData[]
@@ -871,60 +859,38 @@ export function BuyersDataGrid({
 
 
   const renderStatusSelect = (buyer: BuyerData) => (
-    <Select
+    <CustomSelect
       value={buyer.status || ''}
-      onChange={(e) =>
-        !runIsLocked &&
-        buyer.nameAndRealm !== 'Encrypted' &&
-        handleStatusChange(buyer.id, e.target.value)
+      onChange={(value) =>
+        !runIsLocked && buyer.nameAndRealm !== 'Encrypted' && handleStatusChange(buyer.id, value)
       }
-      displayEmpty
-      disabled={runIsLocked || buyer.nameAndRealm === 'Encrypted'} // Disable select when run is locked or Encrypted
-      sx={{
-        width: '7rem',
-        height: '2rem', // Reduced height
-        fontSize: '14px', // Adjust font size for better alignment
-      }}
-    >
-      <MenuItem value='' disabled>
-        ----------
-      </MenuItem>
-      {statusOptions.map((option) => (
-        <MenuItem key={option.value} value={option.value}>
-          {option.label}
-        </MenuItem>
-      ))}
-    </Select>
+      options={statusOptions.map((option) => ({
+        value: option.value,
+        label: option.label,
+      }))}
+      disabled={runIsLocked || buyer.nameAndRealm === 'Encrypted'}
+      minWidthClassName='min-w-[120px]'
+    />
   )
 
   const renderPaidIcon = (buyer: BuyerData) => (
-    <IconButton
+    <button
+      type='button'
       onClick={() =>
         !runIsLocked &&
         !globalCooldown &&
         !cooldownPaid[buyer.id] &&
         handleTogglePaid(buyer.id)
       }
-      disabled={runIsLocked || globalCooldown || cooldownPaid[buyer.id]} // Disable toggle when run is locked, global cooldown, or individual cooldown
-      sx={{
-        backgroundColor: 'white',
-        padding: '2px',
-        '&:hover': {
-          backgroundColor:
-            runIsLocked || globalCooldown || cooldownPaid[buyer.id]
-              ? 'white'
-              : '#f0f0f0',
-        },
-        opacity:
-          runIsLocked || globalCooldown || cooldownPaid[buyer.id] ? 0.5 : 1,
-      }}
+      disabled={runIsLocked || globalCooldown || cooldownPaid[buyer.id]}
+      className='rounded-md bg-white p-1 disabled:cursor-not-allowed disabled:opacity-50'
     >
       {buyer.isPaid ? (
         <CheckFat className='text-green-500' size={22} weight='fill' />
       ) : (
         <XCircle className='text-red-600' size={22} weight='fill' />
       )}
-    </IconButton>
+    </button>
   )
 
   const renderClassImage = (className: string) => {
@@ -1002,216 +968,83 @@ export function BuyersDataGrid({
   }
 
   return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        overflowX: 'auto', // Allows horizontal scroll
-        overflowY: 'hidden', // Ensures content stays within rounded corners
-        borderRadius: '6px', // Matches the style of runs-data-grid
-      }}
-    >
-      <Table>
-        <TableHead>
-          <TableRow>
-            {canSeeIdBuyer && (
-              <TableCell
-                sx={{ textAlign: 'center' }}
-                style={{
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  backgroundColor: '#ECEBEE',
-                }}
-              >
-                Id Buyer
-              </TableCell>
-            )}
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Slot
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Status
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Name-Realm
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Note
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Advertiser
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Collector
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Paid Full
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Dolar Pot
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Gold Pot
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Run Pot
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Class
-            </TableCell>
-            <TableCell
-              sx={{ textAlign: 'center' }}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-              }}
-            >
-              Actions
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
+    <div className='overflow-x-auto rounded-xl border border-white/10 bg-black/30'>
+      <table className='w-full min-w-[1700px] text-sm'>
+        <thead>
+          <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>
+            {canSeeIdBuyer && <th className='px-2 py-3 text-center font-semibold'>Id Buyer</th>}
+            <th className='px-2 py-3 text-center font-semibold'>Slot</th>
+            <th className='px-2 py-3 text-center font-semibold'>Status</th>
+            <th className='px-2 py-3 text-center font-semibold'>Name-Realm</th>
+            <th className='px-2 py-3 text-center font-semibold'>Note</th>
+            <th className='px-2 py-3 text-center font-semibold'>Advertiser</th>
+            <th className='px-2 py-3 text-center font-semibold'>Collector</th>
+            <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
+            <th className='px-2 py-3 text-center font-semibold'>Dolar Pot</th>
+            <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
+            <th className='px-2 py-3 text-center font-semibold'>Run Pot</th>
+            <th className='px-2 py-3 text-center font-semibold'>Class</th>
+            <th className='px-2 py-3 text-center font-semibold'>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
           {sortedData.length === 0 ? (
-            <TableRow sx={{ height: '32px', minHeight: '32px' }}>
-              {/* Increased height */}
-              <TableCell
-                colSpan={canSeeIdBuyer ? 12 : 11}
-                align='center'
-                sx={{ padding: '20px', textAlign: 'center' }}
-              >
+            <tr>
+              <td colSpan={canSeeIdBuyer ? 13 : 12} className='p-6 text-center text-neutral-400'>
                 No Buyers
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ) : (
             sortedData.map((buyer, index) => (
-              <TableRow
+              <tr
                 key={buyer.id}
                 className={getBuyerColor(buyer.status)}
-                sx={{ height: '40px' }} // Set minimum height
               >
                 {canSeeIdBuyer && (
-                  <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                  <td className='px-2 py-2 text-center'>
                     {buyer.id ?? '-'}
-                  </TableCell>
+                  </td>
                 )}
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                <td className='px-2 py-2 text-center'>
                   {index + 1}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.fieldIsBlocked === true ? (
                     <i>Encrypted</i>
                   ) : (
                     renderStatusSelect(buyer)
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.nameAndRealm === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameAndRealm
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.buyerNote === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.buyerNote
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.nameOwnerBuyer === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameOwnerBuyer
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.nameCollector == null ||
                   buyer.nameCollector === 'Encrypted' ? (
                     <i>Encrypted</i>
                   ) : (
                     buyer.nameCollector
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Paid Full */}
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.isEncrypted === true ? (
                     <i>Encrypted</i>
                   ) : (
@@ -1220,9 +1053,8 @@ export function BuyersDataGrid({
                       isPaid: buyer.isPaid == null ? false : buyer.isPaid,
                     })
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Dolar Pot */}
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.buyerDolarPot == null ? (
                     buyer.buyerPot == null ? (
                       <i>Encrypted</i>
@@ -1237,9 +1069,8 @@ export function BuyersDataGrid({
                   ) : (
                     '-'
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
-                  {/* Gold Pot (antes era Total Pot) */}
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.buyerPot == null ? (
                     <i>Encrypted</i>
                   ) : buyer.buyerPot > 0 ? (
@@ -1247,8 +1078,8 @@ export function BuyersDataGrid({
                   ) : (
                     '-'
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.buyerActualPot == null ? (
                     <i>Encrypted</i>
                   ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
@@ -1261,8 +1092,8 @@ export function BuyersDataGrid({
                       'en-US'
                     )
                   )}
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   <div className='flex items-center justify-center gap-2'>
                     {buyer.playerClass === 'Encrypted' ? (
                       <i>Encrypted</i>
@@ -1273,14 +1104,15 @@ export function BuyersDataGrid({
                       </>
                     )}
                   </div>
-                </TableCell>
-                <TableCell sx={{ padding: '4px', textAlign: 'center' }}>
+                </td>
+                <td className='px-2 py-2 text-center'>
                   {buyer.nameAndRealm === 'Encrypted' ? null : (
                     <div className='flex justify-center gap-1'>
                       {canSeeRaidLeaderButtons() && (
                         <>
-                          <Tooltip title='AFK'>
-                            <IconButton
+                          <button
+                            type='button'
+                            title='AFK'
                               onClick={() =>
                                 !runIsLocked && handleSendAFKMessage(buyer.id)
                               }
@@ -1289,20 +1121,13 @@ export function BuyersDataGrid({
                                 cooldownAFK[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownAFK[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiZzzFill size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Offline'>
-                            <IconButton
+                          </button>
+                          <button
+                            type='button'
+                            title='Offline'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendOfflineMessage(buyer.id)
@@ -1312,20 +1137,13 @@ export function BuyersDataGrid({
                                 cooldown[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldown[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiWifiOffLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Buyer in combat'>
-                            <IconButton
+                          </button>
+                          <button
+                            type='button'
+                            title='Buyer in combat'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendBuyerCombatMessage(buyer.id)
@@ -1335,20 +1153,13 @@ export function BuyersDataGrid({
                                 cooldownBuyerCombat[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownBuyerCombat[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiSwordLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Price below minimum'>
-                            <IconButton
+                          </button>
+                          <button
+                            type='button'
+                            title='Price below minimum'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendPriceWarningMessage(buyer.id)
@@ -1358,24 +1169,17 @@ export function BuyersDataGrid({
                                 cooldownPriceWarning[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownPriceWarning[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiArrowDownLine size={18} />
-                            </IconButton>
-                          </Tooltip>
+                          </button>
                         </>
                       )}
                       {canSeeAdvertiserButtons(buyer) && (
                         <>
-                          <Tooltip title='Buyer Ready'>
-                            <IconButton
+                          <button
+                            type='button'
+                            title='Buyer Ready'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendBuyerReadyMessage(buyer.id)
@@ -1385,20 +1189,13 @@ export function BuyersDataGrid({
                                 cooldownBuyerReady[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownBuyerReady[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiUserHeartLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Buyer Logging'>
-                            <IconButton
+                          </button>
+                          <button
+                            type='button'
+                            title='Buyer Logging'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendBuyerLoggingMessage(buyer.id)
@@ -1408,20 +1205,13 @@ export function BuyersDataGrid({
                                 cooldownBuyerLogging[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownBuyerLogging[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiLoginCircleLine size={18} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Attention! Check Note'>
-                            <IconButton
+                          </button>
+                          <button
+                            type='button'
+                            title='Attention! Check Note'
                               onClick={() =>
                                 !runIsLocked &&
                                 handleSendAttentionMessage(buyer.id)
@@ -1431,48 +1221,42 @@ export function BuyersDataGrid({
                                 cooldownAttention[buyer.id] ||
                                 globalCooldown
                               }
-                              sx={{
-                                opacity:
-                                  cooldownAttention[buyer.id] ||
-                                  runIsLocked ||
-                                  globalCooldown
-                                    ? 0.5
-                                    : 1,
-                              }}
+                              className='rounded-md p-1 disabled:opacity-50'
                             >
                               <RiAlertLine size={18} />
-                            </IconButton>
-                          </Tooltip>
+                          </button>
                         </>
                       )}
-                      <Tooltip title='Edit'>
-                        <IconButton
+                      <button
+                        type='button'
+                        title='Edit'
                           onClick={() => !runIsLocked && handleOpenModal(buyer)}
                           disabled={runIsLocked}
+                          className='rounded-md p-1 disabled:opacity-50'
                         >
                           <Pencil size={18} />
-                        </IconButton>
-                      </Tooltip>
+                      </button>
                       {!isOnlyAdvertiserRole && (
-                        <Tooltip title='Delete'>
-                          <IconButton
+                        <button
+                          type='button'
+                          title='Delete'
                             onClick={() =>
                               !runIsLocked && handleDeleteBuyer(buyer)
                             }
                             disabled={runIsLocked}
+                            className='rounded-md p-1 disabled:opacity-50'
                           >
                             <Trash size={18} />
-                          </IconButton>
-                        </Tooltip>
+                        </button>
                       )}
                     </div>
                   )}
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))
           )}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
       {openModal && editingBuyer && (
         <EditBuyer
           buyer={{
@@ -1487,6 +1271,6 @@ export function BuyersDataGrid({
           runIdTeam={runIdTeam}
         />
       )}
-    </TableContainer>
+    </div>
   )
 }

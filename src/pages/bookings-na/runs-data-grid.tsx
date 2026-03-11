@@ -6,7 +6,6 @@ import {
   Lock,
   LockOpen,
 } from '@phosphor-icons/react'
-import { TableSortLabel, Tooltip } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState, useEffect } from 'react'
 import { RunData } from '../../types/runs-interface'
@@ -16,17 +15,6 @@ import { BuyersPreview } from '../../components/buyers-preview'
 import { EditRun } from '../../components/edit-run'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../context/auth-context'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  CircularProgress,
-  IconButton,
-} from '@mui/material'
 import { toggleRunLock as toggleRunLockService } from '../../services/api/runs'
 import Swal from 'sweetalert2'
 
@@ -91,23 +79,23 @@ export function RunsDataGrid({
   }
 
   const teamColors: { [key: string]: string } = {
-    Garçom: 'linear-gradient(90deg, #3B82F6, #2563EB)', // Azul claro para azul (esquerda para direita)
-    Confeiteiros: 'linear-gradient(90deg, #F472B6, #EC4899)', // Rosa claro para rosa
-    Jackfruit: 'linear-gradient(90deg, #22C55E, #16A34A)', // Verde claro para verde
-    Insanos: 'linear-gradient(270deg, #3B82F6, #1E40AF)', // Azul claro para azul escuro (direita para esquerda)
-    APAE: 'linear-gradient(90deg, #FCA5A5, #F87171)', // Rosa muito claro para rosa claro
-    'Los Renegados': 'linear-gradient(90deg, #FCD34D, #F59E0B)', // Amarelo claro para amarelo
-    DTM: 'linear-gradient(90deg, #A78BFA, #8B5CF6)', // Violeta claro para violeta
-    KFFC: 'linear-gradient(90deg, #34D399, #047857)', // Verde claro para verde escuro
-    Greensky: 'linear-gradient(90deg, #F472B6, #BE185D)', // Rosa claro para rosa escuro
-    'Guild Azralon BR#1': 'linear-gradient(270deg, #2DD4BF, #0D9488)', // Verde azulado claro para verde azulado (direita para esquerda)
-    'Guild Azralon BR#2': 'linear-gradient(270deg, #60A5FA, #1D4ED8)', // Azul claro para azul médio (direita para esquerda)
-    Rocket: 'linear-gradient(90deg, #F87171, #B91C1C)', // Rosa claro para vermelho
-    'Booty Reaper': 'linear-gradient(90deg, #8B5CF6, #4C1D95)', // Violeta para violeta escuro
-    Padeirinho: 'linear-gradient(90deg, #FB923C, #EA580C)', // Laranja claro para laranja
-    Milharal: 'linear-gradient(90deg, #FEF3C7, #FEF08A)', // Amarelo muito claro para amarelo claro
-    'Bastard Munchen': 'linear-gradient(90deg, #F59E0B, #D97706)', // Âmbar claro para âmbar
-    'Kiwi': 'linear-gradient(90deg, #A3E635, #84CC16)', // Verde lima claro para verde lima
+    Garçom: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))',
+    Confeiteiros: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))',
+    Jackfruit: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
+    Insanos: 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))',
+    APAE: 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))',
+    'Los Renegados': 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))',
+    DTM: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))',
+    KFFC: 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))',
+    Greensky: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))',
+    'Guild Azralon BR#1': 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))',
+    'Guild Azralon BR#2': 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))',
+    Rocket: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
+    'Booty Reaper': 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
+    Padeirinho: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))',
+    Milharal: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))',
+    'Bastard Munchen': 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))',
+    'Kiwi': 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -265,14 +253,8 @@ export function RunsDataGrid({
     }
   }
 
-  // Renderiza uma célula da tabela com conteúdo padrão
   const renderTableCell = (content: string | number | JSX.Element | null) => (
-    <TableCell
-      align='center'
-      style={{ fontSize: '1rem' }} // Aumenta o tamanho da fonte das células
-    >
-      {content || '-'}
-    </TableCell>
+    <td className='px-3 py-3 text-center text-sm text-white/90'>{content || '-'}</td>
   )
 
   // Renderiza os líderes do raid como uma string separada por vírgulas
@@ -311,184 +293,63 @@ export function RunsDataGrid({
     )
 
   return (
-    <TableContainer component={Paper} className='rounded-sm'>
-      <Table stickyHeader>
-        <TableHead>
-          <TableRow>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Preview
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Date
-            </TableCell>
-            <TableCell
-              sortDirection={isTimeSortedAsc ? 'asc' : 'desc'}
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              <TableSortLabel
-                active
-                direction={isTimeSortedAsc ? 'asc' : 'desc'}
+    <div className='overflow-x-auto rounded-xl border border-white/10 bg-black/30'>
+      <table className='w-full min-w-[1200px] text-sm'>
+        <thead>
+          <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>
+            <th className='px-3 py-3 text-center font-semibold'>Preview</th>
+            <th className='px-3 py-3 text-center font-semibold'>Date</th>
+            <th className='px-3 py-3 text-center font-semibold'>
+              <button
+                type='button'
                 onClick={handleSortByTime}
-                style={{ cursor: 'pointer' }}
+                className='inline-flex items-center gap-1 text-neutral-200 hover:text-white'
               >
                 Time (EST)
-              </TableSortLabel>
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Raid
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Buyers
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Team
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Raid Leader
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Run Type
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Difficulty
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Loot
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            >
-              Note
-            </TableCell>
-            <TableCell
-              style={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                backgroundColor: '#ECEBEE',
-                textAlign: 'center',
-              }}
-            />
-          </TableRow>
-        </TableHead>
-        <TableBody>
+                <span className='text-xs'>{isTimeSortedAsc ? '▲' : '▼'}</span>
+              </button>
+            </th>
+            <th className='px-3 py-3 text-center font-semibold'>Raid</th>
+            <th className='px-3 py-3 text-center font-semibold'>Buyers</th>
+            <th className='px-3 py-3 text-center font-semibold'>Team</th>
+            <th className='px-3 py-3 text-center font-semibold'>Raid Leader</th>
+            <th className='px-3 py-3 text-center font-semibold'>Run Type</th>
+            <th className='px-3 py-3 text-center font-semibold'>Difficulty</th>
+            <th className='px-3 py-3 text-center font-semibold'>Loot</th>
+            <th className='px-3 py-3 text-center font-semibold'>Note</th>
+            <th className='px-3 py-3 text-center font-semibold'>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
           {isLoading ? (
-            <TableRow style={{ height: '400px', border: 'none' }}>
-              <TableCell
-                colSpan={12}
-                align='center'
-                style={{
-                  verticalAlign: 'middle',
-                  display: 'table-cell',
-                  height: '400px',
-                  border: 'none',
-                }}
-              >
-                <CircularProgress />
-              </TableCell>
-            </TableRow>
+            <tr className='h-[320px]'>
+              <td colSpan={12} className='text-center align-middle'>
+                <div className='mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
+              </td>
+            </tr>
           ) : sortedData.length === 0 ? (
-            <TableRow style={{ height: '400px', border: 'none' }}>
-              <TableCell
-                colSpan={12}
-                align='center'
-                style={{
-                  verticalAlign: 'middle',
-                  display: 'table-cell',
-                  height: '400px',
-                  border: 'none',
-                }}
-              >
+            <tr className='h-[320px]'>
+              <td colSpan={12} className='text-center align-middle text-neutral-400'>
                 No runs today
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ) : (
             sortedData.map((run, index) => (
-              <TableRow
+              <tr
                 key={index}
                 onDoubleClick={() => handleRedirect(run.id)}
-                style={{
-                  cursor: 'pointer',
-                  ...getTeamColor(run.team),
-                }}
+                className='cursor-pointer border-b border-white/5'
+                style={getTeamColor(run.team)}
               >
                 {renderTableCell(
                   run.date ? (
-                    <IconButton onClick={() => handleOpenPreview(run.id)}>
+                    <button
+                      type='button'
+                      onClick={() => handleOpenPreview(run.id)}
+                      className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
+                    >
                       <Eye size={20} />
-                    </IconButton>
+                    </button>
                   ) : null
                 )}
                 {renderTableCell(
@@ -504,49 +365,53 @@ export function RunsDataGrid({
                 {renderTableCell(run.loot)}
                 {renderTableCell(run.note)}
                 {renderTableCell(
-                  <>
+                  <div className='flex flex-col items-center gap-1'>
                     {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
-                      <>
-                        <Tooltip title='Edit'>
-                          <IconButton onClick={() => handleOpenEditRunModal(run)}>
-                            <Pencil size={20} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title='Copy'>
-                          <IconButton onClick={() => copyRunToClipboard(run)}>
-                            <Clipboard size={20} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title='Delete'>
-                          <IconButton
-                            onClick={() => handleOpenDeleteRunModal(run)}
-                          >
-                            <Trash size={20} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={run.runIsLocked ? 'Unlock' : 'Lock'}>
-                          <IconButton
-                            onClick={() => toggleRunLock(run.id, run.runIsLocked)}
-                          >
-                            {run.runIsLocked ? (
-                              <LockOpen size={20} />
-                            ) : (
-                              <Lock size={20} />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      </>
+                      <div className='grid grid-cols-2 gap-1'>
+                        <button
+                          type='button'
+                          title='Edit'
+                          onClick={() => handleOpenEditRunModal(run)}
+                          className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
+                        >
+                          <Pencil size={20} />
+                        </button>
+                        <button
+                          type='button'
+                          title='Copy'
+                          onClick={() => copyRunToClipboard(run)}
+                          className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
+                        >
+                          <Clipboard size={20} />
+                        </button>
+                        <button
+                          type='button'
+                          title='Delete'
+                          onClick={() => handleOpenDeleteRunModal(run)}
+                          className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
+                        >
+                          <Trash size={20} />
+                        </button>
+                        <button
+                          type='button'
+                          title={run.runIsLocked ? 'Unlock' : 'Lock'}
+                          onClick={() => toggleRunLock(run.id, run.runIsLocked)}
+                          className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
+                        >
+                          {run.runIsLocked ? <LockOpen size={20} /> : <Lock size={20} />}
+                        </button>
+                      </div>
                     )}
                     <div className='mt-1 text-center text-normal'>
                       {run.runIsLocked ? '(locked)' : '(unlocked)'}
                     </div>
-                  </>
+                  </div>
                 )}
-              </TableRow>
+              </tr>
             ))
           )}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
 
       {isDeleteRunModalOpen && selectedRunToDelete && (
         <DeleteRun
@@ -567,6 +432,6 @@ export function RunsDataGrid({
           onRunEdit={onDeleteSuccess}
         />
       )}
-    </TableContainer>
+    </div>
   )
 }

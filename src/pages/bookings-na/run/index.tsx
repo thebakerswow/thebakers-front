@@ -20,7 +20,6 @@ import { Attendance } from '../../../components/attendance'
 import { useAuth } from '../../../context/auth-context'
 import { canViewAttendanceButton } from '../../../utils/role-utils'
 import { Freelancers } from '../../../components/freelancers'
-import { Button, CircularProgress } from '@mui/material'
 import { RunChat } from '../../../components/run-chat'
 import Swal from 'sweetalert2'
 import CryptoJS from 'crypto-js'
@@ -612,7 +611,7 @@ export function RunDetails() {
       >
         {isLoadingRun ? (
           <div className='flex flex-col items-center'>
-            <CircularProgress />
+            <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
           </div>
         ) : (
           <div className='p-4 pb-20'>
@@ -632,7 +631,7 @@ export function RunDetails() {
             <div className='p-4'>
               {isLoadingBuyers ? (
                 <div className='mt-40 flex flex-col items-center'>
-                  <CircularProgress />
+                  <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
                 </div>
               ) : (
                 <>
@@ -640,40 +639,22 @@ export function RunDetails() {
                     {runData &&
                       (userRoles.includes(import.meta.env.VITE_TEAM_CHEFE) ||
                         hasPrefeitoTeamAccess(runData.idTeam, userRoles)) && (
-                        <Button
+                        <button
                           onClick={handleOpenInviteBuyersModal}
-                          variant='contained'
-                          startIcon={<UserPlus size={18} />}
-                          sx={{
-                            backgroundColor: 'rgb(147, 51, 234)',
-                            '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                            minWidth: 140,
-                            fontWeight: 500,
-                            boxShadow: 'none',
-                          }}
+                          className='balance-action-btn balance-action-btn--primary inline-flex min-w-[140px] items-center justify-center gap-2 px-4'
                         >
+                          <UserPlus size={18} />
                           Invite Buyers
-                        </Button>
+                        </button>
                       )}
-                    <Button
+                    <button
                       onClick={toggleDetailsVisibility}
-                      variant='contained'
-                      sx={{
-                        backgroundColor: 'rgb(147, 51, 234)',
-                        '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                        minWidth: 160,
-                        fontWeight: 500,
-                        boxShadow: 'none',
-                      }}
-                      style={{
-                        display:
-                          canViewAttendance && hasAttendanceAccess
-                            ? 'inline-flex'
-                            : 'none',
-                      }}
+                      className={`balance-action-btn balance-action-btn--primary min-w-[160px] px-4 ${
+                        canViewAttendance && hasAttendanceAccess ? 'inline-flex' : 'hidden'
+                      }`}
                     >
                       {showDetails ? 'Hide Attendance' : 'Show Attendance'}
-                    </Button>
+                    </button>
                     {/* Informativo de status */}
                     <span className='rounded-md bg-gray-300 px-4 py-1 text-gray-800'>
                       Waiting: {waitingCount} | Group: {groupCount}

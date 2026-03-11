@@ -315,3 +315,115 @@ h6 {
   border-radius: 8px !important;
   text-align: center !important;
 }
+
+/* Day picker styling to match the month picker tone */
+.balance-datepicker .react-datepicker__day-name,
+.balance-datepicker .react-datepicker__day,
+.balance-datepicker .react-datepicker__time-name {
+  color: rgba(245, 245, 245, 0.92) !important;
+}
+
+.balance-datepicker .react-datepicker__day {
+  border-radius: 8px !important;
+}
+
+.balance-datepicker .react-datepicker__day:hover {
+  background: rgba(168, 85, 247, 0.18) !important;
+  color: #fff !important;
+}
+
+.balance-datepicker .react-datepicker__day--keyboard-selected,
+.balance-datepicker .react-datepicker__day--selected {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.95), rgba(147, 51, 234, 0.95)) !important;
+  color: #fff !important;
+}
+
+.balance-datepicker .react-datepicker__day--outside-month {
+  color: rgba(245, 245, 245, 0.45) !important;
+}
+
+.balance-datepicker .react-datepicker__navigation-icon::before {
+  border-color: rgba(245, 245, 245, 0.9) !important;
+}
+
+/* Larger day calendar size for Add Run date picker */
+.add-run-datepicker {
+  width: 300px !important;
+  min-width: 300px !important;
+}
+
+.add-run-datepicker .react-datepicker__month-container,
+.add-run-datepicker .react-datepicker__month,
+.add-run-datepicker .react-datepicker__header {
+  width: 100% !important;
+}
+
+.add-run-datepicker .react-datepicker__day-name,
+.add-run-datepicker .react-datepicker__day {
+  width: 2.2rem !important;
+  line-height: 2.2rem !important;
+  margin: 0.12rem !important;
+}
+
+/* Time picker styling for Add Run */
+.add-run-timepicker {
+  width: 220px !important;
+  min-width: 220px !important;
+}
+
+.add-run-timepicker .react-datepicker__time-container {
+  width: 100% !important;
+  border-left: none !important;
+  background: #0e0e12 !important;
+}
+
+.add-run-timepicker .react-datepicker__header--time {
+  background: #14141b !important;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.2) !important;
+  color: #f5f5f5 !important;
+}
+
+.add-run-timepicker .react-datepicker-time__header,
+.add-run-timepicker .react-datepicker__time,
+.add-run-timepicker .react-datepicker__time-box,
+.add-run-timepicker .react-datepicker__time-box .react-datepicker__time-list {
+  width: 100% !important;
+  background: #0e0e12 !important;
+  color: #f5f5f5 !important;
+}
+
+.add-run-timepicker .react-datepicker__time-list-item {
+  background: #0e0e12 !important;
+  color: rgba(245, 245, 245, 0.92) !important;
+}
+
+.add-run-timepicker .react-datepicker__time-list-item:hover {
+  background: rgba(168, 85, 247, 0.18) !important;
+  color: #fff !important;
+}
+
+.add-run-timepicker .react-datepicker__time-list-item--selected {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.95), rgba(147, 51, 234, 0.95)) !important;
+  color: #fff !important;
+}
+
+/* Normalize native date/time controls to balance theme */
+.add-run-native-input {
+  color-scheme: dark;
+}
+
+.add-run-native-input::-webkit-calendar-picker-indicator {
+  filter: invert(81%) sepia(14%) saturate(944%) hue-rotate(214deg) brightness(101%) contrast(94%);
+  opacity: 0.9;
+}
+
+.add-run-native-input::-webkit-datetime-edit,
+.add-run-native-input::-webkit-datetime-edit-text,
+.add-run-native-input::-webkit-datetime-edit-month-field,
+.add-run-native-input::-webkit-datetime-edit-day-field,
+.add-run-native-input::-webkit-datetime-edit-year-field,
+.add-run-native-input::-webkit-datetime-edit-hour-field,
+.add-run-native-input::-webkit-datetime-edit-minute-field,
+.add-run-native-input::-webkit-datetime-edit-ampm-field {
+  color: rgba(255, 255, 255, 0.95);
+}

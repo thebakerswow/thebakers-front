@@ -12,6 +12,10 @@ interface CustomSelectProps {
   placeholder?: string
   disabled?: boolean
   minWidthClassName?: string
+  triggerClassName?: string
+  menuClassName?: string
+  optionClassName?: string
+  activeOptionClassName?: string
 }
 
 export function CustomSelect({
@@ -21,6 +25,10 @@ export function CustomSelect({
   placeholder = 'Select an option',
   disabled = false,
   minWidthClassName = 'min-w-[220px]',
+  triggerClassName = '',
+  menuClassName = '',
+  optionClassName = '',
+  activeOptionClassName = '',
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
@@ -45,7 +53,7 @@ export function CustomSelect({
         type='button'
         disabled={disabled}
         onClick={() => setIsOpen((prev) => !prev)}
-        className='balance-filter-control h-10 w-full rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35 disabled:cursor-not-allowed disabled:opacity-60'
+        className={`balance-filter-control h-10 w-full rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35 disabled:cursor-not-allowed disabled:opacity-60 ${triggerClassName}`}
       >
         {selectedLabel}
       </button>
@@ -54,7 +62,9 @@ export function CustomSelect({
       </span>
 
       {isOpen && !disabled && (
-        <div className='absolute left-0 top-[calc(100%+8px)] z-[140] w-full overflow-hidden rounded-xl border border-purple-300/25 bg-[#0e0e12] shadow-[0_20px_40px_rgba(0,0,0,0.45)]'>
+        <div
+          className={`absolute left-0 top-[calc(100%+8px)] z-[140] w-full overflow-hidden rounded-xl border border-purple-300/25 bg-[#0e0e12] shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${menuClassName}`}
+        >
           <div className='max-h-64 overflow-auto p-1'>
             {options.length === 0 ? (
               <div className='px-3 py-2 text-sm text-neutral-400'>No options available</div>
@@ -69,8 +79,8 @@ export function CustomSelect({
                   }}
                   className={`mb-1 w-full rounded-md px-3 py-2 text-left text-sm transition last:mb-0 ${
                     option.value === value
-                      ? 'bg-[linear-gradient(180deg,rgba(168,85,247,0.95),rgba(147,51,234,0.95))] text-white'
-                      : 'text-white/90 hover:bg-white/10'
+                      ? `bg-[linear-gradient(180deg,rgba(168,85,247,0.95),rgba(147,51,234,0.95))] text-white ${activeOptionClassName}`
+                      : `text-white/90 hover:bg-white/10 ${optionClassName}`
                   }`}
                 >
                   {option.label}

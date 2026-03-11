@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { forwardRef, useState, useCallback, useEffect, useMemo } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
@@ -11,11 +11,27 @@ import {
   startOfWeek,
   startOfDay,
 } from 'date-fns'
-import { Button, Select, MenuItem, InputLabel } from '@mui/material'
+import { CustomSelect } from './custom-select'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
 }
+
+const MonthPickerInput = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void }
+>(({ value, onClick }, ref) => (
+  <button
+    ref={ref}
+    type='button'
+    onClick={onClick}
+    className='balance-filter-control h-10 min-w-[220px] rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35'
+  >
+    {value || 'Month'}
+  </button>
+))
+
+MonthPickerInput.displayName = 'MonthPickerInput'
 
 function computeWeeksAndDays(date: Date) {
   // Calcula as semanas e dias de um mês específico, incluindo a semana atual e o dia selecionado.
@@ -123,7 +139,14 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(
     initialData.selectedWeekIndex
   )
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const weekOptions = useMemo(
+    () =>
+      weeks.map((week, index) => ({
+        value: String(index),
+        label: `Week ${index + 1} (${format(week.start, 'MM/dd')} - ${format(week.end, 'MM/dd')})`,
+      })),
+    [weeks]
+  )
 
   useEffect(() => {
     // Configura o dia inicial do filtro ao montar o componente.
@@ -145,7 +168,6 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
         setSelectedMonth(date)
         updateWeeksAndDays(date)
       }
-      setIsCalendarOpen(false)
     },
     [updateWeeksAndDays]
   )
@@ -178,99 +200,71 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   }
 
   return (
-    <div className='mt-10 flex flex-col items-center gap-4 text-lg'>
-      <div className='flex items-center gap-12'>
+    <div className='mt-10 flex flex-col items-center gap-4'>
+      <div className='flex flex-wrap items-end gap-6'>
         <div className='flex flex-col'>
-          <InputLabel className='font-normal' style={{ color: 'white' }}>
-            Select Month:
-          </InputLabel>
-          <div className='flex items-center gap-4'>
+          <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+            Select Month
+          </label>
+          <div className='relative'>
             <DatePicker
               selected={selectedMonth}
               onChange={handleMonthChange}
               dateFormat='MM/yyyy'
               showMonthYearPicker
-              className='h-10 w-56 rounded-sm bg-white p-1 pl-2 font-normal text-zinc-900'
               placeholderText='Month'
-              open={isCalendarOpen}
-              onClickOutside={() => setIsCalendarOpen(false)}
-              onSelect={() => setIsCalendarOpen(false)}
-              onFocus={() => setIsCalendarOpen(true)}
+              popperClassName='z-[120] balance-datepicker-popper'
+              calendarClassName='balance-datepicker'
+              customInput={<MonthPickerInput />}
             />
+            <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+              ▼
+            </span>
           </div>
         </div>
         {weeks.length > 0 && (
-          <div>
-            <InputLabel className='font-normal' style={{ color: 'white' }}>
-              Select Week:
-            </InputLabel>
-            <div className='flex gap-4'>
-              <Select
-                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
-                onChange={(e) => handleWeekSelect(Number(e.target.value))}
-                value={selectedWeekIndex}
-                variant='outlined'
-              >
-                {weeks.map((week, index) => (
-                  <MenuItem key={index} value={index}>
-                    Week {index + 1} ({format(week.start, 'MM/dd')} -{' '}
-                    {format(week.end, 'MM/dd')})
-                  </MenuItem>
-                ))}
-              </Select>
-              <Button
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Select Week
+            </label>
+            <div className='flex gap-3'>
+              <CustomSelect
+                value={String(selectedWeekIndex)}
+                onChange={(value) => handleWeekSelect(Number(value))}
+                options={weekOptions}
+                minWidthClassName='min-w-[260px]'
+              />
+              <button
                 onClick={handleFilterReset}
-                variant='contained'
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234) ',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247) ' },
-                }}
-                size='small'
-                className='shadow-lg'
+                className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
               >
                 Reset
-              </Button>
+              </button>
             </div>
           </div>
         )}
       </div>
 
       {days.length > 0 && (
-        <div>
-          <InputLabel className='font-normal' style={{ color: 'white' }}>
-            Select Day:
-          </InputLabel>
-          <div className='flex gap-2'>
+        <div className='w-full'>
+          <label className='mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-400'>
+            Select Day
+          </label>
+          <div className='flex flex-wrap gap-2'>
             {days.map((day) => (
-              <Button
-                className={`${
+              <button
+                className={`h-10 rounded-md px-4 text-sm font-medium transition ${
                   filterDay &&
                   format(startOfDay(day), 'yyyy-MM-dd') ===
                     format(startOfDay(filterDay), 'yyyy-MM-dd')
-                    ? 'border font-medium'
-                    : ''
-                } m-2 gap-2 rounded-md`}
+                    ? 'border border-purple-300/50 bg-[linear-gradient(180deg,rgba(168,85,247,0.9)_0%,rgba(126,34,206,0.9)_100%)] text-white'
+                    : 'border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] text-white/90 hover:border-purple-300/45'
+                }`}
                 key={day.toISOString()}
                 onClick={() => handleDaySelect(day)}
-                variant='outlined'
-                style={{
-                  color: 'black',
-                  backgroundColor:
-                    filterDay &&
-                    format(startOfDay(day), 'yyyy-MM-dd') ===
-                      format(startOfDay(filterDay), 'yyyy-MM-dd')
-                      ? '#e9d5ff' // Light purple background for selected
-                      : 'white',
-                  borderColor:
-                    filterDay &&
-                    format(startOfDay(day), 'yyyy-MM-dd') ===
-                      format(startOfDay(filterDay), 'yyyy-MM-dd')
-                      ? '#c084fc' // Light purple border for selected
-                      : 'gray',
-                }}
               >
                 {format(day, 'EEEE, dd MMM')}
-              </Button>
+              </button>
             ))}
           </div>
         </div>

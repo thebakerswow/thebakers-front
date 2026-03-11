@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { RunsDataGrid } from './runs-data-grid'
 import { DateFilter } from '../../components/date-filter'
 import { format } from 'date-fns'
@@ -9,21 +9,9 @@ import { getRuns, createRun } from '../../services/api/runs'
 import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { RunData } from '../../types/runs-interface'
-import Button from '@mui/material/Button'
-import {
-  TextareaAutosize,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
 import Swal from 'sweetalert2'
+import { CustomSelect } from '../../components/custom-select'
+import { createPortal } from 'react-dom'
 
 export function FullRaidsNa() {
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -41,6 +29,61 @@ export function FullRaidsNa() {
   const [selectedLoot, setSelectedLoot] = useState<string>('All')
   const [selectedRunType, setSelectedRunType] = useState<string>('All')
   const { userRoles } = useAuth()
+  const teamOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All' },
+      { value: 'Garçom', label: 'Garçom' },
+      { value: 'Confeiteiros', label: 'Confeiteiros' },
+      { value: 'Jackfruit', label: 'Jackfruit' },
+      { value: 'Insanos', label: 'Insanos' },
+      { value: 'APAE', label: 'APAE' },
+      { value: 'Los Renegados', label: 'Los Renegados' },
+      { value: 'DTM', label: 'DTM' },
+      { value: 'KFFC', label: 'KFFC' },
+      { value: 'Greensky', label: 'Greensky' },
+      { value: 'Guild Azralon BR#1', label: 'Guild Azralon BR#1' },
+      { value: 'Guild Azralon BR#2', label: 'Guild Azralon BR#2' },
+      { value: 'Rocket', label: 'Rocket' },
+      { value: 'Booty Reaper', label: 'Booty Reaper' },
+      { value: 'Padeirinho', label: 'Padeirinho' },
+      { value: 'Milharal', label: 'Milharal' },
+      { value: 'Bastard Munchen', label: 'Bastard Munchen' },
+      { value: 'Kiwi', label: 'Kiwi' },
+    ],
+    []
+  )
+  const difficultyOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All' },
+      { value: 'Normal', label: 'Normal' },
+      { value: 'Heroic', label: 'Heroic' },
+      { value: 'Mythic', label: 'Mythic' },
+    ],
+    []
+  )
+  const lootOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All' },
+      { value: 'Group loot', label: 'Group loot' },
+      { value: 'Unsaved Group loot', label: 'Unsaved Group loot' },
+      { value: 'Full priority', label: 'Full priority' },
+      { value: 'No Loot', label: 'No Loot' },
+      { value: 'Armor and Token Priority', label: 'Armor and Token Priority' },
+    ],
+    []
+  )
+  const runTypeOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All' },
+      { value: 'Full Clear', label: 'Full Clear' },
+      { value: 'Last Boss', label: 'Last Boss' },
+      { value: 'Achievment', label: 'Achievment' },
+      { value: 'Legacy', label: 'Legacy' },
+      { value: 'Remix', label: 'Remix' },
+      { value: 'Mount Only', label: 'Mount Only' },
+    ],
+    []
+  )
 
   // Verifica se o usuário possui o papel necessário
   const hasRequiredRole = (requiredRoles: string[]) =>
@@ -237,247 +280,143 @@ export function FullRaidsNa() {
   }, [selectedDate])
 
   return (
-    <div className='flex min-h-screen w-full flex-col items-center overflow-auto pb-20'>
+    <div className='flex min-h-screen w-full flex-col items-center pb-20'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
       <DateFilter onDaySelect={setSelectedDate} />
 
-      <div className='mx-auto mt-6 flex w-[90%] flex-col p-4'>
-        {/* Linha com botões e filtros */}
+      <div className='mx-auto mt-6 flex w-[90%] flex-col gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm'>
         <div className='mb-2 flex flex-wrap items-end justify-between gap-4'>
-          {/* Botões à esquerda */}
           {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
             <div className='flex gap-2'>
-              <Button
-                variant='contained'
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  padding: '10px 20px',
-                  boxShadow: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                startIcon={<UserPlus size={18} />}
+              <button
+                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[120px] items-center justify-center gap-2 px-4'
                 onClick={() => setIsAddRunOpen(true)}
               >
+                <UserPlus size={18} />
                 Add Run
-              </Button>
-              <Button
-                variant='contained'
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': {
-                    backgroundColor: 'rgb(168, 85, 247)',
-                  },
-                  padding: '10px 20px',
-                  boxShadow: 3,
-                  display: 'flex',
-                  justify: 'center',
-                }}
-                startIcon={<ClipboardText size={18} />}
+              </button>
+              <button
+                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[130px] items-center justify-center gap-2 px-4'
                 onClick={copyRunsToClipboard}
               >
+                <ClipboardText size={18} />
                 {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
-              </Button>
-              <Button
-                variant='contained'
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                  padding: '10px 20px',
-                  boxShadow: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                startIcon={<UsersFour size={18} />}
+              </button>
+              <button
+                className='balance-action-btn balance-action-btn--primary inline-flex min-w-[170px] items-center justify-center gap-2 px-4'
                 onClick={() => setIsBulkAddOpen(true)}
               >
+                <UsersFour size={18} />
                 Add Multiple Runs
-              </Button>
+              </button>
             </div>
           )}
 
-          {/* Filtros à direita */}
           <div className='flex flex-wrap items-end gap-4'>
             {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
               <div className='flex flex-col'>
-                <InputLabel className='font-normal' style={{ color: 'white' }}>
-                  Team:
-                </InputLabel>
-                <Select
-                  className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
-                  id='team-filter'
+                <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+                  Team
+                </label>
+                <CustomSelect
                   value={selectedTeam}
-                  onChange={(e: SelectChangeEvent) =>
-                    setSelectedTeam(e.target.value)
-                  }
-                  variant='outlined'
-                >
-                  <MenuItem value='All'>All</MenuItem>
-                  <MenuItem value='Garçom'>Garçom</MenuItem>
-                  <MenuItem value='Confeiteiros'>Confeiteiros</MenuItem>
-                  <MenuItem value='Jackfruit'>Jackfruit</MenuItem>
-                  <MenuItem value='Insanos'>Insanos</MenuItem>
-                  <MenuItem value='APAE'>APAE</MenuItem>
-                  <MenuItem value='Los Renegados'>Los Renegados</MenuItem>
-                  <MenuItem value='DTM'>DTM</MenuItem>
-                  <MenuItem value='KFFC'>KFFC</MenuItem>
-                  <MenuItem value='Greensky'>Greensky</MenuItem>
-                  <MenuItem value='Guild Azralon BR#1'>Guild Azralon BR#1</MenuItem>
-                  <MenuItem value='Guild Azralon BR#2'>
-                    Guild Azralon BR#2
-                  </MenuItem>
-                  <MenuItem value='Rocket'>Rocket</MenuItem>
-                  <MenuItem value='Booty Reaper'>Booty Reaper</MenuItem>
-                  <MenuItem value='Padeirinho'>Padeirinho</MenuItem>
-                  <MenuItem value='Milharal'>Milharal</MenuItem>
-                  <MenuItem value='Bastard Munchen'>Bastard Munchen</MenuItem>
-                  <MenuItem value='Kiwi'>Kiwi</MenuItem>
-                </Select>
+                  onChange={setSelectedTeam}
+                  options={teamOptions}
+                  minWidthClassName='min-w-[220px]'
+                />
               </div>
             )}
 
             <div className='flex flex-col'>
-              <InputLabel className='font-normal' style={{ color: 'white' }}>
-                Difficulty:
-              </InputLabel>
-              <Select
-                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
-                id='difficulty-filter'
+              <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+                Difficulty
+              </label>
+              <CustomSelect
                 value={selectedDifficulty}
-                onChange={(e: SelectChangeEvent) =>
-                  setSelectedDifficulty(e.target.value)
-                }
-                variant='outlined'
-              >
-                <MenuItem value='All'>All</MenuItem>
-                <MenuItem value='Normal'>Normal</MenuItem>
-                <MenuItem value='Heroic'>Heroic</MenuItem>
-                <MenuItem value='Mythic'>Mythic</MenuItem>
-              </Select>
+                onChange={setSelectedDifficulty}
+                options={difficultyOptions}
+                minWidthClassName='min-w-[220px]'
+              />
             </div>
 
             <div className='flex flex-col'>
-              <InputLabel className='font-normal' style={{ color: 'white' }}>
-                Loot:
-              </InputLabel>
-              <Select
-                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
-                id='loot-filter'
+              <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+                Loot
+              </label>
+              <CustomSelect
                 value={selectedLoot}
-                onChange={(e: SelectChangeEvent) =>
-                  setSelectedLoot(e.target.value)
-                }
-                variant='outlined'
-              >
-                <MenuItem value='All'>All</MenuItem>
-                <MenuItem value='Saved'>Saved</MenuItem>
-                <MenuItem value='Unsaved'>Unsaved</MenuItem>
-              </Select>
+                onChange={setSelectedLoot}
+                options={lootOptions}
+                minWidthClassName='min-w-[220px]'
+              />
             </div>
 
             <div className='flex flex-col'>
-              <InputLabel className='font-normal' style={{ color: 'white' }}>
-                Run Type:
-              </InputLabel>
-              <Select
-                className='text-md h-10 w-56 rounded-md bg-white font-normal text-zinc-900'
-                id='run-type-filter'
+              <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+                Run Type
+              </label>
+              <CustomSelect
                 value={selectedRunType}
-                onChange={(e: SelectChangeEvent) =>
-                  setSelectedRunType(e.target.value)
-                }
-                variant='outlined'
-              >
-                <MenuItem value='All'>All</MenuItem>
-                <MenuItem value='Full Raid'>Full Raid</MenuItem>
-                <MenuItem value='AOTC'>AOTC</MenuItem>
-                <MenuItem value='Legacy'>Legacy</MenuItem>
-                <MenuItem value='Remix'>Remix</MenuItem>
-              </Select>
+                onChange={setSelectedRunType}
+                options={runTypeOptions}
+                minWidthClassName='min-w-[220px]'
+              />
             </div>
 
-            <Button
+            <button
               onClick={() => {
                 setSelectedTeam('All')
                 setSelectedDifficulty('All')
                 setSelectedLoot('All')
                 setSelectedRunType('All')
               }}
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                height: '40px',
-              }}
-              size='small'
-              className='shadow-lg'
+              className='balance-action-btn balance-action-btn--primary min-w-[100px] px-4'
             >
               Reset
-            </Button>
+            </button>
           </div>
         </div>
 
-        {isBulkAddOpen && (
-          <Dialog
-            open={isBulkAddOpen}
-            onClose={handleCloseBulkAddDialog}
-            fullWidth
-            maxWidth='md'
-          >
-            <DialogTitle className='relative'>
-              Add Multiple Runs
-              <IconButton
-                aria-label='close'
-                onClick={handleCloseBulkAddDialog}
-                sx={{ position: 'absolute', right: 8, top: 8 }}
-              >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent>
-              <TextareaAutosize
-                minRows={10}
-                placeholder='Paste runs data here (JSON format)'
-                value={bulkRunsData}
-                onChange={(e) => handleBulkRunsDataChange(e.target.value)} // Automatically handle pasted data
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button
-                variant='contained'
-                sx={{
-                  backgroundColor: 'rgb(34, 197, 94)',
-                  '&:hover': { backgroundColor: 'rgb(52, 211, 153)' },
-                }}
-                onClick={handleBulkAddRuns}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Runs'}
-              </Button>
-              <Button
-                variant='outlined'
-                sx={{
-                  borderColor: 'rgb(147, 51, 234)',
-                  color: 'rgb(147, 51, 234)',
-                  '&:hover': {
-                    borderColor: 'rgb(168, 85, 247)',
-                    color: 'rgb(168, 85, 247)',
-                  },
-                }}
-                onClick={handleCloseBulkAddDialog}
-              >
-                Cancel
-              </Button>
-            </DialogActions>
-          </Dialog>
-        )}
+        {isBulkAddOpen &&
+          createPortal(
+            <div className='fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
+              <div className='w-full max-w-3xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <h3 className='text-lg font-semibold text-purple-100'>Add Multiple Runs</h3>
+                  <button
+                    aria-label='close'
+                    onClick={handleCloseBulkAddDialog}
+                    className='rounded-md p-1 text-purple-200/70 hover:bg-purple-400/15 hover:text-purple-100'
+                  >
+                    ×
+                  </button>
+                </div>
+                <textarea
+                  rows={12}
+                  placeholder='Paste runs data here (JSON format)'
+                  value={bulkRunsData}
+                  onChange={(e) => handleBulkRunsDataChange(e.target.value)}
+                  className='w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] p-3 font-mono text-sm text-purple-100 outline-none placeholder:text-purple-200/50 focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+                />
+                <div className='mt-4 flex justify-end gap-2'>
+                  <button
+                    onClick={handleBulkAddRuns}
+                    disabled={isSubmitting}
+                    className='balance-action-btn h-10 rounded-md border border-green-400/40 bg-green-600/80 px-4 text-sm font-semibold text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Runs'}
+                  </button>
+                  <button
+                    onClick={handleCloseBulkAddDialog}
+                    className='balance-action-btn px-4'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
 
         <RunsDataGrid
           data={filteredRows}

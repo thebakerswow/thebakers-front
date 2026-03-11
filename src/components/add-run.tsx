@@ -1,30 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { UserPlus } from '@phosphor-icons/react'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Box,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  SelectChangeEvent,
-  Chip,
-  Button,
-  CircularProgress,
-  IconButton,
-} from '@mui/material'
 import axios from 'axios'
+import { format, parse } from 'date-fns'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import Swal from 'sweetalert2'
 import { getTeamMembers } from '../services/api/users'
 import { createRun } from '../services/api/runs'
 import { ErrorDetails } from './error-display'
-import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers'
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import dayjs from 'dayjs'
-import Swal from 'sweetalert2'
-import CloseIcon from '@mui/icons-material/Close'
+import { CustomSelect } from './custom-select'
 
 interface ApiOption {
   id: string
@@ -37,6 +22,17 @@ export interface AddRunProps {
   onRunAddedReload: () => void
   onError: (error: ErrorDetails | null) => void
 }
+
+const DatePickerInput = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void; className: string; placeholder?: string }
+>(({ value, onClick, className, placeholder = 'dd/mm/aaaa' }, ref) => (
+  <button ref={ref} type='button' onClick={onClick} className={className}>
+    <span className={value ? 'text-purple-100' : 'text-purple-200/50'}>{value || placeholder}</span>
+  </button>
+))
+
+DatePickerInput.displayName = 'DatePickerInput'
 
 export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
   const [formData, setFormData] = useState({
@@ -51,21 +47,91 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     raidLeader: [] as string[],
     loot: '',
     note: '',
-    quantityBoss: { String: '', Valid: false }, // precisa ser objeto para o backend Go
+    quantityBoss: { String: '', Valid: false },
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
+  const timePickerRef = useRef<HTMLDivElement | null>(null)
 
-  // Function to fetch team members
+  const baseFieldClass =
+    'h-12 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 text-base text-purple-100 outline-none placeholder:text-purple-200/50 focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+  const selectTriggerClass =
+    'h-12 !border-purple-300/25 !bg-[rgba(14,10,28,0.9)] !bg-none px-4 pr-9 text-base !text-purple-100 !shadow-none focus:!border-purple-300/55 focus:!ring-purple-500/45'
+  const selectMenuClass =
+    'z-[240] !border-purple-300/25 !bg-[rgba(14,10,28,0.98)] !bg-none !shadow-[0_20px_40px_rgba(0,0,0,0.45)]'
+  const selectOptionClass = 'text-purple-100 hover:bg-purple-500/20'
+  const selectActiveOptionClass = 'shadow-[0_0_0_1px_rgba(216,180,254,0.35)_inset]'
+  const dateTriggerClass =
+    'balance-filter-control h-12 w-full rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 pr-9 text-left text-base shadow-none outline-none transition focus:border-purple-300/55 focus:ring-2 focus:ring-purple-500/45'
+
+  const runNameOptions = useMemo(
+    () => [
+      'Nerub-ar Palace',
+      'Liberation of Undermine',
+      'Manaforge Omega',
+      "March on Quel'Danas",
+      'The Dreamrift',
+      'The Voidspire',
+    ],
+    []
+  )
+
+  const runTypeOptions = useMemo(
+    () => ['Full Clear', 'Last Boss', 'Achievment', 'Legacy', 'Remix', 'Mount Only'],
+    []
+  )
+
+  const teamOptions = useMemo(
+    () => [
+      { value: import.meta.env.VITE_TEAM_GARCOM, label: 'Garçom' },
+      { value: import.meta.env.VITE_TEAM_CONFEITEIROS, label: 'Confeiteiros' },
+      { value: import.meta.env.VITE_TEAM_JACKFRUIT, label: 'Jackfruit' },
+      { value: import.meta.env.VITE_TEAM_INSANOS, label: 'Insanos' },
+      { value: import.meta.env.VITE_TEAM_APAE, label: 'APAE' },
+      { value: import.meta.env.VITE_TEAM_LOSRENEGADOS, label: 'Los Renegados' },
+      { value: import.meta.env.VITE_TEAM_DTM, label: 'DTM' },
+      { value: import.meta.env.VITE_TEAM_KFFC, label: 'KFFC' },
+      { value: import.meta.env.VITE_TEAM_GREENSKY, label: 'Greensky' },
+      { value: import.meta.env.VITE_TEAM_GUILD_AZRALON_1, label: 'Guild Azralon BR#1' },
+      { value: import.meta.env.VITE_TEAM_GUILD_AZRALON_2, label: 'Guild Azralon BR#2' },
+      { value: import.meta.env.VITE_TEAM_ROCKET, label: 'Rocket' },
+      { value: import.meta.env.VITE_TEAM_BOOTY_REAPER, label: 'Booty Reaper' },
+      { value: import.meta.env.VITE_TEAM_PADEIRINHO, label: 'Padeirinho' },
+      { value: import.meta.env.VITE_TEAM_MILHARAL, label: 'Milharal' },
+      { value: import.meta.env.VITE_TEAM_BASTARD, label: 'Bastard Munchen' },
+      { value: import.meta.env.VITE_TEAM_KIWI, label: 'Kiwi' },
+    ],
+    []
+  )
+
+  const lootOptions = useMemo(
+    () => [
+      'Group loot',
+      'Unsaved Group loot',
+      'Full priority',
+      'No Loot',
+      'Armor and Token Priority',
+    ],
+    []
+  )
+
+  const hourOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0')),
+    []
+  )
+  const minuteOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0')),
+    []
+  )
+
   const fetchTeamMembers = useCallback(async () => {
     try {
       const teamId = import.meta.env.VITE_TEAM_PREFEITO
       const response = await getTeamMembers(teamId)
       setApiOptions(response)
-      onError(null) // Clear any previous errors
+      onError(null)
     } catch (error) {
-      console.error('Error fetching team members:', error)
       const errorDetails = axios.isAxiosError(error)
         ? {
             message: error.message,
@@ -80,55 +146,85 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     }
   }, [onError])
 
-  // Fetches API options when mounting the Prefeito team component
   useEffect(() => {
     fetchTeamMembers()
   }, [fetchTeamMembers])
 
-  // Updates form values
-  const handleChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | SelectChangeEvent
-  ) => {
-    const target = e.target as { id?: string; name?: string; value: string }
-    const key = target.id || target.name
-    if (!key) return
-    if (key === 'quantityBoss') {
-      setFormData((prev) => ({
-        ...prev,
-        quantityBoss: {
-          String: target.value,
-          Valid: !!target.value,
-        },
-      }))
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [key]:
-          key === 'maxBuyers' && !/^[0-9]*$/.test(target.value)
-            ? prev.maxBuyers
-            : target.value,
-      }))
+  const setField = (field: string, value: string) => {
+    if (field === 'name') {
+      setFormData((prev) => ({ ...prev, name: { String: value, Valid: !!value } }))
+      return
     }
+    if (field === 'quantityBoss') {
+      setFormData((prev) => ({
+        ...prev,
+        quantityBoss: { String: value, Valid: !!value },
+      }))
+      return
+    }
+    if (field === 'difficulty') {
+      setFormData((prev) => ({
+        ...prev,
+        difficulty: value,
+        quantityBoss: { String: '', Valid: false },
+      }))
+      return
+    }
+    if (field === 'maxBuyers' && !/^[0-9]*$/.test(value)) return
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Sends form data to API
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleRaidLeaderChange = (value: string, checked: boolean) => {
+    setFormData((prev) => {
+      const nextRaidLeaders = checked
+        ? [...prev.raidLeader, value]
+        : prev.raidLeader.filter((leader) => leader !== value)
+
+      return { ...prev, raidLeader: nextRaidLeaders }
+    })
+  }
+
+  const selectedRaidLeaders = formData.raidLeader.map((value) => {
+    const found = apiOptions.find((option) => `${option.id};${option.username}` === value)
+    return found?.global_name || value
+  })
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setIsSubmitting(true)
     onError(null)
+
+    if (
+      !formData.name.String ||
+      !formData.date ||
+      !formData.time ||
+      !formData.raid ||
+      !formData.runType ||
+      !formData.difficulty ||
+      !formData.idTeam ||
+      !formData.maxBuyers ||
+      !formData.loot ||
+      formData.raidLeader.length === 0 ||
+      (formData.difficulty === 'Mythic' && !formData.quantityBoss.String)
+    ) {
+      Swal.fire({
+        title: 'Missing fields',
+        text: 'Please fill all required fields.',
+        icon: 'warning',
+        timer: 1600,
+        showConfirmButton: false,
+      })
+      setIsSubmitting(false)
+      return
+    }
 
     try {
       await createRun({
         ...formData,
-        quantityBoss: formData.quantityBoss, // envia como objeto para o backend Go
+        quantityBoss: formData.quantityBoss,
       })
       await onRunAddedReload()
-      setIsSuccess(true)
-      onClose() // Close the modal before showing Swal
-
-      // Shows confirmation alert after closing dialog
+      onClose()
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',
@@ -137,9 +233,8 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
           timer: 1500,
           showConfirmButton: false,
         })
-      }, 150) // Delay um pouco maior para garantir que o dialog foi fechado
+      }, 150)
     } catch (error) {
-      console.error('Error creating run:', error)
       const errorDetails = axios.isAxiosError(error)
         ? {
             message: error.message,
@@ -153,371 +248,404 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     }
   }
 
-  return (
-    <Dialog open={true} onClose={onClose} fullWidth>
-      <DialogTitle
-        sx={{
-          textAlign: 'center', // Centraliza o título
-          fontWeight: 'bold', // Opcional: adiciona destaque ao título
-        }}
-      >
-        {isSuccess ? 'Success' : 'Add Run'}
-        <IconButton
-          aria-label='close'
-          onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+  const handleNoteInput = (event: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = event.currentTarget
+    target.style.height = 'auto'
+    target.style.height = `${target.scrollHeight}px`
+  }
 
-      <DialogContent
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          position: 'relative',
-          bgcolor: 'background.paper',
-          p: 4,
-          borderRadius: 2,
-        }}
-      >
-        {/* Formulário para criar uma nova run */}
-        <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-2 gap-4'>
-          {/* Inputs e selects para os dados da run */}
-          <FormControl fullWidth variant='outlined' required margin='dense'>
-            <InputLabel id='name-label'>Name</InputLabel>
-            <Select
-              id='name'
+  const selectedDate = useMemo(() => {
+    if (!formData.date) return null
+    const parsedDate = parse(formData.date, 'yyyy-MM-dd', new Date())
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+  }, [formData.date])
+
+  const timeParts = useMemo(() => {
+    if (!formData.time) {
+      return { hour: '12', minute: '00', period: 'AM', hasValue: false }
+    }
+
+    const [hourPart, minutePart = '00'] = formData.time.split(':')
+    const parsedHour = Number(hourPart)
+    if (Number.isNaN(parsedHour)) {
+      return { hour: '12', minute: '00', period: 'AM', hasValue: false }
+    }
+
+    const period = parsedHour >= 12 ? 'PM' : 'AM'
+    const normalizedHour = parsedHour % 12 || 12
+
+    return {
+      hour: String(normalizedHour).padStart(2, '0'),
+      minute: minutePart.padStart(2, '0'),
+      period,
+      hasValue: true,
+    }
+  }, [formData.time])
+
+  useEffect(() => {
+    if (!isTimePickerOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!timePickerRef.current) return
+      if (!timePickerRef.current.contains(event.target as Node)) {
+        setIsTimePickerOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isTimePickerOpen])
+
+  const updateTimePart = (part: 'hour' | 'minute' | 'period', value: string) => {
+    const nextHour12 = part === 'hour' ? value : timeParts.hour
+    const nextMinute = part === 'minute' ? value : timeParts.minute
+    const nextPeriod = part === 'period' ? value : timeParts.period
+
+    let hour24 = Number(nextHour12) % 12
+    if (nextPeriod === 'PM') hour24 += 12
+
+    setField('time', `${String(hour24).padStart(2, '0')}:${nextMinute}`)
+  }
+
+  return createPortal(
+    <div className='fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(8,4,20,0.8)] p-4 backdrop-blur-[2px]'>
+      <div className='w-full max-w-3xl rounded-xl border border-purple-300/25 bg-[linear-gradient(180deg,rgba(27,19,44,0.95)_0%,rgba(16,11,30,0.95)_100%)] p-5'>
+        <div className='mb-4 flex items-center justify-between'>
+          <h3 className='text-lg font-semibold text-purple-100'>Add Run</h3>
+          <button
+            aria-label='close'
+            onClick={onClose}
+            className='rounded-md p-1 text-purple-200/70 hover:bg-purple-400/15 hover:text-purple-100'
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className='grid grid-cols-2 gap-4'>
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Name
+            </label>
+            <CustomSelect
               value={formData.name.String}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  name: { String: e.target.value, Valid: !!e.target.value },
-                }))
-              }
-              label='Name'
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200,
-                    overflow: 'auto',
-                  },
-                },
-              }}
-            >
-              <MenuItem value='Nerub-ar Palace'>Nerub-ar Palace</MenuItem>
-              <MenuItem value='Liberation of Undermine'>Liberation of Undermine</MenuItem>
-              <MenuItem value='Manaforge Omega'>Manaforge Omega</MenuItem>
-              <MenuItem value="March on Quel'Danas">
-                March on Quel'Danas
-              </MenuItem>
-              <MenuItem value='The Dreamrift'>The Dreamrift</MenuItem>
-              <MenuItem value='The Voidspire'>The Voidspire</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            type='date'
-            id='date'
-            label='Date'
-            required
-            value={formData.date}
-            onChange={handleChange}
-            variant='outlined'
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <TimePicker
-              label='Time'
-              value={formData.time ? dayjs(formData.time, 'HH:mm') : null}
-              onChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  time:
-                    value && dayjs(value).isValid()
-                      ? dayjs(value).format('HH:mm') // Format as HH:mm
-                      : '',
-                }))
-              }
-              ampm={true} // Define o formato 12h com AM/PM
-              slotProps={{ textField: { fullWidth: true } }}
+              onChange={(value) => setField('name', value)}
+              options={runNameOptions.map((name) => ({ value: name, label: name }))}
+              placeholder='Select name'
+              minWidthClassName='w-full min-w-0'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
             />
-          </LocalizationProvider>
-          <TextField
-            type='text'
-            label='Raid'
-            id='raid'
-            required
-            value={formData.raid}
-            onChange={handleChange}
-            variant='outlined'
-            fullWidth
-          />
-          <FormControl fullWidth variant='outlined' required>
-            <InputLabel id='runType-label'>Run Type</InputLabel>
-            <Select
-              id='runType'
-              value={formData.runType}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  runType: e.target.value,
-                }))
-              }
-              label='Run Type'
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Define a altura máxima
-                    overflow: 'auto', // Adiciona rolagem
-                  },
-                },
-              }}
-            >
-              <MenuItem value='Full Clear'>Full Clear</MenuItem>
-              <MenuItem value='Last Boss'>Last Boss</MenuItem>
-              <MenuItem value='Achievment'>Achievment</MenuItem>
-              <MenuItem value='Legacy'>Legacy</MenuItem>
-              <MenuItem value='Remix'>Remix</MenuItem>
-              <MenuItem value='Mount Only'>Mount Only</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth variant='outlined' required>
-            <InputLabel id='difficulty-label'>Difficulty</InputLabel>
-            <Select
-              id='difficulty'
-              value={formData.difficulty}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  difficulty: e.target.value,
-                  quantityBoss: { String: '', Valid: false }, // limpa a opção extra se mudar a dificuldade
-                }))
-              }
-              label='Difficulty'
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Define a altura máxima
-                    overflow: 'auto', // Adiciona rolagem
-                  },
-                },
-              }}
-            >
-              <MenuItem value='Normal'>Normal</MenuItem>
-              <MenuItem value='Heroic'>Heroic</MenuItem>
-              <MenuItem value='Mythic'>Mythic</MenuItem>
-            </Select>
-          </FormControl>
-          {formData.difficulty === 'Mythic' && (
-            <FormControl fullWidth variant='outlined' required>
-              <InputLabel id='quantityBoss-label'>Mythic Cut</InputLabel>
-              <Select
-                id='quantityBoss'
-                name='quantityBoss'
-                value={formData.quantityBoss.String}
-                onChange={handleChange}
-                label='Mythic Option'
-              >
-                <MenuItem value='Up to 6/8'>Up to 6/8</MenuItem>
-                <MenuItem value='7/8, 8/8 & Last Boss'>
-                  7/8, 8/8 & Last Boss
-                </MenuItem>
-              </Select>
-            </FormControl>
-          )}
-          <FormControl fullWidth variant='outlined' required>
-            <InputLabel id='idTeam-label'>Team</InputLabel>
-            <Select
-              id='idTeam'
-              value={formData.idTeam}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  idTeam: e.target.value,
-                }))
-              }
-              label='Team'
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Define a altura máxima
-                    overflow: 'auto', // Adiciona rolagem
-                  },
-                },
-              }}
-            >
-              <MenuItem value={import.meta.env.VITE_TEAM_GARCOM}>
-                Garçom
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_CONFEITEIROS}>
-                Confeiteiros
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_JACKFRUIT}>
-                Jackfruit
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_INSANOS}>
-                Insanos
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_APAE}>APAE</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_LOSRENEGADOS}>Los Renegados</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_DTM}>DTM</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_KFFC}>KFFC</MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_GREENSKY}>
-                Greensky
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_1}>
-                Guild Azralon BR#1
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_GUILD_AZRALON_2}>
-                Guild Azralon BR#2
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_ROCKET}>
-                Rocket
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_BOOTY_REAPER}>
-                Booty Reaper
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_PADEIRINHO}>
-                Padeirinho
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_MILHARAL}>
-                Milharal
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_BASTARD}>
-                Bastard Munchen
-              </MenuItem>
-              <MenuItem value={import.meta.env.VITE_TEAM_KIWI}>
-                Kiwi
-              </MenuItem>
+          </div>
 
-            </Select>
-          </FormControl>
-          <TextField
-            type='text'
-            id='maxBuyers'
-            label='Max Buyers'
-            required
-            value={formData.maxBuyers}
-            onChange={handleChange}
-            variant='outlined'
-            fullWidth
-          />
-          <FormControl fullWidth variant='outlined' required>
-            <InputLabel id='raidLeader-label'>Raid Leader</InputLabel>
-            <Select
-              id='raidLeader'
-              multiple
-              value={formData.raidLeader}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  raidLeader: e.target.value as string[],
-                }))
-              }
-              label='Raid Leader'
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {(selected as string[]).map((value) => (
-                    <Chip
-                      key={value}
-                      label={
-                        apiOptions.find(
-                          (option) =>
-                            `${option.id};${option.username}` === value
-                        )?.global_name || value
-                      }
-                    />
-                  ))}
-                </Box>
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Date
+            </label>
+            <div className='relative'>
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => setField('date', date ? format(date, 'yyyy-MM-dd') : '')}
+                dateFormat='dd/MM/yyyy'
+                placeholderText='dd/mm/aaaa'
+                popperClassName='z-[240] balance-datepicker-popper'
+                calendarClassName='balance-datepicker add-run-datepicker'
+                wrapperClassName='w-full'
+                customInput={<DatePickerInput className={dateTriggerClass} />}
+              />
+              <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+                ▼
+              </span>
+            </div>
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Time
+            </label>
+            <div ref={timePickerRef} className='relative'>
+              <button
+                type='button'
+                onClick={() => setIsTimePickerOpen((prev) => !prev)}
+                className={dateTriggerClass}
+              >
+                <span className={timeParts.hasValue ? 'text-purple-100' : 'text-purple-200/50'}>
+                  {timeParts.hasValue
+                    ? `${timeParts.hour}:${timeParts.minute} ${timeParts.period}`
+                    : '--:--'}
+                </span>
+              </button>
+              <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+                ▼
+              </span>
+              {isTimePickerOpen && (
+                <div className='absolute left-0 top-[calc(100%+8px)] z-[240] w-full overflow-hidden rounded-xl border border-purple-300/25 bg-[rgba(14,10,28,0.98)] p-3 shadow-[0_20px_40px_rgba(0,0,0,0.45)]'>
+                  <div className='grid grid-cols-3 gap-2'>
+                    <div className='flex flex-col'>
+                      <span className='mb-1 text-[10px] font-semibold uppercase tracking-wide text-purple-200/70'>
+                        Hour
+                      </span>
+                      <div className='max-h-32 overflow-y-auto rounded-md border border-purple-300/20 bg-[rgba(8,4,20,0.55)] p-1'>
+                        {hourOptions.map((hour) => (
+                          <button
+                            key={hour}
+                            type='button'
+                            onClick={() => updateTimePart('hour', hour)}
+                            className={`mb-1 w-full rounded px-2 py-1 text-sm transition last:mb-0 ${
+                              timeParts.hour === hour
+                                ? 'bg-purple-500/65 text-white'
+                                : 'text-purple-100/90 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            {hour}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='flex flex-col'>
+                      <span className='mb-1 text-[10px] font-semibold uppercase tracking-wide text-purple-200/70'>
+                        Minute
+                      </span>
+                      <div className='max-h-32 overflow-y-auto rounded-md border border-purple-300/20 bg-[rgba(8,4,20,0.55)] p-1'>
+                        {minuteOptions.map((minute) => (
+                          <button
+                            key={minute}
+                            type='button'
+                            onClick={() => updateTimePart('minute', minute)}
+                            className={`mb-1 w-full rounded px-2 py-1 text-sm transition last:mb-0 ${
+                              timeParts.minute === minute
+                                ? 'bg-purple-500/65 text-white'
+                                : 'text-purple-100/90 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            {minute}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='flex flex-col'>
+                      <span className='mb-1 text-[10px] font-semibold uppercase tracking-wide text-purple-200/70'>
+                        AM/PM
+                      </span>
+                      <div className='rounded-md border border-purple-300/20 bg-[rgba(8,4,20,0.55)] p-1'>
+                        {(['AM', 'PM'] as const).map((period) => (
+                          <button
+                            key={period}
+                            type='button'
+                            onClick={() => updateTimePart('period', period)}
+                            className={`mb-1 w-full rounded px-2 py-1 text-sm transition last:mb-0 ${
+                              timeParts.period === period
+                                ? 'bg-purple-500/65 text-white'
+                                : 'text-purple-100/90 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            {period}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Define a altura máxima
-                    overflow: 'auto', // Adiciona rolagem
-                  },
-                },
-              }}
-            >
-              {apiOptions.map((option) => (
-                <MenuItem
-                  key={option.username}
-                  value={`${option.id};${option.username}`}
-                >
-                  {option.global_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth variant='outlined' required>
-            <InputLabel id='loot-label'>Loot Options</InputLabel>
-            <Select
-              id='loot'
+            </div>
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Raid
+            </label>
+            <input
+              type='text'
+              value={formData.raid}
+              onChange={(e) => setField('raid', e.target.value)}
+              className={baseFieldClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Run Type
+            </label>
+            <CustomSelect
+              value={formData.runType}
+              onChange={(value) => setField('runType', value)}
+              options={runTypeOptions.map((option) => ({ value: option, label: option }))}
+              placeholder='Select run type'
+              minWidthClassName='w-full min-w-0'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Difficulty
+            </label>
+            <CustomSelect
+              value={formData.difficulty}
+              onChange={(value) => setField('difficulty', value)}
+              options={[
+                { value: 'Normal', label: 'Normal' },
+                { value: 'Heroic', label: 'Heroic' },
+                { value: 'Mythic', label: 'Mythic' },
+              ]}
+              placeholder='Select difficulty'
+              minWidthClassName='w-full min-w-0'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
+            />
+          </div>
+
+          {formData.difficulty === 'Mythic' && (
+            <div className='flex flex-col'>
+              <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+                Mythic Cut
+              </label>
+              <CustomSelect
+                value={formData.quantityBoss.String}
+                onChange={(value) => setField('quantityBoss', value)}
+                options={[
+                  { value: 'Up to 6/8', label: 'Up to 6/8' },
+                  { value: '7/8, 8/8 & Last Boss', label: '7/8, 8/8 & Last Boss' },
+                ]}
+                placeholder='Select option'
+                minWidthClassName='w-full min-w-0'
+                triggerClassName={selectTriggerClass}
+                menuClassName={selectMenuClass}
+                optionClassName={selectOptionClass}
+                activeOptionClassName={selectActiveOptionClass}
+              />
+            </div>
+          )}
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Team
+            </label>
+            <CustomSelect
+              value={formData.idTeam}
+              onChange={(value) => setField('idTeam', value)}
+              options={teamOptions}
+              placeholder='Select team'
+              minWidthClassName='w-full min-w-0'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Max Buyers
+            </label>
+            <input
+              type='text'
+              value={formData.maxBuyers}
+              onChange={(e) => setField('maxBuyers', e.target.value)}
+              className={baseFieldClass}
+            />
+          </div>
+
+          <div className='col-span-2 flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Raid Leader
+            </label>
+            <div className='max-h-[190px] w-full overflow-y-auto rounded-md border border-purple-300/25 bg-[rgba(14,10,28,0.9)] px-4 py-3'>
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+                {apiOptions.map((option) => {
+                  const optionValue = `${option.id};${option.username}`
+                  const isChecked = formData.raidLeader.includes(optionValue)
+
+                  return (
+                    <label
+                      key={option.username}
+                      className='flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-purple-100 hover:bg-purple-500/10'
+                    >
+                      <input
+                        type='checkbox'
+                        checked={isChecked}
+                        onChange={(event) =>
+                          handleRaidLeaderChange(optionValue, event.target.checked)
+                        }
+                        className='h-4 w-4 cursor-pointer rounded border-purple-300/40 bg-[rgba(14,10,28,0.9)] accent-purple-500'
+                      />
+                      <span>{option.global_name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            {selectedRaidLeaders.length > 0 ? (
+              <div className='mt-2 flex flex-wrap gap-1'>
+                {selectedRaidLeaders.map((leader) => (
+                  <span
+                    key={leader}
+                    className='rounded-full border border-purple-300/30 bg-purple-500/20 px-2 py-0.5 text-xs text-purple-100'
+                  >
+                    {leader}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Loot Options
+            </label>
+            <CustomSelect
               value={formData.loot}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  loot: e.target.value,
-                }))
-              }
-              label='Loot Options'
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Define a altura máxima
-                    overflow: 'auto',
-                  },
-                },
-              }}
-            >
-              <MenuItem value='Group loot'>Group loot</MenuItem>
-              <MenuItem value='Unsaved Group loot'>Unsaved Group loot</MenuItem>
-              <MenuItem value='Full priority'>Full priority</MenuItem>
-              <MenuItem value='No Loot'>No Loot</MenuItem>
-              <MenuItem value='Armor and Token Priority'>
-                Armor and Token Priority
-              </MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            placeholder='Note'
-            id='note'
-            value={formData.note}
-            onChange={handleChange}
-            variant='outlined'
-            fullWidth
-            multiline
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <div className='col-span-2 flex items-center justify-center'>
-            <Button
+              onChange={(value) => setField('loot', value)}
+              options={lootOptions.map((option) => ({ value: option, label: option }))}
+              placeholder='Select loot'
+              minWidthClassName='w-full min-w-0'
+              triggerClassName={selectTriggerClass}
+              menuClassName={selectMenuClass}
+              optionClassName={selectOptionClass}
+              activeOptionClassName={selectActiveOptionClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs font-medium uppercase tracking-wide text-neutral-400'>
+              Note
+            </label>
+            <textarea
+              rows={1}
+              placeholder='Note'
+              value={formData.note}
+              onChange={(e) => setField('note', e.target.value)}
+              onInput={handleNoteInput}
+              className={`${baseFieldClass} min-h-12 resize-none overflow-hidden py-3`}
+            />
+          </div>
+
+          <div className='col-span-2 mt-2 flex items-center justify-center gap-2'>
+            <button
               type='submit'
-              variant='contained'
-              sx={{
-                backgroundColor: 'rgb(147, 51, 234)',
-                '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                padding: '10px 20px',
-                boxShadow: 3,
-              }}
-              size='medium'
               disabled={isSubmitting}
-              startIcon={
-                isSubmitting ? (
-                  <CircularProgress size={20} color='inherit' />
-                ) : (
-                  <UserPlus size={20} />
-                )
-              }
+              className='balance-action-btn balance-action-btn--primary inline-flex min-w-[160px] items-center justify-center gap-2 px-5 disabled:cursor-not-allowed disabled:opacity-60'
             >
+              {isSubmitting ? (
+                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
+              ) : (
+                <UserPlus size={18} />
+              )}
               {isSubmitting ? 'Creating...' : 'Add Run'}
-            </Button>
+            </button>
+            <button type='button' onClick={onClose} className='balance-action-btn px-4'>
+              Cancel
+            </button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>,
+    document.body
   )
 }
