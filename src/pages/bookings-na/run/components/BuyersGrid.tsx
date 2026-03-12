@@ -22,7 +22,7 @@ import { EditBuyer } from './EditBuyer'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../../context/auth-context'
 import CryptoJS from 'crypto-js'
-import { CustomSelect } from '../../../../components/custom-select'
+import { CustomSelect } from '../../../../components/CustomSelect'
 import type { BuyerData, BuyersGridProps, RaidLeader } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 

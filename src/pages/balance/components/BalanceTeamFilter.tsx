@@ -1,20 +1,14 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import axios from 'axios'
-import { getBalanceTeams } from '../../../services/api/teams'
-import { ErrorDetails } from '../../../components/error-display'
+import { fetchBalanceTeams } from '../services/balanceApi'
 import { useAuth } from '../../../context/auth-context'
 import { shouldShowBalanceFilter, getUserTeamsForFilter } from '../../../utils/role-utils'
-import { CustomSelect } from '../../../components/custom-select'
-
-interface BalanceTeamFilterProps {
-  selectedTeam: string | null
-  onChange: (team: string | null) => void
-  onError: (error: ErrorDetails | null) => void
-}
+import { CustomSelect } from '../../../components/CustomSelect'
+import { handleApiError } from '../../../utils/apiErrorHandler'
+import { BalanceTeamFilterProps, BalanceTeamOption } from '../types/balance'
 
 // Função para ordenar times por prioridade baseada nos nomes
 const sortTeamsByPriority = (
-  teams: Array<{ id_discord: string; team_name: string }>
+  teams: BalanceTeamOption[]
 ) => {
   // Define a ordem de prioridade dos times
   const priorityOrder = [
@@ -64,7 +58,6 @@ const sortTeamsByPriority = (
 export function BalanceTeamFilter({
   selectedTeam,
   onChange,
-  onError,
 }: BalanceTeamFilterProps) {
   const { userRoles } = useAuth()
   
@@ -75,16 +68,16 @@ export function BalanceTeamFilter({
   const userTeams = useMemo(() => getUserTeamsForFilter(userRoles), [userRoles])
 
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
-  const [teams, setTeams] = useState<
-    Array<{ id_discord: string; team_name: string }>
-  >([])
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false)
+  const [teams, setTeams] = useState<BalanceTeamOption[]>([])
 
   const fetchTeams = useCallback(async () => {
     if (isLoadingTeams) return // Evita chamadas duplicadas
     
     setIsLoadingTeams(true)
+    setHasAttemptedFetch(true)
     try {
-      const response = await getBalanceTeams()
+      const response = await fetchBalanceTeams()
 
       // Se o usuário tem cargo de Chefe de cozinha, mostra todos os times
       // Caso contrário, filtra apenas os times que o usuário deve ver
@@ -93,13 +86,13 @@ export function BalanceTeamFilter({
 
       if (!isChefe) {
         const userTeamsSet = new Set(userTeams)
-        filteredTeams = response.filter((team: any) => 
+        filteredTeams = response.filter((team) =>
           userTeamsSet.has(team.id_discord)
         )
       }
 
-      const uniqueTeams = filteredTeams.reduce(
-        (acc: any[], team: any) =>
+      const uniqueTeams = filteredTeams.reduce<BalanceTeamOption[]>(
+        (acc, team) =>
           acc.some((t) => t.team_name === team.team_name)
             ? acc
             : [...acc, team],
@@ -109,38 +102,41 @@ export function BalanceTeamFilter({
       // Aplica a ordenação por prioridade
       const sortedTeams = sortTeamsByPriority(uniqueTeams)
       setTeams(sortedTeams)
-      onError(null) // Clear any previous errors
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error', response: error }
-      onError(errorDetails)
+      await handleApiError(error, 'Failed to fetch balance teams')
     } finally {
       setIsLoadingTeams(false)
     }
-  }, [onError, userTeams, userRoles])
+  }, [userTeams, userRoles, isLoadingTeams])
 
   useEffect(() => {
     // Só busca teams se deve mostrar o filtro e se ainda não carregou
     // Para Chefe de cozinha, sempre busca (não depende de userTeams.length)
     const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
-    const shouldFetch = shouldShowFilter && teams.length === 0 && !isLoadingTeams && 
+    const shouldFetch =
+      shouldShowFilter &&
+      teams.length === 0 &&
+      !isLoadingTeams &&
+      !hasAttemptedFetch &&
       (isChefe || userTeams.length > 0)
     
     if (shouldFetch) {
-      fetchTeams()
+      void fetchTeams()
     }
-  }, [shouldShowFilter, teams.length, isLoadingTeams, userTeams.length, userRoles])
+  }, [
+    shouldShowFilter,
+    teams.length,
+    isLoadingTeams,
+    hasAttemptedFetch,
+    userTeams.length,
+    userRoles,
+    fetchTeams,
+  ])
 
   // Memoriza as opções para evitar renderizações desnecessárias quando a lista de times não muda
-  const options = useMemo(() => teams, [teams])
   const customSelectOptions = useMemo(
-    () => options.map((team) => ({ value: team.id_discord, label: team.team_name })),
-    [options]
+    () => teams.map((team) => ({ value: team.id_discord, label: team.team_name })),
+    [teams]
   )
 
   // Define o time inicial apenas para usuários que devem ver o filtro quando teams são carregados

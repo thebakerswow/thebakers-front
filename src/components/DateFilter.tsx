@@ -11,7 +11,7 @@ import {
   startOfWeek,
   startOfDay,
 } from 'date-fns'
-import { CustomSelect } from './custom-select'
+import { CustomSelect } from './CustomSelect'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void

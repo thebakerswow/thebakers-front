@@ -3,7 +3,7 @@ import { X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 import { ErrorDetails } from './error-display'
-import { CustomSelect } from './custom-select'
+import { CustomSelect } from './CustomSelect'
 import {
 
   createService,

@@ -1,20 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { BalanceDataGrid } from './balance-data-grid'
-import { BalanceTeamFilter } from './components/balance-team-filter'
-import { WeekRangeFilter } from './components/week-range-filter'
+import { BalanceDataGrid } from './components/BalanceGrid'
+import { BalanceTeamFilter } from './components/BalanceTeamFilter'
+import { WeekRangeFilter } from './components/WeekFilter'
+import { BalancePageSkeleton } from './components/BalanceSkeleton'
 import { useAuth } from '../../context/auth-context'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/role-utils'
 import { NewBalancePage } from '../balance-new'
+import { BalanceDateRange } from './types/balance'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<
-    { start: string; end: string } | undefined
-  >(undefined)
+  const [dateRange, setDateRange] = useState<BalanceDateRange | undefined>(undefined)
   const [isDolar, setIsDolar] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
 
   // Determina se deve mostrar o filtro baseado nas regras especificadas
@@ -34,15 +32,11 @@ export function BalancePage() {
     // Para usuários que devem ver o filtro, aguarda o BalanceTeamFilter definir via handleTeamChange
   }, [authLoading, shouldShowFilter, idDiscord])
 
-  const handleError = (error: ErrorDetails | null) => {
-    setError(error)
-  }
-
   const handleTeamChange = useCallback((team: string | null) => {
     setSelectedTeam(team)
   }, [])
 
-  const handleDateRangeChange = useCallback((range: { start: string; end: string }) => {
+  const handleDateRangeChange = useCallback((range: BalanceDateRange) => {
     setDateRange(range)
   }, [])
 
@@ -50,11 +44,7 @@ export function BalancePage() {
   const isLoading = authLoading
 
   if (isLoading) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
-      </div>
-    )
+    return <BalancePageSkeleton />
   }
 
   return (
@@ -64,15 +54,12 @@ export function BalancePage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
-      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-
       <section className='relative z-30 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm md:p-6'>
         <div className='flex flex-wrap items-center justify-between gap-4'>
           <div className='flex flex-wrap items-center gap-2'>
             <BalanceTeamFilter
               selectedTeam={selectedTeam}
               onChange={handleTeamChange}
-              onError={handleError}
             />
             {shouldShowUsGoldButtonValue && (
               <button
@@ -96,7 +83,6 @@ export function BalancePage() {
           selectedTeam={selectedTeam}
           dateRange={dateRange}
           is_dolar={isDolar}
-          onError={handleError}
         />
       </section>
     </motion.div>
@@ -109,11 +95,7 @@ export function BalancePageRouter() {
   const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
 
   if (loading) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
-      </div>
-    )
+    return <BalancePageSkeleton />
   }
 
   return isChefe ? <BalancePage /> : <NewBalancePage />

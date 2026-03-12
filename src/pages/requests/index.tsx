@@ -12,7 +12,7 @@ import Swal from 'sweetalert2'
 import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { CustomSelect } from '../../components/custom-select'
+import { CustomSelect } from '../../components/CustomSelect'
 import { ErrorComponent, ErrorDetails } from '../../components/error-display'
 import {
   getTransactionRequests,

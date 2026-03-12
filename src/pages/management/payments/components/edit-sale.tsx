@@ -1,7 +1,7 @@
 import { PencilSimple, X } from '@phosphor-icons/react'
 import { useEffect, useState, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
-import { CustomSelect } from '../../../../components/custom-select'
+import { CustomSelect } from '../../../../components/CustomSelect'
 
 import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../../../../services/api'
 

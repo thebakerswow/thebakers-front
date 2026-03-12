@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { RunsDataGrid } from './components/RunsGrid'
 import { AddMultipleRuns } from './components/AddMultipleRuns'
 import { RaidsPageSkeleton } from './components/RaidsPageSkeleton'
-import { DateFilter } from '../../../components/date-filter'
+import { DateFilter } from '../../../components/DateFilter'
 import { format } from 'date-fns'
 import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
 import { AddRun } from './components/AddRun'
@@ -11,7 +11,7 @@ import { getRaidsRuns } from './services/raidsApi'
 import { handleApiError } from '../../../utils/apiErrorHandler'
 import type { RaidsRunData } from './types/raids'
 import Swal from 'sweetalert2'
-import { CustomSelect } from '../../../components/custom-select'
+import { CustomSelect } from '../../../components/CustomSelect'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RaidsRunData[]>([])

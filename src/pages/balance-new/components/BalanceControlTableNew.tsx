@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'r
 import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { CustomSelect } from '../../../components/custom-select'
+import { CustomSelect } from '../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { DEFAULT_TEAM_COLOR, TEAM_ID_TO_COLOR_MAP, TRACKED_TEAM_OPTIONS } from '../../../utils/teamConfig'
 import { handleApiError } from '../../../utils/apiErrorHandler'

@@ -1,23 +1,27 @@
 import { useEffect, useState, useMemo } from 'react'
 
-import axios from 'axios'
 import { format, eachDayOfInterval, parseISO } from 'date-fns'
-import { getBalance, updateBalanceColor } from '../../services/api/balance'
-import { getTextColorForBackground } from './components/color-selector'
-import { useAuth } from '../../context/auth-context' // ajuste o path conforme necessário
+import {
+  fetchBalanceData,
+  updateBalancePlayerColor,
+} from '../services/balanceApi'
+import { getTextColorForBackground } from './ColorSelector'
+import { BalanceGridSkeleton } from './BalanceSkeleton'
+import { useAuth } from '../../../context/auth-context' // ajuste o path conforme necessário
+import { handleApiError } from '../../../utils/apiErrorHandler'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
 
 import {
   BalanceResponse,
   ProcessedPlayer,
   BalanceDataGridProps,
-} from '../../types'
-import { shouldShowOwnBalanceOnly } from '../../utils/role-utils'
+} from '../../../types'
+import { shouldShowOwnBalanceOnly } from '../../../utils/role-utils'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,
   dateRange, // Destructure dateRange
   is_dolar, // Destructure is_dolar
-  onError,
 }: BalanceDataGridProps) {
   const { userRoles = [], idDiscord } = useAuth() // Garante que userRoles seja um array
 
@@ -33,7 +37,7 @@ export function BalanceDataGrid({
     balance_total: [],
   })
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
-  const [hasInitialDataLoaded, setHasInitialDataLoaded] = useState(false)
+  const [hasCompletedInitialFetch, setHasCompletedInitialFetch] = useState(false)
   const [playerStyles, setPlayerStyles] = useState<{
     [key: string]: { background: string; text: string }
   }>({})
@@ -81,24 +85,24 @@ export function BalanceDataGrid({
       [playerId]: { background, text: textColor },
     }))
     try {
-      await updateBalanceColor({
+      await updateBalancePlayerColor({
         id_discord: playerId,
         color: background,
       })
     } catch (error) {
-      console.error('Error updating color:', error)
+      await handleApiError(error, 'Error updating player color')
     }
   }
 
   // Retorna as datas ordenadas dentro do intervalo selecionado
-  const getSortedDates = (): string[] => {
+  const sortedDates = useMemo(() => {
     if (!dateRange) return []
     const { start, end } = dateRange
     return eachDayOfInterval({
       start: parseISO(start),
       end: parseISO(end),
     }).map((date) => format(date, 'yyyy-MM-dd'))
-  }
+  }, [dateRange])
 
   // Formata o cabeçalho das colunas de datas
   const formatDayHeader = (dateString: string) => {
@@ -112,16 +116,15 @@ export function BalanceDataGrid({
 
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
-    const fetchBalanceData = async () => {
+    const loadBalanceData = async () => {
       
       // Validação mais simples: se não tem dados essenciais, não faz nada
       if (!dateRange || !selectedTeam) {
-        setHasInitialDataLoaded(false)
+        setIsLoadingBalance(false)
         return
       }
 
       setIsLoadingBalance(true)
-      setHasInitialDataLoaded(false)
       try {
         
         let response
@@ -133,7 +136,7 @@ export function BalanceDataGrid({
             date_end: dateRange.end,
             is_dolar,
           }
-          response = await getBalance(params)
+          response = await fetchBalanceData(params)
 
           // Filtra os dados para mostrar apenas o usuário logado
           if (response) {
@@ -179,31 +182,23 @@ export function BalanceDataGrid({
             date_end: dateRange.end,
             is_dolar,
           }
-          response = await getBalance(params)
+          response = await fetchBalanceData(params)
         }
 
         setBalanceData(response || { player_balance: {}, balance_total: [] })
-        setHasInitialDataLoaded(true)
-        onError(null) // Clear any previous errors
+        setHasCompletedInitialFetch(true)
       } catch (error) {
-        const errorDetails = axios.isAxiosError(error)
-          ? {
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Unexpected error', response: error }
-        onError(errorDetails)
-        setHasInitialDataLoaded(true)
+        await handleApiError(error, 'Failed to fetch balance data')
+        setHasCompletedInitialFetch(true)
       } finally {
         setIsLoadingBalance(false)
       }
     }
-    fetchBalanceData()
+    void loadBalanceData()
   }, [dateRange, selectedTeam, isRestrictedUser, is_dolar])
 
   // Processa os dados de balanceamento para exibição na tabela
-  const processBalanceData = () => {
+  const processedBalanceData = useMemo(() => {
     const playersMap = new Map<string, ProcessedPlayer>()
 
     // Extract balance totals from balance_total
@@ -249,13 +244,15 @@ export function BalanceDataGrid({
     return Array.from(playersMap.values()).sort((a, b) =>
       a.username.localeCompare(b.username)
     )
-  }
+  }, [balanceData])
 
   return (
     <div className='px-1 py-1 md:px-0 md:py-0'>
-      {isLoadingBalance || !hasInitialDataLoaded ? (
+      {!hasCompletedInitialFetch ? (
+        <BalanceGridSkeleton />
+      ) : isLoadingBalance ? (
         <div className='flex min-h-[400px] items-center justify-center'>
-          <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
+          <LoadingSpinner size='lg' label='Loading balance data' />
         </div>
       ) : (
         <div className='relative rounded-lg bg-transparent'>
@@ -269,7 +266,7 @@ export function BalanceDataGrid({
                 <th className='py-3 px-3 text-center font-medium'>
                   Total Balance
                 </th>
-                {getSortedDates().map((date) => (
+                {sortedDates.map((date) => (
                   <th
                     key={date}
                     className='py-3 px-3 text-center font-medium whitespace-nowrap'
@@ -283,14 +280,14 @@ export function BalanceDataGrid({
               {(balanceData.balance_total?.length || 0) === 0 ? (
                 <tr>
                   <td
-                    colSpan={getSortedDates().length + 2}
+                    colSpan={sortedDates.length + 2}
                     className='py-10 text-center text-gray-500'
                   >
                     No data yet
                   </td>
                 </tr>
               ) : (
-                processBalanceData().map((player) => (
+                processedBalanceData.map((player) => (
                   <tr key={player.id} className='border-b border-white/5'>
                     <td className='py-3 pr-3'>
                       <div className='relative inline-block'>
@@ -353,7 +350,7 @@ export function BalanceDataGrid({
                               'en-US'
                             )}
                     </td>
-                    {getSortedDates().map((date) => (
+                    {sortedDates.map((date) => (
                       <td
                         key={`${player.id}-${date}`}
                         className='py-3 px-3 text-center text-white/90'

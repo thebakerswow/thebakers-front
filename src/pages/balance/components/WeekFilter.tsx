@@ -11,11 +11,8 @@ import {
   getWeek,
   startOfWeek,
 } from 'date-fns'
-import { CustomSelect } from '../../../components/custom-select'
-
-interface WeekRangeFilterProps {
-  onChange: (range: { start: string; end: string }) => void
-}
+import { CustomSelect } from '../../../components/CustomSelect'
+import { WeekRangeFilterProps } from '../types/balance'
 
 const MonthPickerInput = forwardRef<
   HTMLButtonElement,
@@ -88,7 +85,7 @@ export function WeekRangeFilter({ onChange }: WeekRangeFilterProps) {
         end: endDate,
       })
     }
-  }, [selectedWeek, weeksInMonth])
+  }, [selectedWeek, weeksInMonth, onChange])
 
   // Função corrigida com tipagem adequada
   const handleMonthChange = (date: Date | null) => {

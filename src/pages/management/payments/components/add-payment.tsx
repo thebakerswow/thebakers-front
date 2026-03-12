@@ -2,7 +2,7 @@ import { UserPlus, Plus, PencilSimple, X } from '@phosphor-icons/react'
 import { useState, useEffect, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 
-import { CustomSelect } from '../../../../components/custom-select'
+import { CustomSelect } from '../../../../components/CustomSelect'
 import { ErrorDetails } from '../../../../components/error-display'
 import { AddBuyerToList } from './add-buyer-to-list'
 import { AddPaymentDate } from './add-payment-date'

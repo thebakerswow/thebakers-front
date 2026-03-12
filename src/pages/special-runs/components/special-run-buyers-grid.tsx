@@ -8,7 +8,7 @@ import {
   RiWifiOffLine,
   RiZzzFill,
 } from 'react-icons/ri'
-import { CustomSelect } from '../../../components/custom-select'
+import { CustomSelect } from '../../../components/CustomSelect'
 import { MockBuyer, MockBuyerStatus } from '../special-run-mock-types'
 
 interface StatusOption {
