@@ -72,9 +72,6 @@ export function NewBalancePage() {
   return (
     <div className='flex h-full min-h-0 w-full flex-col px-6 pb-8 pt-6 md:px-10'>
       {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      <div className='mb-4 flex flex-wrap items-center justify-between gap-2 px-1'>
-        <h2 className='text-lg font-semibold text-white'>Balance</h2>
-      </div>
       <div className='grid min-h-0 w-full flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
         <div className='min-h-0 h-full lg:col-span-2'>
           {selectedTeam && (

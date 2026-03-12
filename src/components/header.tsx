@@ -70,11 +70,11 @@ export function Header() {
       children: [
         { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
         { label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> },
+        ...(shouldUseNewBalance(userRoles)
+          ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
+          : []),
       ],
     },
-    ...(shouldUseNewBalance(userRoles)
-      ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
-      : []),
     ...(hasAccess([import.meta.env.VITE_TEAM_CHEFE])
       ? [
           {

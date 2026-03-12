@@ -288,7 +288,7 @@ function getScreenMeta(pathname: string) {
     return { name: 'Home', breadcrumb: 'Dashboard / Home', icon: <House size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/balance')) {
-    return { name: 'Balance', breadcrumb: 'Finance / Balance', icon: <Coins size={20} weight='duotone' /> }
+    return { name: 'Balance', breadcrumb: 'Finances / Balance', icon: <Coins size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/bookings-na/key/')) {
     return {
@@ -360,7 +360,7 @@ function getScreenMeta(pathname: string) {
     return { name: 'Requests', breadcrumb: 'Management / Requests', icon: <ClipboardText size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/my-requests')) {
-    return { name: 'My Requests', breadcrumb: 'Requests / My Requests', icon: <User size={20} weight='duotone' /> }
+    return { name: 'My Requests', breadcrumb: 'Finances / My Requests', icon: <User size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/payments')) {
     return { name: 'Gold', breadcrumb: 'Management / Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
@@ -369,7 +369,7 @@ function getScreenMeta(pathname: string) {
     return { name: 'Dollar', breadcrumb: 'Finance / Dollar', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/sells')) {
-    return { name: 'Sells', breadcrumb: 'Finance / Sells', icon: <CurrencyDollar size={20} weight='duotone' /> }
+    return { name: 'Sells', breadcrumb: 'Finances / Sells', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   return { name: 'Dashboard', breadcrumb: 'Dashboard', icon: <House size={20} weight='duotone' /> }
 }

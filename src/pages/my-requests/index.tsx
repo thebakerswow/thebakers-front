@@ -1,28 +1,13 @@
-import { useState, useEffect } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Typography,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Box,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Pagination,
-} from '@mui/material'
-import Grid from '@mui/material/Grid2'
-import { Eye, PencilSimple, Trash } from '@phosphor-icons/react'
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
-import { getUserTransactionRequests, updateTransactionRequestValue, deleteTransactionRequest } from '../../services/api/gbanks'
+import { useEffect, useMemo, useState } from 'react'
+import { CaretLeft, CaretRight, Eye, PencilSimple, Trash, X } from '@phosphor-icons/react'
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import Swal from 'sweetalert2'
+import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import {
+  deleteTransactionRequest,
+  getUserTransactionRequests,
+  updateTransactionRequestValue,
+} from '../../services/api/gbanks'
 
 interface TransactionRequest {
   id: string | number
@@ -39,100 +24,149 @@ interface TransactionRequest {
   sumDay: number
 }
 
+type StatusFilter = 'all' | 'pending' | 'accepted' | 'denied'
+
+const statusBadgeClass: Record<TransactionRequest['status'], string> = {
+  pending: 'border-amber-400/40 bg-amber-500/20 text-amber-100',
+  accepted: 'border-emerald-400/40 bg-emerald-500/20 text-emerald-100',
+  denied: 'border-red-400/40 bg-red-500/20 text-red-100',
+}
 
 export function MyRequestsPage() {
   const [requests, setRequests] = useState<TransactionRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<TransactionRequest | null>(null)
-  const [imageDialogOpen, setImageDialogOpen] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'denied'>('pending')
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(12)
-
-  // Função para ordenar requisições por data e hora (mais recente primeiro)
-  const sortRequestsByDate = (requests: TransactionRequest[]) => {
-    return [...requests].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime()
-      const dateB = new Date(b.createdAt).getTime()
-      return dateB - dateA // Ordem decrescente (mais recente primeiro)
-    })
-  }
-
-
-  // Função para filtrar requests por status
-  const filterRequestsByStatus = (requests: TransactionRequest[], status: string) => {
-    if (status === 'all') {
-      return requests
-    }
-    return requests.filter(request => request.status === status)
-  }
-
-  // Função para calcular dados de paginação
-  const getPaginatedData = (requests: TransactionRequest[]) => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    const paginatedRequests = requests.slice(startIndex, endIndex)
-    const totalPages = Math.ceil(requests.length / itemsPerPage)
-    
-    return {
-      paginatedRequests,
-      totalPages,
-      totalItems: requests.length,
-      startIndex: startIndex + 1,
-      endIndex: Math.min(endIndex, requests.length)
-    }
-  }
 
   const fetchRequests = async () => {
     setIsLoading(true)
     try {
       const response = await getUserTransactionRequests()
-      const sortedRequests = sortRequestsByDate(response || [])
-      setRequests(sortedRequests)
-    } catch (error) {
-      const errorDetails = {
+      const sorted = [...(response || [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      setRequests(sorted)
+    } catch (err) {
+      setError({
         message: 'Error fetching your requests',
-        response: error,
-      }
-      setError(errorDetails)
+        response: err,
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleStatusFilter = (status: 'all' | 'pending' | 'accepted' | 'denied') => {
-    setStatusFilter(status)
-    setCurrentPage(1) // Reset to first page when changing status filter
-  }
-
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page)
-  }
-
-  const handleItemsPerPageChange = (event: any) => {
-    setItemsPerPage(event.target.value as number)
-    setCurrentPage(1) // Reset to first page when changing items per page
-  }
-
-
   useEffect(() => {
     fetchRequests()
   }, [])
 
+  const filteredRequests = useMemo(
+    () => (statusFilter === 'all' ? requests : requests.filter((request) => request.status === statusFilter)),
+    [requests, statusFilter]
+  )
+
+  const pagination = useMemo(() => {
+    const totalItems = filteredRequests.length
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
+    const safePage = Math.min(currentPage, totalPages)
+    const startIndex = (safePage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+
+    return {
+      totalItems,
+      totalPages,
+      safePage,
+      startIndex,
+      endIndex,
+      pageItems: filteredRequests.slice(startIndex, endIndex),
+    }
+  }, [filteredRequests, itemsPerPage, currentPage])
+
+  useEffect(() => {
+    if (currentPage !== pagination.safePage) {
+      setCurrentPage(pagination.safePage)
+    }
+  }, [currentPage, pagination.safePage])
+
+  const handleStatusFilter = (status: StatusFilter) => {
+    setStatusFilter(status)
+    setCurrentPage(1)
+  }
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value)
+    setCurrentPage(1)
+  }
+
+  const getStatusButtonClass = (status: StatusFilter) => {
+    const isActive = statusFilter === status
+    if (status === 'pending') {
+      return isActive
+        ? 'border-amber-400/60 bg-amber-500/25 text-amber-100'
+        : 'border-white/15 bg-white/[0.03] text-neutral-200 hover:border-amber-400/60 hover:bg-amber-500/15'
+    }
+    if (status === 'accepted') {
+      return isActive
+        ? 'border-emerald-400/60 bg-emerald-500/25 text-emerald-100'
+        : 'border-white/15 bg-white/[0.03] text-neutral-200 hover:border-emerald-400/60 hover:bg-emerald-500/15'
+    }
+    if (status === 'denied') {
+      return isActive
+        ? 'border-red-400/60 bg-red-500/25 text-red-100'
+        : 'border-white/15 bg-white/[0.03] text-neutral-200 hover:border-red-400/60 hover:bg-red-500/15'
+    }
+    return isActive
+      ? 'border-purple-400/60 bg-purple-500/25 text-purple-100'
+      : 'border-white/15 bg-white/[0.03] text-neutral-200 hover:border-purple-400/60 hover:bg-purple-500/15'
+  }
+
+  const getStatusButtonStyle = (status: StatusFilter) => {
+    const isActive = statusFilter === status
+    if (status === 'pending') {
+      return {
+        borderColor: isActive ? '#f59e0b' : '#d97706',
+        backgroundColor: isActive ? 'rgba(245,158,11,0.28)' : 'rgba(245,158,11,0.10)',
+        color: '#fef3c7',
+      }
+    }
+    if (status === 'accepted') {
+      return {
+        borderColor: isActive ? '#10b981' : '#059669',
+        backgroundColor: isActive ? 'rgba(16,185,129,0.28)' : 'rgba(16,185,129,0.10)',
+        color: '#d1fae5',
+      }
+    }
+    if (status === 'denied') {
+      return {
+        borderColor: isActive ? '#ef4444' : '#dc2626',
+        backgroundColor: isActive ? 'rgba(239,68,68,0.28)' : 'rgba(239,68,68,0.10)',
+        color: '#fee2e2',
+      }
+    }
+    return {
+      borderColor: isActive ? '#a855f7' : '#9333ea',
+      backgroundColor: isActive ? 'rgba(168,85,247,0.28)' : 'rgba(168,85,247,0.10)',
+      color: '#f3e8ff',
+    }
+  }
+
   const openEditValueDialog = async (request: TransactionRequest) => {
     if (request.status !== 'pending') return
-    
+
     const { value: newValue } = await Swal.fire({
       title: 'Edit Transaction Value',
       input: 'number',
       inputValue: request.value,
       inputAttributes: {
         step: '0.01',
-        style: '-moz-appearance: textfield;'
+        style: '-moz-appearance: textfield;',
       },
       customClass: {
-        input: 'swal-no-spinner'
+        input: 'swal-no-spinner',
       },
       showCancelButton: true,
       confirmButtonText: 'Save',
@@ -144,31 +178,31 @@ export function MyRequestsPage() {
         if (!value || Number.isNaN(parseFloat(value))) {
           return 'Please enter a valid number'
         }
-      }
+      },
     })
 
-    if (newValue && !Number.isNaN(parseFloat(newValue))) {
-      try {
-        await updateTransactionRequestValue({ id: request.id, value: parseFloat(newValue) })
-        await fetchRequests()
-        Swal.fire({
-          title: 'Success!',
-          text: 'Transaction value updated successfully',
-          icon: 'success',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white'
-        })
-      } catch (error) {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to update transaction value',
-          icon: 'error',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white'
-        })
-      }
+    if (!newValue || Number.isNaN(parseFloat(newValue))) return
+
+    try {
+      await updateTransactionRequestValue({ id: request.id, value: parseFloat(newValue) })
+      await fetchRequests()
+      Swal.fire({
+        title: 'Success!',
+        text: 'Transaction value updated successfully',
+        icon: 'success',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+    } catch (_error) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update transaction value',
+        icon: 'error',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
     }
   }
 
@@ -183,638 +217,343 @@ export function MyRequestsPage() {
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
       background: '#2a2a2a',
-      color: 'white'
+      color: 'white',
     })
 
-    if (result.isConfirmed) {
-      try {
-        await deleteTransactionRequest(request.id)
-        await fetchRequests()
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Your request has been deleted successfully.',
-          icon: 'success',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white'
-        })
-      } catch (error) {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to delete request',
-          icon: 'error',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white'
-        })
+    if (!result.isConfirmed) return
+
+    try {
+      await deleteTransactionRequest(request.id)
+      await fetchRequests()
+      Swal.fire({
+        title: 'Deleted!',
+        text: 'Your request has been deleted successfully.',
+        icon: 'success',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+    } catch (_error) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to delete request',
+        icon: 'error',
+        confirmButtonColor: 'rgb(147, 51, 234)',
+        background: '#2a2a2a',
+        color: 'white',
+      })
+    }
+  }
+
+  const openImageModal = (request: TransactionRequest) => {
+    setSelectedRequest(request)
+    setIsImageModalOpen(true)
+  }
+
+  const getCardColorClass = () => {
+    return 'bg-white/[0.04] border-white/10 hover:bg-white/[0.06] hover:border-white/20'
+  }
+
+  const getStatusBadgeStyle = (status: TransactionRequest['status']) => {
+    if (status === 'accepted') {
+      return {
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.20)',
+        color: '#bbf7d0',
       }
     }
-  }
-
-  const handleViewImage = (request: TransactionRequest) => {
-    setSelectedRequest(request)
-    setImageDialogOpen(true)
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'warning'
-      case 'accepted':
-        return 'success'
-      case 'denied':
-        return 'error'
-      default:
-        return 'default'
+    if (status === 'pending') {
+      return {
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.20)',
+        color: '#fde68a',
+      }
+    }
+    return {
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239,68,68,0.20)',
+      color: '#fecaca',
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className='w-full overflow-auto overflow-x-hidden pr-20'>
-        <div className='m-8 min-h-screen w-full pb-12 text-white'>
-          <div className='flex h-40 items-center justify-center'>
-            <div className='flex flex-col items-center gap-2'>
-              <CircularProgress size={32} sx={{ color: 'rgb(147, 51, 234)' }} />
-              <span className='text-gray-400'>Loading your requests...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  const formatDateFromAPI = (apiDateString: string) => {
+    const datePart = apiDateString.split('T')[0]
+    const [year, month, day] = datePart.split('-')
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+    const weekday = weekdays[date.getDay()]
+    return {
+      date: `${weekday}, ${day} ${months[parseInt(month) - 1]} ${year}`,
+      time: apiDateString.split('T')[1].split('.')[0].substring(0, 5),
+    }
+  }
+
+  const formatValueForDisplay = (value: number) => {
+    const formatted = Math.abs(value)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return value < 0 ? `-${formatted}` : formatted
   }
 
   return (
-    <div className='w-full overflow-auto overflow-x-hidden pr-20'>
-      <div className='m-8 min-h-screen w-full pb-12 text-white'>
-        {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-        
-        <div className='mb-6 flex justify-between'>
-          <Typography variant='h4' fontWeight='bold'>
-            My Transaction Requests
-          </Typography>
-        </div>
+    <div className='flex h-full min-h-0 w-full flex-col px-6 pb-8 pt-6 md:px-10'>
+      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
 
-        {/* Filters */}
-        <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Status Filter Buttons */}
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              variant={statusFilter === 'pending' ? 'contained' : 'outlined'}
-              onClick={() => handleStatusFilter('pending')}
-              sx={{
-                backgroundColor: statusFilter === 'pending' ? '#f59e0b' : 'transparent',
-                borderColor: '#f59e0b',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: statusFilter === 'pending' ? '#fbbf24' : 'rgba(245, 158, 11, 0.1)',
-                  borderColor: '#fbbf24',
-                },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1
-              }}
-            >
-              Pending
-            </Button>
-            <Button
-              variant={statusFilter === 'accepted' ? 'contained' : 'outlined'}
-              onClick={() => handleStatusFilter('accepted')}
-              sx={{
-                backgroundColor: statusFilter === 'accepted' ? '#10b981' : 'transparent',
-                borderColor: '#10b981',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: statusFilter === 'accepted' ? '#34d399' : 'rgba(16, 185, 129, 0.1)',
-                  borderColor: '#34d399',
-                },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1
-              }}
-            >
-              Accepted
-            </Button>
-            <Button
-              variant={statusFilter === 'denied' ? 'contained' : 'outlined'}
-              onClick={() => handleStatusFilter('denied')}
-              sx={{
-                backgroundColor: statusFilter === 'denied' ? '#ef4444' : 'transparent',
-                borderColor: '#ef4444',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: statusFilter === 'denied' ? '#f87171' : 'rgba(239, 68, 68, 0.1)',
-                  borderColor: '#f87171',
-                },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1
-              }}
-            >
-              Denied
-            </Button>
-            <Button
-              variant={statusFilter === 'all' ? 'contained' : 'outlined'}
-              onClick={() => handleStatusFilter('all')}
-              sx={{
-                backgroundColor: statusFilter === 'all' ? 'rgb(147, 51, 234)' : 'transparent',
-                borderColor: 'rgb(147, 51, 234)',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: statusFilter === 'all' ? 'rgb(168, 85, 247)' : 'rgba(147, 51, 234, 0.1)',
-                  borderColor: 'rgb(168, 85, 247)',
-                },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1
-              }}
-            >
-              All Requests
-            </Button>
-          </Box>
+      <section className='mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-4'>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
+          <div className='flex flex-wrap gap-2'>
+            {(['pending', 'accepted', 'denied', 'all'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => handleStatusFilter(status)}
+                className={`rounded-md border px-3 py-2 text-sm font-medium capitalize transition ${getStatusButtonClass(status)}`}
+                style={getStatusButtonStyle(status)}
+              >
+                {status === 'all' ? 'All Requests' : status[0].toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
 
-          {/* Items per page selector */}
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel sx={{ color: 'white' }}>Per Page</InputLabel>
-            <Select
+          <div className='flex items-center gap-2'>
+            <span className='text-xs uppercase tracking-wide text-neutral-400'>Per Page</span>
+            <select
               value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              label="Per Page"
-              sx={{
-                color: 'white',
-                backgroundColor: '#2a2a2a',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.23)',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgb(147, 51, 234)',
-                },
-                '& .MuiSvgIcon-root': {
-                  color: 'white',
-                },
-                '& .MuiSelect-select': {
-                  color: 'white',
-                  backgroundColor: '#2a2a2a',
-                },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    backgroundColor: '#2a2a2a',
-                    border: '1px solid #333',
-                    '& .MuiMenuItem-root': {
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#3a3a3a',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(147, 51, 234, 0.3)',
-                        },
-                      },
-                    },
-                  },
-                },
-              }}
+              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+              className='h-10 rounded-md border border-purple-400/25 bg-white/[0.03] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
             >
-              <MenuItem value={6}>6</MenuItem>
-              <MenuItem value={12}>12</MenuItem>
-              <MenuItem value={24}>24</MenuItem>
-              <MenuItem value={48}>48</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+              <option value={6}>6</option>
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+              <option value={48}>48</option>
+            </select>
+          </div>
+        </div>
+      </section>
 
-        {/* Requests Grid */}
-        {(() => {
-          const filteredRequests = filterRequestsByStatus(requests, statusFilter)
-          const { paginatedRequests, totalPages, totalItems, startIndex, endIndex } = getPaginatedData(filteredRequests)
-          
-          return filteredRequests.length === 0 ? (
-            <Card sx={{ bgcolor: '#3a3a3a', border: '1px solid #555' }}>
-              <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="textSecondary">
-                  {statusFilter === 'all'
-                    ? 'No requests found' 
-                    : `No requests found for the selected status`
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              {/* Results info */}
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
-                  Showing {startIndex}-{endIndex} of {totalItems} requests
-                </Typography>
-              </Box>
+      {isLoading ? (
+        <div className='flex h-48 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]'>
+          <div className='flex flex-col items-center gap-2'>
+            <span className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-purple-400' />
+            <span className='text-sm text-neutral-400'>Loading your requests...</span>
+          </div>
+        </div>
+      ) : filteredRequests.length === 0 ? (
+        <div className='rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center text-neutral-400'>
+          {statusFilter === 'all' ? 'No requests found' : 'No requests found for the selected status'}
+        </div>
+      ) : (
+        <>
+          <div className='mb-3 text-sm text-neutral-400'>
+            Showing {pagination.startIndex + 1}-{Math.min(pagination.endIndex, pagination.totalItems)} of{' '}
+            {pagination.totalItems} requests
+          </div>
 
-              <Grid container spacing={3}>
-                {paginatedRequests.map((request) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={request.id}>
-                <Card
-                  sx={{
-                    bgcolor: '#2a2a2a',
-                    border: '1px solid #333',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      borderColor: 'rgb(147, 51, 234)',
-                      bgcolor: '#3a3a3a',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(147, 51, 234, 0.1)',
-                    },
-                  }}
-                >
-                  {/* Image Section */}
-                  <Box sx={{ position: 'relative' }}>
-                    <Box
-                      component="img"
-                      src={request.urlImage}
-                      alt="Request image"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDIwMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMWExYTFhIi8+CjxwYXRoIGQ9Ik0xMDAgNzBMMTIwIDEwMEg4MEwxMDAgNzBaIiBmaWxsPSIjNjY2NjY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEyMCIgcj0iMjAiIGZpbGw9IiM2NjY2NjYiLz4KPHN2Zz4K';
-                      }}
-                      sx={{
-                        width: '100%',
-                        height: 180,
-                        objectFit: 'cover',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease-in-out',
-                        backgroundColor: '#1a1a1a',
-                        '&:hover': {
-                          opacity: 0.7,
-                          transform: 'scale(1.05)',
-                        }
-                      }}
-                      onClick={() => handleViewImage(request)}
-                    />
-                    
-                    {/* Hover overlay with magnifying glass */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease-in-out',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          opacity: 1,
-                        }
-                      }}
-                      onClick={() => handleViewImage(request)}
-                    >
-                      <Box
-                        sx={{
-                          backgroundColor: 'rgba(147, 51, 234, 0.9)',
-                          borderRadius: '50%',
-                          padding: '12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transform: 'scale(1.2)',
-                          transition: 'transform 0.2s ease-in-out',
-                          '&:hover': {
-                            transform: 'scale(1.3)',
-                          }
-                        }}
-                      >
-                        <Eye size={24} color="white" />
-                      </Box>
-                    </Box>
-                    
-                  </Box>
-
-                  {/* Content Section */}
-                  <CardContent sx={{ 
-                    flexGrow: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    p: 2
-                  }}>
-                    {/* Header with G-Bank name and status */}
-                    <Box sx={{ mb: 2 }}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1, 
-                        mb: 0.5 
-                      }}>
-                        <Typography 
-                          variant="h6" 
-                          sx={{ 
-                            fontWeight: 600,
-                            fontSize: '1.1rem',
-                            lineHeight: 1.3,
-                            color: 'white'
-                          }}
-                        >
-                          {request.nameGbank}
-                        </Typography>
-                        <Chip
-                          label={request.status.toUpperCase()}
-                          color={getStatusColor(request.status) as any}
-                          size="small"
-                          sx={{
-                            fontWeight: 'bold',
-                            fontSize: '0.7rem',
-                            height: 20,
-                            '& .MuiChip-label': {
-                              px: 1
-                            }
-                          }}
-                        />
-                      </Box>
-                     
-                    </Box>
-                    
-                    {/* Value section */}
-                    <Box sx={{ 
-                      backgroundColor: '#1a1a1a',
-                      borderRadius: 1,
-                      p: 1.5,
-                      mb: 2,
-                      border: '1px solid',
-                      borderColor: '#333'
-                    }}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontSize: '0.8rem',
-                          mb: 0.5,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          color: '#9ca3af'
-                        }}
-                      >
-                        Transaction Value
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography 
-                          variant="h5" 
-                          sx={{ 
-                            fontWeight: 700,
-                            color: 'rgb(147, 51, 234)',
-                            fontSize: '1.4rem'
-                          }}
-                        >
-                          {request.value.toLocaleString()}
-                        </Typography>
-                        {request.status === 'pending' && (
-                          <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <IconButton
-                              aria-label="edit value"
-                              size="small"
-                              onClick={() => openEditValueDialog(request)}
-                              sx={{ color: 'rgb(147, 51, 234)' }}
-                            >
-                              <PencilSimple size={18} />
-                            </IconButton>
-                            <IconButton
-                              aria-label="delete request"
-                              size="small"
-                              onClick={() => handleDeleteRequest(request)}
-                              sx={{ color: '#ef4444' }}
-                            >
-                              <Trash size={18} />
-                            </IconButton>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                    
-                    {/* Request details section */}
-                    <Box sx={{ mb: 2.5 }}>
-                      {/* Requested by */}
-                      <Box sx={{ mb: 1.5 }}>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            mb: 0.5,
-                            display: 'block',
-                            color: '#9ca3af'
-                          }}
-                        >
-                          Requested by
-                        </Typography>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontSize: '0.85rem',
-                            fontWeight: 500,
-                            color: 'white'
-                          }}
-                        >
-                          {request.nameUserRequest}
-                        </Typography>
-                      </Box>
-
-                      {/* Date and time */}
-                      <Box sx={{ mb: 1.5 }}>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            mb: 0.5,
-                            display: 'block',
-                            color: '#9ca3af'
-                          }}
-                        >
-                          Date & Time
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontSize: '0.85rem',
-                              fontWeight: 500,
-                              color: 'white'
-                            }}
-                          >
-                            {new Date(request.createdAt).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontSize: '0.8rem',
-                              color: '#9ca3af',
-                              fontFamily: 'monospace'
-                            }}
-                          >
-                            {new Date(request.createdAt).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: false
-                            })}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-              ))}
-            </Grid>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                mt: 4,
-                mb: 2
-              }}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      color: 'white',
-                      backgroundColor: '#2a2a2a',
-                      border: '1px solid #333',
-                      '&:hover': {
-                        backgroundColor: '#3a3a3a',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgb(147, 51, 234)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgb(168, 85, 247)',
-                        },
-                      },
-                      '&.MuiPaginationItem-previousNext': {
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid #333',
-                        '&:hover': {
-                          backgroundColor: '#3a3a3a',
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            )}
-            </>
-          )
-        })()}
-      </div>
-
-    {/* Image Dialog */}
-    <Dialog
-        open={imageDialogOpen}
-        onClose={() => setImageDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle sx={{ position: 'relative', pr: 6 }}>
-          Request Image - {selectedRequest?.nameGbank}
-          <IconButton
-            aria-label="close"
-            onClick={() => setImageDialogOpen(false)}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
+          <div
+            className='grid gap-4'
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             }}
           >
-            <Eye size={20} />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          {selectedRequest && (
-            <Box>
+            {pagination.pageItems.map((request) => (
+              <div
+                key={request.id}
+                className={`flex flex-col overflow-hidden rounded-xl border transition ${getCardColorClass()}`}
+                style={{ height: '450px' }}
+              >
+                <div className='group relative h-[180px] w-full shrink-0 overflow-hidden' style={{ flexBasis: '180px' }}>
+                  <img
+                    src={request.urlImage}
+                    alt='Request'
+                    className='block h-full w-full cursor-pointer object-cover'
+                    onClick={() => openImageModal(request)}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src =
+                        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDIwMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMWExYTFhIi8+CjxwYXRoIGQ9Ik0xMDAgNzBMMTIwIDEwMEg4MEwxMDAgNzBaIiBmaWxsPSIjNjY2NjY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEyMCIgcj0iMjAiIGZpbGw9IiM2NjY2NjYiLz4KPHN2Zz4K'
+                    }}
+                  />
+                  <button
+                    type='button'
+                    onClick={() => openImageModal(request)}
+                    className='absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition group-hover:opacity-100'
+                  >
+                    <span className='rounded-full bg-purple-500/90 p-3'>
+                      <Eye size={22} />
+                    </span>
+                  </button>
+                </div>
+
+                <div className='flex flex-1 flex-col p-3'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <h3 className='line-clamp-1 text-lg font-semibold text-white'>{request.nameGbank}</h3>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadgeClass[request.status]}`}
+                      style={getStatusBadgeStyle(request.status)}
+                    >
+                      {request.status}
+                    </span>
+                  </div>
+
+                  <div
+                    className='mb-3 rounded-md border p-2'
+                    style={
+                      request.value > 0
+                        ? { borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.16)' }
+                        : request.value < 0
+                          ? { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.16)' }
+                          : { borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(0,0,0,0.35)' }
+                    }
+                  >
+                    <p className='text-[11px] uppercase tracking-wide text-neutral-400'>Transaction Value</p>
+                    <div className='flex items-center justify-between'>
+                      <p
+                        className={`text-xl font-bold ${
+                          request.value > 0
+                            ? 'text-blue-300'
+                            : request.value < 0
+                              ? 'text-red-400'
+                              : 'text-purple-300'
+                        }`}
+                      >
+                        {formatValueForDisplay(request.value)}
+                      </p>
+                      {request.status === 'pending' ? (
+                        <div className='flex items-center gap-1'>
+                          <button
+                            onClick={() => openEditValueDialog(request)}
+                            className='rounded-md p-1.5 text-purple-300 transition hover:bg-purple-500/15'
+                            aria-label='edit request value'
+                          >
+                            <PencilSimple size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRequest(request)}
+                            className='rounded-md p-1.5 text-red-300 transition hover:bg-red-500/15'
+                            aria-label='delete request'
+                          >
+                            <Trash size={18} />
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className='mb-3 text-sm'>
+                    <p className='text-[11px] uppercase tracking-wide text-neutral-400'>Requested by</p>
+                    <p className='line-clamp-1 font-medium text-white'>{request.nameUserRequest}</p>
+                    {request.status === 'pending' ? (
+                      <div className='mt-1 flex flex-wrap gap-1'>
+                        <span className='rounded-full border border-blue-400/40 bg-blue-500/15 px-2 py-0.5 text-[11px] text-blue-300'>
+                          Daily: {formatValueForDisplay(request.sumDay)}g
+                        </span>
+                        <span className='rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-300'>
+                          Total: {formatValueForDisplay(request.balanceTotal)}g
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className='mb-4 text-sm'>
+                    <p className='text-[11px] uppercase tracking-wide text-neutral-400'>Date & Time</p>
+                    <p className='text-white'>{formatDateFromAPI(request.createdAt).date}</p>
+                    <p className='font-mono text-xs text-neutral-400'>{formatDateFromAPI(request.createdAt).time}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {pagination.totalPages > 1 ? (
+            <div className='mt-5 flex items-center justify-center gap-1'>
+              <button
+                disabled={pagination.safePage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-white/[0.03] text-white/80 transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50'
+              >
+                <CaretLeft size={16} />
+              </button>
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-9 min-w-9 rounded-md border px-2 text-sm transition ${
+                    page === pagination.safePage
+                      ? 'border-purple-400/50 bg-purple-500/25 text-purple-100'
+                      : 'border-white/15 bg-white/[0.03] text-white/80 hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                disabled={pagination.safePage === pagination.totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
+                className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-white/[0.03] text-white/80 transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50'
+              >
+                <CaretRight size={16} />
+              </button>
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {isImageModalOpen && selectedRequest ? (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4'>
+          <div className='w-full max-w-5xl rounded-xl border border-white/10 bg-[#101014] p-4 shadow-2xl'>
+            <div className='mb-3 flex items-center justify-between'>
+              <h3 className='line-clamp-1 text-base font-semibold text-white'>
+                Request Image - {selectedRequest.nameGbank}
+              </h3>
+              <button
+                onClick={() => setIsImageModalOpen(false)}
+                className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className='h-[70vh] overflow-hidden rounded-lg border border-white/10 bg-black/30'>
               <TransformWrapper
                 initialScale={1}
                 minScale={0.5}
                 maxScale={4}
-                centerOnInit={true}
+                centerOnInit
                 wheel={{ step: 0.1 }}
                 pinch={{ step: 5 }}
                 doubleClick={{ disabled: false, step: 0.9 }}
-                centerZoomedOut={true}
+                centerZoomedOut
                 limitToBounds={false}
               >
                 <TransformComponent
-                  wrapperStyle={{
-                    width: '100%',
-                    height: '400px',
-                    cursor: 'grab'
-                  }}
+                  wrapperStyle={{ width: '100%', height: '100%', cursor: 'grab' }}
                   contentStyle={{
                     width: '100%',
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
                   }}
                 >
                   <img
                     src={selectedRequest.urlImage}
-                    alt="Request image"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDIwMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMWExYTFhIi8+CjxwYXRoIGQ9Ik0xMDAgNzBMMTIwIDEwMEg4MEwxMDAgNzBaIiBmaWxsPSIjNjY2NjY2Ii8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEyMCIgcj0iMjAiIGZpbGw9IiM2NjY2NjYiLz4KPHN2Zz4K';
-                    }}
+                    alt='Request'
                     style={{
                       maxWidth: '100%',
                       maxHeight: '100%',
                       objectFit: 'contain',
                       borderRadius: '8px',
-                      userSelect: 'none'
+                      userSelect: 'none',
                     }}
                     draggable={false}
                   />
                 </TransformComponent>
               </TransformWrapper>
-              <Box mt={2}>
-                <Typography variant="body2" color="textSecondary">
-                  Value: <strong>{selectedRequest.value.toLocaleString()}</strong>
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Status: <strong>{selectedRequest.status}</strong>
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Created: {new Date(selectedRequest.createdAt).toLocaleString()}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-      </Dialog>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
