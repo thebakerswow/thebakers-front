@@ -1,32 +1,35 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { checkAdminAccess } from '../../../services/api/auth'
-import { BalanceControlTable } from './balance-control-table'
-import { GBanksTable } from './gbanks-table'
-import { VerifyTable } from './verify-table'
-import LatestTransactions from './components/latest-transactions'
-import RunWithoutAttendanceTable from './components/run-without-attendance-table'
+import { checkAdminAccess } from './services/adminApi'
+import { BalanceControlTable } from './components/BalanceControlTable'
+import { GBanksTable } from './components/GbankTable'
+import { VerifyTable } from './components/VerifyTable'
+import LatestTransactions from './components/LatestTransactions'
+import RunWithoutAttendanceTable from './components/RunsWithoutAttendance'
+import { AdminPageSkeleton } from './components/AdminPageSkeleton'
 import { ErrorDetails, ErrorComponent } from '../../../components/error-display'
 
 export function AdminPage() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [isAuthorized, setIsAuthorized] = useState(false)
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isDolar, setIsDolar] = useState(false)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const navigate = useNavigate()
 
-  // Function to check admin access
   async function verifyAdminAccess() {
     try {
       const hasAccess = await checkAdminAccess()
       if (!hasAccess) {
-        navigate('/') // Redirect to home if access is denied
+        navigate('/')
       } else {
         setIsAuthorized(true)
       }
-    } catch (error) {
-      navigate('/') // Redirect to home in case of error
+    } catch {
+      navigate('/')
+    } finally {
+      setIsCheckingAccess(false)
     }
   }
 
@@ -34,40 +37,47 @@ export function AdminPage() {
     setError(null)
   }
 
-  const handleError = (error: ErrorDetails) => {
-    setError(error)
+  const handleError = (nextError: ErrorDetails) => {
+    setError(nextError)
   }
 
   useEffect(() => {
     verifyAdminAccess()
   }, [])
 
+  if (isCheckingAccess) {
+    return <AdminPageSkeleton />
+  }
+
   if (!isAuthorized) {
     return null
   }
 
   return (
-    <div className='flex w-full items-center justify-around gap-2'>
+    <div className='flex w-full flex-col gap-4 px-6 pb-10 pt-6 text-white md:px-10'>
       {error && <ErrorComponent error={error} onClose={clearError} />}
+      <div className='flex w-full items-start gap-4'>
+        <section className='w-[55%] rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-sm'>
+          <BalanceControlTable
+            selectedTeam={selectedTeam}
+            selectedDate={selectedDate}
+            setSelectedTeam={setSelectedTeam}
+            setSelectedDate={setSelectedDate}
+            isDolar={isDolar}
+            setIsDolar={setIsDolar}
+            onError={handleError}
+          />
+        </section>
 
-      {/* Primeira Tabela */}
-      <BalanceControlTable
-        selectedTeam={selectedTeam}
-        selectedDate={selectedDate}
-        setSelectedTeam={setSelectedTeam}
-        setSelectedDate={setSelectedDate}
-        isDolar={isDolar}
-        setIsDolar={setIsDolar}
-        onError={handleError}
-      />
-      {/* Segunda Tabela */}
-      <GBanksTable onError={handleError} />
+        <section className='w-[35%] rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-sm'>
+          <GBanksTable onError={handleError} />
+        </section>
 
-      {/* Terceira Tabela */}
-      <div className='h-[90%] min-w-[20%]'>
-        <VerifyTable onError={handleError} />
-        <LatestTransactions isDolar={isDolar} />
-        <RunWithoutAttendanceTable />
+        <section className='min-h-[85vh] min-w-[10%] rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-sm'>
+          <VerifyTable onError={handleError} />
+          <LatestTransactions isDolar={isDolar} />
+          <RunWithoutAttendanceTable />
+        </section>
       </div>
     </div>
   )

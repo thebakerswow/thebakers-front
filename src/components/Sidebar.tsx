@@ -1,9 +1,11 @@
-import { cloneElement, isValidElement, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowFatUp,
   Briefcase,
   CalendarBlank,
+  CaretLeft,
+  CaretRight,
   CaretDown,
   Coins,
   CurrencyDollar,
@@ -35,11 +37,17 @@ export function Header() {
   const location = useLocation()
   const { logout, isAuthenticated, userRoles } = useAuth()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isDesktopSidebarHidden, setIsDesktopSidebarHidden] = useState(false)
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     finances: true,
     bookings: true,
     management: true,
   })
+  const isAdminPage = location.pathname.startsWith('/admin')
+
+  useEffect(() => {
+    setIsDesktopSidebarHidden(isAdminPage)
+  }, [isAdminPage])
 
   const hasAccess = (requiredRoles: string[], exactMatch = false): boolean => {
     if (exactMatch) {
@@ -192,7 +200,28 @@ export function Header() {
         </div>
       </div>
 
-      <aside className='relative z-20 hidden w-64 shrink-0 border-r border-white/5 bg-[#0a0a0c] backdrop-blur-sm md:flex md:flex-col'>
+      {isAdminPage && (
+        <button
+          type='button'
+          onClick={() => setIsDesktopSidebarHidden((previous) => !previous)}
+          aria-label={isDesktopSidebarHidden ? 'Show sidebar' : 'Hide sidebar'}
+          className={`fixed top-1/2 z-30 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-purple-300/50 bg-purple-500/25 text-white shadow-[0_0_20px_rgba(168,85,247,0.85),inset_0_0_12px_rgba(255,255,255,0.2)] transition-all duration-300 hover:scale-105 hover:bg-purple-500/35 md:inline-flex ${
+            isDesktopSidebarHidden ? 'left-2' : 'left-[15.25rem]'
+          }`}
+        >
+          {isDesktopSidebarHidden ? (
+            <CaretRight size={20} weight='bold' />
+          ) : (
+            <CaretLeft size={20} weight='bold' />
+          )}
+        </button>
+      )}
+
+      <aside
+        className={`relative z-20 hidden w-64 shrink-0 border-r border-white/5 bg-[#0a0a0c] backdrop-blur-sm ${
+          isDesktopSidebarHidden ? 'md:hidden' : 'md:flex md:flex-col'
+        }`}
+      >
         <div className='md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
           <div className='flex h-full flex-col overflow-hidden'>
             <div className='relative flex shrink-0 items-center justify-center border-b border-white/5 px-6 py-8'>
