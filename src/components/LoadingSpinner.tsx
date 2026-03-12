@@ -1,3 +1,5 @@
+import { CircleNotch } from '@phosphor-icons/react'
+
 type LoadingSpinnerProps = {
   size?: 'sm' | 'md' | 'lg'
   className?: string
@@ -5,9 +7,9 @@ type LoadingSpinnerProps = {
 }
 
 const sizeClasses = {
-  sm: 'h-4 w-4 border-2',
-  md: 'h-6 w-6 border-4',
-  lg: 'h-10 w-10 border-4',
+  sm: 20,
+  md: 28,
+  lg: 40,
 }
 
 export function LoadingSpinner({
@@ -17,8 +19,10 @@ export function LoadingSpinner({
 }: LoadingSpinnerProps) {
   return (
     <span role='status' aria-live='polite' className={`inline-flex items-center justify-center ${className}`}>
-      <span
-        className={`inline-block animate-spin rounded-full border-white/20 border-t-purple-400 ${sizeClasses[size]}`}
+      <CircleNotch
+        size={sizeClasses[size]}
+        className='animate-spin'
+        style={{ color: 'rgb(147, 51, 234)' }}
         aria-hidden='true'
       />
       <span className='sr-only'>{label}</span>
