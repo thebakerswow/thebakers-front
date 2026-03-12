@@ -2,6 +2,7 @@ import { PencilSimple, X } from '@phosphor-icons/react'
 import { useEffect, useState, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 import { CustomSelect } from '../../../../components/CustomSelect'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 
 import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../../../../services/api'
 
@@ -357,7 +358,7 @@ export function EditSale({
               className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
               {isSubmitting ? (
-                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
+                <LoadingSpinner size='sm' color='white' label='Updating sale' />
               ) : (
                 <PencilSimple size={18} />
               )}

@@ -11,6 +11,7 @@ import {
   Button,
   IconButton,
 } from '@mui/material'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface AddStatusToListProps {
   onClose: () => void
@@ -101,7 +102,7 @@ export function AddStatusToList({
             disabled={isSubmitting}
             startIcon={
               isSubmitting ? (
-                <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                <LoadingSpinner size='sm' color='white' label='Adding status' />
               ) : (
                 <Plus size={20} />
               )

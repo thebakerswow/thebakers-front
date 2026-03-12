@@ -40,6 +40,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Swal from 'sweetalert2'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
 
 import { GBank } from '../../../types'
 
@@ -546,7 +547,7 @@ export function GBanksTable({ onError }: GBanksTableProps) {
                  {isLoading ? (
            <div className='bg-white p-4 text-center border border-gray-200 rounded-md'>
              <div className='flex flex-col items-center gap-2'>
-               <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-gray-600 border-t-transparent' />
+              <LoadingSpinner size='md' color='#4b5563' label='Loading gbanks' />
                <Typography>Loading...</Typography>
              </div>
            </div>

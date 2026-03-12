@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, type CSSProperties, type ReactNode } from 'react'
-import { CircleNotch, Wallet, CopySimple } from '@phosphor-icons/react'
+import { Wallet, CopySimple } from '@phosphor-icons/react'
 import { ErrorDetails } from '../../../components/error-display'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { 
   getPaymentManagement, 
   getPaymentManagementDates, 
@@ -137,10 +138,6 @@ const Button = ({
       {children}
     </span>
   </button>
-)
-
-const CircularProgress = ({ size = 24, sx }: { size?: number; sx?: Record<string, unknown> }) => (
-  <CircleNotch size={size} className='animate-spin' style={sxToStyle(sx)} />
 )
 
 const TableContainer = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode; component?: unknown }) => (
@@ -919,7 +916,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress size={32} sx={{ color: 'rgb(147, 51, 234)' }} />
+        <LoadingSpinner size='lg' label='Loading payments table' />
       </Box>
     )
   }

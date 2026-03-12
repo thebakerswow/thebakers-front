@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect, type CSSProperties } from 'react'
-import { CircleNotch, Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
+import { Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ErrorDetails } from '../../../components/error-display'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { AddPayment } from './components/add-payment'
 import { EditSale } from './components/edit-sale'
 import { getSales, getPayers, deleteSale, getPaymentDates, getPaymentSummaryByStatus, type Payer, type Sale, type PaymentDate, type PaymentSummaryResponse } from '../../../services/api'
@@ -490,7 +491,7 @@ export function SellsTab({ onError }: SellsTabProps) {
         <div className='col-span-1 lg:col-span-8'>
           {isLoadingPayments ? (
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
-              <CircleNotch size={40} className='animate-spin' style={{ color: 'rgb(147, 51, 234)' }} />
+              <LoadingSpinner size='lg' label='Loading payments list' />
             </div>
           ) : filteredPayments.length === 0 ? (
             <div
@@ -676,7 +677,7 @@ export function SellsTab({ onError }: SellsTabProps) {
             {/* Loading State */}
             {isLoadingSummary ? (
               <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
-                <CircleNotch size={40} className='animate-spin' style={{ color: 'rgb(147, 51, 234)' }} />
+                <LoadingSpinner size='lg' label='Loading payments summary' />
               </div>
             ) : (
               <>

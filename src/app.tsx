@@ -29,14 +29,15 @@ import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
 import { AdminPage } from './pages/management/admin'
-import ManagementServices from './pages/management/management-services'
+import ManagementServices from './pages/management/servicesManagement'
 import { MockSpecialRunDetailsPage } from './pages/special-runs/mock-special-run-details-page'
-import { RequestsPage } from './pages/requests'
+import { RequestsPage } from './pages/management/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/management/payments'
 import { ReceiptsPage } from './pages/receipts'
 import { SellsPage } from './pages/sells'
 import { PurpleGlowBackground } from './components/purple-glow-background'
+import { LoadingSpinner } from './components/LoadingSpinner'
 import { GlobalErrorPage } from './pages/global-error'
 
 // Componente para proteger rotas privadas
@@ -46,7 +47,7 @@ function PrivateRoute({ element }: { element: JSX.Element }) {
   if (loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
-        <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-purple-400'></div>
+        <LoadingSpinner size='lg' label='Checking authentication' />
       </div>
     )
   }

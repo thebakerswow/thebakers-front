@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { CircleNotch } from '@phosphor-icons/react'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { SellsTab } from './sells-tab'
 import { PaymentsTab } from './payments-tab'
 
@@ -31,7 +31,7 @@ export function PaymentsPage() {
         <div className='m-8 min-h-screen w-full pb-12 text-white'>
           <div className='flex h-40 items-center justify-center'>
             <div className='flex flex-col items-center gap-2'>
-              <CircleNotch size={32} className='animate-spin text-purple-400' />
+              <LoadingSpinner size='lg' label='Loading payments page' />
               <span className='text-gray-400'>Loading...</span>
             </div>
           </div>

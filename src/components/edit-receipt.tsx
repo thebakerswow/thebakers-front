@@ -14,8 +14,8 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  CircularProgress,
 } from '@mui/material'
+import { LoadingSpinner } from './LoadingSpinner'
 import {
   updateReceiptsSale,
   getReceiptsPayers,
@@ -224,7 +224,7 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
               required
               disabled={isLoadingPayers}
               startAdornment={
-                isLoadingPayers ? <CircularProgress size={20} sx={{ ml: 1 }} /> : null
+                isLoadingPayers ? <LoadingSpinner size='sm' className='ml-1' label='Loading payers' /> : null
               }
             >
               <MenuItem value={0} disabled>
@@ -269,7 +269,7 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
               label='Receipts Date'
               disabled={isLoadingDates}
               startAdornment={
-                isLoadingDates ? <CircularProgress size={20} sx={{ ml: 1 }} /> : null
+                isLoadingDates ? <LoadingSpinner size='sm' className='ml-1' label='Loading receipt dates' /> : null
               }
             >
               <MenuItem value={0} disabled>
@@ -290,7 +290,7 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
             disabled={isSubmitting}
             startIcon={
               isSubmitting ? (
-                <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                <LoadingSpinner size='sm' color='white' label='Updating receipt' />
               ) : (
                 <PencilSimple size={20} />
               )

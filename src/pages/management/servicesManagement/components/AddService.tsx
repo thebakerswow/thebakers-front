@@ -1,16 +1,14 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import axios from 'axios'
-import { ErrorDetails } from './error-display'
-import { CustomSelect } from './CustomSelect'
+import { ErrorDetails } from '../../../../components/error-display'
+import { CustomSelect } from '../../../../components/CustomSelect'
+import { getApiErrorMessage } from '../../../../utils/apiErrorHandler'
 import {
-
   createService,
-  updateService,
   getServiceCategories,
-} from '../services/api/services'
-import { Service, ServiceForm, ServiceCategory } from '../types'
+} from '../services/servicesManagementApi'
+import { ServiceForm, ServiceCategory } from '../types/servicesManagement'
 
 const emptyForm: ServiceForm = {
   name: '',
@@ -25,18 +23,9 @@ interface AddServiceProps {
   onClose: () => void
   onServiceAdded: () => void
   onError: (error: ErrorDetails) => void
-  editingService?: Service | null
-  categoryId?: number
 }
 
-export function AddService({
-  open,
-  onClose,
-  onServiceAdded,
-  onError,
-  editingService,
-  categoryId,
-}: AddServiceProps) {
+export function AddService({ open, onClose, onServiceAdded, onError }: AddServiceProps) {
   const [form, setForm] = useState<ServiceForm>(emptyForm)
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loading, setLoading] = useState(false)
@@ -53,31 +42,9 @@ export function AddService({
       const res = await getServiceCategories()
       setCategories(Array.isArray(res) ? res : [])
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Failed to fetch categories', response: error }
-
-      onError(errorDetails)
-    }
-  }
-
-  const handleOpen = (service: Service | null = null) => {
-    if (service) {
-      setForm({
-        name: service.name,
-        description: service.description,
-        price: formatPriceInput(String(service.price)),
-        serviceCategoryId: String(service.serviceCategoryId),
-        hotItem: !!service.hotItem,
-      })
-    } else {
-      setForm({
-        ...emptyForm,
-        serviceCategoryId: categoryId ? String(categoryId) : '',
+      onError({
+        message: getApiErrorMessage(error, 'Failed to fetch categories'),
+        response: null,
       })
     }
   }
@@ -120,49 +87,31 @@ export function AddService({
 
     setLoading(true)
     try {
-      if (editingService) {
-        await updateService({
-          id: editingService.id,
-          name,
-          description,
-          price: Number(price.replace(/,/g, '')),
-          serviceCategoryId: Number(serviceCategoryId),
-          hotItem,
-        })
-        Swal.fire('Success', 'Service updated!', 'success')
-      } else {
-        await createService({
-          name,
-          description,
-          price: Number(price.replace(/,/g, '')),
-          serviceCategoryId: Number(serviceCategoryId),
-          hotItem,
-        })
-        Swal.fire('Success', 'Service added!', 'success')
-      }
+      await createService({
+        name,
+        description,
+        price: Number(price.replace(/,/g, '')),
+        serviceCategoryId: Number(serviceCategoryId),
+        hotItem,
+      })
+      Swal.fire('Success', 'Service added!', 'success')
       handleClose()
       onServiceAdded()
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.response?.data?.message || error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error', response: error }
-
-      onError(errorDetails)
+      onError({
+        message: getApiErrorMessage(error, 'Failed to save service'),
+        response: null,
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  // Reset form when editing service changes
   useEffect(() => {
     if (open) {
-      handleOpen(editingService)
+      setForm(emptyForm)
     }
-  }, [editingService, open])
+  }, [open])
 
   if (!open) return null
 
@@ -175,9 +124,7 @@ export function AddService({
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
       <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
         <div className='mb-4 flex items-center justify-between'>
-          <h3 className='text-lg font-semibold'>
-            {editingService ? 'Edit Service' : 'Add Service'}
-          </h3>
+          <h3 className='text-lg font-semibold'>Add Service</h3>
           <button
             type='button'
             aria-label='close'
@@ -278,7 +225,7 @@ export function AddService({
               disabled={loading}
               className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
-              {loading ? 'Saving...' : editingService ? 'Save' : 'Add'}
+              {loading ? 'Saving...' : 'Add'}
             </button>
           </div>
         </form>

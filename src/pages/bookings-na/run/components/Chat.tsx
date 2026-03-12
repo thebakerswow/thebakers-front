@@ -2,13 +2,13 @@ import { useState, useRef, FormEvent, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ChatTeardropText,
-  CircleNotch,
   PaperPlaneRight,
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 import type { ChatMessage, RunChatProps } from '../types/run'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 
 export function RunChat({
   messages,
@@ -104,7 +104,7 @@ export function RunChat({
           <div className='custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto bg-black/20 p-4'>
             {loading ? (
               <div className='flex h-full items-center justify-center'>
-                <CircleNotch className='animate-spin text-purple-300' size={24} />
+                <LoadingSpinner size='md' label='Loading chat messages' />
               </div>
             ) : (
               <>

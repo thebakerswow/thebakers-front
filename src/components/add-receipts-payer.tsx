@@ -11,6 +11,7 @@ import {
   Button,
   IconButton,
 } from '@mui/material'
+import { LoadingSpinner } from './LoadingSpinner'
 import { createReceiptsPayer } from '../services/api'
 
 interface AddReceiptsPayerProps {
@@ -103,7 +104,7 @@ export function AddReceiptsPayer({ onClose, onPayerAdded }: AddReceiptsPayerProp
             disabled={isSubmitting}
             startIcon={
               isSubmitting ? (
-                <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                <LoadingSpinner size='sm' color='white' label='Adding payer' />
               ) : (
                 <UserPlus size={20} />
               )

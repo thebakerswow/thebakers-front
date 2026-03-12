@@ -11,6 +11,7 @@ import {
   Button,
   IconButton,
 } from '@mui/material'
+import { LoadingSpinner } from './LoadingSpinner'
 import { updateReceiptsPayer, type ReceiptsPayer } from '../services/api'
 
 interface EditReceiptsPayerNameProps {
@@ -123,7 +124,7 @@ export function EditReceiptsPayerName({
             disabled={isSubmitting}
             startIcon={
               isSubmitting ? (
-                <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                <LoadingSpinner size='sm' color='white' label='Updating payer' />
               ) : (
                 <PencilSimple size={20} />
               )

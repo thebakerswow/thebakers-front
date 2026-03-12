@@ -15,10 +15,10 @@ import {
   Button,
   IconButton,
   Box,
-  CircularProgress,
   Autocomplete,
 } from '@mui/material'
 import { ErrorDetails } from './error-display'
+import { LoadingSpinner } from './LoadingSpinner'
 import { AddReceiptsPayer } from './add-receipts-payer'
 import { AddReceiptsDate } from './add-receipt-date'
 import { EditReceiptsPayerName } from './edit-receipts-payer-name'
@@ -345,7 +345,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {isLoadingPayers ? <CircularProgress size={20} /> : null}
+                            {isLoadingPayers ? <LoadingSpinner size='sm' label='Loading payers' /> : null}
                             {params.InputProps.endAdornment}
                           </>
                         ),
@@ -416,7 +416,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                     disabled={isLoadingReceiptDates}
                     startAdornment={
                       isLoadingReceiptDates ? (
-                        <CircularProgress size={20} sx={{ ml: 1 }} />
+                        <LoadingSpinner size='sm' className='ml-1' label='Loading receipt dates' />
                       ) : null
                     }
                   >
@@ -476,7 +476,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                 disabled={isSubmitting}
                 startIcon={
                   isSubmitting ? (
-                    <div className='h-5 w-5 animate-spin rounded-full border-b-2 border-white'></div>
+                    <LoadingSpinner size='sm' color='white' label='Adding receipt' />
                   ) : (
                     <UserPlus size={20} />
                   )

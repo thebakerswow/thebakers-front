@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Fire, FolderSimple, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import axios from 'axios'
 import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { AddService } from '../../../components/add-service'
+import { getApiErrorMessage } from '../../../utils/apiErrorHandler'
+import { AddService } from './components/AddService'
+import { CategoriesSkeletonGrid } from './components/ServicesManagementSkeleton'
+import { EditService } from './components/EditService'
+import { ServiceCard } from './components/ServiceCard'
 import {
   getServices,
   deleteService,
@@ -11,8 +14,8 @@ import {
   createServiceCategory,
   updateServiceCategory,
   deleteServiceCategory,
-} from '../../../services/api/services'
-import { Service, ServiceCategory, CategoryForm } from '../../../types'
+} from './services/servicesManagementApi'
+import { Service, ServiceCategory, CategoryForm } from './types/servicesManagement'
 
 export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
@@ -20,6 +23,7 @@ export default function PriceTableManagement() {
   const [loadingServices, setLoadingServices] = useState(true)
   const [error, setError] = useState<ErrorDetails | null>(null)
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
+  const [isEditServiceOpen, setIsEditServiceOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
 
   const emptyCategoryForm: CategoryForm = { name: '' }
@@ -45,14 +49,10 @@ export default function PriceTableManagement() {
       const res = await getServices()
       setServices(res)
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error', response: null }
-      handleError(errorDetails)
+      handleError({
+        message: getApiErrorMessage(error, 'Failed to fetch services'),
+        response: null,
+      })
     } finally {
       setLoadingServices(false)
     }
@@ -63,14 +63,10 @@ export default function PriceTableManagement() {
       const res = await getServiceCategories()
       setCategories(Array.isArray(res) ? res : [])
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Failed to fetch categories', response: error }
-      handleError(errorDetails)
+      handleError({
+        message: getApiErrorMessage(error, 'Failed to fetch categories'),
+        response: null,
+      })
     }
   }
 
@@ -78,7 +74,7 @@ export default function PriceTableManagement() {
 
   const handleEditService = (service: Service) => {
     setEditingService(service)
-    setIsAddServiceOpen(true)
+    setIsEditServiceOpen(true)
   }
 
   const handleAddService = () => {
@@ -102,14 +98,10 @@ export default function PriceTableManagement() {
         setServices((prev) => prev.filter((s) => s.id !== id))
         Swal.fire('Deleted!', 'Service has been deleted.', 'success')
       } catch (error) {
-        const errorDetails = axios.isAxiosError(error)
-          ? {
-              message: error.response?.data?.message || error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Unexpected error', response: error }
-        handleError(errorDetails)
+        handleError({
+          message: getApiErrorMessage(error, 'Failed to delete service'),
+          response: null,
+        })
       }
     })
   }
@@ -162,14 +154,10 @@ export default function PriceTableManagement() {
       handleCloseCategoryDialog()
       fetchCategories()
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.response?.data?.message || error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error', response: error }
-      handleError(errorDetails)
+      handleError({
+        message: getApiErrorMessage(error, 'Failed to save category'),
+        response: null,
+      })
     }
   }
 
@@ -189,14 +177,10 @@ export default function PriceTableManagement() {
         setCategories((prev) => prev.filter((c) => c.id !== id))
         Swal.fire('Deleted!', 'Category has been deleted.', 'success')
       } catch (error) {
-        const errorDetails = axios.isAxiosError(error)
-          ? {
-              message: error.response?.data?.message || error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            }
-          : { message: 'Unexpected error', response: error }
-        handleError(errorDetails)
+        handleError({
+          message: getApiErrorMessage(error, 'Failed to delete category'),
+          response: null,
+        })
       }
     })
   }
@@ -219,12 +203,7 @@ export default function PriceTableManagement() {
         <div className='my-4 h-px w-full bg-gradient-to-r from-transparent via-purple-400/35 to-transparent' />
 
         {loadingServices ? (
-          <div className='flex h-52 items-center justify-center rounded-xl border border-white/10 bg-black/20'>
-            <div className='flex flex-col items-center gap-2'>
-              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-purple-400'></div>
-              <span className='text-gray-400'>Loading services...</span>
-            </div>
-          </div>
+          <CategoriesSkeletonGrid />
         ) : (
           <div className='grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-black/20 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
             {categories.map((category) => {
@@ -237,7 +216,7 @@ export default function PriceTableManagement() {
                   key={category.id}
                   type='button'
                   onClick={() => handleCategoryClick(category)}
-                  className='h-[200px] rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-left transition hover:-translate-y-0.5 hover:border-purple-500/40 hover:bg-[#222] hover:shadow-lg'
+                  className='h-[200px] rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.06] hover:shadow-lg'
                 >
                   <div className='flex h-full flex-col justify-between'>
                     <div>
@@ -300,48 +279,12 @@ export default function PriceTableManagement() {
                 ) : (
                   <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
                     {getServicesForCategory(selectedCategory.id).map((service) => (
-                      <div
+                      <ServiceCard
                         key={service.id}
-                        className='relative flex flex-col rounded-xl border border-white/10 bg-[#262626] p-4 transition hover:-translate-y-0.5 hover:border-purple-500/40'
-                      >
-                        <div className='mb-2 flex items-start gap-2'>
-                          <h3 className='line-clamp-1 flex-1 text-lg font-bold text-white'>{service.name}</h3>
-                          {service.hotItem ? (
-                            <span className='inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400'>
-                              <Fire size={12} />
-                              Hot
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className='mb-4 flex-1 text-sm text-neutral-400'>{service.description}</p>
-                        <div className='border-t border-white/5 pt-3'>
-                          <div className='flex items-end justify-between gap-2'>
-                            <div>
-                              <span className='text-[10px] uppercase tracking-wider text-gray-500'>Price</span>
-                              <p className='text-xl font-bold text-amber-400'>
-                                {service.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                                <span className='ml-1 text-xs font-medium text-amber-500/70'>gold</span>
-                              </p>
-                            </div>
-                            <div className='flex gap-1'>
-                              <button
-                                type='button'
-                                onClick={() => handleEditService(service)}
-                                className='rounded-md p-2 text-purple-300 transition hover:bg-purple-500/15 hover:text-purple-200'
-                              >
-                                <PencilSimple size={16} />
-                              </button>
-                              <button
-                                type='button'
-                                onClick={() => handleDelete(service.id)}
-                                className='rounded-md p-2 text-red-400 transition hover:bg-red-500/15 hover:text-red-300'
-                              >
-                                <Trash size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        service={service}
+                        onEdit={handleEditService}
+                        onDelete={handleDelete}
+                      />
                     ))}
                   </div>
                 )}
@@ -468,11 +411,22 @@ export default function PriceTableManagement() {
             open={isAddServiceOpen}
             onClose={() => {
               setIsAddServiceOpen(false)
-              setEditingService(null)
             }}
             onServiceAdded={handleServiceAdded}
             onError={handleError}
-            editingService={editingService}
+          />
+        ) : null}
+
+        {isEditServiceOpen ? (
+          <EditService
+            open={isEditServiceOpen}
+            service={editingService}
+            onClose={() => {
+              setIsEditServiceOpen(false)
+              setEditingService(null)
+            }}
+            onServiceUpdated={handleServiceAdded}
+            onError={handleError}
           />
         ) : null}
 
