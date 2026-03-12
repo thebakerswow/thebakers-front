@@ -1,13 +1,14 @@
-import { api } from '../../../../services/axiosConfig'
+import { api } from '../../../../utils/axiosConfig'
 import {
   checkRunAccess as checkRunAccessService,
-} from '../../../../services/api/auth'
-import { sendDiscordMessage as sendDiscordMessageService } from '../../../../services/api/discord'
+} from '../../../auth/services/authApi'
 import type {
   FreelancerAttendancePayload,
   FreelancerMutationPayload,
   UpdateRunAttendancePayloadItem,
 } from '../types/run'
+
+type RequestPayload = Record<string, unknown>
 
 export const getRun = async (runId: string) => {
   const response = await api.get(`/run/${runId}`)
@@ -38,7 +39,7 @@ export const toggleRunLock = async (runId: string, isLocked: boolean) => {
   })
   return response.data
 }
-export const updateRun = async (runId: string, runData: unknown) => {
+export const updateRun = async (runId: string, runData: RequestPayload) => {
   const response = await api.put('/run', { ...runData, id: runId })
   return response.data
 }
@@ -48,14 +49,19 @@ export const getChatMessages = async (runId: string) => {
   const response = await api.get(`/chat/${runId}`)
   return response.data.info
 }
-export const sendDiscordMessage = (idDiscord: string, message: string) =>
-  sendDiscordMessageService(idDiscord, message)
+export const sendDiscordMessage = async (recipientId: string, message: string) => {
+  const response = await api.post('/discord/send_message', {
+    id_discord_recipient: recipientId,
+    message,
+  })
+  return response.data
+}
 
 export const createBuyer = async (buyerData: unknown) => {
   const response = await api.post('/buyer', buyerData)
   return response.data
 }
-export const updateBuyer = async (buyerId: string | number, buyerData: unknown) => {
+export const updateBuyer = async (buyerId: string | number, buyerData: RequestPayload) => {
   const response = await api.put('/buyer', { id_buyer: buyerId, ...buyerData })
   return response.data
 }

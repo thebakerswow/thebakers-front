@@ -3,7 +3,7 @@ import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import { RiMegaphoneLine } from 'react-icons/ri'
 import { AddBuyer } from './AddBuyer'
 import { EditRun } from './EditRun'
-import { useAuth } from '../../../../context/auth-context'
+import { useAuth } from '../../../../context/AuthContext'
 import {
   getRunAttendance,
   toggleRunLock as toggleRunLockService,

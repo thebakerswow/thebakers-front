@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getCurrentUserDate } from '../../../../utils/timezone-utils'
+import { getCurrentUserDate } from '../../../../utils/timezoneUtils'
 import {
   getBalanceAdmin,
   createTransaction,

@@ -1,4 +1,4 @@
-import { api } from '../axiosConfig'
+import { api } from '../../../utils/axiosConfig'
 
 export const login = async (data: { code: string }) => {
   const response = await api.post('/auth/login', data)
@@ -9,7 +9,6 @@ export const loginDiscord = async () => {
   const response = await api.post('/login/discord')
   return response.data
 }
-
 
 export const checkRunAccess = async (runId: string) => {
   const response = await api.get(`/access/run/${runId}`)

@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { X } from '@phosphor-icons/react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import Swal from 'sweetalert2'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { getApiErrorMessage, handleApiError } from '../../../utils/apiErrorHandler'
 import { RequestCard } from './components/RequestCard'
 import { RequestsFilter } from './components/RequestsFilter'
@@ -46,7 +45,6 @@ export function RequestsPage() {
   const [requests, setRequests] = useState<TransactionRequest[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<TransactionRequest | null>(null)
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<RequestsStatusFilter>('pending')
@@ -137,10 +135,7 @@ export function RequestsPage() {
         setTotalPages(0)
       }
     } catch (err) {
-      setError({
-        message: getApiErrorMessage(err, 'Error fetching requests'),
-        response: err,
-      })
+      await handleApiError(err, getApiErrorMessage(err, 'Error fetching requests'))
     } finally {
       setIsLoading(false)
     }
@@ -312,13 +307,13 @@ export function RequestsPage() {
       setRequests(updatedRequests)
       if (updatedRequests.filter((req) => req.status === 'pending').length === 0) fetchRequests()
     } catch (err) {
-      setError({
-        message: getApiErrorMessage(
+      await handleApiError(
+        err,
+        getApiErrorMessage(
           err,
           `Error ${status === 'accepted' ? 'accepting' : 'denying'} request`
-        ),
-        response: err,
-      })
+        )
+      )
     } finally {
       setProcessingRequests((prev) => {
         const next = new Set(prev)
@@ -341,8 +336,6 @@ export function RequestsPage() {
   return (
     <div className='w-full overflow-auto overflow-x-hidden pr-20'>
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
-        {error ? <ErrorComponent error={error} onClose={() => setError(null)} /> : null}
-
         {isLoading ? (
           <ResquestsSkeleton />
         ) : (

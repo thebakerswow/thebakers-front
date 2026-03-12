@@ -13,8 +13,8 @@ import {
   sendDiscordMessage,
 } from './services/runApi'
 import { Attendance } from './components/Attendance'
-import { useAuth } from '../../../context/auth-context'
-import { canViewAttendanceButton } from '../../../utils/role-utils'
+import { useAuth } from '../../../context/AuthContext'
+import { canViewAttendanceButton } from '../../../utils/roleUtils'
 import { Freelancers } from './components/Freelancers'
 import { RunChat } from './components/Chat'
 import { LoadingSpinner } from '../../../components/LoadingSpinner'

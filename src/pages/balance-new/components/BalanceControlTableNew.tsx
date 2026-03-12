@@ -6,7 +6,7 @@ import { CustomSelect } from '../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { DEFAULT_TEAM_COLOR, TEAM_ID_TO_COLOR_MAP, TRACKED_TEAM_OPTIONS } from '../../../utils/teamConfig'
 import { handleApiError } from '../../../utils/apiErrorHandler'
-import { getCurrentUserDate } from '../../../utils/timezone-utils'
+import { getCurrentUserDate } from '../../../utils/timezoneUtils'
 import { getBalanceDaily } from '../services/balanceNewApi'
 import {
   BalanceControlSortConfig,

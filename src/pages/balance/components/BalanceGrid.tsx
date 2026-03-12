@@ -7,7 +7,7 @@ import {
 } from '../services/balanceApi'
 import { getTextColorForBackground } from './ColorSelector'
 import { BalanceGridSkeleton } from './BalanceSkeleton'
-import { useAuth } from '../../../context/auth-context' // ajuste o path conforme necessário
+import { useAuth } from '../../../context/AuthContext' // ajuste o path conforme necessário
 import { handleApiError } from '../../../utils/apiErrorHandler'
 import { LoadingSpinner } from '../../../components/LoadingSpinner'
 
@@ -16,7 +16,7 @@ import {
   ProcessedPlayer,
   BalanceDataGridProps,
 } from '../types/balance'
-import { shouldShowOwnBalanceOnly } from '../../../utils/role-utils'
+import { shouldShowOwnBalanceOnly } from '../../../utils/roleUtils'
 
 export function BalanceDataGrid({
   selectedTeam: initialSelectedTeam,

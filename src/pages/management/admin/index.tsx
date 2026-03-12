@@ -7,7 +7,7 @@ import { VerifyTable } from './components/VerifyTable'
 import LatestTransactions from './components/LatestTransactions'
 import RunWithoutAttendanceTable from './components/RunsWithoutAttendance'
 import { AdminPageSkeleton } from './components/AdminPageSkeleton'
-import { ErrorDetails, ErrorComponent } from '../../../components/error-display'
+import { ApiErrorDetails, handleApiError } from '../../../utils/apiErrorHandler'
 
 export function AdminPage() {
   const [selectedDate, setSelectedDate] = useState('')
@@ -15,7 +15,6 @@ export function AdminPage() {
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isDolar, setIsDolar] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const navigate = useNavigate()
 
   async function verifyAdminAccess() {
@@ -33,12 +32,8 @@ export function AdminPage() {
     }
   }
 
-  const clearError = () => {
-    setError(null)
-  }
-
-  const handleError = (nextError: ErrorDetails) => {
-    setError(nextError)
+  const handleError = (nextError: ApiErrorDetails) => {
+    void handleApiError(nextError, nextError.message)
   }
 
   useEffect(() => {
@@ -55,7 +50,6 @@ export function AdminPage() {
 
   return (
     <div className='flex w-full flex-col gap-4 px-6 pb-10 pt-6 text-white md:px-10'>
-      {error && <ErrorComponent error={error} onClose={clearError} />}
       <div className='flex w-full items-start gap-4'>
         <section className='w-[55%] rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-sm'>
           <BalanceControlTable

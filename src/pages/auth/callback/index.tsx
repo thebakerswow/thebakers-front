@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/auth-context'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 
 export function AuthCallback() {
   const [searchParams] = useSearchParams()

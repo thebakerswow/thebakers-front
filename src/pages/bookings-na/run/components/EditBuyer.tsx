@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, X } from '@phosphor-icons/react'
 import { updateBuyer } from '../services/runApi'
-import { ErrorDetails, ErrorComponent } from '../../../../components/error-display'
 import Swal from 'sweetalert2'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { EditBuyerProps } from '../types/run'
@@ -27,7 +26,6 @@ export function EditBuyer({
     buyerNote: buyer.buyerNote,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
 
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
@@ -83,11 +81,10 @@ export function EditBuyer({
     const buyerDolarPotValue = Number(formData.buyerDolarPot.replace(/,/g, ''))
 
     if (isNaN(buyerPotValue) || isNaN(buyerDolarPotValue)) {
-      setError({
-        message: 'Invalid numeric values',
-        response: 'Please enter valid numbers for Pot and Dollar Pot fields',
-        status: 400,
-      })
+      await handleApiError(
+        new Error('Please enter valid numbers for Pot and Dollar Pot fields'),
+        'Invalid numeric values'
+      )
       setIsSubmitting(false)
       return
     }
@@ -115,7 +112,6 @@ export function EditBuyer({
       onClose()
     } catch (error) {
       await handleApiError(error, 'Failed to update buyer')
-      setError({ message: 'Failed to update buyer', response: error })
     } finally {
       setIsSubmitting(false)
     }
@@ -138,58 +134,54 @@ export function EditBuyer({
           </button>
         </div>
 
-        {error ? (
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        ) : (
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-            <div>
-              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-                Name-Realm
-              </label>
-              <input
-                value={formData.nameAndRealm}
-                onChange={handleChange('nameAndRealm')}
-                maxLength={255}
-                className={baseFieldClass}
-              />
-            </div>
-
-            <div>
-              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-                Gold Pot
-              </label>
-              <input
-                value={formData.buyerPot}
-                onChange={handleChange('buyerPot')}
-                className={baseFieldClass}
-              />
-            </div>
-
-            {!shouldHideDolarField() && (
-              <div>
-                <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-                  Dollar Pot
-                </label>
-                <input
-                  value={formData.buyerDolarPot}
-                  onChange={handleChange('buyerDolarPot')}
-                  className={baseFieldClass}
-                />
-              </div>
-            )}
-
-            <div>
-              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-                Note
-              </label>
-              <input
-                value={formData.buyerNote}
-                onChange={handleChange('buyerNote')}
-                className={baseFieldClass}
-              />
-            </div>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Name-Realm
+            </label>
+            <input
+              value={formData.nameAndRealm}
+              onChange={handleChange('nameAndRealm')}
+              maxLength={255}
+              className={baseFieldClass}
+            />
           </div>
-        )}
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Gold Pot
+            </label>
+            <input
+              value={formData.buyerPot}
+              onChange={handleChange('buyerPot')}
+              className={baseFieldClass}
+            />
+          </div>
+
+          {!shouldHideDolarField() && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Dollar Pot
+              </label>
+              <input
+                value={formData.buyerDolarPot}
+                onChange={handleChange('buyerDolarPot')}
+                className={baseFieldClass}
+              />
+            </div>
+          )}
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Note
+            </label>
+            <input
+              value={formData.buyerNote}
+              onChange={handleChange('buyerNote')}
+              className={baseFieldClass}
+            />
+          </div>
+        </div>
 
         <div className='mt-4 flex items-center justify-end gap-2'>
           <button

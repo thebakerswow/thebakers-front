@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/auth-context'
-import { loginDiscord } from '../../services/api/auth'
-import axios from 'axios'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { useAuth } from '../../../context/AuthContext'
+import { handleApiError } from '../../../utils/apiErrorHandler'
+import { loginDiscord } from '../services/authApi'
 
 export function Login() {
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isLoadingDiscord, setIsLoadingDiscord] = useState(false)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
@@ -14,22 +12,6 @@ export function Login() {
   useEffect(() => {
     if (isAuthenticated) navigate('/home')
   }, [isAuthenticated, navigate])
-
-  const handleApiError = (error: unknown) => {
-    if (axios.isAxiosError(error)) {
-      setError({
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-    } else {
-      setError({ message: 'Unexpected error', response: error })
-    }
-  }
-
-  const clearError = () => {
-    setError(null)
-  }
 
   const handleLoginDiscord = async () => {
     setIsLoadingDiscord(true)
@@ -51,16 +33,13 @@ export function Login() {
         setIsLoadingDiscord(false)
       }
     } catch (error) {
-      handleApiError(error)
+      await handleApiError(error, 'Failed to start Discord login')
       setIsLoadingDiscord(false)
     }
   }
 
-
-
   return (
     <div className='relative flex min-h-screen w-full items-center justify-center overflow-hidden px-6'>
-      {error && <ErrorComponent error={error} onClose={clearError} />}
       <div className='relative z-10 flex flex-col items-center gap-10 px-10 py-14'>
         <p
           className='pointer-events-none inline-flex select-none items-center gap-3 text-center text-4xl font-semibold uppercase text-white/25 md:gap-4 md:text-6xl'

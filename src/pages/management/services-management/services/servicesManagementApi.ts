@@ -1,4 +1,4 @@
-import { api } from '../../../../services/axiosConfig'
+import { api } from '../../../../utils/axiosConfig'
 
 export const getServices = async () => {
   const response = await api.get('/services')

@@ -1,4 +1,4 @@
-import { api } from '../../../services/axiosConfig'
+import { api } from '../../../utils/axiosConfig'
 import { TransactionRequest, UpdateTransactionRequestValuePayload } from '../types/myRequests'
 
 export const getUserTransactionRequests = async (): Promise<TransactionRequest[]> => {

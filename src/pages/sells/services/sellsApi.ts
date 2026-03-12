@@ -1,4 +1,4 @@
-import { api } from '../../../services/axiosConfig'
+import { api } from '../../../utils/axiosConfig'
 import { PaymentsResumeResponse } from '../types/sells'
 
 export const getPaymentsResume = async (): Promise<PaymentsResumeResponse> => {

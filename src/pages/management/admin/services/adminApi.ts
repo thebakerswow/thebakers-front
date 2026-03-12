@@ -1,5 +1,5 @@
-import { api } from '../../../../services/axiosConfig'
-import { checkAdminAccess as checkAdminAccessService } from '../../../../services/api/auth'
+import { api } from '../../../../utils/axiosConfig'
+import { checkAdminAccess as checkAdminAccessService } from '../../../auth/services/authApi'
 import type {
   CreateGBankData,
   CreateTransactionData,

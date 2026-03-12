@@ -1,6 +1,6 @@
-import { api } from '../../../../services/axiosConfig'
-import { RUN_FLAG_QUERY_PARAM } from '../../../../constants/run-flags'
-import type { RunScreenFlag } from '../../../../constants/run-flags'
+import { api } from '../../../../utils/axiosConfig'
+import { RUN_FLAG_QUERY_PARAM } from '../../../../utils/runFlags'
+import type { RunScreenFlag } from '../../../../utils/runFlags'
 import type { BuyerData } from '../../run/types/run'
 import type { ApiOption, RaidRunCreatePayload, RaidsRunData } from '../types/raids'
 

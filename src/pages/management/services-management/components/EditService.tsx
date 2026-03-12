@@ -1,9 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import { ErrorDetails } from '../../../../components/error-display'
 import { CustomSelect } from '../../../../components/CustomSelect'
-import { getApiErrorMessage } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, getApiErrorMessage } from '../../../../utils/apiErrorHandler'
 import { getServiceCategories, updateService } from '../services/servicesManagementApi'
 import { Service, ServiceCategory, ServiceForm } from '../types/servicesManagement'
 
@@ -20,7 +19,7 @@ interface EditServiceProps {
   service: Service | null
   onClose: () => void
   onServiceUpdated: () => void
-  onError: (error: ErrorDetails) => void
+  onError: (error: ApiErrorDetails) => void
 }
 
 export function EditService({

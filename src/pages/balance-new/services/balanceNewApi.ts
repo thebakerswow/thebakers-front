@@ -1,4 +1,4 @@
-import { api } from '../../../services/axiosConfig'
+import { api } from '../../../utils/axiosConfig'
 import { CreateGBankPayload, CreateTransactionRequestPayload, GetBalanceDailyParams } from '../types/balanceNew'
 
 export const getBalanceDaily = async (params: GetBalanceDailyParams) => {

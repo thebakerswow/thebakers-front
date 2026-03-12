@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Wallet, CopySimple } from '@phosphor-icons/react'
-import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { PaymentsTabPageSkeleton } from './PaymentsTabPageSkeleton'
 import { 
   getPaymentManagement, 
@@ -55,7 +54,7 @@ interface PaymentRow {
 }
 
 interface PaymentsTabProps {
-  onError?: (error: ErrorDetails | null) => void
+  onError?: (error: ApiErrorDetails | null) => void
 }
 
 export function PaymentsTab({ onError }: PaymentsTabProps) {

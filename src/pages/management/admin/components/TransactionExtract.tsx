@@ -3,10 +3,9 @@ import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { getPlayers, getTransactionLogs } from '../services/adminApi'
-import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { getApiErrorMessage } from '../../../../utils/apiErrorHandler'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 import type {
   DatePickerInputProps,
   ExtractLogInfo,
@@ -36,7 +35,6 @@ export function TransactionExtract() {
   const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [logs, setLogs] = useState<ExtractLogRow[]>([])
   const [isDolar, setIsDolar] = useState(false)
   const dateTriggerClass =
@@ -52,9 +50,7 @@ export function TransactionExtract() {
         }
         setPlayers(response) // Ensure response is an array of objects
       } catch (error) {
-        setError({
-          message: getApiErrorMessage(error, 'Failed to fetch players.'),
-        })
+        await handleApiError(error, 'Failed to fetch players.')
       } finally {
         setIsLoadingPlayers(false)
       }
@@ -83,9 +79,7 @@ export function TransactionExtract() {
         : []
       setLogs(logsData) // Ensure logsData is always an array
     } catch (error) {
-      setError({
-        message: getApiErrorMessage(error, 'Failed to fetch transaction logs.'),
-      })
+      await handleApiError(error, 'Failed to fetch transaction logs.')
     } finally {
       setIsFetchingLogs(false)
     }
@@ -102,16 +96,6 @@ export function TransactionExtract() {
     const parsedDate = parse(endDate, 'yyyy-MM-dd', new Date())
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
   }, [endDate])
-
-  if (error) {
-    return (
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
-        <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#111115] p-4 text-white shadow-2xl'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div>

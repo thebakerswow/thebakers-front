@@ -1,4 +1,4 @@
-import { api } from '../../../services/axiosConfig'
+import { api } from '../../../utils/axiosConfig'
 import { handleApiError } from '../../../utils/apiErrorHandler'
 import { HomeRunItem, HomeServicesData, HomeWeekRuns } from '../types/home'
 

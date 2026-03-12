@@ -4,9 +4,8 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Swal from 'sweetalert2'
 
-import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { AddReceipt } from './AddPayment'
 import { EditReceipt } from './EditPayment'
 import { SellsTabPageSkeleton } from './SellsTabPageSkeleton'
@@ -33,7 +32,7 @@ interface ReceiptDisplay {
 }
 
 interface ReceiptsSellsTabProps {
-  onError?: (error: ErrorDetails | null) => void
+  onError?: (error: ApiErrorDetails | null) => void
 }
 
 export function ReceiptsSellsTab({ onError }: ReceiptsSellsTabProps) {

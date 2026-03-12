@@ -4,8 +4,7 @@ import Swal from 'sweetalert2'
 
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { ErrorDetails } from '../../../../components/error-display'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { AddBuyerToList } from './AddBuyerToList'
 import { AddPaymentDate } from './AddPaymentDate'
 import { EditBuyerName } from './EditBuyerName'
@@ -16,7 +15,7 @@ import { sortPaymentDatesByName, toMonthDay } from '../utils/paymentDate'
 interface AddPaymentProps {
   onClose: () => void
   onPaymentAdded: () => void
-  onError?: (error: ErrorDetails) => void
+  onError?: (error: ApiErrorDetails) => void
 }
 
 

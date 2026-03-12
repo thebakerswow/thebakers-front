@@ -3,10 +3,9 @@ import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { getGbanks, getGbankLogs } from '../services/adminApi'
-import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { getApiErrorMessage } from '../../../../utils/apiErrorHandler'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 import type {
   DatePickerInputProps,
   ExtractLogInfo,
@@ -35,7 +34,6 @@ export function GbankExtract() {
   const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [logs, setLogs] = useState<ExtractLogRow[]>([])
   const dateTriggerClass =
     'h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-9 text-left text-sm text-white shadow-none outline-none transition focus:border-purple-400/60'
@@ -50,9 +48,7 @@ export function GbankExtract() {
         }
         setGbanks(response) // Ensure response is an array of objects
       } catch (error) {
-        setError({
-          message: getApiErrorMessage(error, 'Failed to fetch g-banks.'),
-        })
+        await handleApiError(error, 'Failed to fetch g-banks.')
       } finally {
         setIsLoadingGbanks(false)
       }
@@ -79,9 +75,7 @@ export function GbankExtract() {
         : []
       setLogs(logsData) // Ensure logsData is always an array
     } catch (error) {
-      setError({
-        message: getApiErrorMessage(error, 'Failed to fetch g-bank logs.'),
-      })
+      await handleApiError(error, 'Failed to fetch g-bank logs.')
     } finally {
       setIsFetchingLogs(false)
     }
@@ -98,16 +92,6 @@ export function GbankExtract() {
     const parsedDate = parse(endDate, 'yyyy-MM-dd', new Date())
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
   }, [endDate])
-
-  if (error) {
-    return (
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
-        <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#111115] p-4 text-white shadow-2xl'>
-          <ErrorComponent error={error} onClose={() => setError(null)} />
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div>

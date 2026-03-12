@@ -2,9 +2,8 @@ import { UserPlus, Plus, PencilSimple } from '@phosphor-icons/react'
 import { X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
-import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { AddReceiptsPayer } from './AddPaymentsPayer'
 import { AddReceiptsDate } from './AddPaymentDate'
 import { EditReceiptsPayerName } from './EditPaymentPayerName'
@@ -19,7 +18,7 @@ import {
 interface AddReceiptProps {
   onClose: () => void
   onReceiptAdded: () => void
-  onError?: (error: ErrorDetails) => void
+  onError?: (error: ApiErrorDetails) => void
 }
 
 export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps) {

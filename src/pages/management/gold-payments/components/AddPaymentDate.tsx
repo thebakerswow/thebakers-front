@@ -191,21 +191,6 @@ export function AddPaymentDate({
               placeholderText='MM/DD/YYYY'
               showPopperArrow={false}
               popperPlacement='bottom-start'
-              popperModifiers={[
-                {
-                  name: 'preventOverflow',
-                  options: {
-                    rootBoundary: 'viewport',
-                    padding: 8,
-                  },
-                },
-                {
-                  name: 'flip',
-                  options: {
-                    fallbackPlacements: ['top-start', 'bottom-end', 'top-end'],
-                  },
-                },
-              ]}
               popperClassName='z-[300] balance-datepicker-popper'
               calendarClassName='balance-datepicker add-run-datepicker'
               wrapperClassName='w-full'

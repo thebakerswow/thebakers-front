@@ -20,7 +20,7 @@ import {
 } from '../services/runApi'
 import { EditBuyer } from './EditBuyer'
 import Swal from 'sweetalert2'
-import { useAuth } from '../../../../context/auth-context'
+import { useAuth } from '../../../../context/AuthContext'
 import CryptoJS from 'crypto-js'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import type { BuyerData, BuyersGridProps, RaidLeader } from '../types/run'

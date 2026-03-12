@@ -1,4 +1,4 @@
-import type { ErrorDetails } from '../../../../components/error-display'
+import type { ApiErrorDetails } from '../../../../utils/apiErrorHandler'
 
 export interface BalanceControlTableProps {
   selectedTeam: string
@@ -10,15 +10,15 @@ export interface BalanceControlTableProps {
 }
 
 export interface ExtendedBalanceControlTableProps extends BalanceControlTableProps {
-  onError?: (error: ErrorDetails) => void
+  onError?: (error: ApiErrorDetails) => void
 }
 
 export interface GBanksTableProps {
-  onError?: (error: ErrorDetails) => void
+  onError?: (error: ApiErrorDetails) => void
 }
 
 export interface VerifyTableProps {
-  onError?: (error: ErrorDetails) => void
+  onError?: (error: ApiErrorDetails) => void
 }
 
 export interface Transaction {

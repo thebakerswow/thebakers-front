@@ -3,6 +3,12 @@ import Swal from 'sweetalert2'
 
 type GenericRecord = Record<string, unknown>
 
+export interface ApiErrorDetails {
+  message: string
+  response?: unknown
+  status?: number
+}
+
 const isRecord = (value: unknown): value is GenericRecord =>
   typeof value === 'object' && value !== null
 

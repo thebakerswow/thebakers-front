@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { AddBuyer } from '../bookings-na/run/components/AddBuyer'
-import { useAuth } from '../../context/auth-context'
+import { useAuth } from '../../context/AuthContext'
 import type { RunData } from '../bookings-na/run/types/run'
 import { SpecialRunDetails } from './components/special-run-details'
 import { SpecialRunBuyersGrid } from './components/special-run-buyers-grid'

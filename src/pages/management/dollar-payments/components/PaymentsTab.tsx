@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Wallet, CopySimple } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 
-import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { PaymentsTabPageSkeleton } from './PaymentsTabPageSkeleton'
 import {
   getReceiptsManagement,
@@ -41,7 +40,7 @@ const teamOrder = [
 ] as const
 
 interface ReceiptsPaymentsTabProps {
-  onError?: (error: ErrorDetails | null) => void
+  onError?: (error: ApiErrorDetails | null) => void
 }
 
 export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Fire, FolderSimple, PencilSimple, Plus, Trash, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { getApiErrorMessage } from '../../../utils/apiErrorHandler'
+import { ApiErrorDetails, getApiErrorMessage, handleApiError } from '../../../utils/apiErrorHandler'
 import { AddService } from './components/AddService'
 import { CategoriesSkeletonGrid } from './components/ServicesManagementSkeleton'
 import { EditService } from './components/EditService'
@@ -21,7 +20,6 @@ export default function PriceTableManagement() {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loadingServices, setLoadingServices] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
   const [isEditServiceOpen, setIsEditServiceOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
@@ -35,8 +33,9 @@ export default function PriceTableManagement() {
   const [isCategoryServicesDialogOpen, setIsCategoryServicesDialogOpen] = useState(false)
   const [openCategories, setOpenCategories] = useState(false)
 
-  const handleError = (errorDetails: ErrorDetails) => setError(errorDetails)
-  const clearError = () => setError(null)
+  const handleError = (errorDetails: ApiErrorDetails) => {
+    void handleApiError(errorDetails, errorDetails.message)
+  }
 
   useEffect(() => {
     fetchServices()
@@ -429,8 +428,6 @@ export default function PriceTableManagement() {
             onError={handleError}
           />
         ) : null}
-
-        {error ? <ErrorComponent error={error} onClose={clearError} /> : null}
       </div>
     </div>
   )

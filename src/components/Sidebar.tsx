@@ -19,8 +19,8 @@ import {
   X,
   ClipboardText,
 } from '@phosphor-icons/react'
-import { useAuth } from '../context/auth-context'
-import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/role-utils'
+import { useAuth } from '../context/AuthContext'
+import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/roleUtils'
 
 type NavItem = {
   label: string

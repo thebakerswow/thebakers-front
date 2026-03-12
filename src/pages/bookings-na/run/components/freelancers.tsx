@@ -7,10 +7,9 @@ import {
   updateFreelancerAttendance,
 } from '../services/runApi'
 import { Trash } from '@phosphor-icons/react'
-import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { FreelancersProps, User } from '../types/run'
-import { getApiErrorMessage, handleApiError } from '../../../../utils/apiErrorHandler'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [freelancers, setFreelancers] = useState<User[]>([])
@@ -21,7 +20,6 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // For adding freelancers
   const [isLoadingFreelancers, setIsLoadingFreelancers] = useState(true)
-  const [error, setError] = useState<ErrorDetails | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(
     null
@@ -32,7 +30,6 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
 
   const handleError = async (error: unknown, fallbackMessage = 'Unexpected error') => {
     await handleApiError(error, fallbackMessage)
-    setError({ message: getApiErrorMessage(error, fallbackMessage), response: error })
   }
 
   useEffect(() => {
@@ -89,7 +86,6 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const handleConfirmDeleteFreelancer = async () => {
     if (!runId || !freelancerToDelete) return
     setDeletingFreelancerId(freelancerToDelete) // Set the ID of the freelancer being deleted
-    setError(null) // Reset error state before attempting deletion
     try {
       await deleteFreelancer(freelancerToDelete, runId)
       const response = await getFreelancers(runId)
@@ -157,8 +153,6 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
 
   return (
     <div className='w-full'>
-      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-
       <div className='rounded-xl border border-white/10 bg-black/30 p-3 text-white'>
         <div className='mb-3 flex flex-wrap items-center gap-2'>
           <div className='relative min-w-[280px] flex-1'>

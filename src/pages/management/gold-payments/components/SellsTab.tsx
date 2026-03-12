@@ -2,9 +2,8 @@ import { useMemo, useState, useEffect, type CSSProperties } from 'react'
 import { Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { AddPayment } from './AddPayment'
 import { EditSale } from './EditSale'
 import { SellsTabPageSkeleton } from './SellsTabPageSkeleton'
@@ -29,7 +28,7 @@ interface PaymentDisplay {
 }
 
 interface SellsTabProps {
-  onError?: (error: ErrorDetails | null) => void
+  onError?: (error: ApiErrorDetails | null) => void
 }
 
 export function SellsTab({ onError }: SellsTabProps) {

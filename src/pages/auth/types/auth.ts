@@ -1,4 +1,3 @@
-
 export interface DiscordTokenPayload {
   username: string
   roles: string[] | string

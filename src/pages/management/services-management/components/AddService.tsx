@@ -1,9 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import { ErrorDetails } from '../../../../components/error-display'
 import { CustomSelect } from '../../../../components/CustomSelect'
-import { getApiErrorMessage } from '../../../../utils/apiErrorHandler'
+import { ApiErrorDetails, getApiErrorMessage } from '../../../../utils/apiErrorHandler'
 import {
   createService,
   getServiceCategories,
@@ -22,7 +21,7 @@ interface AddServiceProps {
   open: boolean
   onClose: () => void
   onServiceAdded: () => void
-  onError: (error: ErrorDetails) => void
+  onError: (error: ApiErrorDetails) => void
 }
 
 export function AddService({ open, onClose, onServiceAdded, onError }: AddServiceProps) {
