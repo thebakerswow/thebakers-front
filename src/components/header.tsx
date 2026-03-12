@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { cloneElement, isValidElement, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowFatUp,
@@ -192,36 +192,43 @@ export function Header() {
         </div>
       </div>
 
-      <aside className='relative z-20 hidden w-64 shrink-0 border-r border-white/10 bg-[#060608]/85 backdrop-blur-sm md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
-        <div className='flex h-20 items-center justify-center border-b border-white/10 px-6'>
-          <button
-            onClick={() => goTo('/home')}
-            className='inline-flex items-center justify-center gap-2 text-xl font-semibold uppercase tracking-[0.35em] text-white'
-            style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-          >
-            <span>THE</span>
-            <span className='text-[10px] text-purple-500'>●</span>
-            <span>BAKERS</span>
-          </button>
+      <aside className='relative z-20 hidden w-64 shrink-0 border-r border-white/5 bg-[#0a0a0c] backdrop-blur-sm md:flex md:flex-col'>
+        <div className='md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
+          <div className='flex h-full flex-col overflow-hidden'>
+            <div className='relative flex shrink-0 items-center justify-center border-b border-white/5 px-6 py-8'>
+              <button
+                onClick={() => goTo('/home')}
+                className='inline-flex items-center justify-center gap-2 text-xl font-semibold uppercase tracking-[0.32em] text-white'
+                style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
+              >
+                <span>THE</span>
+                <span className='text-[10px] text-purple-500'>●</span>
+                <span>BAKERS</span>
+              </button>
+            </div>
+            <div className='flex shrink-0 items-center justify-center px-6 py-3'>
+              <p className='text-base text-gray-400'>Administration</p>
+            </div>
+            <nav className='font-space-grotesk min-h-0 flex-1 overflow-y-auto space-y-1 px-4 py-2'>
+              {navItems.map((item) => (
+                <SidebarItem
+                  key={item.label}
+                  item={item}
+                  pathname={location.pathname}
+                  open={openGroups[item.label.toLowerCase()] ?? true}
+                  setOpen={(next) =>
+                    setOpenGroups((prev) => ({ ...prev, [item.label.toLowerCase()]: next }))
+                  }
+                  onNavigate={goTo}
+                />
+              ))}
+            </nav>
+          </div>
         </div>
-        <nav className='font-space-grotesk flex-1 space-y-2 px-4 py-4'>
-          {navItems.map((item) => (
-            <SidebarItem
-              key={item.label}
-              item={item}
-              pathname={location.pathname}
-              open={openGroups[item.label.toLowerCase()] ?? true}
-              setOpen={(next) =>
-                setOpenGroups((prev) => ({ ...prev, [item.label.toLowerCase()]: next }))
-              }
-              onNavigate={goTo}
-            />
-          ))}
-        </nav>
-        <div className='sticky bottom-0 z-30 border-t border-white/10 bg-[#060608]/90 p-4 backdrop-blur-sm'>
+        <div className='mt-auto shrink-0 border-t border-white/5 px-4 py-4'>
           <button
             onClick={handleLogout}
-            className='flex w-full items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20'
+            className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
           >
             <SignOut size={18} />
             Logout
@@ -236,7 +243,7 @@ export function Header() {
             onClick={() => setIsMobileOpen(false)}
             aria-label='Close sidebar backdrop'
           />
-          <aside className='absolute left-0 top-0 h-full w-[82%] max-w-[320px] border-r border-white/10 bg-[#060608]/95 p-4 backdrop-blur-sm'>
+          <aside className='absolute left-0 top-0 flex h-full w-[82%] max-w-[320px] flex-col border-r border-white/5 bg-[#0a0a0c]/95 p-4 backdrop-blur-sm'>
             <div className='mb-4 flex items-center justify-between'>
               <button
                 onClick={() => goTo('/home')}
@@ -255,7 +262,7 @@ export function Header() {
               </button>
             </div>
 
-            <nav className='font-space-grotesk space-y-2'>
+            <nav className='font-space-grotesk flex-1 space-y-1 overflow-y-auto'>
               {navItems.map((item) => (
                 <SidebarItem
                   key={`mobile-${item.label}`}
@@ -275,7 +282,7 @@ export function Header() {
 
             <button
               onClick={handleLogout}
-              className='mt-6 flex w-full items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300'
+              className='mt-4 flex w-full shrink-0 items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
             >
               <SignOut size={18} />
               Logout
@@ -285,6 +292,14 @@ export function Header() {
       )}
     </>
   )
+}
+
+function renderNavIcon(icon: JSX.Element, isActive: boolean) {
+  if (!isValidElement(icon)) return icon
+  return cloneElement(icon, {
+    className: isActive ? 'text-purple-400' : 'text-gray-500',
+    weight: isActive ? 'fill' : 'regular',
+  } as Partial<{ className: string; weight: string }>)
 }
 
 function SidebarItem({
@@ -322,10 +337,10 @@ function SidebarItem({
 
   if (item.children?.length) {
     return (
-      <div className='rounded-lg border border-white/10 bg-white/5'>
+      <div className='rounded-md'>
         <button
           onClick={() => setOpen(!open)}
-          className='flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-200 transition hover:bg-white/5 hover:text-white'
+          className='flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:bg-white/5 hover:text-white'
         >
           <span className='inline-flex items-center gap-2'>
             {item.icon}
@@ -337,7 +352,7 @@ function SidebarItem({
           />
         </button>
         {open && (
-          <div className='space-y-1 px-2 pb-2'>
+          <div className='space-y-1 pl-2 pr-0.5 pb-1 pt-1'>
             {item.children.map((child) => {
               const isActive = isPathActive(
                 child.path,
@@ -348,13 +363,13 @@ function SidebarItem({
                 <button
                   key={child.label}
                   onClick={() => child.path && onNavigate(child.path)}
-                  className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm transition ${
+                  className={`flex w-full items-center gap-2 rounded-md border-l-2 px-3 py-2.5 text-left text-sm transition-all duration-200 ${
                     isActive
-                      ? 'border-purple-500/30 bg-purple-500/20 text-purple-200'
-                      : 'border-transparent text-gray-300 hover:translate-x-[3px] hover:bg-white/5 hover:text-white'
+                      ? 'border-purple-500 bg-purple-500/10 text-white'
+                      : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  {child.icon}
+                  {renderNavIcon(child.icon, isActive)}
                   {child.label}
                 </button>
               )
@@ -373,13 +388,13 @@ function SidebarItem({
   return (
     <button
       onClick={() => item.path && onNavigate(item.path)}
-      className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${
+      className={`flex w-full items-center gap-3 rounded-md border-l-2 px-4 py-2.5 text-left text-sm transition-all duration-200 ${
         isActive
-          ? 'border-purple-500/30 bg-purple-500/20 text-purple-200'
-          : 'border-transparent text-gray-300 hover:translate-x-[3px] hover:bg-white/5 hover:text-white'
+          ? 'border-purple-500 bg-purple-500/10 text-white'
+          : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
       }`}
     >
-      {item.icon}
+      {renderNavIcon(item.icon, isActive)}
       {item.label}
     </button>
   )

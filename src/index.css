@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import './styles/global.css';
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,13 +14,19 @@
 
 * {
   min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.95) rgba(255, 255, 255, 0.08);
 }
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  overflow: hidden;
+}
+
+html {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -32,19 +37,10 @@ body {
   background: #050505;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden !important;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Purple scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(168, 85, 247, 0.95) rgba(255, 255, 255, 0.08);
-}
-
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
 
 *::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.08);
@@ -57,7 +53,7 @@ body {
     rgba(147, 51, 234, 0.95) 100%
   );
   border-radius: 9999px;
-  border: 1px solid rgba(8, 8, 8, 0.25);
+  border: 2px solid rgba(8, 8, 8, 0.25);
 }
 
 *::-webkit-scrollbar-thumb:hover {
@@ -68,11 +64,12 @@ body {
   );
 }
 
+
 body,
 input,
 textarea,
 button {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 400;
   font-size: 1rem;
 }
@@ -83,7 +80,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Montserrat', 'Roboto', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -175,7 +172,7 @@ h6 {
 }
 
 .font-space-grotesk {
-  font-family: 'Space Grotesk', 'Montserrat', 'Roboto', sans-serif;
+  font-family: 'Space Grotesk', 'Montserrat', sans-serif;
 }
 
 /* Balance filter controls */
@@ -420,4 +417,170 @@ h6 {
 .add-run-native-input::-webkit-datetime-edit-minute-field,
 .add-run-native-input::-webkit-datetime-edit-ampm-field {
   color: rgba(255, 255, 255, 0.95);
+}
+
+/* SweetAlert2 and shared helpers */
+.z-50 {
+  z-index: 50;
+}
+
+.swal2-custom-popup {
+  border-radius: 12px !important;
+  font-family: inherit !important;
+}
+
+.swal2-custom-confirm {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 12px 24px !important;
+}
+
+.swal2-container {
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Garantir que o backdrop do SweetAlert2 nao interfira com outros elementos */
+.swal2-backdrop-show {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+body.swal2-shown {
+  padding-right: 0 !important;
+  overflow-y: auto !important;
+}
+
+body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown) {
+  padding-right: 0 !important;
+}
+
+html.swal2-shown {
+  overflow-y: auto !important;
+  padding-right: 0 !important;
+}
+
+body.swal2-height-auto {
+  height: auto !important;
+}
+
+body.swal2-height-auto:not(.swal2-shown),
+html.swal2-height-auto:not(.swal2-shown) {
+  overflow-y: auto !important;
+}
+
+.MuiAppBar-root,
+.AppBar-root,
+[class*='AppBar'] {
+  z-index: 10001 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+main {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+header,
+.Header,
+[class*='header'] {
+  z-index: 10001 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.swal2-popup {
+  margin: auto !important;
+  pointer-events: auto !important;
+  z-index: 10002 !important;
+}
+
+.swal2-popup * {
+  pointer-events: auto !important;
+}
+
+.swal2-container.swal2-shown {
+  pointer-events: auto !important;
+}
+
+.swal2-confirm,
+.swal2-cancel,
+.swal2-actions {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.swal2-backdrop {
+  pointer-events: auto !important;
+}
+
+/* Hide spinner arrows from number inputs in SweetAlert2 */
+.swal-no-spinner::-webkit-outer-spin-button,
+.swal-no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.swal-no-spinner {
+  -moz-appearance: textfield;
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.line-clamp-4 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+@keyframes purpleGlowFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(20px, -14px, 0) scale(1.2);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .purple-glow-blob {
+    width: var(--blob-mobile-size) !important;
+    height: var(--blob-mobile-size) !important;
+    filter: blur(var(--blob-mobile-blur)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .purple-glow-blob {
+    animation: none !important;
+  }
 }

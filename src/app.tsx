@@ -41,7 +41,6 @@ import { PaymentsPage } from './pages/management/payments'
 import { ReceiptsPage } from './pages/receipts'
 import { SellsPage } from './pages/sells'
 import { PurpleGlowBackground } from './components/purple-glow-background'
-import './styles/global.css'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -96,20 +95,20 @@ function AppContent() {
   }, [])
 
   return (
-    <div className='relative isolate flex h-full w-full flex-grow flex-col bg-[#060608]'>
+    <div className='relative isolate flex min-h-screen w-full flex-col bg-[#060608]'>
       <PurpleGlowBackground />
-      <div className='relative z-10 flex h-full w-full flex-1 overflow-hidden'>
+      <div className='relative z-10 flex w-full flex-1'>
         {isAuthenticated ? <Header /> : null}
         <main
-          className={`relative flex h-full flex-1 overflow-y-auto overflow-x-hidden ${
+          className={`relative flex min-h-0 flex-1 overflow-x-hidden ${
             isAuthenticated ? 'pt-[64px] md:pt-0' : ''
           }`}
         >
-          <div className='flex min-h-full w-full min-w-0 flex-col'>
+          <div className='flex w-full min-w-0 flex-1 flex-col'>
             {isAuthenticated ? (
               <TopInfoBar username={username} idDiscord={idDiscord} pathname={pathname} />
             ) : null}
-            <div className='flex-1'>
+            <div className='w-full flex-1'>
               <Routes>
               {/* Rotas públicas */}
               <Route path='/' element={<Login />} />
@@ -376,8 +375,8 @@ function getScreenMeta(pathname: string) {
 
 function AppFooter() {
   return (
-    <footer className='relative z-10 border-t border-white/5 bg-black/50 backdrop-blur-sm'>
-      <div className='w-full px-4 py-4 sm:px-6 lg:px-12 2xl:px-16'>
+    <footer className='relative z-10 h-14 w-full shrink-0 border-t border-white/5 bg-black/50 backdrop-blur-sm'>
+      <div className='flex h-full w-full items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>
         <div className='flex items-center justify-center'>
           <p className='text-xs text-neutral-500'>
             <span
@@ -401,7 +400,7 @@ function AppFooter() {
 
 export function App() {
   return (
-    <div className='flex h-screen w-full overflow-hidden'>
+    <div className='flex min-h-screen w-full'>
       <Router
         future={{
           v7_startTransition: true,
