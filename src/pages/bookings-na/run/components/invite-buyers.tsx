@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CircleNotch, Copy, X } from '@phosphor-icons/react'
-import { getInviteBuyers } from '../../../services/api/buyers'
-import { ErrorDetails } from '../../../components/error-display'
+import { getInviteBuyers } from '../../../../services/api/buyers'
+import { ErrorDetails } from '../../../../components/error-display'
 
 interface InviteBuyersProps {
   onClose: () => void

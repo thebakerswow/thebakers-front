@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import axios from 'axios'
-import { ErrorDetails } from '../../../components/error-display'
-import { updateRunAttendance } from '../../../services/api/runs'
+import { ErrorDetails } from '../../../../components/error-display'
+import { updateRunAttendance } from '../../../../services/api/runs'
 
 interface AttendanceProps {
   attendance: {

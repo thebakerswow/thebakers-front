@@ -11,20 +11,20 @@ import {
   RiArrowDownLine,
 } from 'react-icons/ri'
 import axios from 'axios'
-import { BuyerData } from '../../../types/buyer-interface'
+import { BuyerData } from '../../../../types/buyer-interface'
 import {
   updateBuyerPaid,
   updateBuyerStatus,
   deleteBuyer,
-} from '../../../services/api/buyers'
-import { getRun, getRunBuyers } from '../../../services/api/runs'
-import { sendDiscordMessage } from '../../../services/api/discord'
-import { ErrorDetails } from '../../../components/error-display'
-import { EditBuyer } from '../components/edit-buyer'
+} from '../../../../services/api/buyers'
+import { getRun, getRunBuyers } from '../../../../services/api/runs'
+import { sendDiscordMessage } from '../../../../services/api/discord'
+import { ErrorDetails } from '../../../../components/error-display'
+import { EditBuyer } from './edit-buyer'
 import Swal from 'sweetalert2'
-import { useAuth } from '../../../context/auth-context'
+import { useAuth } from '../../../../context/auth-context'
 import CryptoJS from 'crypto-js'
-import { CustomSelect } from '../../../components/custom-select'
+import { CustomSelect } from '../../../../components/custom-select'
 
 interface BuyersGridProps {
   data: BuyerData[]

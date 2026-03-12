@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
-import { BuyersDataGrid } from '../pages/bookings-na/run/buyers-data-grid'
+import { BuyersDataGrid } from '../pages/bookings-na/run/components/buyers-data-grid'
 import { getRun } from '../services/api/runs'
 import { getRunBuyers } from '../services/api/buyers'
 import { BuyerData } from '../types/buyer-interface'
