@@ -5,11 +5,6 @@ export const getGbanks = async () => {
   return response.data.info
 }
 
-export const getUserGbanks = async () => {
-  const response = await api.get('/transaction/request/gbanks')
-  return response.data.info
-}
-
 export const getGbankExtract = async (params: {
   initial_date: string
   end_date: string
@@ -64,36 +59,6 @@ export const updateGBank = async (data: {
 export const deleteGBank = async (gbankId: string) => {
   const response = await api.delete(`/gbanks/${gbankId}`)
   return response.data
-}
-
-export const createTransactionRequest = async (data: {
-  idGbank: string
-  value: number
-  image: string
-}) => {
-  const formData = new FormData()
-  
-  // Criar o payload JSON
-  const payload = {
-    idGbank: parseInt(String(data.idGbank)),
-    value: data.value
-  }
-  
-  // Adicionar o payload como string
-  formData.append('payload', JSON.stringify(payload))
-  
-  // Converter a imagem base64 para blob e adicionar ao formData
-  const response = await fetch(data.image)
-  const blob = await response.blob()
-  formData.append('image', blob, 'image.png')
-  
-  const request = await api.post('/transaction/request', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
-  
-  return request.data
 }
 
 export const getTransactionRequests = async (params: {

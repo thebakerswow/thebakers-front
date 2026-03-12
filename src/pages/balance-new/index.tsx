@@ -1,32 +1,21 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../context/auth-context'
-import { ErrorComponent, ErrorDetails } from '../../components/error-display'
+import { TRACKED_TEAM_IDS } from '../../utils/teamConfig'
 import { getTrackedTeamRoles, shouldShowBalanceFilter } from '../../utils/role-utils'
-import { GBankListNew } from './gbank-list-new'
-import { BalanceControlTableNew } from './balance-control-table-new'
+import { GBankListNew } from './components/GBankListNew'
+import { BalanceControlTableNew } from './components/BalanceControlTableNew'
+import { BalancePageSkeleton } from './components/BalancePageSkeleton'
 
 export function NewBalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [isDolar, setIsDolar] = useState<boolean>(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
+  const [isBalanceInitialLoaded, setIsBalanceInitialLoaded] = useState(false)
+  const [isGBankInitialLoaded, setIsGBankInitialLoaded] = useState(false)
   
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
 
   const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
-
-  const tenTeams = [
-    import.meta.env.VITE_TEAM_MPLUS,
-    import.meta.env.VITE_TEAM_LEVELING,
-    import.meta.env.VITE_TEAM_GARCOM,
-    import.meta.env.VITE_TEAM_CONFEITEIROS,
-    import.meta.env.VITE_TEAM_JACKFRUIT,
-    import.meta.env.VITE_TEAM_INSANOS,
-    import.meta.env.VITE_TEAM_APAE,
-    import.meta.env.VITE_TEAM_LOSRENEGADOS,
-    import.meta.env.VITE_TEAM_PADEIRINHO,
-    import.meta.env.VITE_TEAM_MILHARAL,
-  ]
 
   const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
   const isMplus = userRoles.includes(import.meta.env.VITE_TEAM_MPLUS)
@@ -38,10 +27,10 @@ export function NewBalancePage() {
     }
     // Se tem apenas Chefe (sem M+), retorna todos os times
     if (isChefe) {
-      return tenTeams
+      return TRACKED_TEAM_IDS
     }
     // Para outros usuários, retorna apenas os times que possuem
-    return getTrackedTeamRoles(userRoles).filter((t) => tenTeams.includes(t))
+    return getTrackedTeamRoles(userRoles).filter((t) => TRACKED_TEAM_IDS.includes(t))
   }, [isChefe, isMplus, userRoles])
 
   // Seleção inicial do time
@@ -57,39 +46,39 @@ export function NewBalancePage() {
     }
   }, [authLoading, shouldShowFilter, idDiscord, selectedTeam, allowedTeams])
 
-  const handleError = useCallback((error: ErrorDetails | null) => setError(error), [])
-
-  const isLoading = authLoading
-
-  if (isLoading) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <span className='inline-block h-10 w-10 animate-spin rounded-full border-4 border-purple-300/30 border-t-purple-400' />
-      </div>
-    )
-  }
+  const isInitialPageLoading =
+    authLoading || !selectedTeam || !isBalanceInitialLoaded || !isGBankInitialLoaded
 
   return (
-    <div className='flex h-full min-h-0 w-full flex-col px-6 pb-8 pt-6 md:px-10'>
-      {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
-      <div className='grid min-h-0 w-full flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
-        <div className='min-h-0 h-full lg:col-span-2'>
-          {selectedTeam && (
-            <BalanceControlTableNew
-              selectedTeam={selectedTeam}
-              selectedDate={selectedDate}
-              setSelectedTeam={setSelectedTeam}
-              setSelectedDate={setSelectedDate}
-              isDolar={isDolar}
-              setIsDolar={setIsDolar}
-              onError={handleError}
-              allowedTeams={allowedTeams}
-              hideTeamSelector={!shouldShowFilter}
-            />
-          )}
+    <div className='relative h-full min-h-0 w-full'>
+      {isInitialPageLoading ? (
+        <div className='absolute inset-0 z-20'>
+          <BalancePageSkeleton />
         </div>
-        <div className='min-h-0 h-full'>
-          <GBankListNew onError={handleError} selectedTeam={selectedTeam} />
+      ) : null}
+      <div className={`flex h-full min-h-0 w-full flex-col px-6 pb-8 pt-6 md:px-10 ${isInitialPageLoading ? 'pointer-events-none opacity-0' : 'opacity-100'}`}>
+        <div className='grid min-h-0 w-full flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
+          <div className='min-h-0 h-full lg:col-span-2'>
+            {selectedTeam && (
+              <BalanceControlTableNew
+                selectedTeam={selectedTeam}
+                selectedDate={selectedDate}
+                setSelectedTeam={setSelectedTeam}
+                setSelectedDate={setSelectedDate}
+                isDolar={isDolar}
+                setIsDolar={setIsDolar}
+                allowedTeams={allowedTeams}
+                hideTeamSelector={!shouldShowFilter}
+                onInitialLoadComplete={() => setIsBalanceInitialLoaded(true)}
+              />
+            )}
+          </div>
+          <div className='min-h-0 h-full'>
+            <GBankListNew
+              selectedTeam={selectedTeam}
+              onInitialLoadComplete={() => setIsGBankInitialLoaded(true)}
+            />
+          </div>
         </div>
       </div>
     </div>

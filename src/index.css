@@ -101,34 +101,6 @@ h6 {
   color: white !important;
 }
 
-/* Estilos personalizados para SweetAlert2 - APENAS para erros */
-.swal2-popup.swal2-icon-error {
-  background-color: #1f2937 !important;
-  color: #f3f4f6 !important;
-  border: 1px solid #374151 !important;
-}
-
-.swal2-popup.swal2-icon-error .swal2-title {
-  color: #f3f4f6 !important;
-}
-
-.swal2-popup.swal2-icon-error .swal2-content {
-  color: #d1d5db !important;
-}
-
-.swal2-popup.swal2-icon-error .swal2-confirm {
-  background-color: #ef4444 !important;
-  color: white !important;
-}
-
-.swal2-popup.swal2-icon-error .swal2-confirm:hover {
-  background-color: #dc2626 !important;
-}
-
-.swal2-popup.swal2-icon-error .swal2-timer-progress-bar {
-  background-color: #ef4444 !important;
-}
-
 /* Estilos personalizados para o Swiper */
 .swiper-pagination-bullet {
   background-color: #9f7aea !important;
@@ -583,4 +555,42 @@ header,
   .purple-glow-blob {
     animation: none !important;
   }
+}
+
+/* Global SweetAlert2 theme */
+.swal2-popup {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem !important;
+  background: #101014 !important;
+  color: #f3f4f6 !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45) !important;
+}
+
+.swal2-title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #f9fafb !important;
+}
+
+.swal2-html-container {
+  font-size: 1rem !important;
+  color: rgba(243, 244, 246, 0.78) !important;
+}
+
+.swal2-styled.swal2-confirm,
+.swal2-styled.swal2-cancel,
+.swal2-styled.swal2-deny {
+  border-radius: 0.375rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.swal2-styled.swal2-confirm {
+  background: #9333ea !important;
+}
+
+.swal2-loader {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-top-color: #a855f7 !important;
 }

@@ -1,126 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
-import axios from 'axios'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CaretDown, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import { ErrorDetails } from '../../components/error-display'
-import { createGBank, createTransactionRequest, getUserGbanks } from '../../services/api/gbanks'
-import { useAuth } from '../../context/auth-context'
-import { GBank } from '../../types'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
+import { COLOR_OPTIONS, DEFAULT_TEAM_COLOR, TEAM_ID_TO_COLOR_MAP, compareByPriority } from '../../../utils/teamConfig'
+import { createGBank, createTransactionRequest, getUserGbanks } from '../services/balanceNewApi'
+import { useAuth } from '../../../context/auth-context'
+import { GBank } from '../../../types'
+import { handleApiError } from '../../../utils/apiErrorHandler'
+import { GBankGroup, GBankListNewProps } from '../types/balanceNew'
 
-const teamIdToColorMap: Record<string, string> = {
-  [import.meta.env.VITE_TEAM_CHEFE]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
-  [import.meta.env.VITE_TEAM_MPLUS]: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))',
-  [import.meta.env.VITE_TEAM_LEVELING]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
-  [import.meta.env.VITE_TEAM_GARCOM]: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))',
-  [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))',
-  [import.meta.env.VITE_TEAM_JACKFRUIT]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
-  [import.meta.env.VITE_TEAM_INSANOS]: 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))',
-  [import.meta.env.VITE_TEAM_APAE]: 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))',
-  [import.meta.env.VITE_TEAM_LOSRENEGADOS]: 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))',
-  [import.meta.env.VITE_TEAM_DTM]: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))',
-  [import.meta.env.VITE_TEAM_KFFC]: 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))',
-  [import.meta.env.VITE_TEAM_GREENSKY]: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))',
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))',
-  [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))',
-  [import.meta.env.VITE_TEAM_ROCKET]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
-  [import.meta.env.VITE_TEAM_PADEIRINHO]: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))',
-  [import.meta.env.VITE_TEAM_MILHARAL]: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))',
-  [import.meta.env.VITE_TEAM_BASTARD]: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))',
-  [import.meta.env.VITE_TEAM_KIWI]: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
-}
-
-const priorityOrder = [
-  'Chefe de cozinha',
-  'M+',
-  'Leveling',
-  'Garcom',
-  'Confeiteiros',
-  'Jackfruit',
-  'Insanos',
-  'APAE',
-  'Los Renegados',
-  'DTM',
-  'KFFC',
-  'Greensky',
-  'Guild Azralon BR#1',
-  'Guild Azralon BR#2',
-  'Rocket',
-  'Booty Reaper',
-  'Padeirinho',
-  'Milharal',
-  'Bastard Munchen',
-  'Kiwi',
-]
-
-const colorOptions = [
-  { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Chefe de cozinha' },
-  { value: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))', label: 'M+' },
-  { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Leveling' },
-  { value: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))', label: 'Garcom' },
-  { value: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))', label: 'Confeiteiros' },
-  { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Jackfruit' },
-  { value: 'linear-gradient(270deg, rgba(59,130,246,0.72), rgba(30,64,175,0.62))', label: 'Insanos' },
-  { value: 'linear-gradient(90deg, rgba(252,165,165,0.68), rgba(248,113,113,0.6))', label: 'APAE' },
-  { value: 'linear-gradient(90deg, rgba(252,211,77,0.72), rgba(245,158,11,0.62))', label: 'Los Renegados' },
-  { value: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(139,92,246,0.62))', label: 'DTM' },
-  { value: 'linear-gradient(90deg, rgba(52,211,153,0.72), rgba(4,120,87,0.62))', label: 'KFFC' },
-  { value: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(190,24,93,0.62))', label: 'Greensky' },
-  { value: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))', label: 'Guild Azralon BR#1' },
-  { value: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))', label: 'Guild Azralon BR#2' },
-  { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Rocket' },
-  { value: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))', label: 'Booty Reaper' },
-  { value: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))', label: 'Padeirinho' },
-  { value: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))', label: 'Milharal' },
-  { value: '#9CA3AF', label: 'Advertiser' },
-  { value: '#86EFAC', label: 'Freelancer' },
-  { value: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))', label: 'Bastard Munchen' },
-  { value: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))', label: 'Kiwi' },
-]
-
-const compareByPriority = (aLabel: string, bLabel: string) => {
-  const aIndex = priorityOrder.indexOf(aLabel)
-  const bIndex = priorityOrder.indexOf(bLabel)
-  if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
-  if (aIndex !== -1 && bIndex === -1) return -1
-  if (aIndex === -1 && bIndex !== -1) return 1
-  return aLabel.localeCompare(bLabel)
-}
-
-type GBankListNewProps = {
-  onError?: (error: ErrorDetails) => void
-  selectedTeam?: string | null
-}
-
-export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
+export function GBankListNew({ selectedTeam, onInitialLoadComplete }: GBankListNewProps) {
   const { userRoles = [] } = useAuth()
   const [gbanks, setGbanks] = useState<GBank[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasCompletedInitialFetch, setHasCompletedInitialFetch] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [newGBankName, setNewGBankName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const hasReportedInitialLoad = useRef(false)
   const canCreateGBank = userRoles.includes(import.meta.env.VITE_TEAM_PREFEITO)
+  const shouldShowInlineLoading = isLoading && hasReportedInitialLoad.current
 
   const selectedTeamLabel = useMemo(() => {
     if (!selectedTeam) return '-'
-    const selectedColor = teamIdToColorMap[selectedTeam]
-    return colorOptions.find((option) => option.value === selectedColor)?.label || selectedTeam
+    const selectedColor = TEAM_ID_TO_COLOR_MAP[selectedTeam]
+    return COLOR_OPTIONS.find((option) => option.value === selectedColor)?.label || selectedTeam
   }, [selectedTeam])
-
-  const handleError = (error: unknown, defaultMessage: string) => {
-    if (axios.isAxiosError(error)) {
-      const errorDetails = {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      }
-      if (onError) onError(errorDetails)
-    } else {
-      const errorDetails = { message: defaultMessage, response: error }
-      if (onError) onError(errorDetails)
-    }
-  }
 
   const formatCalculatorValue = (value: string) => {
     const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
@@ -184,13 +90,9 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
           <input type="file" id="file-input" accept="image/*" style="display:none;" />
         </div>
       `,
-      background: '#101014',
-      color: '#f3f4f6',
       showCancelButton: true,
       confirmButtonText: 'Confirm',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#9333EA',
-      cancelButtonColor: '#6B7280',
       allowOutsideClick: false,
       didOpen: () => {
         const uploadArea = document.getElementById('upload-area')
@@ -275,6 +177,8 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
         Swal.fire({
           title: 'Processing...',
           text: 'Please wait while we process your request',
+          showConfirmButton: false,
+          showCancelButton: false,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading(),
         })
@@ -292,13 +196,7 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
           confirmButtonText: 'OK',
         })
       } catch (error) {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to create transaction request',
-          icon: 'error',
-          confirmButtonText: 'OK',
-        })
-        handleError(error, 'Error creating transaction request')
+        await handleApiError(error, 'Failed to create transaction request')
       }
     })
   }
@@ -317,11 +215,21 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
       const sorted = formattedGBanks.sort((a: GBank, b: GBank) => b.balance - a.balance)
       setGbanks(sorted)
     } catch (error) {
-      handleError(error, 'Error fetching G-Banks')
+      await handleApiError(error, 'Failed to fetch G-Banks')
     } finally {
-      if (showLoading) setIsLoading(false)
+      if (showLoading) {
+        setIsLoading(false)
+        setHasCompletedInitialFetch(true)
+      }
     }
   }
+
+  useEffect(() => {
+    if (hasCompletedInitialFetch && !isLoading && !hasReportedInitialLoad.current) {
+      hasReportedInitialLoad.current = true
+      onInitialLoadComplete?.()
+    }
+  }, [hasCompletedInitialFetch, isLoading, onInitialLoadComplete])
 
   useEffect(() => {
     fetchGBanks(true)
@@ -332,13 +240,13 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
   const grouped = useMemo(() => {
     const byColor = gbanks.reduce((acc, g) => {
       const color =
-        teamIdToColorMap[g.idTeam] ||
-        'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
-      const label = colorOptions.find((o) => o.value === color)?.label || 'Chefe de cozinha'
+        TEAM_ID_TO_COLOR_MAP[g.idTeam] ||
+        DEFAULT_TEAM_COLOR
+      const label = COLOR_OPTIONS.find((o) => o.value === color)?.label || 'Chefe de cozinha'
       if (!acc[color]) acc[color] = { color, label, items: [] as GBank[] }
       acc[color].items.push(g)
       return acc
-    }, {} as Record<string, { color: string; label: string; items: GBank[] }>)
+    }, {} as Record<string, GBankGroup>)
 
     return Object.values(byColor)
       .sort((a, b) => compareByPriority(a.label, b.label))
@@ -359,7 +267,7 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
 
   const handleCreateGBank = async () => {
     if (!selectedTeam) {
-      handleError({ message: 'No selected team for G-Bank creation' }, 'Error adding G-Bank')
+      await handleApiError(new Error('No selected team for G-Bank creation'), 'Failed to add G-Bank')
       return
     }
     setIsSubmitting(true)
@@ -369,7 +277,7 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
       setIsCreateModalOpen(false)
       await fetchGBanks(false)
     } catch (error) {
-      handleError(error, 'Error adding G-Bank')
+      await handleApiError(error, 'Failed to add G-Bank')
     } finally {
       setIsSubmitting(false)
     }
@@ -390,10 +298,9 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
         ) : null}
 
         <div className='flex-1 overflow-y-auto p-2'>
-          {isLoading ? (
-            <div className='rounded-md border border-white/10 bg-black/25 p-4 text-center text-white/70'>
-              <span className='inline-block h-6 w-6 animate-spin rounded-full border-4 border-white/20 border-t-purple-400' />
-              <p className='mt-2'>Loading...</p>
+          {shouldShowInlineLoading ? (
+            <div className='rounded-md border border-white/10 bg-black/25 px-3 pb-8 pt-14 text-center text-white/70'>
+              <LoadingSpinner size='md' label='Loading gbank data' />
             </div>
           ) : grouped.length === 0 ? (
             <div className='rounded-md border border-white/10 bg-black/25 p-4 text-center text-white/70'>
@@ -421,9 +328,9 @@ export function GBankListNew({ onError, selectedTeam }: GBankListNewProps) {
                     </button>
 
                     {expanded ? (
-                      <div className='overflow-x-auto bg-[#101014]'>
+                      <div className='overflow-x-auto bg-white/[0.03]'>
                         <table className='w-full border-collapse text-sm text-white/90'>
-                          <thead className='bg-[#17171d] text-xs uppercase tracking-wide text-white/60'>
+                          <thead className='bg-[#121217] text-xs uppercase tracking-wide text-white/60'>
                             <tr>
                               <th className='px-3 py-3 text-left'>Name</th>
                               <th className='px-3 py-3 text-center'>Total</th>
