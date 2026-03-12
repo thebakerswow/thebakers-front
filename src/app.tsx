@@ -19,7 +19,7 @@ import {
   Navigate,
   useLocation,
 } from 'react-router-dom'
-import { Header } from './components/header'
+import { Header } from './components/Sidebar'
 import { HomePage } from './pages/home'
 import { BalancePageRouter } from './pages/balance'
 import { FullRaidsNa } from './pages/bookings-na/raids'

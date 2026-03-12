@@ -1,19 +1,7 @@
-import { useState, useCallback } from 'react'
-import axios from 'axios'
-import { ErrorDetails } from '../../../../components/error-display'
-import { updateRunAttendance } from '../../../../services/api/runs'
-
-interface AttendanceProps {
-  attendance: {
-    info: Array<{ idDiscord: string; username: string; percentage: number }>
-  }
-  runId: string | undefined
-  markAllAsFull: () => void
-  handleAttendanceClick: (playerId: string, value: number) => void
-  onAttendanceUpdate: () => void
-  runIsLocked: boolean // Added prop
-  onError?: (error: ErrorDetails) => void // Callback para passar erro para o componente pai
-}
+import { useState, useCallback, type ReactElement } from 'react'
+import { updateRunAttendance } from '../services/runApi'
+import type { AttendanceProps } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 export function Attendance({
   attendance,
@@ -22,8 +10,7 @@ export function Attendance({
   onAttendanceUpdate,
   runId,
   runIsLocked, // Added prop
-  onError, // Added prop
-}: AttendanceProps) {
+}: AttendanceProps): ReactElement {
   const ATTENDANCE_GREEN = 'rgba(34,197,94,0.72)'
   const ATTENDANCE_RED = 'rgba(248,113,113,0.72)'
   const ATTENDANCE_YELLOW = 'rgba(252,211,77,0.72)'
@@ -52,8 +39,7 @@ export function Attendance({
 
   const handleAttendanceSave = useCallback(async () => {
     if (!runId) {
-      const error = { message: 'Run ID is required', response: null }
-      onError?.(error)
+      await handleApiError(new Error('Run ID is required'), 'Run ID is required')
       return
     }
 
@@ -71,20 +57,11 @@ export function Attendance({
       setHasUnsavedChanges(false) // Reset unsaved changes
       setTimeout(() => setIsSuccess(false), 2000)
     } catch (error) {
-      console.error('Error updating attendance:', error)
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error updating attendance', response: error }
-
-      onError?.(errorDetails)
+      await handleApiError(error, 'Error updating attendance')
     } finally {
       setIsSubmitting(false)
     }
-  }, [attendance.info, onAttendanceUpdate, runId, onError])
+  }, [attendance.info, onAttendanceUpdate, runId])
 
   const handleMarkAllAsFull = useCallback(() => {
     if (runIsLocked) return

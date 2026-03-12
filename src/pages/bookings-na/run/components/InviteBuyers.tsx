@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react'
-import { CircleNotch, Copy, X } from '@phosphor-icons/react'
-import { getInviteBuyers } from '../../../../services/api/buyers'
-import { ErrorDetails } from '../../../../components/error-display'
+import { Copy, X } from '@phosphor-icons/react'
+import { getInviteBuyers } from '../services/runApi'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import type { InviteBuyersProps } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
-interface InviteBuyersProps {
-  onClose: () => void
-  runId: string | undefined
-  onError?: (error: ErrorDetails) => void
-}
-
-export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
+export function InviteBuyers({ onClose, runId }: InviteBuyersProps) {
   const [inviteData, setInviteData] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
@@ -23,21 +19,14 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
         const data = await getInviteBuyers(runId)
         setInviteData(data)
       } catch (error) {
-        console.error('Error fetching invite buyers data:', error)
-        if (onError) {
-          const errorDetails = {
-            message: 'Error fetching invite buyers data',
-            response: error,
-          }
-          onError(errorDetails)
-        }
+        await handleApiError(error, 'Error fetching invite buyers data')
       } finally {
         setLoading(false)
       }
     }
 
     fetchInviteBuyersData()
-  }, [runId, onError])
+  }, [runId])
 
   function formatInviteData(rawData: string): string {
     try {
@@ -102,7 +91,7 @@ export function InviteBuyers({ onClose, runId, onError }: InviteBuyersProps) {
         <div className='flex flex-col gap-4'>
           {loading ? (
             <div className='flex min-h-[120px] items-center justify-center'>
-              <CircleNotch className='animate-spin text-purple-300' size={24} />
+              <LoadingSpinner size='md' label='Loading invite buyers' />
             </div>
           ) : (
             <>

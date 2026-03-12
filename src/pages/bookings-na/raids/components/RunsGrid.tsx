@@ -8,46 +8,32 @@ import {
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState, useEffect } from 'react'
-import { RunData } from '../../../../types/runs-interface'
-import { ErrorDetails } from '../../../../components/error-display'
-import { DeleteRun } from '../../../../components/delete-run'
-import { BuyersPreview } from '../../../../components/buyers-preview'
-import { EditRun } from '../../../../components/edit-run'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { BuyersPreview } from './BuyersPreview'
+import { EditRun } from '../../run/components/EditRun'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../../../context/auth-context'
-import { toggleRunLock as toggleRunLockService } from '../../../../services/api/runs'
+import { deleteRaidRun, toggleRaidRunLock } from '../services/raidsApi'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 import Swal from 'sweetalert2'
-
-interface RunsDataProps {
-  data: RunData[]
-  isLoading: boolean
-  onDeleteSuccess: () => void
-  onEditSuccess?: () => void
-  onError: (error: ErrorDetails | null) => void
-}
+import type { RaidsRunData, RunsDataGridProps } from '../types/raids'
 
 export function RunsDataGrid({
   data,
   isLoading,
   onDeleteSuccess,
-}: RunsDataProps) {
+}: RunsDataGridProps) {
   const navigate = useNavigate()
 
   const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
-  const [isDeleteRunModalOpen, setIsDeleteRunModalOpen] = useState(false)
-  const [selectedRunToDelete, setSelectedRunToDelete] = useState<{
-    id: string
-    raid: string
-    date: string
-  } | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
-  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RunData | null>(
+  const [selectedRunToEdit, setSelectedRunToEdit] = useState<RaidsRunData | null>(
     null
   )
   const { userRoles } = useAuth()
-  const [runs, setRuns] = useState<RunData[]>(data)
+  const [runs, setRuns] = useState<RaidsRunData[]>(data)
 
   useEffect(() => {
     setRuns(data)
@@ -55,9 +41,7 @@ export function RunsDataGrid({
 
   // Verifica se o usuário possui os papéis necessários
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
-    return requiredRoles.some((required) =>
-      userRoles.some((userRole) => userRole.toString() === required.toString())
-    )
+    return requiredRoles.some((required) => userRoles.includes(required))
   }
 
   const teamPriority: { [key: string]: number } = {
@@ -115,24 +99,50 @@ export function RunsDataGrid({
     setSelectedRunId(null)
   }
 
-  // Abre o modal de exclusão de uma run
-  const handleOpenDeleteRunModal = (run: {
-    id: string
-    raid: string
-    date: string
-  }) => {
-    setSelectedRunToDelete(run)
-    setIsDeleteRunModalOpen(true)
-  }
+  const handleDeleteRun = async (run: { id: string; raid: string }) => {
+    const result = await Swal.fire({
+      title: 'Confirm Deletion',
+      text: `Are you sure you want to delete ${run.raid}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+    })
 
-  // Fecha o modal de exclusão de uma run
-  const handleCloseDeleteRunModal = () => {
-    setIsDeleteRunModalOpen(false)
-    setSelectedRunToDelete(null)
+    if (!result.isConfirmed) return
+
+    try {
+      Swal.fire({
+        title: 'Deleting run...',
+        text: `Removing ${run.raid}`,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
+
+      await deleteRaidRun(run.id)
+      Swal.close()
+      await Swal.fire({
+        title: 'Deleted!',
+        text: 'The run has been successfully deleted.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      onDeleteSuccess()
+    } catch (error) {
+      Swal.close()
+      await handleApiError(error, 'Unexpected error deleting run')
+    }
   }
 
   // Abre o modal de edição de uma run
-  const handleOpenEditRunModal = (run: RunData) => {
+  const handleOpenEditRunModal = (run: RaidsRunData) => {
     setSelectedRunToEdit(run)
     setIsEditRunModalOpen(true)
   }
@@ -198,7 +208,7 @@ export function RunsDataGrid({
   }
 
   // Function to copy an individual run's data to the clipboard
-  const copyRunToClipboard = (run: RunData) => {
+  const copyRunToClipboard = (run: RaidsRunData) => {
     const formattedRun = {
       name: run.name,
       date: run.date,
@@ -231,7 +241,7 @@ export function RunsDataGrid({
   // Function to toggle the lock status of a run
   const toggleRunLock = async (runId: string, isLocked: boolean) => {
     try {
-      await toggleRunLockService(runId, isLocked)
+      await toggleRaidRunLock(runId, isLocked)
       setRuns((prevRuns) =>
         prevRuns.map((run) =>
           run.id === runId ? { ...run, runIsLocked: !isLocked } : run
@@ -244,12 +254,7 @@ export function RunsDataGrid({
         showConfirmButton: false,
       })
     } catch (error) {
-      console.error('Failed to toggle run lock:', error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to toggle run lock.',
-        text: 'Please try again later.',
-      })
+      await handleApiError(error, 'Failed to toggle run lock.')
     }
   }
 
@@ -324,7 +329,7 @@ export function RunsDataGrid({
           {isLoading ? (
             <tr className='h-[320px]'>
               <td colSpan={12} className='text-center align-middle'>
-                <div className='mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
+                <LoadingSpinner size='lg' className='mx-auto' label='Loading runs' />
               </td>
             </tr>
           ) : sortedData.length === 0 ? (
@@ -334,9 +339,9 @@ export function RunsDataGrid({
               </td>
             </tr>
           ) : (
-            sortedData.map((run, index) => (
+            sortedData.map((run) => (
               <tr
-                key={index}
+                key={run.id}
                 onDoubleClick={() => handleRedirect(run.id)}
                 className='cursor-pointer border-b border-white/5'
                 style={getTeamColor(run.team)}
@@ -387,7 +392,7 @@ export function RunsDataGrid({
                         <button
                           type='button'
                           title='Delete'
-                          onClick={() => handleOpenDeleteRunModal(run)}
+                          onClick={() => handleDeleteRun(run)}
                           className='rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white'
                         >
                           <Trash size={20} />
@@ -412,14 +417,6 @@ export function RunsDataGrid({
           )}
         </tbody>
       </table>
-
-      {isDeleteRunModalOpen && selectedRunToDelete && (
-        <DeleteRun
-          run={selectedRunToDelete}
-          onClose={handleCloseDeleteRunModal}
-          onDeleteSuccess={onDeleteSuccess}
-        />
-      )}
 
       {isPreviewOpen && selectedRunId && (
         <BuyersPreview runId={selectedRunId} onClose={handleClosePreview} />

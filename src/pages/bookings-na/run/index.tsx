@@ -1,44 +1,34 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
-import { RunInfo } from './components/run-info'
-import { BuyersDataGrid } from './components/buyers-data-grid'
-import axios from 'axios'
+import { useEffect, useState, useRef } from 'react'
+import { RunInfo } from './components/RunInfo'
+import { BuyersDataGrid } from './components/BuyersGrid'
 import { useParams, useNavigate } from 'react-router-dom'
 import { UserPlus } from '@phosphor-icons/react'
-import { InviteBuyers } from './components/invite-buyers'
+import { InviteBuyers } from './components/InviteBuyers'
 import {
   getRun,
   getRunBuyers,
   getRunAttendance,
-} from '../../../services/api/runs'
-import { checkRunAccess as checkRunAccessService } from '../../../services/api/auth'
-import { getChatMessages } from '../../../services/api/chat'
-import { sendDiscordMessage } from '../../../services/api/discord'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { RunData } from '../../../types/runs-interface'
-import { BuyerData } from '../../../types/buyer-interface'
-import { Attendance } from './components/attendance'
+  checkRunAccess as checkRunAccessService,
+  getChatMessages,
+  sendDiscordMessage,
+} from './services/runApi'
+import { Attendance } from './components/Attendance'
 import { useAuth } from '../../../context/auth-context'
 import { canViewAttendanceButton } from '../../../utils/role-utils'
-import { Freelancers } from './components/freelancers'
-import { RunChat } from '../../../components/run-chat'
+import { Freelancers } from './components/Freelancers'
+import { RunChat } from './components/Chat'
+import { LoadingSpinner } from '../../../components/LoadingSpinner'
+import { RunPageSkeleton } from './components/RunPageSkeleton'
 import Swal from 'sweetalert2'
 import CryptoJS from 'crypto-js'
-
-// ChatMessage interface igual ao run-chat.tsx
-interface ChatMessage {
-  id?: string | number
-  user_name: string
-  id_discord: string
-  message: string
-  created_at: string
-}
-
-// Nova interface para raid leaders
-interface RaidLeader {
-  idCommunication: string
-  idDiscord: string
-  username: string
-}
+import { handleApiError } from '../../../utils/apiErrorHandler'
+import type {
+  AttendanceState,
+  BuyerData,
+  ChatMessage,
+  RaidLeader,
+  RunData,
+} from './types/run'
 
 export function RunDetails() {
   const navigate = useNavigate()
@@ -48,10 +38,7 @@ export function RunDetails() {
   const [isLoadingBuyers, setIsLoadingBuyers] = useState(true)
   const [rows, setRows] = useState<BuyerData[]>([])
   const [isInviteBuyersOpen, setIsInviteBuyersOpen] = useState(false)
-  const [attendance, setAttendance] = useState<{
-    info: Array<{ idDiscord: string; username: string; percentage: number }>
-  }>({ info: [] })
-  const [error, setError] = useState<ErrorDetails | null>(null)
+  const [attendance, setAttendance] = useState<AttendanceState>({ info: [] })
   const [hasAttendanceAccess, setHasAttendanceAccess] = useState(true)
   const { userRoles, idDiscord } = useAuth()
   const [showDetails, setShowDetails] = useState(false)
@@ -118,19 +105,7 @@ export function RunDetails() {
         setRunData(normalizedRunData)
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Unexpected error',
-          response: error,
-        })
-      }
+      await handleApiError(error, 'Failed to fetch run data')
     } finally {
       runRequestInFlightRef.current = false
       setIsLoadingRun(false)
@@ -156,19 +131,7 @@ export function RunDetails() {
         setRows(data)
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        setError(errorDetails)
-      } else {
-        setError({
-          message: 'Unexpected error',
-          response: error,
-        })
-      }
+      await handleApiError(error, 'Failed to fetch buyers')
     } finally {
       buyersRequestInFlightRef.current = false
       if (showLoading) {
@@ -185,6 +148,7 @@ export function RunDetails() {
         navigate('/check-access') // Redireciona para a home se o acesso for negado
       }
     } catch (error) {
+      await handleApiError(error, 'Failed to verify run access')
       navigate('/') // Redireciona para a home em caso de erro
     }
   }
@@ -271,22 +235,11 @@ export function RunDetails() {
       setAttendance({ info: data })
       setHasAttendanceAccess(true)
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 403) {
-          setHasAttendanceAccess(false)
-        } else {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          setError(errorDetails)
-        }
+      const statusCode = (error as { response?: { status?: number } })?.response?.status
+      if (statusCode === 403) {
+        setHasAttendanceAccess(false)
       } else {
-        setError({
-          message: 'Unexpected error',
-          response: error,
-        })
+        await handleApiError(error, 'Failed to fetch attendance')
       }
     }
   }
@@ -343,7 +296,7 @@ export function RunDetails() {
           setChatMessages(messages || [])
         })
         .catch((error) => {
-          console.error('Falha ao buscar mensagens anteriores:', error)
+          void handleApiError(error, 'Failed to fetch chat messages')
         })
         .finally(() => setChatLoading(false))
 
@@ -353,7 +306,7 @@ export function RunDetails() {
           setChatRaidLeaders(data.raidLeaders || [])
         })
         .catch((error) => {
-          console.error('Error fetching raid leaders:', error)
+          void handleApiError(error, 'Failed to fetch raid leaders')
         })
 
       // WebSocket connection
@@ -602,14 +555,7 @@ export function RunDetails() {
         showConfirmButton: false,
       })
     } catch (error) {
-      console.error('Error sending message to raid leader:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to send message to raid leader.',
-        icon: 'error',
-        timer: 1500,
-        showConfirmButton: false,
-      })
+      await handleApiError(error, 'Failed to send message to raid leader')
     }
   }
 
@@ -634,25 +580,15 @@ export function RunDetails() {
     return true
   }
 
-  // Função para limpar erro
-  const handleErrorClose = useCallback(() => {
-    setError(null)
-  }, [])
-
   return (
     <>
-      {/* Renderiza o ErrorComponent de forma não-condicional, mas apenas quando há erro */}
-      {error && <ErrorComponent error={error} onClose={handleErrorClose} />}
-
       <div
         className={`flex min-h-[70vh] w-full flex-col overflow-x-hidden rounded-xl text-gray-100 shadow-2xl ${
           isLoadingRun || !runData ? 'items-center justify-center' : ''
         }`}
       >
         {isLoadingRun ? (
-          <div className='flex flex-1 items-center justify-center py-20'>
-            <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
-          </div>
+          <RunPageSkeleton />
         ) : (
           <div className='p-4 pb-20'>
             {runData ? (
@@ -662,7 +598,6 @@ export function RunDetails() {
                 onRunEdit={fetchRunData}
                 attendanceAccessDenied={!hasAttendanceAccess}
                 buyers={rows}
-                onError={setError}
               />
             ) : (
               <div>Loading</div>
@@ -671,7 +606,7 @@ export function RunDetails() {
             <div className='p-4'>
               {isLoadingBuyers ? (
                 <div className='flex min-h-[220px] items-center justify-center'>
-                  <div className='h-10 w-10 animate-spin rounded-full border-b-2 border-purple-400'></div>
+                  <LoadingSpinner size='lg' label='Loading buyers' />
                 </div>
               ) : (
                 <>
@@ -710,7 +645,6 @@ export function RunDetails() {
                     runIsLocked={runData?.runIsLocked ?? false}
                     runIdTeam={runData?.idTeam}
                     raidLeaders={runData?.raidLeaders}
-                    onError={setError}
                   />
                 </>
               )}
@@ -724,7 +658,6 @@ export function RunDetails() {
                   onAttendanceUpdate={fetchAttendanceData}
                   runIsLocked={runData?.runIsLocked ?? false}
                   runId={runData.id}
-                  onError={setError}
                 />
                 <Freelancers
                   runId={runData.id}
@@ -739,7 +672,6 @@ export function RunDetails() {
           <InviteBuyers
             onClose={handleCloseInviteBuyersModal}
             runId={runData.id}
-            onError={setError}
           />
         )}
         {runData?.id && idDiscord && (

@@ -1,30 +1,19 @@
 import { useState } from 'react'
 import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import { RiMegaphoneLine } from 'react-icons/ri'
-import { AddBuyer } from '../../../../components/add-buyer'
-import { EditRun } from '../../../../components/edit-run'
+import { AddBuyer } from './AddBuyer'
+import { EditRun } from './EditRun'
 import { useAuth } from '../../../../context/auth-context'
-import { RunData } from '../../../../types/runs-interface'
-import { BuyerData } from '../../../../types/buyer-interface'
 import {
   getRunAttendance,
   toggleRunLock as toggleRunLockService,
-} from '../../../../services/api/runs'
-import { EditHistoryDialog } from '../../../../components/edit-history-dialog'
-import { ErrorDetails } from '../../../../components/error-display'
-import { sendDiscordMessage } from '../../../../services/api/discord'
+  sendDiscordMessage,
+} from '../services/runApi'
+import { EditHistoryDialog } from './History'
 import { useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import axios from 'axios'
-
-interface RunInfoProps {
-  run: RunData
-  onBuyerAddedReload: () => void
-  onRunEdit: () => void
-  attendanceAccessDenied: boolean
-  buyers?: BuyerData[]
-  onError?: (error: ErrorDetails) => void
-}
+import type { BuyerData, RunData, RunInfoProps } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 export function RunInfo({
   run,
@@ -32,7 +21,6 @@ export function RunInfo({
   onRunEdit,
   attendanceAccessDenied,
   buyers = [],
-  onError,
 }: RunInfoProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -117,22 +105,7 @@ export function RunInfo({
       setIsRunLocked(!isRunLocked)
       window.location.reload() // Reload the page after toggling the lock
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        if (onError) {
-          onError(errorDetails)
-        }
-      } else {
-        if (onError) {
-          onError({ message: 'Unexpected error', response: error })
-        }
-      }
-
-      console.error('Failed to toggle run lock:', error)
+      await handleApiError(error, 'Failed to toggle run lock')
     }
   }
 
@@ -245,20 +218,7 @@ export function RunInfo({
         successCount++
       } catch (error) {
         errorCount++
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          if (onError) {
-            onError(errorDetails)
-          }
-        } else {
-          if (onError) {
-            onError({ message: 'Unexpected error', response: error })
-          }
-        }
+        await handleApiError(error, 'Failed to notify one or more advertisers')
       }
     }
 
@@ -491,7 +451,6 @@ export function RunInfo({
           run={run}
           onClose={handleCloseAddBuyer}
           onBuyerAddedReload={onBuyerAddedReload}
-          onError={onError}
         />
       )}
       {isEditModalOpen && (
@@ -500,7 +459,6 @@ export function RunInfo({
           run={run}
           onClose={handleCloseEditModal}
           onRunEdit={onRunEdit}
-          onError={onError}
         />
       )}
       {isEditHistoryOpen && (

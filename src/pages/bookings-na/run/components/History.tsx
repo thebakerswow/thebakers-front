@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
-import { CircleNotch, X } from '@phosphor-icons/react'
-import { getRunHistory } from '../services/api/runs'
-import { RunHistory } from '../types/runs-interface'
+import { X } from '@phosphor-icons/react'
+import { getRunHistory } from '../services/runApi'
 import dayjs from 'dayjs'
-
-import { EditHistoryDialogProps } from '../types'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import type { EditHistoryDialogProps, RunHistory } from '../types/run'
 
 export function EditHistoryDialog({
   open,
@@ -80,7 +79,7 @@ export function EditHistoryDialog({
         <div className='max-h-[60vh] overflow-auto rounded-md border border-white/10 bg-white/[0.03] p-3'>
           {loading ? (
             <div className='py-8 text-center'>
-              <CircleNotch className='mx-auto animate-spin text-purple-300' size={22} />
+              <LoadingSpinner size='sm' className='mx-auto' label='Loading history' />
             </div>
           ) : filteredHistory.length === 0 ? (
             <div className='py-6 text-center text-neutral-400'>No history found</div>

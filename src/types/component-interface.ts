@@ -18,16 +18,6 @@ export interface ColorSelectorProps {
   onSelectColor: (color: string) => void
 }
 
-export interface DeleteRunProps {
-  run: {
-    id: string
-    raid: string
-    date: string
-  }
-  onClose: () => void
-  onDeleteSuccess: () => void
-}
-
 export interface EditHistoryDialogProps {
   open: boolean
   onClose: () => void

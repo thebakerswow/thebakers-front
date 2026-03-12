@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useParams } from 'react-router-dom'
 import { CheckFat, Pencil, Trash, X } from '@phosphor-icons/react'
 import {
@@ -10,37 +10,21 @@ import {
   RiSwordLine,
   RiArrowDownLine,
 } from 'react-icons/ri'
-import axios from 'axios'
-import { BuyerData } from '../../../../types/buyer-interface'
 import {
   updateBuyerPaid,
   updateBuyerStatus,
   deleteBuyer,
-} from '../../../../services/api/buyers'
-import { getRun, getRunBuyers } from '../../../../services/api/runs'
-import { sendDiscordMessage } from '../../../../services/api/discord'
-import { ErrorDetails } from '../../../../components/error-display'
-import { EditBuyer } from './edit-buyer'
+  getRun,
+  getRunBuyers,
+  sendDiscordMessage,
+} from '../services/runApi'
+import { EditBuyer } from './EditBuyer'
 import Swal from 'sweetalert2'
 import { useAuth } from '../../../../context/auth-context'
 import CryptoJS from 'crypto-js'
 import { CustomSelect } from '../../../../components/custom-select'
-
-interface BuyersGridProps {
-  data: BuyerData[]
-  onBuyerStatusEdit: () => void
-  onBuyerNameNoteEdit: () => void
-  onDeleteSuccess: () => void
-  slotAvailable?: number
-  runIsLocked?: boolean // Added runIsLocked prop
-  runIdTeam?: string // Adicionada para permissão correta
-  raidLeaders?: {
-    idCommunication: string
-    idDiscord: string
-    username: string
-  }[] // Added raid leaders prop
-  onError?: (error: ErrorDetails) => void
-}
+import type { BuyerData, BuyersGridProps, RaidLeader } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 const statusOptions = [
   { value: 'waiting', label: 'Waiting' },
@@ -60,16 +44,19 @@ const statusPriorities: Record<string, number> = {
   cancelled: 6,
 }
 
+type BuyerCooldownMap = Record<string, boolean>
+type BuyerCooldownSetter = Dispatch<SetStateAction<BuyerCooldownMap>>
+
 export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
+  containerClassName,
   slotAvailable = 0,
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Nova prop
   raidLeaders, // Added raid leaders prop
-  onError,
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
   const isOnlyAdvertiserRole =
@@ -123,11 +110,7 @@ export function BuyersDataGrid({
   }
 
   // Function to get Discord ID from raid leader
-  const getRaidLeaderDiscordId = (raidLeader: {
-    idCommunication: string
-    idDiscord: string
-    username: string
-  }): string => {
+  const getRaidLeaderDiscordId = (raidLeader: RaidLeader): string => {
     if (raidLeader.idDiscord === 'Encrypted') {
       const decryptedId = decryptIdCommunication(raidLeader.idCommunication)
       if (!decryptedId) {
@@ -192,7 +175,6 @@ export function BuyersDataGrid({
   }
 
   const { id: runId } = useParams<{ id: string }>() // Correctly retrieve 'id' as 'runId'
-  const [, setError] = useState<ErrorDetails | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<{
     id: string
@@ -201,30 +183,16 @@ export function BuyersDataGrid({
     buyerDolarPot: number
     buyerNote: string
   } | null>(null)
-  const [cooldown, setCooldown] = useState<{ [key: string]: boolean }>({})
-  const [cooldownAFK, setCooldownAFK] = useState<{ [key: string]: boolean }>({}) // Separate cooldown for Bed button
-  const [cooldownBuyerReady, setCooldownBuyerReady] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Buyer Ready button
-  const [cooldownBuyerLogging, setCooldownBuyerLogging] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Buyer Logging button
-  const [cooldownAttention, setCooldownAttention] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Attention button
-  const [cooldownBuyerCombat, setCooldownBuyerCombat] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Buyer in Combat button
-  const [cooldownPriceWarning, setCooldownPriceWarning] = useState<{
-    [key: string]: boolean
-  }>({}) // Cooldown for Price Warning button
-  const [clickTracker, setClickTracker] = useState<{ [key: string]: boolean }>(
-    {}
-  ) // Track button clicks
+  const [cooldown, setCooldown] = useState<BuyerCooldownMap>({})
+  const [cooldownAFK, setCooldownAFK] = useState<BuyerCooldownMap>({}) // Separate cooldown for Bed button
+  const [cooldownBuyerReady, setCooldownBuyerReady] = useState<BuyerCooldownMap>({}) // Cooldown for Buyer Ready button
+  const [cooldownBuyerLogging, setCooldownBuyerLogging] = useState<BuyerCooldownMap>({}) // Cooldown for Buyer Logging button
+  const [cooldownAttention, setCooldownAttention] = useState<BuyerCooldownMap>({}) // Cooldown for Attention button
+  const [cooldownBuyerCombat, setCooldownBuyerCombat] = useState<BuyerCooldownMap>({}) // Cooldown for Buyer in Combat button
+  const [cooldownPriceWarning, setCooldownPriceWarning] = useState<BuyerCooldownMap>({}) // Cooldown for Price Warning button
+  const [clickTracker, setClickTracker] = useState<BuyerCooldownMap>({}) // Track button clicks
   const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
-  const [cooldownPaid, setCooldownPaid] = useState<{ [key: string]: boolean }>(
-    {}
-  ) // Cooldown for Paid Full button
+  const [cooldownPaid, setCooldownPaid] = useState<BuyerCooldownMap>({}) // Cooldown for Paid Full button
 
   const handleOpenModal = (buyer: BuyerData) => {
     setEditingBuyer({
@@ -245,21 +213,7 @@ export function BuyersDataGrid({
       await apiFunction()
       callback()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        if (onError) {
-          onError(errorDetails)
-        }
-      } else {
-        const errorDetails = { message: 'Unexpected error', response: error }
-        if (onError) {
-          onError(errorDetails)
-        }
-      }
+      await handleApiError(error, 'Failed to update buyer')
     }
   }
 
@@ -314,21 +268,7 @@ export function BuyersDataGrid({
 
       onBuyerStatusEdit()
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        }
-        if (onError) {
-          onError(errorDetails)
-        }
-      } else {
-        const errorDetails = { message: 'Unexpected error', response: error }
-        if (onError) {
-          onError(errorDetails)
-        }
-      }
+      await handleApiError(error, 'Failed to change buyer status')
     }
   }
 
@@ -352,415 +292,217 @@ export function BuyersDataGrid({
     }, 5000) // 3-second global cooldown
   }
 
-  const handleSendAFKMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
-
-      if (cooldownAFK[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId) return // Ensure buyer and runId exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientIds = getBuyerRecipientIds(buyer)
-      // Envia mensagem para todos os destinatários
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `AFK Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-      setCooldownAFK((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownAFK((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
+  const showActionCooldownWarning = () => {
+    Swal.fire({
+      title: 'Action Not Allowed',
+      text: 'Please wait 3 seconds before clicking again.',
+      icon: 'warning',
+      timer: 1500,
+      showConfirmButton: false,
     })
   }
 
-  const handleSendOfflineMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const setBuyerCooldown = (
+    setCooldownState: BuyerCooldownSetter,
+    buyerId: string,
+    durationMs: number
+  ) => {
+    setCooldownState((prev) => ({ ...prev, [buyerId]: true }))
+    setTimeout(() => {
+      setCooldownState((prev) => ({ ...prev, [buyerId]: false }))
+    }, durationMs)
+  }
 
-      if (cooldown[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId) return // Ensure buyer and runId exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientIds = getBuyerRecipientIds(buyer)
-      // Envia mensagem para todos os destinatários
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Offline Buyer\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
+  const startClickCooldown = (buyerId: string) => {
+    if (clickTracker[buyerId]) {
+      showActionCooldownWarning()
+      return false
+    }
+
+    setBuyerCooldown(setClickTracker, buyerId, 3000)
+    return true
+  }
+
+  const getRaidLeaderRecipientIds = (): string[] => {
+    if (!raidLeaders) return []
+    return raidLeaders
+      .map((leader) => getRaidLeaderDiscordId(leader))
+      .filter((id): id is string => Boolean(id))
+  }
+
+  const sendBuyerNotification = async ({
+    buyerId,
+    actionCooldownMap,
+    setActionCooldownState,
+    recipientIds,
+    messageBuilder,
+    successText,
+    apiErrorMessage,
+  }: {
+    buyerId: string
+    actionCooldownMap: BuyerCooldownMap
+    setActionCooldownState: BuyerCooldownSetter
+    recipientIds: string[]
+    messageBuilder: (buyer: BuyerData, runLink: string) => string
+    successText: string
+    apiErrorMessage: string
+  }) => {
+    if (actionCooldownMap[buyerId]) return
+
+    const buyer = data.find((entry) => entry.id === buyerId)
+    if (!buyer || !runId || recipientIds.length === 0) return
+
+    const runLink = `${window.location.origin}/bookings-na/run/${runId}`
+
+    for (const recipientId of recipientIds) {
+      try {
+        await sendDiscordMessage(recipientId, messageBuilder(buyer, runLink))
+      } catch (error) {
+        await handleApiError(error, apiErrorMessage)
       }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-      setCooldown((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldown((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
+    }
+
+    Swal.fire({
+      title: 'Success!',
+      text: successText,
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+    })
+
+    setBuyerCooldown(setActionCooldownState, buyerId, 15000)
+  }
+
+  const runNotificationAction = (action: () => Promise<void>) => {
+    handleGlobalAction(() => {
+      void action()
     })
   }
 
-  const handleSendBuyerReadyMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const handleSendAFKMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
+      const buyer = data.find((entry) => entry.id === buyerId)
+      if (!buyer) return
 
-      if (cooldownBuyerReady[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-
-      // Get raid leader Discord IDs
-      const recipientIds: string[] = []
-      for (const leader of raidLeaders) {
-        const leaderDiscordId = getRaidLeaderDiscordId(leader)
-        if (leaderDiscordId) {
-          recipientIds.push(leaderDiscordId)
-        }
-      }
-
-      // Envia mensagem para todos os raid leaders
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Buyer Ready\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Raid leaders notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownAFK,
+        setActionCooldownState: setCooldownAFK,
+        recipientIds: getBuyerRecipientIds(buyer),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `AFK Buyer\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Advertiser notified',
+        apiErrorMessage: 'Failed to notify advertiser',
       })
-      setCooldownBuyerReady((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownBuyerReady((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
     })
   }
 
-  const handleSendBuyerLoggingMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const handleSendOfflineMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
+      const buyer = data.find((entry) => entry.id === buyerId)
+      if (!buyer) return
 
-      if (cooldownBuyerLogging[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-
-      // Get raid leader Discord IDs
-      const recipientIds: string[] = []
-      for (const leader of raidLeaders) {
-        const leaderDiscordId = getRaidLeaderDiscordId(leader)
-        if (leaderDiscordId) {
-          recipientIds.push(leaderDiscordId)
-        }
-      }
-
-      // Envia mensagem para todos os raid leaders
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Buyer Logging\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Raid leaders notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldown,
+        setActionCooldownState: setCooldown,
+        recipientIds: getBuyerRecipientIds(buyer),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Offline Buyer\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Advertiser notified',
+        apiErrorMessage: 'Failed to notify advertiser',
       })
-      setCooldownBuyerLogging((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownBuyerLogging((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
     })
   }
 
-  const handleSendAttentionMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const handleSendBuyerReadyMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
 
-      if (cooldownAttention[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId || !raidLeaders) return // Ensure buyer, runId and raidLeaders exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-
-      // Get raid leader Discord IDs
-      const recipientIds: string[] = []
-      for (const leader of raidLeaders) {
-        const leaderDiscordId = getRaidLeaderDiscordId(leader)
-        if (leaderDiscordId) {
-          recipientIds.push(leaderDiscordId)
-        }
-      }
-
-      // Envia mensagem para todos os raid leaders
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Attention! Check Note\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Raid leaders notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownBuyerReady,
+        setActionCooldownState: setCooldownBuyerReady,
+        recipientIds: getRaidLeaderRecipientIds(),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Buyer Ready\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Raid leaders notified',
+        apiErrorMessage: 'Failed to notify raid leaders',
       })
-      setCooldownAttention((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownAttention((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
     })
   }
 
-  const handleSendBuyerCombatMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const handleSendBuyerLoggingMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
 
-      if (cooldownBuyerCombat[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId) return // Ensure buyer and runId exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientIds = getBuyerRecipientIds(buyer)
-      // Envia mensagem para todos os destinatários
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Buyer in combat and not in our group\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownBuyerLogging,
+        setActionCooldownState: setCooldownBuyerLogging,
+        recipientIds: getRaidLeaderRecipientIds(),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Buyer Logging\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Raid leaders notified',
+        apiErrorMessage: 'Failed to notify raid leaders',
       })
-      setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownBuyerCombat((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
     })
   }
 
-  const handleSendPriceWarningMessage = async (buyerId: string) => {
-    handleGlobalAction(async () => {
-      if (clickTracker[buyerId]) {
-        Swal.fire({
-          title: 'Action Not Allowed',
-          text: 'Please wait 3 seconds before clicking again.',
-          icon: 'warning',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        return
-      }
-      setClickTracker((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setClickTracker((prev) => ({ ...prev, [buyerId]: false }))
-      }, 3000) // Reset click tracker after 3 seconds
+  const handleSendAttentionMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
 
-      if (cooldownPriceWarning[buyerId]) return // Prevent action if cooldown is active
-      const buyer = data.find((b) => b.id === buyerId)
-      if (!buyer || !runId) return // Ensure buyer and runId exist
-      const runLink = `${window.location.origin}/bookings-na/run/${runId}`
-      const recipientIds = getBuyerRecipientIds(buyer)
-      // Envia mensagem para todos os destinatários
-      for (const recipientId of recipientIds) {
-        try {
-          await sendDiscordMessage(
-            recipientId,
-            `Buyer is below minimum price and will be replaced if the price is not corrected until 15 minutes before the invite\nNick: ${buyer.nameAndRealm}\nRun: ${runLink}`
-          )
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            setError({
-              message: error.message,
-              response: error.response?.data,
-              status: error.response?.status,
-            })
-          } else {
-            setError({ message: 'Unexpected error', response: error })
-          }
-        }
-      }
-      Swal.fire({
-        title: 'Success!',
-        text: 'Advertiser notified',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownAttention,
+        setActionCooldownState: setCooldownAttention,
+        recipientIds: getRaidLeaderRecipientIds(),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Attention! Check Note\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Raid leaders notified',
+        apiErrorMessage: 'Failed to notify raid leaders',
       })
-      setCooldownPriceWarning((prev) => ({ ...prev, [buyerId]: true }))
-      setTimeout(() => {
-        setCooldownPriceWarning((prev) => ({ ...prev, [buyerId]: false }))
-      }, 15000)
+    })
+  }
+
+  const handleSendBuyerCombatMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
+      const buyer = data.find((entry) => entry.id === buyerId)
+      if (!buyer) return
+
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownBuyerCombat,
+        setActionCooldownState: setCooldownBuyerCombat,
+        recipientIds: getBuyerRecipientIds(buyer),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Buyer in combat and not in our group\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Advertiser notified',
+        apiErrorMessage: 'Failed to notify advertiser',
+      })
+    })
+  }
+
+  const handleSendPriceWarningMessage = (buyerId: string) => {
+    runNotificationAction(async () => {
+      if (!startClickCooldown(buyerId)) return
+      const buyer = data.find((entry) => entry.id === buyerId)
+      if (!buyer) return
+
+      await sendBuyerNotification({
+        buyerId,
+        actionCooldownMap: cooldownPriceWarning,
+        setActionCooldownState: setCooldownPriceWarning,
+        recipientIds: getBuyerRecipientIds(buyer),
+        messageBuilder: (selectedBuyer, runLink) =>
+          `Buyer is below minimum price and will be replaced if the price is not corrected until 15 minutes before the invite\nNick: ${selectedBuyer.nameAndRealm}\nRun: ${runLink}`,
+        successText: 'Advertiser notified',
+        apiErrorMessage: 'Failed to notify advertiser',
+      })
     })
   }
 
@@ -772,15 +514,25 @@ export function BuyersDataGrid({
       text: `Are you sure you want to delete ${buyer.nameAndRealm}?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
     })
 
     if (result.isConfirmed) {
       try {
+        Swal.fire({
+          title: 'Deleting buyer...',
+          text: `Removing ${buyer.nameAndRealm}`,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading()
+          },
+        })
+
         await deleteBuyer(buyer.id)
+        Swal.close()
         Swal.fire({
           title: 'Success!',
           text: 'Buyer deleted successfully',
@@ -790,21 +542,8 @@ export function BuyersDataGrid({
         })
         onDeleteSuccess()
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorDetails = {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-          if (onError) {
-            onError(errorDetails)
-          }
-        } else {
-          const errorDetails = { message: 'Unexpected error', response: error }
-          if (onError) {
-            onError(errorDetails)
-          }
-        }
+        Swal.close()
+        await handleApiError(error, 'Failed to delete buyer')
       }
     }
   }
@@ -896,7 +635,9 @@ export function BuyersDataGrid({
   }
 
   return (
-    <div className='overflow-x-auto rounded-xl border border-white/10 bg-black/30'>
+    <div
+      className={`overflow-x-auto rounded-xl border border-white/10 bg-black/30 ${containerClassName ?? ''}`}
+    >
       <table className='w-full min-w-[1500px] text-sm'>
         <thead>
           <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>

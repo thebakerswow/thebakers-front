@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AddBuyer } from '../../components/add-buyer'
+import { AddBuyer } from '../bookings-na/run/components/AddBuyer'
 import { useAuth } from '../../context/auth-context'
 import { RunData } from '../../types/runs-interface'
 import { SpecialRunDetails } from './components/special-run-details'

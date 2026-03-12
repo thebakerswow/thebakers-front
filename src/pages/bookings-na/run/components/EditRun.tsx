@@ -1,28 +1,15 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Pencil, X } from '@phosphor-icons/react'
-import axios from 'axios'
 import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { RunData } from '../types/runs-interface'
-import { updateRun } from '../services/api/runs'
-import { getTeamMembers } from '../services/api/users'
-import { ErrorDetails } from './error-display'
+import { updateRun, getTeamMembers } from '../services/runApi'
 import Swal from 'sweetalert2'
-import { CustomSelect } from './custom-select'
-
-interface ApiOption {
-  id: string
-  username: string
-  global_name: string
-}
-
-export interface EditRunProps {
-  run: RunData
-  onClose: () => void
-  onRunEdit: () => void
-  onError?: (error: ErrorDetails) => void
-}
+import { CustomSelect } from '../../../../components/custom-select'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import type { ApiOption, EditRunProps } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 const DatePickerInput = forwardRef<
   HTMLButtonElement,
@@ -37,7 +24,7 @@ const DatePickerInput = forwardRef<
 
 DatePickerInput.displayName = 'DatePickerInput'
 
-export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
+export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   // Detecta se e uma run especial (Keys, Leveling ou PVP)
   const isKeysRun = run.idTeam === import.meta.env.VITE_TEAM_MPLUS
@@ -68,7 +55,6 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
       : { String: '', Valid: false },
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
   const timePickerRef = useRef<HTMLDivElement | null>(null)
 
@@ -89,21 +75,11 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
         const response = await getTeamMembers(teamId)
         if (response) setApiOptions(response)
       } catch (err) {
-        console.error('Failed to fetch API options:', err)
-        if (onError) {
-          const errorDetails = axios.isAxiosError(err)
-            ? {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-              }
-            : { message: 'Unexpected error', response: err }
-          onError(errorDetails)
-        }
+        await handleApiError(err, 'Failed to fetch team members')
       }
     }
     fetchOptions()
-  }, [onError, isKeysRun, isLevelingRun, isPvpRun])
+  }, [isKeysRun, isLevelingRun, isPvpRun])
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -114,9 +90,12 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
 
     // So valida o horario se nao for uma run especial
     if (!isSpecialRun && !formData.time) {
-      if (onError) {
-        onError({ message: 'Time is required', response: null })
-      }
+      await Swal.fire({
+        title: 'Validation',
+        text: 'Time is required',
+        icon: 'warning',
+        confirmButtonText: 'Close',
+      })
       return
     }
 
@@ -135,7 +114,6 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
     try {
       await updateRun(run.id, data)
       await onRunEdit()
-      setIsSuccess(true)
       onClose() // Close the modal first
       Swal.fire({
         title: 'Success!',
@@ -145,21 +123,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
         showConfirmButton: false,
       })
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const errorDetails = {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status,
-        }
-        if (onError) {
-          onError(errorDetails)
-        }
-      } else {
-        const errorDetails = { message: 'Unexpected error', response: err }
-        if (onError) {
-          onError(errorDetails)
-        }
-      }
+      await handleApiError(err, 'Failed to edit run')
     } finally {
       setIsSubmitting(false)
     }
@@ -169,8 +133,6 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
     'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
   const dateTriggerClass =
     'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 pr-9 text-left text-sm text-white shadow-none outline-none transition focus:border-purple-400/50'
-  const baseSelectClass = `${baseFieldClass} appearance-none ![background-image:none] text-white`
-  const dateTimeFieldClass = `${baseFieldClass} ![color-scheme:dark] text-white`
   const isMythic = formData.difficulty === 'Mythic'
   const customSelectTriggerClass =
     'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
@@ -296,21 +258,19 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
     handleChange('time', `${String(hour24).padStart(2, '0')}:${nextMinute}`)
   }
 
-  return (
+  return createPortal(
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
       <div className='w-full max-w-3xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
-        {!isSuccess && (
-          <div className='mb-4 flex items-center justify-between'>
-            <h2 className='text-lg font-semibold text-white'>Edit Run</h2>
-            <button
-              type='button'
-              onClick={onClose}
-              className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
+        <div className='mb-4 flex items-center justify-between'>
+          <h2 className='text-lg font-semibold text-white'>Edit Run</h2>
+          <button
+            type='button'
+            onClick={onClose}
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+          >
+            <X size={18} />
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           <div>
@@ -595,7 +555,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
             </div>
           )}
 
-          <div className='md:col-span-2'>
+          <div className={isSpecialRun ? 'md:col-span-2' : 'md:col-span-1'}>
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Note</label>
             <textarea
               value={formData.note}
@@ -618,7 +578,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
               className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
               {isSubmitting ? (
-                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
+                <LoadingSpinner size='sm' label='Editing run' />
               ) : (
                 <Pencil size={18} />
               )}
@@ -627,6 +587,7 @@ export function EditRun({ onClose, run, onRunEdit, onError }: EditRunProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

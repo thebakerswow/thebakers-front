@@ -1,34 +1,18 @@
 import { UserPlus } from '@phosphor-icons/react'
 import { X } from '@phosphor-icons/react'
-import axios from 'axios'
 import { useState, useEffect, useCallback } from 'react'
 import Swal from 'sweetalert2'
-import { RunData } from '../types/runs-interface'
-import { createBuyer } from '../services/api/buyers'
-import { getGhostUsers } from '../services/api/users'
-import { useAuth } from '../context/auth-context'
-import { ErrorDetails } from './error-display'
-import { CustomSelect } from './custom-select'
-
-interface AddBuyerProps {
-  run: RunData
-  onClose: () => void
-  onBuyerAddedReload: () => void
-  onError?: (error: ErrorDetails) => void
-}
-
-interface Advertiser {
-  id: string
-  id_discord: string
-  name: string
-  username: string
-}
+import { createBuyer, getGhostUsers } from '../services/runApi'
+import { useAuth } from '../../../../context/auth-context'
+import { CustomSelect } from '../../../../components/custom-select'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import type { AddBuyerProps, Advertiser } from '../types/run'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
 export function AddBuyer({
   run,
   onClose,
   onBuyerAddedReload,
-  onError,
 }: AddBuyerProps) {
   const { userRoles } = useAuth()
 
@@ -44,7 +28,6 @@ export function AddBuyer({
   })
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const baseFieldClass =
     'h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
@@ -185,26 +168,10 @@ export function AddBuyer({
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          customClass: {
-            popup: 'swal2-custom-popup',
-          },
         })
       }, 150) // Delay um pouco maior para garantir que o dialog foi fechado
     } catch (error) {
-      // Captura e armazena erros
-      console.error('Error creating buyer:', error)
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error creating buyer', response: error }
-
-      // Passa o erro para o componente pai
-      if (onError) {
-        onError(errorDetails)
-      }
+      await handleApiError(error, 'Error creating buyer')
     } finally {
       setIsSubmitting(false)
     }
@@ -216,24 +183,9 @@ export function AddBuyer({
       const response = await getGhostUsers()
       setAdvertisers(response)
     } catch (error) {
-      console.error('Error fetching advertisers:', error)
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : {
-            message: 'Unexpected error fetching advertisers',
-            response: error,
-          }
-
-      // Passa o erro para o componente pai
-      if (onError) {
-        onError(errorDetails)
-      }
+      await handleApiError(error, 'Error fetching advertisers')
     }
-  }, [onError])
+  }, [])
 
   useEffect(() => {
     fetchAdvertisers() // Fetches advertisers when component loads
@@ -242,18 +194,16 @@ export function AddBuyer({
   return (
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
       <div className='w-full max-w-3xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
-        {!isSuccess && (
-          <div className='mb-4 flex items-center justify-between'>
-            <h2 className='text-lg font-semibold text-white'>Add Buyer</h2>
-            <button
-              type='button'
-              onClick={onClose}
-              className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
+        <div className='mb-4 flex items-center justify-between'>
+          <h2 className='text-lg font-semibold text-white'>Add Buyer</h2>
+          <button
+            type='button'
+            onClick={onClose}
+            className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+          >
+            <X size={18} />
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className='mt-2 grid grid-cols-1 gap-4 md:grid-cols-2'>
           <div>
@@ -414,7 +364,7 @@ export function AddBuyer({
               className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
               {isSubmitting ? (
-                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
+                <LoadingSpinner size='sm' label='Creating buyer' />
               ) : (
                 <UserPlus size={18} />
               )}

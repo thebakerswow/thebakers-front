@@ -8,7 +8,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
-import { ChatMessage, RunChatProps } from '../types'
+import type { ChatMessage, RunChatProps } from '../types/run'
 
 export function RunChat({
   messages,

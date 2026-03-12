@@ -1,27 +1,15 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { UserPlus, X } from '@phosphor-icons/react'
-import axios from 'axios'
 import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import Swal from 'sweetalert2'
-import { getTeamMembers } from '../../../../services/api/users'
-import { createRun } from '../../../../services/api/runs'
-import { ErrorDetails } from '../../../../components/error-display'
+import { createRaidRun, getRaidsTeamMembers } from '../services/raidsApi'
 import { CustomSelect } from '../../../../components/custom-select'
-
-interface ApiOption {
-  id: string
-  username: string
-  global_name: string
-}
-
-export interface AddRunProps {
-  onClose: () => void
-  onRunAddedReload: () => void
-  onError: (error: ErrorDetails | null) => void
-}
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import type { AddRunProps, ApiOption } from '../types/raids'
 
 const DatePickerInput = forwardRef<
   HTMLButtonElement,
@@ -34,7 +22,7 @@ const DatePickerInput = forwardRef<
 
 DatePickerInput.displayName = 'DatePickerInput'
 
-export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
+export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [formData, setFormData] = useState({
     name: { String: '', Valid: false },
     date: '',
@@ -128,23 +116,12 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
   const fetchTeamMembers = useCallback(async () => {
     try {
       const teamId = import.meta.env.VITE_TEAM_PREFEITO
-      const response = await getTeamMembers(teamId)
+      const response = await getRaidsTeamMembers(teamId)
       setApiOptions(response)
-      onError(null)
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : {
-            message: 'Unexpected error fetching team members',
-            response: error,
-          }
-      onError(errorDetails)
+      await handleApiError(error, 'Unexpected error fetching team members')
     }
-  }, [onError])
+  }, [])
 
   useEffect(() => {
     fetchTeamMembers()
@@ -192,7 +169,6 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsSubmitting(true)
-    onError(null)
 
     if (
       !formData.name.String ||
@@ -219,7 +195,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
     }
 
     try {
-      await createRun({
+      await createRaidRun({
         ...formData,
         quantityBoss: formData.quantityBoss,
       })
@@ -235,14 +211,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
         })
       }, 150)
     } catch (error) {
-      const errorDetails = axios.isAxiosError(error)
-        ? {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          }
-        : { message: 'Unexpected error creating run', response: error }
-      onError(errorDetails)
+      await handleApiError(error, 'Unexpected error creating run')
     } finally {
       setIsSubmitting(false)
     }
@@ -645,9 +614,7 @@ export function AddRun({ onClose, onRunAddedReload, onError }: AddRunProps) {
               disabled={isSubmitting}
               className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
-              {isSubmitting ? (
-                <span className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></span>
-              ) : (
+              {isSubmitting ? <LoadingSpinner size='sm' label='Creating run' /> : (
                 <UserPlus size={18} />
               )}
               {isSubmitting ? 'Creating...' : 'Add Run'}

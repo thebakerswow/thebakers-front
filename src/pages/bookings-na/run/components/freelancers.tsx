@@ -5,12 +5,12 @@ import {
   createFreelancer,
   deleteFreelancer,
   updateFreelancerAttendance,
-} from '../../../../services/api/users'
-import { CircleNotch, Trash } from '@phosphor-icons/react'
-import axios from 'axios'
+} from '../services/runApi'
+import { Trash } from '@phosphor-icons/react'
 import { ErrorComponent, ErrorDetails } from '../../../../components/error-display'
-
-import { User, FreelancersProps } from '../../../../types'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import type { FreelancersProps, User } from '../types/run'
+import { getApiErrorMessage, handleApiError } from '../../../../utils/apiErrorHandler'
 
 export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
   const [freelancers, setFreelancers] = useState<User[]>([])
@@ -30,16 +30,9 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
     string | null
   >(null) // Track the specific freelancer being deleted
 
-  const handleError = (error: unknown) => {
-    if (axios.isAxiosError(error)) {
-      setError({
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-    } else {
-      setError({ message: 'Unexpected error', response: error })
-    }
+  const handleError = async (error: unknown, fallbackMessage = 'Unexpected error') => {
+    await handleApiError(error, fallbackMessage)
+    setError({ message: getApiErrorMessage(error, fallbackMessage), response: error })
   }
 
   useEffect(() => {
@@ -77,7 +70,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
       setSearch('')
       setSelectedUser(null)
     } catch (error) {
-      handleError(error)
+      await handleError(error, 'Failed to add freelancer')
     } finally {
       setIsSubmitting(false)
     }
@@ -102,14 +95,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
       const response = await getFreelancers(runId)
       setFreelancers(response || [])
     } catch (err) {
-      const errorDetails = axios.isAxiosError(err)
-        ? {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status,
-          }
-        : { message: 'Unexpected error', response: err }
-      setError(errorDetails)
+      await handleError(err, 'Failed to delete freelancer')
     } finally {
       setDeletingFreelancerId(null) // Reset the deleting state
       handleCloseDeleteDialog()
@@ -136,7 +122,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
         )
       )
     } catch (error) {
-      handleError(error)
+      await handleError(error, 'Failed to update freelancer attendance')
     }
   }
 
@@ -222,10 +208,10 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
             type='button'
             onClick={handleAddFreelancer}
             disabled={runIsLocked || isSubmitting || !selectedUser}
-            className='balance-action-btn balance-action-btn--primary inline-flex h-10 min-w-[100px] items-center justify-center gap-2 px-4 disabled:cursor-not-allowed disabled:opacity-60'
+            className='inline-flex h-10 min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none'
           >
-            {isSubmitting && <CircleNotch className='animate-spin' size={16} />}
-            {isSubmitting ? 'Adding...' : 'Add'}
+            {isSubmitting && <LoadingSpinner size='sm' label='Adding freelancer' />}
+            {isSubmitting ? 'Adding...' : 'Add Freelancer'}
           </button>
         </div>
 
@@ -242,7 +228,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
               {isLoadingFreelancers ? (
                 <tr>
                   <td colSpan={3} className='px-3 py-8 text-center'>
-                    <CircleNotch className='mx-auto animate-spin text-purple-300' size={22} />
+                    <LoadingSpinner size='md' className='mx-auto' label='Loading freelancers' />
                   </td>
                 </tr>
               ) : freelancers.length === 0 ? (
@@ -266,7 +252,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
                         className='rounded-md p-1 text-red-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
                       >
                         {deletingFreelancerId === user.id_discord ? (
-                          <CircleNotch className='animate-spin' size={18} />
+                          <LoadingSpinner size='sm' label='Deleting freelancer' />
                         ) : (
                           <Trash size={18} />
                         )}
@@ -303,9 +289,7 @@ export function Freelancers({ runId, runIsLocked }: FreelancersProps) {
                 disabled={deletingFreelancerId !== null}
                 className='inline-flex min-w-[96px] items-center justify-center gap-2 rounded-md border border-red-400/40 bg-red-500/80 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50'
               >
-                {deletingFreelancerId !== null && (
-                  <CircleNotch className='animate-spin' size={16} />
-                )}
+                {deletingFreelancerId !== null && <LoadingSpinner size='sm' label='Deleting' />}
                 {deletingFreelancerId !== null ? 'Deleting...' : 'Delete'}
               </button>
             </div>
