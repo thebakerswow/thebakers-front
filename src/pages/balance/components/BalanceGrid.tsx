@@ -15,7 +15,7 @@ import {
   BalanceResponse,
   ProcessedPlayer,
   BalanceDataGridProps,
-} from '../../../types'
+} from '../types/balance'
 import { shouldShowOwnBalanceOnly } from '../../../utils/role-utils'
 
 export function BalanceDataGrid({

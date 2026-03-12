@@ -1,12 +1,14 @@
-import { getRuns } from '../../../services/api/runs'
-import { getServiceCategories, getServices } from '../../../services/api/services'
+import { api } from '../../../services/axiosConfig'
 import { handleApiError } from '../../../utils/apiErrorHandler'
 import { HomeRunItem, HomeServicesData, HomeWeekRuns } from '../types/home'
 
 export async function fetchWeekRuns(dates: string[]): Promise<HomeWeekRuns> {
   const results = await Promise.allSettled(
     dates.map((date) =>
-      getRuns(date).then((runs) => ({ date, runs: (runs || []) as HomeRunItem[] }))
+      api
+        .get('/run', { params: { date } })
+        .then((response) => response.data.info)
+        .then((runs) => ({ date, runs: (runs || []) as HomeRunItem[] }))
     )
   )
 
@@ -34,8 +36,8 @@ export async function fetchWeekRuns(dates: string[]): Promise<HomeWeekRuns> {
 export async function fetchHomeServicesAndCategories(): Promise<HomeServicesData> {
   try {
     const [services, categoriesResponse] = await Promise.all([
-      getServices(),
-      getServiceCategories(),
+      api.get('/services').then((response) => response.data.info),
+      api.get('/services-categories').then((response) => response.data.info),
     ])
 
     return {

@@ -1,21 +1,4 @@
 import { api } from '../../../../services/axiosConfig'
-import {
-  createTransaction as createTransactionService,
-  getBalanceAdmin as getBalanceAdminService,
-  getTransactionLogs as getTransactionLogsService,
-  updateNick as updateNickService,
-} from '../../../../services/api/balance'
-import {
-  createGBank as createGBankService,
-  deleteGBank as deleteGBankService,
-  getGbankLogs as getGbankLogsService,
-  getGbanks as getGbanksService,
-  getGbanksGeneral as getGbanksGeneralService,
-  getLatestTransactions as getLatestTransactionsService,
-  updateGBank as updateGBankService,
-  updateGBankValue as updateGBankValueService,
-} from '../../../../services/api/gbanks'
-import { getPlayers as getPlayersService } from '../../../../services/api/users'
 import { checkAdminAccess as checkAdminAccessService } from '../../../../services/api/auth'
 import type {
   CreateGBankData,
@@ -30,37 +13,70 @@ import type {
 
 export const checkAdminAccess = () => checkAdminAccessService()
 
-export const getBalanceAdmin = (params: GetBalanceAdminParams) =>
-  getBalanceAdminService(params)
+export const getBalanceAdmin = async (params: GetBalanceAdminParams) => {
+  const response = await api.get('/admin', { params })
+  return response.data.info
+}
 
-export const createTransaction = (data: CreateTransactionData) =>
-  createTransactionService(data)
+export const createTransaction = async (data: CreateTransactionData) => {
+  const response = await api.post('/transaction', data)
+  return response.data
+}
 
-export const updateNick = (data: UpdateNickData) => updateNickService(data)
+export const updateNick = async (data: UpdateNickData) => {
+  const response = await api.put('/nick', data)
+  return response.data
+}
 
-export const getGbanks = () => getGbanksService()
+export const getGbanks = async () => {
+  const response = await api.get('/gbanks')
+  return response.data.info
+}
 
-export const createGBank = (data: CreateGBankData) => createGBankService(data)
+export const createGBank = async (data: CreateGBankData) => {
+  const response = await api.post('/gbanks', data)
+  return response.data
+}
 
-export const updateGBankValue = (data: UpdateGBankValueData) =>
-  updateGBankValueService(data)
+export const updateGBankValue = async (data: UpdateGBankValueData) => {
+  const response = await api.put('/gbanks/value', data)
+  return response.data
+}
 
-export const updateGBank = (data: UpdateGBankData) =>
-  updateGBankService(data)
+export const updateGBank = async (data: UpdateGBankData) => {
+  const response = await api.put('/gbanks', data)
+  return response.data
+}
 
-export const deleteGBank = (gbankId: string) => deleteGBankService(gbankId)
+export const deleteGBank = async (gbankId: string) => {
+  const response = await api.delete(`/gbanks/${gbankId}`)
+  return response.data
+}
 
-export const getGbanksGeneral = () => getGbanksGeneralService()
+export const getGbanksGeneral = async () => {
+  const response = await api.get('/gbanks/general')
+  return response.data.info
+}
 
-export const getGbankLogs = (params: GetGbankLogsParams) =>
-  getGbankLogsService(params)
+export const getGbankLogs = async (params: GetGbankLogsParams) => {
+  const response = await api.get('/gbanks/logs', { params })
+  return response.data.info
+}
 
-export const getLatestTransactions = () => getLatestTransactionsService()
+export const getLatestTransactions = async () => {
+  const response = await api.get('/transaction/latest')
+  return response.data.info
+}
 
-export const getPlayers = () => getPlayersService()
+export const getPlayers = async () => {
+  const response = await api.get('/discord/players')
+  return response.data.info
+}
 
-export const getTransactionLogs = (params: GetTransactionLogsParams) =>
-  getTransactionLogsService(params)
+export const getTransactionLogs = async (params: GetTransactionLogsParams) => {
+  const response = await api.get('/transaction/info', { params })
+  return response.data.info
+}
 
 export const getRunsWithoutAttendanceInfo = async () => {
   const response = await api.get('/run-attendance/info')

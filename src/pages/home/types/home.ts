@@ -1,4 +1,17 @@
-import { Service, ServiceCategory } from '../../../types'
+export interface Service {
+  id: number
+  name: string
+  description: string
+  price: number
+  serviceCategoryId: number
+  category?: { id: number; name: string }
+  hotItem: boolean
+}
+
+export interface ServiceCategory {
+  id: number
+  name: string
+}
 
 export type HomeRunItem = {
   id: string | number

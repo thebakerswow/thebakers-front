@@ -14,8 +14,32 @@ import {
 } from '../services/goldPaymentApi'
 import type { PaymentManagementTeam, PaymentDate as PaymentDateType } from '../types/goldPayments'
 import { sortPaymentDatesByName, toMonthDay } from '../utils/paymentDate'
-import { teamOrder } from '../../../../types/team-interface'
 import Swal from 'sweetalert2'
+
+const teamOrder = [
+  'Chefe de cozinha',
+  'M+',
+  'Leveling',
+  'Garçom',
+  'Confeiteiros',
+  'Jackfruit',
+  'Insanos',
+  'APAE',
+  'Los Renegados',
+  'DTM',
+  'KFFC',
+  'Greensky',
+  'Guild Azralon BR#1',
+  'Guild Azralon BR#2',
+  'Rocket',
+  'Booty Reaper',
+  'Padeirinho',
+  'Milharal',
+  'Advertiser',
+  'Freelancer',
+  'Bastard Munchen',
+  'Kiwi',
+] as const
 
 interface PaymentRow {
   id: string | number

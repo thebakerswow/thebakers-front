@@ -1,4 +1,4 @@
-import type { RunData } from '../../../../types/runs-interface'
+import type { RunData } from '../../run/types/run'
 import type { RunScreenFlag } from '../../../../constants/run-flags'
 
 export type RaidsRunData = RunData

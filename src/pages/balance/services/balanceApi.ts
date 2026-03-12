@@ -1,5 +1,4 @@
-import { getBalance, updateBalanceColor } from '../../../services/api/balance'
-import { getBalanceTeams } from '../../../services/api/teams'
+import { api } from '../../../services/axiosConfig'
 import {
   BalanceColorPayload,
   BalanceQueryParams,
@@ -7,13 +6,16 @@ import {
 } from '../types/balance'
 
 export async function fetchBalanceTeams(): Promise<BalanceTeamOption[]> {
-  return getBalanceTeams()
+  const response = await api.get('/teams/balance')
+  return response.data.info
 }
 
 export async function fetchBalanceData(params: BalanceQueryParams) {
-  return getBalance(params)
+  const response = await api.get('/balance', { params })
+  return response.data.info
 }
 
 export async function updateBalancePlayerColor(payload: BalanceColorPayload) {
-  return updateBalanceColor(payload)
+  const response = await api.put('/balance/color', payload)
+  return response.data
 }

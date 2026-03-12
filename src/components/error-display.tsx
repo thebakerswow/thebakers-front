@@ -9,7 +9,10 @@ export interface ErrorDetails {
   status?: number
 }
 
-import { ErrorComponentProps } from '../types'
+interface ErrorComponentProps {
+  error: ErrorDetails
+  onClose: () => void
+}
 
 // Map global para rastrear erros já exibidos
 const displayedErrors = new Map<string, number>()

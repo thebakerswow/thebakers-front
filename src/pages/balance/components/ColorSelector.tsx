@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { ColorSelectorProps } from '../types/balance'
 
 export interface Color {
   name: string
@@ -13,8 +14,6 @@ export const getTextColorForBackground = (backgroundColor: string): string => {
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b
   return luminance > 186 ? 'black' : 'white'
 }
-
-import { ColorSelectorProps } from '../../../types'
 
 export function ColorSelector({ onSelectColor }: ColorSelectorProps) {
   const backgroundColors: Color[] = useMemo(

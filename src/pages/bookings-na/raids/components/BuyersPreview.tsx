@@ -6,7 +6,7 @@ import { getRaidsRun, getRaidsRunBuyers } from '../services/raidsApi'
 import { AddBuyer } from '../../run/components/AddBuyer'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
-import type { BuyerData } from '../../../../types/buyer-interface'
+import type { BuyerData } from '../../run/types/run'
 import type { RaidsRunData, BuyersPreviewProps } from '../types/raids'
 
 export function BuyersPreview({ runId, runScreen, onClose }: BuyersPreviewProps) {

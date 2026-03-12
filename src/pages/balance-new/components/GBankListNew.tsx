@@ -5,9 +5,8 @@ import { LoadingSpinner } from '../../../components/LoadingSpinner'
 import { COLOR_OPTIONS, DEFAULT_TEAM_COLOR, TEAM_ID_TO_COLOR_MAP, compareByPriority } from '../../../utils/teamConfig'
 import { createGBank, createTransactionRequest, getUserGbanks } from '../services/balanceNewApi'
 import { useAuth } from '../../../context/auth-context'
-import { GBank } from '../../../types'
 import { handleApiError } from '../../../utils/apiErrorHandler'
-import { GBankGroup, GBankListNewProps } from '../types/balanceNew'
+import { GBank, GBankGroup, GBankListNewProps } from '../types/balanceNew'
 
 export function GBankListNew({ selectedTeam, onInitialLoadComplete }: GBankListNewProps) {
   const { userRoles = [] } = useAuth()

@@ -1,12 +1,71 @@
-import type {
-  RunData as BaseRunData,
-  RunHistory as BaseRunHistory,
-} from '../../../../types/runs-interface'
-import type { BuyerData as BaseBuyerData } from '../../../../types/buyer-interface'
+export interface Players {
+  idDiscord: string
+  username: string
+}
 
-export type RunData = BaseRunData
-export type BuyerData = BaseBuyerData
-export type RunHistory = BaseRunHistory
+export interface SumPot {
+  idDiscord: string
+  username: string
+  sumPot: number
+  type: 'gold' | 'dollar'
+}
+
+export interface RunData {
+  id: string
+  name: { String: string; Valid: boolean }
+  runIsLocked: boolean
+  idTeam: string
+  date: string
+  time: string
+  raid: string
+  runType: string
+  difficulty: string
+  team: string
+  backups: number
+  actualPot: number
+  actualPotDolar: number
+  slotAvailable: number
+  maxBuyers: string
+  raidLeaders: RaidLeader[]
+  loot: string
+  note: string
+  sumPot: SumPot[]
+  players: Players[]
+  buyersCount: string
+  quantityBoss: { String: string; Valid: boolean }
+}
+
+export interface RunHistory {
+  id: number
+  id_run: number
+  id_buyer: { Int64: number; Valid: boolean } | null
+  nameAndRealm?: string
+  field: string
+  old_value: string
+  new_value: string
+  name_edited_by: string
+  created_at: string
+}
+
+export interface BuyerData {
+  id: string
+  status: string
+  idBuyerAdvertiser: string
+  fieldIsBlocked: boolean
+  idOwnerBuyer: string
+  nameOwnerBuyer: string
+  buyerNote: string
+  buyerPot: number
+  buyerDolarPot: number
+  buyerActualPot: number
+  isPaid: boolean
+  nameAndRealm: string
+  nameCollector: string
+  paymentRealm: string
+  playerClass: string
+  idRegister: string
+  isEncrypted: boolean
+}
 
 export interface AttendanceInfoItem {
   idDiscord: string

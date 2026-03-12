@@ -6,7 +6,6 @@ import { ErrorDetails } from '../../../../components/error-display'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import { PaymentsTabPageSkeleton } from './PaymentsTabPageSkeleton'
-import { teamOrder } from '../../../../types/team-interface'
 import {
   getReceiptsManagement,
   getReceiptsManagementDates,
@@ -15,6 +14,31 @@ import {
   type ReceiptsManagementTeam,
   type ReceiptsDate,
 } from '../services/dollarPaymentsApi'
+
+const teamOrder = [
+  'Chefe de cozinha',
+  'M+',
+  'Leveling',
+  'Garçom',
+  'Confeiteiros',
+  'Jackfruit',
+  'Insanos',
+  'APAE',
+  'Los Renegados',
+  'DTM',
+  'KFFC',
+  'Greensky',
+  'Guild Azralon BR#1',
+  'Guild Azralon BR#2',
+  'Rocket',
+  'Booty Reaper',
+  'Padeirinho',
+  'Milharal',
+  'Advertiser',
+  'Freelancer',
+  'Bastard Munchen',
+  'Kiwi',
+] as const
 
 interface ReceiptsPaymentsTabProps {
   onError?: (error: ErrorDetails | null) => void

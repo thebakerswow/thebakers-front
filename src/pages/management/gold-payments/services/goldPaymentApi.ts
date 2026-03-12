@@ -1,21 +1,4 @@
-import {
-  createPaymentDate as createPaymentDateRequest,
-  createPayer as createPayerRequest,
-  createSale as createSaleRequest,
-  deleteSale as deleteSaleRequest,
-  getPayers as getPayersRequest,
-  getPaymentDates as getPaymentDatesRequest,
-  getPaymentManagement as getPaymentManagementRequest,
-  getPaymentManagementDates as getPaymentManagementDatesRequest,
-  getPaymentSummaryByStatus as getPaymentSummaryByStatusRequest,
-  getSales as getSalesRequest,
-  updatePayer as updatePayerRequest,
-  updatePaymentBinance as updatePaymentBinanceRequest,
-  updatePaymentHold as updatePaymentHoldRequest,
-  updatePaymentManagementDebit as updatePaymentManagementDebitRequest,
-  updateSale as updateSaleRequest,
-} from '../../../../services/api/payments'
-import { getBalanceTeams as getBalanceTeamsRequest } from '../../../../services/api/teams'
+import { api } from '../../../../services/axiosConfig'
 import type {
   CreatePaymentDatePayload,
   CreatePayerPayload,
@@ -50,53 +33,89 @@ export type {
   UpdateSalePayload,
 } from '../types/goldPayments'
 
-export const getPayers = async (): Promise<Payer[]> => getPayersRequest()
+export const getPayers = async (): Promise<Payer[]> => {
+  const response = await api.get('/payments/payers')
+  return response.data.info
+}
 
 export const createPayer = async (data: CreatePayerPayload): Promise<Payer> =>
-  createPayerRequest(data)
+  (await api.post('/payments/payers', data)).data.info
 
 export const updatePayer = async (data: UpdatePayerPayload): Promise<Payer> =>
-  updatePayerRequest(data)
+  (await api.put('/payments/payers', data)).data.info
 
 export const getPaymentDates = async (
   params?: { is_date_valid?: boolean },
-): Promise<PaymentDate[]> => getPaymentDatesRequest(params)
+): Promise<PaymentDate[]> => {
+  const response = await api.get('/payments/date', { params })
+  return response.data.info
+}
 
 export const createPaymentDate = async (
   data: CreatePaymentDatePayload,
-): Promise<PaymentDate> => createPaymentDateRequest(data)
+): Promise<PaymentDate> => (await api.post('/payments/date', data)).data.info
 
-export const getSales = async (): Promise<Sale[]> => getSalesRequest()
+export const getSales = async (): Promise<Sale[]> => {
+  const response = await api.get('/payments/sales')
+  return response.data.info
+}
 
 export const createSale = async (data: CreateSalePayload): Promise<Sale> =>
-  createSaleRequest(data)
+  (await api.post('/payments/sales', data)).data.info
 
 export const updateSale = async (data: UpdateSalePayload): Promise<Sale> =>
-  updateSaleRequest(data)
+  (await api.put('/payments/sales', data)).data.info
 
-export const deleteSale = async (idPaymentSale: string | number): Promise<void> =>
-  deleteSaleRequest(idPaymentSale)
+export const deleteSale = async (idPaymentSale: string | number): Promise<void> => {
+  await api.delete('/payments/sales', {
+    params: {
+      id_payment_sale: idPaymentSale,
+    },
+  })
+}
 
 export const getPaymentSummaryByStatus = async (): Promise<PaymentSummaryResponse> =>
-  getPaymentSummaryByStatusRequest()
+  (await api.get('/payments/summary/status')).data
 
 export const getPaymentManagement = async (
   filters?: PaymentManagementFilters,
-): Promise<PaymentManagementTeam[]> => getPaymentManagementRequest(filters)
+): Promise<PaymentManagementTeam[]> => {
+  const params: Record<string, string | number> = {}
+
+  if (filters?.id_team) {
+    params.id_team = filters.id_team
+  }
+
+  if (filters?.id_payment_date !== undefined) {
+    params.id_payment_date = filters.id_payment_date
+  }
+
+  const response = await api.get('/payments/management', { params })
+  return response.data.info.teams
+}
 
 export const getPaymentManagementDates = async (): Promise<PaymentDate[]> =>
-  getPaymentManagementDatesRequest()
+  (await api.get('/payments/management/date')).data.info
 
 export const updatePaymentHold = async (
   data: UpdatePaymentHoldPayload,
-): Promise<void> => updatePaymentHoldRequest(data)
+): Promise<void> => {
+  await api.put('/payments/hold', data)
+}
 
 export const updatePaymentBinance = async (
   data: UpdatePaymentBinancePayload,
-): Promise<void> => updatePaymentBinanceRequest(data)
+): Promise<void> => {
+  await api.put('/payments/binance', data)
+}
 
 export const updatePaymentManagementDebit = async (
   data: UpdatePaymentManagementDebitPayload,
-): Promise<void> => updatePaymentManagementDebitRequest(data)
+): Promise<void> => {
+  await api.put('/payments/management/debit', data)
+}
 
-export const getBalanceTeams = async () => getBalanceTeamsRequest()
+export const getBalanceTeams = async () => {
+  const response = await api.get('/teams/balance')
+  return response.data.info
+}

@@ -1,5 +1,3 @@
-import { GBank } from '../../../types'
-
 type BalanceControlSortKey = 'username' | 'balance_total'
 type BalanceControlSortDirection = 'asc' | 'desc'
 
@@ -39,6 +37,14 @@ export type BalanceDailyUser = {
 export type GBankListNewProps = {
   selectedTeam?: string | null
   onInitialLoadComplete?: () => void
+}
+
+export type GBank = {
+  id: string
+  name: string
+  balance: number
+  calculatorValue: string
+  idTeam: string
 }
 
 export type GBankGroup = {
