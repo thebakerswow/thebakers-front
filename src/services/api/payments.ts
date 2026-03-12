@@ -344,7 +344,7 @@ export interface PaymentResumeItem {
   gold_in_dolar: number
   dolar_sold: number
   total: number
-  type: 'gold' | 'dolar'
+  type: 'gold' | 'dollar'
 }
 
 export interface PaymentsResumeResponse {

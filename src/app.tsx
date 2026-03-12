@@ -29,12 +29,12 @@ import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
 import { AdminPage } from './pages/management/admin'
-import ManagementServices from './pages/management/servicesManagement'
+import ManagementServices from './pages/management/services-management'
 import { MockSpecialRunDetailsPage } from './pages/special-runs/mock-special-run-details-page'
 import { RequestsPage } from './pages/management/requests'
 import { MyRequestsPage } from './pages/my-requests'
-import { PaymentsPage } from './pages/management/payments'
-import { ReceiptsPage } from './pages/receipts'
+import { PaymentsPage } from './pages/management/gold-payments'
+import { ReceiptsPage } from './pages/management/dollar-payments'
 import { SellsPage } from './pages/sells'
 import { PurpleGlowBackground } from './components/purple-glow-background'
 import { LoadingSpinner } from './components/LoadingSpinner'
@@ -229,6 +229,10 @@ function AppContent() {
               />
               <Route
                 path='/receipts'
+                element={<Navigate to='/dollar-payments' replace />}
+              />
+              <Route
+                path='/dollar-payments'
                 element={<PrivateRoute element={<ReceiptsPage />} />}
               />
               <Route
@@ -409,7 +413,7 @@ function getScreenMeta(pathname: string) {
   if (pathname.startsWith('/payments')) {
     return { name: 'Gold', breadcrumb: 'Management / Gold', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
-  if (pathname.startsWith('/receipts')) {
+  if (pathname.startsWith('/dollar-payments')) {
     return { name: 'Dollar', breadcrumb: 'Finance / Dollar', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/sells')) {

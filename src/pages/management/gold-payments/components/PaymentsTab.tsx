@@ -1,32 +1,29 @@
-import { useState, useEffect, useMemo, useCallback, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Wallet, CopySimple } from '@phosphor-icons/react'
-import { ErrorDetails } from '../../../components/error-display'
-import { LoadingSpinner } from '../../../components/LoadingSpinner'
+import { ErrorDetails } from '../../../../components/error-display'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { PaymentsTabPageSkeleton } from './PaymentsTabPageSkeleton'
 import { 
   getPaymentManagement, 
   getPaymentManagementDates, 
   updatePaymentHold,
   updatePaymentBinance,
   updatePaymentManagementDebit,
-  PaymentManagementTeam,
-  PaymentDate as PaymentDateType 
-} from '../../../services/api/payments'
-import { getBalanceTeams } from '../../../services/api/teams'
-import { teamOrder } from '../../../types/team-interface'
+  getBalanceTeams,
+} from '../services/goldPaymentApi'
+import type { PaymentManagementTeam, PaymentDate as PaymentDateType } from '../types/goldPayments'
+import { sortPaymentDatesByName, toMonthDay } from '../utils/paymentDate'
+import { teamOrder } from '../../../../types/team-interface'
 import Swal from 'sweetalert2'
 
 interface PaymentRow {
   id: string | number
   player: string
   balanceTotal: number
-  shopBalance: number
   balanceSold: number
   mInDollarSold: number
   paymentDate: string
-  paymentStatus: 'pending' | 'completed'
-  nextDollarShop: number
-  nextGPayment: number
-  total: number
   averageDolarPerGold: number
   hold: boolean
   binanceId: string
@@ -37,187 +34,11 @@ interface PaymentsTabProps {
   onError?: (error: ErrorDetails | null) => void
 }
 
-const sxToStyle = (sx?: Record<string, unknown>): CSSProperties => {
-  if (!sx) return {}
-  const style: Record<string, string | number> = {}
-  const spacingToPx = (value: unknown) => (typeof value === 'number' ? `${value * 8}px` : value)
-  Object.entries(sx).forEach(([key, value]) => {
-    if (key === 'bgcolor') {
-      if (typeof value === 'string') style.backgroundColor = value
-      return
-    }
-    if (key === 'p') {
-      style.padding = spacingToPx(value) as string
-      return
-    }
-    if (key === 'px') {
-      style.paddingLeft = spacingToPx(value) as string
-      style.paddingRight = spacingToPx(value) as string
-      return
-    }
-    if (key === 'py') {
-      style.paddingTop = spacingToPx(value) as string
-      style.paddingBottom = spacingToPx(value) as string
-      return
-    }
-    if (key === 'pt' || key === 'pr' || key === 'pb' || key === 'pl' || key === 'mt' || key === 'mr' || key === 'mb' || key === 'ml') {
-      const map: Record<string, string> = {
-        pt: 'paddingTop',
-        pr: 'paddingRight',
-        pb: 'paddingBottom',
-        pl: 'paddingLeft',
-        mt: 'marginTop',
-        mr: 'marginRight',
-        mb: 'marginBottom',
-        ml: 'marginLeft',
-      }
-      style[map[key]] = spacingToPx(value) as string
-      return
-    }
-    if (key.startsWith('&')) return
-    if (typeof value === 'string' || typeof value === 'number') {
-      style[key] = value
-    }
-  })
-  return style as CSSProperties
-}
-
-const Box = ({ sx, children, ...rest }: { sx?: Record<string, unknown>; children: ReactNode; [key: string]: unknown }) => (
-  <div style={sxToStyle(sx)} {...rest}>
-    {children}
-  </div>
-)
-
-const Paper = ({ sx, children, ...rest }: { sx?: Record<string, unknown>; children: ReactNode; [key: string]: unknown }) => (
-  <div style={sxToStyle(sx)} {...rest}>
-    {children}
-  </div>
-)
-
-const Typography = ({
-  sx,
-  children,
-  ...rest
-}: {
-  sx?: Record<string, unknown>
-  children: ReactNode
-  variant?: string
-  color?: string
-  [key: string]: unknown
-}) => (
-  <p style={sxToStyle(sx)} {...rest}>
-    {children}
-  </p>
-)
-
-const Button = ({
-  sx,
-  onClick,
-  children,
-  startIcon,
-  disabled,
-  ...rest
-}: {
-  sx?: Record<string, unknown>
-  onClick?: () => void
-  children: ReactNode
-  startIcon?: ReactNode
-  disabled?: boolean
-  [key: string]: unknown
-}) => (
-  <button
-    type='button'
-    onClick={onClick}
-    disabled={disabled}
-    className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
-    style={sxToStyle(sx)}
-    {...rest}
-  >
-    <span className='inline-flex items-center gap-2'>
-      {startIcon}
-      {children}
-    </span>
-  </button>
-)
-
-const TableContainer = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode; component?: unknown }) => (
-  <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.04]' style={sxToStyle(sx)}>
-    {children}
-  </div>
-)
-const Table = ({ children }: { children: ReactNode }) => <table className='min-w-full text-sm'>{children}</table>
-const TableHead = ({ children }: { children: ReactNode }) => <thead>{children}</thead>
-const TableBody = ({ children }: { children: ReactNode }) => <tbody>{children}</tbody>
-const TableRow = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode }) => (
-  <tr className='transition hover:bg-purple-500/10' style={sxToStyle(sx)}>
-    {children}
-  </tr>
-)
-const TableCell = ({
-  sx,
-  align,
-  children,
-}: {
-  sx?: Record<string, unknown>
-  align?: 'left' | 'right' | 'center'
-  children: ReactNode
-}) => (
-  <td className='border-b border-white/10 px-3 py-2' style={{ textAlign: align, ...sxToStyle(sx) }}>
-    {children}
-  </td>
-)
-
-const Checkbox = ({
-  checked,
-  onChange,
-}: {
-  checked: boolean
-  onChange: (event: { target: { checked: boolean } }) => void
-  sx?: Record<string, unknown>
-}) => (
-  <input type='checkbox' checked={checked} onChange={(e) => onChange({ target: { checked: e.target.checked } })} />
-)
-
-const FormControl = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode; size?: string }) => (
-  <div style={sxToStyle(sx)}>{children}</div>
-)
-
-const InputLabel = ({ sx, children }: { sx?: Record<string, unknown>; children: ReactNode }) => (
-  <label className='mb-1 block text-xs text-white/70' style={sxToStyle(sx)}>
-    {children}
-  </label>
-)
-
-const MenuItem = ({ value, children }: { value: string; children: ReactNode; key?: string }) => (
-  <option value={value}>{children}</option>
-)
-
-const Select = ({
-  value,
-  onChange,
-  children,
-  sx,
-}: {
-  value: string
-  onChange: (event: { target: { value: string } }) => void
-  children: ReactNode
-  sx?: Record<string, unknown>
-  [key: string]: unknown
-}) => (
-  <select
-    value={value}
-    onChange={(e) => onChange({ target: { value: e.target.value } })}
-    className='h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition focus:border-purple-400/60'
-    style={sxToStyle(sx)}
-  >
-    {children}
-  </select>
-)
-
 export function PaymentsTab({ onError }: PaymentsTabProps) {
   const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([])
   const [paymentDateFilter, setPaymentDateFilter] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false)
   const [teamFilter, setTeamFilter] = useState<string>('all')
   const [availableTeams, setAvailableTeams] = useState<Array<{ id_discord: string; team_name: string }>>([])
   const [availablePaymentDates, setAvailablePaymentDates] = useState<PaymentDateType[]>([])
@@ -229,13 +50,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
 
   // Função para converter data de YYYY-MM-DD para MM/DD
   const formatSummaryDate = (dateStr: string) => {
-    const match = dateStr.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-    if (match) {
-      const month = match[1]
-      const day = match[2]
-      return `${month}/${day}`
-    }
-    return dateStr
+    return toMonthDay(dateStr)
   }
 
   const handleHoldChange = async (id: string | number, checked: boolean) => {
@@ -274,6 +89,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       })
     } catch (error) {
       console.error('Error updating hold:', error)
+      await handleApiError(error, 'Error updating hold status')
       // Reverter o estado local em caso de erro
       setPaymentRows(prevRows =>
         prevRows.map(row =>
@@ -305,30 +121,12 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       inputValue: currentValue,
       inputPlaceholder: 'Enter Binance ID',
       showCancelButton: true,
-      confirmButtonColor: 'rgb(147, 51, 234)',
-      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Save',
       cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
       inputValidator: () => {
         // Permite valores vazios (para limpar o campo)
         return null
       },
-      customClass: {
-        input: 'swal-input-dark'
-      },
-      didOpen: () => {
-        // Estilizar o input
-        const input = Swal.getInput()
-        if (input) {
-          input.style.backgroundColor = '#1a1a1a'
-          input.style.color = 'white'
-          input.style.border = '1px solid rgba(255, 255, 255, 0.23)'
-          input.style.borderRadius = '4px'
-          input.style.padding = '10px'
-        }
-      }
     })
 
     if (result.isConfirmed) {
@@ -353,11 +151,10 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       } catch (error) {
         console.error('Error updating binance ID:', error)
+        await handleApiError(error, 'Error updating Binance ID')
         
         // Reverter o estado local em caso de erro
         setPaymentRows(prevRows =>
@@ -365,15 +162,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             row.id === id ? { ...row, binanceId: currentValue } : row
           )
         )
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to update Binance ID.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
 
         const errorDetails = {
           message: 'Error updating Binance ID',
@@ -396,9 +184,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           icon: 'warning',
           title: 'No Data',
           text: 'No valid payment data to copy.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
         })
         return
       }
@@ -425,8 +210,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
-        background: '#2a2a2a',
-        color: 'white',
       })
     } catch (error) {
       console.error('Error copying to clipboard:', error)
@@ -435,9 +218,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         icon: 'error',
         title: 'Error',
         text: 'Failed to copy to clipboard.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
       })
     }
   }
@@ -450,9 +230,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           icon: 'warning',
           title: 'No Payment Date Selected',
           text: 'Please select a payment date first.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
         })
         return
       }
@@ -480,12 +257,8 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         `,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#60a5fa',
-        cancelButtonColor: '#6b7280',
         confirmButtonText: 'Yes, debit it!',
         cancelButtonText: 'Cancel',
-        background: '#2a2a2a',
-        color: 'white',
       })
 
       if (!result.isConfirmed) {
@@ -504,8 +277,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
-        background: '#2a2a2a',
-        color: 'white',
       })
 
       // Reload completo da página para atualizar os filtros de datas
@@ -532,9 +303,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               </p>
             </div>
           `,
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
         })
         // Não chama onError para evitar mensagem duplicada
         return
@@ -559,9 +327,6 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               </p>
             </div>
           `,
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
         })
         // Não chama onError para evitar mensagem duplicada
         return
@@ -586,23 +351,13 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               </p>
             </div>
           `,
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
         })
         // Não chama onError para evitar mensagem duplicada
         return
       }
       
       // Para outros erros, mostra mensagem genérica
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to debit gold. Please try again.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
+      await handleApiError(error, 'Failed to debit gold. Please try again.')
 
       const errorDetails = {
         message: 'Error debiting gold',
@@ -655,50 +410,11 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         
         setAvailableTeams(validTeamsData)
         
-        // Converte datas de YYYY-MM-DD para MM/DD
-        const convertedDates = validPaymentDatesData.map(date => {
-          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-          if (match) {
-            const month = match[1]
-            const day = match[2]
-            return { ...date, name: `${month}/${day}` }
-          }
-          return date
-        })
-        
-        // Ordenar datas antes de definir
-        const sortedDates = [...convertedDates].sort((dateA, dateB) => {
-          // Função para parsear data no formato MM/DD
-          const parseDateString = (dateStr: string) => {
-            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
-            if (match) {
-              const month = parseInt(match[1])
-              const day = parseInt(match[2])
-              // Retorna um valor que pode ser usado para comparação
-              return month * 100 + day
-            }
-            return 0
-          }
-          
-          // PRIORIDADE 1: Tenta parsear como data MM/DD
-          const dateValueA = parseDateString(dateA.name)
-          const dateValueB = parseDateString(dateB.name)
-          
-          if (dateValueA && dateValueB) {
-            return dateValueA - dateValueB
-          }
-          
-          // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
-          const idA = Number(dateA.id)
-          const idB = Number(dateB.id)
-          
-          if (!isNaN(idA) && !isNaN(idB)) {
-            return idA - idB
-          }
-          
-          // PRIORIDADE 3: Fallback para ordenação alfabética
-          return dateA.name.localeCompare(dateB.name)
-        })
+        const convertedDates = validPaymentDatesData.map((date) => ({
+          ...date,
+          name: toMonthDay(date.name),
+        }))
+        const sortedDates = sortPaymentDatesByName(convertedDates)
         
         setAvailablePaymentDates(sortedDates)
         
@@ -713,6 +429,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
         }
       } catch (error) {
         console.error('Error fetching initial data:', error)
+        await handleApiError(error, 'Error fetching initial data')
         const errorDetails = {
           message: 'Error fetching initial data',
           response: error,
@@ -768,14 +485,9 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             id: player.id_discord,
             player: player.username,
             balanceTotal: player.balance_total,
-            shopBalance: 0, // Not provided by API
             balanceSold: player.balance_sold,
             mInDollarSold: player.m_in_dolar_sold,
             paymentDate: player.payment_date,
-            paymentStatus: 'pending' as const, // Not provided by API
-            nextDollarShop: 0, // Not provided by API
-            nextGPayment: 0, // Not provided by API
-            total: player.balance_total,
             averageDolarPerGold: player.average_dolar_per_gold,
             hold: player.hold,
             binanceId: player.id_binance,
@@ -785,6 +497,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
       
       setPaymentRows(transformedRows)
     } catch (error) {
+      await handleApiError(error, 'Error fetching payment rows')
       const errorDetails = {
         message: 'Error fetching payment rows',
         response: error,
@@ -867,40 +580,15 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
 
   // Ordenar datas de pagamento cronologicamente
   const sortedPaymentDates = useMemo(() => {
-    return [...availablePaymentDates].sort((dateA, dateB) => {
-      // Função para parsear data no formato MM/DD
-      const parseDateString = (dateStr: string) => {
-        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
-        if (match) {
-          const month = parseInt(match[1])
-          const day = parseInt(match[2])
-          return month * 100 + day
-        }
-        return 0
-      }
-      
-      // PRIORIDADE 1: Tenta parsear como data MM/DD
-      const dateValueA = parseDateString(dateA.name)
-      const dateValueB = parseDateString(dateB.name)
-      
-      if (dateValueA && dateValueB) {
-        return dateValueA - dateValueB
-      }
-      
-      // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
-      const idA = Number(dateA.id)
-      const idB = Number(dateB.id)
-      
-      if (!isNaN(idA) && !isNaN(idB)) {
-        return idA - idB
-      }
-      
-      // PRIORIDADE 3: Fallback para ordenação alfabética
-      return dateA.name.localeCompare(dateB.name)
-    })
+    return sortPaymentDatesByName(availablePaymentDates)
   }, [availablePaymentDates])
 
   // Note: Filtering is now done by the API
+  useEffect(() => {
+    if (!isLoading && !hasCompletedInitialLoad) {
+      setHasCompletedInitialLoad(true)
+    }
+  }, [isLoading, hasCompletedInitialLoad])
 
   const getPaymentDateLabel = (paymentDate: string) => {
     if (!paymentDate) return '-'
@@ -914,82 +602,77 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
 
 
   if (isLoading) {
+    if (!hasCompletedInitialLoad) {
+      return <PaymentsTabPageSkeleton />
+    }
+
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
         <LoadingSpinner size='lg' label='Loading payments table' />
-      </Box>
+      </div>
     )
   }
 
   // Se não há payment dates disponíveis, mostra mensagem
   if (!availablePaymentDates || availablePaymentDates.length === 0) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
-        <Paper sx={{ 
-          bgcolor: '#2a2a2a', 
-          border: '1px solid #333', 
-          p: 4, 
-          textAlign: 'center',
-          maxWidth: 500 
-        }}>
-          <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
+        <div
+          style={{
+            backgroundColor: '#2a2a2a',
+            border: '1px solid #333',
+            padding: 32,
+            textAlign: 'center',
+            maxWidth: 500,
+            borderRadius: 8,
+          }}
+        >
+          <p style={{ color: 'white', marginBottom: 16, fontWeight: 'bold', fontSize: '1.125rem' }}>
             No Payment Dates Available
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#9ca3af' }}>
+          </p>
+          <p style={{ color: '#9ca3af' }}>
             There are no payment dates configured yet.
-          </Typography>
-        </Paper>
-      </Box>
+          </p>
+        </div>
+      </div>
     )
   }
 
   const renderTableRows = (rows: PaymentRow[]) => (
     <>
       {rows.map((row) => (
-          <TableRow
-            key={row.id}
-            sx={{
-              '&:hover': {
-                bgcolor: 'rgba(147, 51, 234, 0.08)',
-              },
-              transition: 'all 0.2s ease-in-out',
-            }}
-          >
-            <TableCell align="left" sx={{ color: 'white', fontSize: '1rem', fontWeight: 500, width: 180 }}>
+          <tr key={row.id} className='border-b border-white/5 transition hover:bg-white/[0.05]'>
+            <td className='px-4 py-3 text-sm font-medium text-white/90' style={{ textAlign: 'left', width: 180 }}>
               {row.player}
-            </TableCell>
-            <TableCell align="right" sx={{ color: '#60a5fa', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+            </td>
+            <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300' style={{ width: 150 }}>
               {row.balanceTotal === 0 ? '0' : `${formatValueForDisplay(row.balanceTotal)}g`}
-            </TableCell>
-            <TableCell align="right" sx={{ color: '#10b981', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+            </td>
+            <td className='px-4 py-3 text-right text-sm font-semibold text-emerald-300' style={{ width: 150 }}>
               {row.balanceSold === 0 ? '-' : `${formatValueForDisplay(row.balanceSold)}g`}
-            </TableCell>
-            <TableCell align="right" sx={{ color: '#f59e0b', fontSize: '1rem', fontWeight: 600, width: 150 }}>
+            </td>
+            <td className='px-4 py-3 text-right text-sm font-semibold text-violet-300' style={{ width: 150 }}>
               {row.mInDollarSold === 0 ? '-' : `U$ ${row.mInDollarSold.toFixed(2)}`}
-            </TableCell>
-            <TableCell align="center" sx={{ color: '#9ca3af', fontSize: '1rem', width: 150 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ fontSize: '1rem', color: 'white' }}>
+            </td>
+            <td className='px-4 py-3 text-center text-sm text-neutral-400' style={{ width: 150 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <p style={{ color: 'white' }}>
                   {getPaymentDateLabel(row.paymentDate)}
-                </Typography>
-              </Box>
-            </TableCell>
-            <TableCell align="center" sx={{ width: 100 }}>
-              <Checkbox
+                </p>
+              </div>
+            </td>
+            <td className='px-4 py-3 text-center' style={{ width: 100 }}>
+              <input
+                type='checkbox'
                 checked={row.hold}
                 onChange={(e) => handleHoldChange(row.id, e.target.checked)}
-                sx={{
-                  color: '#9ca3af',
-                  '&.Mui-checked': {
-                    color: 'rgb(147, 51, 234)',
-                  },
-                }}
+                style={{ accentColor: 'rgb(147, 51, 234)' }}
               />
-            </TableCell>
-            <TableCell align="left" sx={{ width: 180 }}>
-              <Box
+            </td>
+            <td className='px-4 py-3 text-left' style={{ width: 180 }}>
+              <div
                 onClick={() => handleBinanceIdChange(row.id, row.binanceId, row.player)}
-                sx={{
+                style={{
                   cursor: 'pointer',
                   padding: '8px 12px',
                   borderRadius: '4px',
@@ -1001,200 +684,96 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
                   minHeight: '36px',
                   display: 'flex',
                   alignItems: 'center',
-                  '&:hover': {
-                    borderColor: 'rgba(168,85,247,0.6)',
-                    backgroundColor: 'rgba(147,51,234,0.12)',
-                  },
                 }}
+                className='hover:border-purple-400/60 hover:bg-purple-500/10'
               >
                 {row.binanceId || 'Click to add Binance ID'}
-              </Box>
-            </TableCell>
-          </TableRow>
+              </div>
+            </td>
+          </tr>
         ))}
     </>
   )
 
   const renderTable = (rows: PaymentRow[], teamName?: string) => (
-    <Box sx={{ mb: teamName ? 4 : 0 }}>
+    <div style={{ marginBottom: teamName ? 32 : 0 }}>
       {teamName && (
-        <Typography
-          variant="h6"
-          sx={{
+        <p
+          style={{
             color: 'white',
             fontWeight: 'bold',
-            mb: 2,
-            pl: 1,
+            marginBottom: 16,
+            paddingLeft: 8,
             borderLeft: '4px solid rgb(147, 51, 234)',
+            fontSize: '1.125rem',
           }}
         >
           {teamName}
-        </Typography>
+        </p>
       )}
-      <TableContainer
-        component={Paper}
-        sx={{
-          bgcolor: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: '12px',
-          boxShadow: 'none',
-          '& .MuiTableCell-root': {
-            borderColor: 'rgba(255,255,255,0.08)',
-          },
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
-              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 180 }}>Player</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Total</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Balance Sold</TableCell>
-              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>M in $ Sold</TableCell>
-              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 150 }}>Payment Date</TableCell>
-              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 100 }}>Hold</TableCell>
-              <TableCell align="left" sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', width: 180 }}>Binance ID</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+      <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.05]'>
+        <table className='w-full min-w-[1000px] text-sm'>
+          <thead>
+            <tr className='border-b border-white/10 bg-white/[0.06] text-neutral-200'>
+              <th className='px-4 py-4 text-left font-semibold' style={{ width: 180 }}>Player</th>
+              <th className='px-4 py-4 text-right font-semibold' style={{ width: 150 }}>Balance Total</th>
+              <th className='px-4 py-4 text-right font-semibold' style={{ width: 150 }}>Balance Sold</th>
+              <th className='px-4 py-4 text-right font-semibold' style={{ width: 150 }}>M in $ Sold</th>
+              <th className='px-4 py-4 text-center font-semibold' style={{ width: 150 }}>Payment Date</th>
+              <th className='px-4 py-4 text-center font-semibold' style={{ width: 100 }}>Hold</th>
+              <th className='px-4 py-4 text-left font-semibold' style={{ width: 180 }}>Binance ID</th>
+            </tr>
+          </thead>
+          <tbody>
             {renderTableRows(rows)}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 
   return (
-    <Box>
+    <div>
       {/* Filters */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ marginBottom: 24, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           {/* Team Filter */}
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel sx={{ 
-            color: 'white',
-            '&.Mui-focused': {
-              color: 'rgb(147, 51, 234)',
-            },
-          }}>Team</InputLabel>
-          <Select
+          <div style={{ minWidth: 200 }}>
+          <label className='mb-1 block text-xs text-white/70'>Team</label>
+          <select
             value={teamFilter}
             onChange={(e) => handleTeamFilterChange(e.target.value)}
-            label="Team"
-            sx={{
-              color: 'white',
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255,255,255,0.10)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(168,85,247,0.45)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(168,85,247,0.65)',
-              },
-              '& .MuiSvgIcon-root': {
-                color: 'white',
-              },
-              '& .MuiSelect-select': {
-                color: 'white',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  backgroundColor: '#1a1a1a',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  '& .MuiMenuItem-root': {
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(147,51,234,0.10)',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.20)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.28)',
-                      },
-                    },
-                  },
-                },
-              },
-            }}
+            className='h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition focus:border-purple-400/60'
           >
-            <MenuItem value="all">All Teams</MenuItem>
+            <option value="all" style={{ backgroundColor: '#1a1a1a' }}>All Teams</option>
             {sortedAvailableTeams && sortedAvailableTeams.map((team) => (
-              <MenuItem key={team.id_discord} value={team.id_discord}>
+              <option key={team.id_discord} value={team.id_discord} style={{ backgroundColor: '#1a1a1a' }}>
                 {team.team_name}
-              </MenuItem>
+              </option>
             ))}
-          </Select>
-        </FormControl>
+          </select>
+        </div>
 
         {/* Payment Date Filter */}
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel sx={{ 
-            color: 'white',
-            '&.Mui-focused': {
-              color: 'rgb(147, 51, 234)',
-            },
-          }}>Payment Date</InputLabel>
-          <Select
+        <div style={{ minWidth: 200 }}>
+          <label className='mb-1 block text-xs text-white/70'>Payment Date</label>
+          <select
             value={paymentDateFilter}
             onChange={(e) => handlePaymentDateFilter(e.target.value)}
-            label="Payment Date"
-            sx={{
-              color: 'white',
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255,255,255,0.10)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(168,85,247,0.45)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(168,85,247,0.65)',
-              },
-              '& .MuiSvgIcon-root': {
-                color: 'white',
-              },
-              '& .MuiSelect-select': {
-                color: 'white',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  backgroundColor: '#1a1a1a',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  '& .MuiMenuItem-root': {
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(147,51,234,0.10)',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(147, 51, 234, 0.20)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(147, 51, 234, 0.28)',
-                      },
-                    },
-                  },
-                },
-              },
-            }}
+            className='h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition focus:border-purple-400/60'
           >
             {sortedPaymentDates && sortedPaymentDates.map((paymentDate) => (
-              <MenuItem key={paymentDate.id} value={paymentDate.name}>
+              <option key={String(paymentDate.id)} value={String(paymentDate.name)} style={{ backgroundColor: '#1a1a1a' }}>
                 {paymentDate.name}
-              </MenuItem>
+              </option>
             ))}
-          </Select>
-        </FormControl>
+          </select>
+        </div>
 
         {/* Average Display */}
         {averageDolarPerGold > 0 && (
-          <Typography
-            sx={{
+          <p
+            style={{
               color: '#10b981',
               fontSize: '0.875rem',
               fontWeight: 600,
@@ -1204,74 +783,97 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
               border: '1px solid rgba(16,185,129,0.45)',
               display: 'flex',
               alignItems: 'center',
-              gap: 0.5,
+              height: '40px',
+              gap: 4,
+              margin: 0,
             }}
           >
             Avg: {formatDollar(averageDolarPerGold)}/M
-          </Typography>
+          </p>
         )}
-        </Box>
+        </div>
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            size="medium"
-            startIcon={<CopySimple size={16} />}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+          <button
+            type='button'
             onClick={handleCopyBinanceTemplate}
-            sx={{
+            className='rounded-md border px-3 py-2 text-sm transition disabled:opacity-50'
+            style={{
               borderColor: 'rgba(168,85,247,0.45)',
               color: '#e9d5ff',
               backgroundColor: 'rgba(147,51,234,0.16)',
-              '&:hover': { backgroundColor: 'rgba(147,51,234,0.24)', borderColor: 'rgba(168,85,247,0.7)' },
               fontSize: '0.875rem',
-              textTransform: 'none',
               height: '40px',
-              px: 2,
+              paddingLeft: 16,
+              paddingRight: 16,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(147,51,234,0.24)'
+              e.currentTarget.style.borderColor = 'rgba(168,85,247,0.7)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(147,51,234,0.16)'
+              e.currentTarget.style.borderColor = 'rgba(168,85,247,0.45)'
             }}
           >
-            Copy Binance Template for {paymentDateFilter}
-          </Button>
+            <span className='inline-flex items-center gap-2'>
+              <CopySimple size={16} />
+              Copy Binance Template for {paymentDateFilter}
+            </span>
+          </button>
           
-          <Button
-            variant="outlined"
-            size="medium"
-            startIcon={<Wallet size={16} />}
+          <button
+            type='button'
             onClick={handleDebitG}
-            sx={{
+            className='rounded-md border px-3 py-2 text-sm transition disabled:opacity-50'
+            style={{
               borderColor: 'rgba(96,165,250,0.45)',
               color: '#bfdbfe',
               backgroundColor: 'rgba(59,130,246,0.16)',
-              '&:hover': { backgroundColor: 'rgba(59,130,246,0.24)', borderColor: 'rgba(96,165,250,0.7)' },
               fontSize: '0.875rem',
-              textTransform: 'none',
               height: '40px',
-              px: 2,
+              paddingLeft: 16,
+              paddingRight: 16,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.24)'
+              e.currentTarget.style.borderColor = 'rgba(96,165,250,0.7)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.16)'
+              e.currentTarget.style.borderColor = 'rgba(96,165,250,0.45)'
             }}
           >
-            Debit G for {getPaymentDateLabel(paymentDateFilter)}
-          </Button>
-        </Box>
-      </Box>
+            <span className='inline-flex items-center gap-2'>
+              <Wallet size={16} />
+              Debit G for {getPaymentDateLabel(paymentDateFilter)}
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* Mensagem quando não há dados */}
       {paymentRows.length === 0 && !isLoading && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
-          <Paper sx={{ 
-            bgcolor: '#2a2a2a', 
-            border: '1px solid #333', 
-            p: 4, 
-            textAlign: 'center',
-            maxWidth: 500 
-          }}>
-            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 'bold' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
+          <div
+            style={{
+              backgroundColor: '#2a2a2a',
+              border: '1px solid #333',
+              padding: 32,
+              textAlign: 'center',
+              maxWidth: 500,
+              borderRadius: 8,
+            }}
+          >
+            <p style={{ color: 'white', marginBottom: 16, fontWeight: 'bold', fontSize: '1.125rem' }}>
               No Payment Data Available
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#9ca3af' }}>
+            </p>
+            <p style={{ color: '#9ca3af' }}>
               There are no payment records for the selected filters.
-            </Typography>
-          </Paper>
-        </Box>
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Renderizar tabelas */}
@@ -1282,7 +884,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
             <>
               {sortedTeamEntries.map(([teamId, rows]) => {
                 const teamName = teamNamesMap[teamId] || teamId
-                return <Box key={teamId}>{renderTable(rows, teamName)}</Box>
+                return <div key={teamId}>{renderTable(rows, teamName)}</div>
               })}
             </>
           ) : (
@@ -1291,7 +893,7 @@ export function PaymentsTab({ onError }: PaymentsTabProps) {
           )}
         </>
       )}
-    </Box>
+    </div>
   )
 }
 

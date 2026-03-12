@@ -246,7 +246,7 @@ export function RunInfo({
     run.sumPot?.some((item) => item.type === 'gold' && item.sumPot !== 0)
   )
   const hasDolarCollectors = Boolean(
-    run.sumPot?.some((item) => item.type === 'dolar' && item.sumPot !== 0)
+    run.sumPot?.some((item) => item.type === 'dollar' && item.sumPot !== 0)
   )
   const mainCardColSpanClass =
     hasGoldCollectors && hasDolarCollectors
@@ -345,7 +345,7 @@ export function RunInfo({
               </div>
               <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
                 <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Run Dolar Pot
+                  Run Dollar Pot
                 </dt>
                 <dd className='mt-1 font-medium'>
                   {run.actualPotDolar != null
@@ -418,14 +418,14 @@ export function RunInfo({
           <div
             className={`rounded-xl border border-white/10 bg-white/[0.04] p-3 text-white ${collectorColSpanClass}`}
           >
-            <h2 className='text-base font-semibold'>Dolar Collectors</h2>
+            <h2 className='text-base font-semibold'>Dollar Collectors</h2>
             <div className='mt-2 max-h-[260px] overflow-y-auto rounded-md border border-white/10 bg-black/20'>
               {!attendanceAccessDenied && (
                 <table className='w-full text-sm'>
                   <tbody>
                     {run.sumPot
                       ?.filter(
-                        (item) => item.type === 'dolar' && item.sumPot !== 0
+                        (item) => item.type === 'dollar' && item.sumPot !== 0
                       )
                       .map((item) => (
                         <tr key={item.idDiscord} className='border-b border-white/5'>

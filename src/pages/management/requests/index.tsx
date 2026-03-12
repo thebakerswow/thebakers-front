@@ -7,7 +7,7 @@ import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
 import { getApiErrorMessage, handleApiError } from '../../../utils/apiErrorHandler'
 import { RequestCard } from './components/RequestCard'
 import { RequestsFilter } from './components/RequestsFilter'
-import { ResquestsSkeleton } from './components/ResquestsSkeleton'
+import { ResquestsSkeleton } from './components/RequestsSkeleton'
 import {
   getTransactionRequests,
   updateTransactionRequest,

@@ -48,9 +48,9 @@ export function SellsTable({ salesByDate, statusFilter }: SellsTableProps) {
             <th className='px-4 py-4 text-right text-sm font-bold text-white'>Avg M</th>
             <th className='px-4 py-4 text-right text-sm font-bold text-white'>Gold In $</th>
             {statusFilter === 'pending' && (
-              <th className='px-4 py-4 text-right text-sm font-bold text-white'>Balance Dolar</th>
+              <th className='px-4 py-4 text-right text-sm font-bold text-white'>Balance Dollar</th>
             )}
-            <th className='px-4 py-4 text-right text-sm font-bold text-white'>Shop Dolar</th>
+            <th className='px-4 py-4 text-right text-sm font-bold text-white'>Shop Dollar</th>
             <th className='px-4 py-4 text-right text-sm font-bold text-white'>Total</th>
           </tr>
         </thead>
@@ -64,13 +64,13 @@ export function SellsTable({ salesByDate, statusFilter }: SellsTableProps) {
                 </td>
               )}
               <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>
-                {dateData.type === 'dolar' ? '-' : `${formatGold(dateData.goldSold)}g`}
+                {dateData.type === 'dollar' ? '-' : `${formatGold(dateData.goldSold)}g`}
               </td>
               <td className='px-4 py-3 text-right text-sm font-semibold text-violet-300'>
-                {dateData.type === 'dolar' ? '-' : formatDollar(dateData.avgM)}
+                {dateData.type === 'dollar' ? '-' : formatDollar(dateData.avgM)}
               </td>
               <td className='px-4 py-3 text-right text-sm font-semibold text-emerald-300'>
-                {dateData.type === 'dolar' ? '-' : formatDollar(dateData.goldInDollar)}
+                {dateData.type === 'dollar' ? '-' : formatDollar(dateData.goldInDollar)}
               </td>
               {statusFilter === 'pending' && (
                 <td className='px-4 py-3 text-right text-sm font-semibold text-blue-300'>

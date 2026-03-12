@@ -153,12 +153,12 @@ export function TransactionExtract() {
         </FormControl>
         <FormControl className='flex-1'>
           <Select
-            value={isDolar ? 'dolar' : 'gold'}
-            onChange={(e) => setIsDolar(e.target.value === 'dolar')}
+            value={isDolar ? 'dollar' : 'gold'}
+            onChange={(e) => setIsDolar(e.target.value === 'dollar')}
             displayEmpty
           >
             <MenuItem value='gold'>Gold</MenuItem>
-            <MenuItem value='dolar'>Dolar</MenuItem>
+            <MenuItem value='dollar'>Dollar</MenuItem>
           </Select>
         </FormControl>
         <Button

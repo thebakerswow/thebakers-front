@@ -1,34 +1,20 @@
 import { UserPlus, Plus, PencilSimple } from '@phosphor-icons/react'
-import CloseIcon from '@mui/icons-material/Close'
+import { X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
-
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Button,
-  IconButton,
-  Box,
-  Autocomplete,
-} from '@mui/material'
-import { ErrorDetails } from './error-display'
-import { LoadingSpinner } from './LoadingSpinner'
-import { AddReceiptsPayer } from './add-receipts-payer'
-import { AddReceiptsDate } from './add-receipt-date'
-import { EditReceiptsPayerName } from './edit-receipts-payer-name'
+import { ErrorDetails } from '../../../../components/error-display'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { AddReceiptsPayer } from './AddPaymentsPayer'
+import { AddReceiptsDate } from './AddPaymentDate'
+import { EditReceiptsPayerName } from './EditPaymentPayerName'
 import {
   getReceiptsPayers,
   getReceiptsDates,
   createReceiptsSale,
   type ReceiptsPayer,
   type ReceiptsDate,
-} from '../services/api'
+} from '../services/dollarPaymentsApi'
 
 interface AddReceiptProps {
   onClose: () => void
@@ -39,9 +25,9 @@ interface AddReceiptProps {
 export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps) {
   const [formData, setFormData] = useState({
     note: '',
-    payer: '',
+    payerId: '',
     dollar: '',
-    receiptDate: '',
+    receiptDateId: '',
   })
 
   const [payers, setPayers] = useState<ReceiptsPayer[]>([])
@@ -64,7 +50,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
       const validPayersData = Array.isArray(payersData) ? payersData : []
       setPayers(validPayersData)
     } catch (error) {
-      console.error('Error fetching receipts payers:', error)
+      await handleApiError(error, 'Error fetching receipts payers')
       const errorDetails = {
         message: 'Error fetching receipts payers',
         response: error,
@@ -123,7 +109,7 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
 
       setReceiptDateOptions(sortedDates)
     } catch (error) {
-      console.error('Error fetching receipts dates:', error)
+      await handleApiError(error, 'Error fetching receipts dates')
       const errorDetails = {
         message: 'Error fetching receipts dates',
         response: error,
@@ -179,13 +165,13 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
     setIsSubmitting(true)
     setFormError(null)
 
-    if (!formData.payer) {
+    if (!formData.payerId) {
       setFormError('Please select a payer.')
       setIsSubmitting(false)
       return
     }
 
-    if (!formData.receiptDate) {
+    if (!formData.receiptDateId) {
       setFormError('Please select a receipts date.')
       setIsSubmitting(false)
       return
@@ -199,8 +185,10 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
       return
     }
 
-    const selectedPayer = payers.find((payer) => payer.name === formData.payer)
-    const selectedReceiptDate = receiptDateOptions.find((date) => date.name === formData.receiptDate)
+    const selectedPayer = payers.find((payer) => Number(payer.id) === Number(formData.payerId))
+    const selectedReceiptDate = receiptDateOptions.find(
+      (date) => Number(date.id) === Number(formData.receiptDateId)
+    )
 
     if (!selectedPayer) {
       setFormError('Invalid payer selected.')
@@ -236,12 +224,10 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       }, 150)
     } catch (error) {
-      console.error('Error creating receipt:', error)
+      await handleApiError(error, 'Failed to create receipt.')
       const errorDetails = {
         message: 'Error creating receipt',
         response: error,
@@ -249,213 +235,174 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
       if (onError) {
         onError(errorDetails)
       }
-
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to create receipt.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handlePayerAdded = async (payerName: string, _payerId: string | number) => {
+  const handlePayerAdded = async (_payerName: string, payerId: string | number) => {
     await fetchPayers()
 
     setFormData((prev) => ({
       ...prev,
-      payer: payerName,
+      payerId: String(payerId),
     }))
   }
 
   const handlePayerUpdated = async (updatedPayer: ReceiptsPayer) => {
     await fetchPayers()
 
-    if (formData.payer === editingPayer?.name) {
+    if (Number(formData.payerId) === Number(editingPayer?.id)) {
       setFormData((prev) => ({
         ...prev,
-        payer: updatedPayer.name,
+        payerId: String(updatedPayer.id),
       }))
     }
   }
 
-  const handleReceiptDateAdded = async (receiptDateName: string, _receiptDateId: number) => {
+  const handleReceiptDateAdded = async (_receiptDateName: string, receiptDateId: number) => {
     await fetchReceiptDates()
 
     setFormData((prev) => ({
       ...prev,
-      receiptDate: receiptDateName,
+      receiptDateId: String(receiptDateId),
     }))
   }
 
   return (
     <>
-      <Dialog open={true} onClose={onClose} maxWidth='md' fullWidth>
-        <DialogTitle className='relative text-center'>
-          Add Receipt
-          <IconButton
-            aria-label='close'
-            onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <div className='flex w-full flex-col overflow-y-auto overflow-x-hidden'>
-            <form onSubmit={handleSubmit} className='mt-4 grid grid-cols-2 gap-4'>
-              <TextField
+      <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+        <div className='w-full max-w-2xl rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
+          <div className='mb-4 flex items-center justify-between'>
+            <h2 className='text-xl font-semibold text-white'>Add Receipt</h2>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-md border border-white/10 bg-white/5 p-1.5 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+            <div className='md:col-span-2'>
+              <label htmlFor='note' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Note/Description
+              </label>
+              <textarea
                 id='note'
-                label='Note/Description'
                 required
                 value={formData.note}
                 onChange={handleTextFieldChange}
-                variant='outlined'
-                fullWidth
-                multiline
                 rows={2}
-                className='col-span-2'
+                className='h-10 min-h-12 w-full resize-none rounded-md border border-white/15 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition focus:border-purple-400/50'
               />
+            </div>
 
-              <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <Autocomplete
-                  fullWidth
+            <div className='md:col-span-2'>
+              <label htmlFor='payer' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Payer *
+              </label>
+              <div className='flex gap-2'>
+                <select
                   id='payer'
-                  options={payers}
-                  getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
-                  value={payers.find((payer) => payer.name === formData.payer) || null}
-                  onChange={(_, newValue) => {
+                  value={formData.payerId}
+                  onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      payer: newValue ? newValue.name : '',
+                      payerId: e.target.value,
                     }))
-                  }}
+                  }
+                  required
                   disabled={isLoadingPayers}
-                  loading={isLoadingPayers}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label='Payer'
-                      required
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {isLoadingPayers ? <LoadingSpinner size='sm' label='Loading payers' /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
-                  renderOption={(props, payer) => (
-                    <li {...props} key={payer.id}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          width: '100%',
-                          gap: 1,
-                        }}
-                      >
-                        <span>{payer.name}</span>
-                        <IconButton
-                          size='small'
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingPayer(payer)
-                          }}
-                          sx={{
-                            padding: '4px',
-                            color: 'rgb(147, 51, 234)',
-                            '&:hover': {
-                              backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                            },
-                          }}
-                        >
-                          <PencilSimple size={16} />
-                        </IconButton>
-                      </Box>
-                    </li>
-                  )}
-                />
-                <Button
-                  variant='contained'
-                  onClick={() => setIsAddPayerOpen(true)}
-                  startIcon={<Plus size={20} />}
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                    minWidth: '120px',
-                  }}
+                  className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
                 >
+                  <option value='' disabled>
+                    {isLoadingPayers ? 'Loading payers...' : 'Select a Payer'}
+                  </option>
+                  {payers.map((payer) => (
+                    <option key={payer.id} value={String(payer.id)}>
+                      {payer.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type='button'
+                  onClick={() => {
+                    const selected = payers.find(
+                      (payer) => Number(payer.id) === Number(formData.payerId)
+                    )
+                    if (selected) setEditingPayer(selected)
+                  }}
+                  disabled={!formData.payerId}
+                  className='inline-flex min-w-[90px] items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10 disabled:opacity-60'
+                >
+                  <PencilSimple size={16} />
+                  Edit
+                </button>
+                <button
+                  type='button'
+                  onClick={() => setIsAddPayerOpen(true)}
+                  className='inline-flex min-w-[90px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
+                >
+                  <Plus size={18} />
                   New
-                </Button>
-              </Box>
+                </button>
+              </div>
+            </div>
 
-              <Box sx={{ display: 'flex', gap: 1, gridColumn: 'span 2' }}>
-                <FormControl fullWidth variant='outlined' required>
-                  <InputLabel id='receipt-date-label'>Receipts Date</InputLabel>
-                  <Select
-                    id='receiptDate'
-                    labelId='receipt-date-label'
-                    value={formData.receiptDate}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        receiptDate: e.target.value,
-                      }))
-                    }
-                    label='Receipts Date'
-                    required
-                    disabled={isLoadingReceiptDates}
-                    startAdornment={
-                      isLoadingReceiptDates ? (
-                        <LoadingSpinner size='sm' className='ml-1' label='Loading receipt dates' />
-                      ) : null
-                    }
-                  >
-                    <MenuItem value='' disabled>
-                      {isLoadingReceiptDates ? 'Loading receipts dates...' : 'Select a Receipts Date'}
-                    </MenuItem>
-                    {receiptDateOptions.map((receiptDate) => (
-                      <MenuItem key={receiptDate.id} value={receiptDate.name}>
-                        {receiptDate.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Button
-                  variant='contained'
+            <div className='md:col-span-2'>
+              <label htmlFor='receiptDate' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Receipts Date *
+              </label>
+              <div className='flex gap-2'>
+                <select
+                  id='receiptDate'
+                  value={formData.receiptDateId}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      receiptDateId: e.target.value,
+                    }))
+                  }
+                  required
+                  disabled={isLoadingReceiptDates}
+                  className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
+                >
+                  <option value='' disabled>
+                    {isLoadingReceiptDates ? 'Loading receipts dates...' : 'Select a Receipts Date'}
+                  </option>
+                  {receiptDateOptions.map((receiptDate) => (
+                    <option key={receiptDate.id} value={String(receiptDate.id)}>
+                      {receiptDate.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type='button'
                   onClick={(e) => {
                     setReceiptDateAnchorEl(e.currentTarget)
                     setReceiptDatePickerKey((prev) => prev + 1)
                   }}
-                  startIcon={<Plus size={20} />}
-                  sx={{
-                    backgroundColor: 'rgb(147, 51, 234)',
-                    '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                    minWidth: '120px',
-                  }}
+                  className='inline-flex min-w-[90px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30'
                 >
+                  <Plus size={18} />
                   New
-                </Button>
-              </Box>
+                </button>
+              </div>
+            </div>
 
-              {formError && (
-                <div className='col-span-2 text-center font-semibold text-red-600'>
-                  {formError}
-                </div>
-              )}
+            {formError && (
+              <div className='md:col-span-2 text-center font-semibold text-red-500'>
+                {formError}
+              </div>
+            )}
 
-              <TextField
+            <div className='md:col-span-2'>
+              <label htmlFor='dollar' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Dollar Amount ($)
+              </label>
+              <input
                 id='dollar'
-                label='Dollar Amount ($)'
                 required
                 value={formData.dollar}
                 onChange={(e) =>
@@ -464,35 +411,35 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                     dollar: formatDollarValue(e.target.value),
                   }))
                 }
-                variant='outlined'
-                fullWidth
+                className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
                 placeholder='0.00'
               />
+            </div>
 
-              <Button
-                type='submit'
-                variant='contained'
-                fullWidth
-                disabled={isSubmitting}
-                startIcon={
-                  isSubmitting ? (
-                    <LoadingSpinner size='sm' color='white' label='Adding receipt' />
-                  ) : (
-                    <UserPlus size={20} />
-                  )
-                }
-                sx={{
-                  backgroundColor: 'rgb(147, 51, 234)',
-                  '&:hover': { backgroundColor: 'rgb(168, 85, 247)' },
-                }}
-                className='col-span-2'
+            <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>
+              <button
+                type='button'
+                onClick={onClose}
+                className='rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/10'
               >
+                Cancel
+              </button>
+              <button
+                type='submit'
+                disabled={isSubmitting}
+                className='inline-flex min-w-[140px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+              >
+                {isSubmitting ? (
+                  <LoadingSpinner size='sm' color='white' label='Adding receipt' />
+                ) : (
+                  <UserPlus size={18} />
+                )}
                 {isSubmitting ? 'Adding...' : 'Add Receipt'}
-              </Button>
-            </form>
-          </div>
-        </DialogContent>
-      </Dialog>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       {isAddPayerOpen && (
         <AddReceiptsPayer

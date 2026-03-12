@@ -2,11 +2,15 @@ import { useMemo, useState, useEffect, type CSSProperties } from 'react'
 import { Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ErrorDetails } from '../../../components/error-display'
-import { LoadingSpinner } from '../../../components/LoadingSpinner'
-import { AddPayment } from './components/add-payment'
-import { EditSale } from './components/edit-sale'
-import { getSales, getPayers, deleteSale, getPaymentDates, getPaymentSummaryByStatus, type Payer, type Sale, type PaymentDate, type PaymentSummaryResponse } from '../../../services/api'
+import { ErrorDetails } from '../../../../components/error-display'
+import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { AddPayment } from './AddPayment'
+import { EditSale } from './EditSale'
+import { SellsTabPageSkeleton } from './SellsTabPageSkeleton'
+import { getSales, getPayers, deleteSale, getPaymentDates, getPaymentSummaryByStatus } from '../services/goldPaymentApi'
+import type { Payer, Sale, PaymentDate, PaymentSummaryResponse } from '../types/goldPayments'
+import { getMonthDaySortValue, toMonthDay } from '../utils/paymentDate'
 import Swal from 'sweetalert2'
 
 interface PaymentDisplay {
@@ -28,47 +32,17 @@ interface SellsTabProps {
   onError?: (error: ErrorDetails | null) => void
 }
 
-const normalizePaymentDateValue = (dateValue: string): string => {
-  if (!dateValue) return dateValue
-
-  const trimmedDate = dateValue.trim()
-
-  const yyyyMmDdMatch = trimmedDate.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-  if (yyyyMmDdMatch) {
-    const month = Number(yyyyMmDdMatch[1])
-    const day = Number(yyyyMmDdMatch[2])
-    return `${month}/${day}`
-  }
-
-  const mmDdMatch = trimmedDate.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (mmDdMatch) {
-    const month = Number(mmDdMatch[1])
-    const day = Number(mmDdMatch[2])
-    return `${month}/${day}`
-  }
-
-  return trimmedDate
-}
-
-const getSortableDateValue = (dateValue: string): number => {
-  const normalizedDate = normalizePaymentDateValue(dateValue)
-  const match = normalizedDate.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (!match) return 0
-  return Number(match[1]) * 100 + Number(match[2])
-}
-
 export function SellsTab({ onError }: SellsTabProps) {
   const [payments, setPayments] = useState<PaymentDisplay[]>([])
-  const [totalPages, setTotalPages] = useState(0)
   const [paymentDateFilter, setPaymentDateFilter] = useState<string | null>(null)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'pending' | 'completed'>('pending')
-  const [currentPage, setCurrentPage] = useState(1)
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
   const [isLoadingPayments, setIsLoadingPayments] = useState(true)
   const [editingSale, setEditingSale] = useState<PaymentDisplay | null>(null)
   const [paymentDateOptions, setPaymentDateOptions] = useState<PaymentDate[]>([])
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryResponse | null>(null)
   const [isLoadingSummary, setIsLoadingSummary] = useState(false)
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false)
   const [isPaymentDateAutocompleteOpen, setIsPaymentDateAutocompleteOpen] = useState(false)
   const [paymentDateSearch, setPaymentDateSearch] = useState('')
 
@@ -104,7 +78,7 @@ export function SellsTab({ onError }: SellsTabProps) {
 
   // Função para converter data de YYYY-MM-DD para MM/DD
   const formatSummaryDate = (dateStr: string) => {
-    return normalizePaymentDateValue(dateStr)
+    return toMonthDay(dateStr)
   }
 
   const fetchPayments = async () => {
@@ -138,7 +112,7 @@ export function SellsTab({ onError }: SellsTabProps) {
       // Mapeia os dados da API para o formato de exibição
       const mappedPayments: PaymentDisplay[] = validSalesData.map((sale: Sale) => {
         const rawPaymentDate = paymentDatesMap.get(sale.id_payment_date) || sale.payment_date
-        const formattedPaymentDate = normalizePaymentDateValue(rawPaymentDate)
+        const formattedPaymentDate = toMonthDay(rawPaymentDate)
         
         return {
           id: sale.id,
@@ -157,9 +131,9 @@ export function SellsTab({ onError }: SellsTabProps) {
       })
       
       setPayments(mappedPayments)
-      setTotalPages(1)
     } catch (error) {
       console.error('Error fetching payments:', error)
+      await handleApiError(error, 'Error fetching payments')
       const errorDetails = {
         message: 'Error fetching payments',
         response: error,
@@ -174,16 +148,10 @@ export function SellsTab({ onError }: SellsTabProps) {
 
   const handlePaymentDateFilter = (paymentDate: string | null) => {
     setPaymentDateFilter(paymentDate)
-    setCurrentPage(1)
   }
 
   const handlePaymentStatusFilter = (status: 'pending' | 'completed') => {
     setPaymentStatusFilter(status)
-    setCurrentPage(1)
-  }
-
-  const handlePageChange = (_event: unknown, page: number) => {
-    setCurrentPage(page)
   }
 
 
@@ -193,12 +161,8 @@ export function SellsTab({ onError }: SellsTabProps) {
       text: `Are you sure you want to delete this sale? This action cannot be undone.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
     })
 
     if (result.isConfirmed) {
@@ -215,19 +179,10 @@ export function SellsTab({ onError }: SellsTabProps) {
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       } catch (error) {
         console.error('Error deleting sale:', error)
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to delete sale.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
+        await handleApiError(error, 'Failed to delete sale.')
       }
     }
   }
@@ -241,14 +196,14 @@ export function SellsTab({ onError }: SellsTabProps) {
         
         const convertedDates = validPaymentDatesData.map(date => ({
           ...date,
-          name: normalizePaymentDateValue(date.name),
+          name: toMonthDay(date.name),
         }))
         
         // Ordenar datas por data parseada (cronologicamente)
         const sortedDates = [...convertedDates].sort((dateA, dateB) => {
           // PRIORIDADE 1: Tenta parsear como data MM/DD
-          const dateValueA = getSortableDateValue(dateA.name)
-          const dateValueB = getSortableDateValue(dateB.name)
+          const dateValueA = getMonthDaySortValue(dateA.name)
+          const dateValueB = getMonthDaySortValue(dateB.name)
           
           if (dateValueA && dateValueB) {
             return dateValueA - dateValueB
@@ -269,6 +224,7 @@ export function SellsTab({ onError }: SellsTabProps) {
         setPaymentDateOptions(sortedDates)
       } catch (error) {
         console.error('Error fetching payment dates:', error)
+        await handleApiError(error, 'Error fetching payment dates')
         const errorDetails = {
           message: 'Error fetching payment dates',
           response: error,
@@ -291,6 +247,7 @@ export function SellsTab({ onError }: SellsTabProps) {
       setPaymentSummary(summaryData)
     } catch (error) {
       console.error('Error fetching payment summary:', error)
+      await handleApiError(error, 'Error fetching payment summary')
     } finally {
       setIsLoadingSummary(false)
     }
@@ -298,7 +255,7 @@ export function SellsTab({ onError }: SellsTabProps) {
 
   useEffect(() => {
     fetchPayments()
-  }, [paymentDateFilter, paymentStatusFilter, currentPage])
+  }, [paymentDateFilter, paymentStatusFilter])
 
   // Buscar summary da API
   useEffect(() => {
@@ -368,6 +325,26 @@ export function SellsTab({ onError }: SellsTabProps) {
     if (!search) return paymentDateNames
     return paymentDateNames.filter((option) => option.toLowerCase().includes(search))
   }, [paymentDateNames, paymentDateSearch])
+
+  const isAnyLoading = isLoadingPayments || isLoadingSummary
+
+  useEffect(() => {
+    if (!isAnyLoading && !hasCompletedInitialLoad) {
+      setHasCompletedInitialLoad(true)
+    }
+  }, [isAnyLoading, hasCompletedInitialLoad])
+
+  if (isAnyLoading) {
+    if (!hasCompletedInitialLoad) {
+      return <SellsTabPageSkeleton />
+    }
+
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
+        <LoadingSpinner size='lg' label='Loading sales data' />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -489,11 +466,7 @@ export function SellsTab({ onError }: SellsTabProps) {
       <div className='grid grid-cols-1 gap-3 lg:grid-cols-12' style={{ gap: '24px' }}>
         {/* Coluna da Tabela Principal */}
         <div className='col-span-1 lg:col-span-8'>
-          {isLoadingPayments ? (
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
-              <LoadingSpinner size='lg' label='Loading payments list' />
-            </div>
-          ) : filteredPayments.length === 0 ? (
+          {filteredPayments.length === 0 ? (
             <div
               style={{
                 backgroundColor: 'rgba(255,255,255,0.04)',
@@ -511,7 +484,7 @@ export function SellsTab({ onError }: SellsTabProps) {
           ) : (
             <>
               <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.05]'>
-                <table className='w-full min-w-[1100px] text-sm'>
+                <table className='w-full min-w-[1000px] text-sm'>
                   <thead>
                     <tr className='border-b border-white/10 bg-white/[0.06] text-neutral-200'>
                       <th className='px-4 py-4 text-center font-semibold'>Note</th>
@@ -613,37 +586,6 @@ export function SellsTab({ onError }: SellsTabProps) {
                 </table>
               </div>
 
-              {/* Page controls */}
-              {totalPages > 1 && (
-                <div style={{
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  marginTop: 32,
-                  marginBottom: 16
-                }}>
-                  <div className='flex items-center gap-2'>
-                    <button
-                      type='button'
-                      onClick={() => handlePageChange(null, Math.max(1, currentPage - 1))}
-                      disabled={currentPage <= 1}
-                      className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
-                    >
-                      Prev
-                    </button>
-                    <span className='text-sm text-neutral-300'>
-                      {currentPage} / {totalPages}
-                    </span>
-                    <button
-                      type='button'
-                      onClick={() => handlePageChange(null, Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage >= totalPages}
-                      className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white transition hover:border-purple-400/50 hover:bg-purple-500/15 disabled:opacity-50'
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -675,14 +617,9 @@ export function SellsTab({ onError }: SellsTabProps) {
             </p>
 
             {/* Loading State */}
-            {isLoadingSummary ? (
-              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64, paddingBottom: 64 }}>
-                <LoadingSpinner size='lg' label='Loading payments summary' />
-              </div>
-            ) : (
-              <>
-                {/* Summary por data */}
-                {paymentSummary && paymentSummary.info.summary && Array.isArray(paymentSummary.info.summary) && paymentSummary.info.summary.length > 0 && (
+            <>
+              {/* Summary por data */}
+              {paymentSummary && paymentSummary.info.summary && Array.isArray(paymentSummary.info.summary) && paymentSummary.info.summary.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 16 }}>
                 {[...paymentSummary.info.summary]
                   .sort((a, b) => {
@@ -957,8 +894,7 @@ export function SellsTab({ onError }: SellsTabProps) {
                 No summary data available
               </p>
             )}
-              </>
-            )}
+            </>
           </div>
         </div>
       </div>

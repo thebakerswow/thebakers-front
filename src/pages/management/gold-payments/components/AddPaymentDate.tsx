@@ -3,7 +3,8 @@ import { format, parse } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import Swal from 'sweetalert2'
-import { createPaymentDate } from '../../../../services/api'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { createPaymentDate } from '../services/goldPaymentApi'
 
 interface AddPaymentDateProps {
   anchorEl: HTMLElement | null
@@ -60,12 +61,8 @@ export function AddPaymentDate({
       html: `<p style="color: white; font-size: 1.1rem;">Create payment date <strong style="color: rgb(147, 51, 234);">${displayDate}</strong>?</p>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: 'rgb(147, 51, 234)',
-      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, create it!',
       cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
     })
     
     if (result.isConfirmed) {
@@ -94,21 +91,12 @@ export function AddPaymentDate({
             icon: 'success',
             timer: 1500,
             showConfirmButton: false,
-            background: '#2a2a2a',
-            color: 'white',
           })
         }, 100)
       } catch (error) {
         console.error('Error creating payment date:', error)
         setSelectedDate('')
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to create payment date.',
-          confirmButtonColor: 'rgb(147, 51, 234)',
-          background: '#2a2a2a',
-          color: 'white',
-        })
+        await handleApiError(error, 'Failed to create payment date.')
       } finally {
         setIsSubmitting(false)
       }

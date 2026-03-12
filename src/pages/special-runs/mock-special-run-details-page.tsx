@@ -141,7 +141,7 @@ function buildMockRunInfo(runType: string): MockRunInfo {
     sumPot: [
       { idDiscord: 'g1', username: 'Luna', sumPot: 2400000, type: 'gold' },
       { idDiscord: 'g2', username: 'Rex', sumPot: 1200000, type: 'gold' },
-      { idDiscord: 'd1', username: 'Mika', sumPot: 42.5, type: 'dolar' },
+      { idDiscord: 'd1', username: 'Mika', sumPot: 42.5, type: 'dollar' },
     ],
   }
 }

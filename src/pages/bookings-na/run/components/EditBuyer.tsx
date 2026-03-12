@@ -85,7 +85,7 @@ export function EditBuyer({
     if (isNaN(buyerPotValue) || isNaN(buyerDolarPotValue)) {
       setError({
         message: 'Invalid numeric values',
-        response: 'Please enter valid numbers for Pot and Dolar Pot fields',
+        response: 'Please enter valid numbers for Pot and Dollar Pot fields',
         status: 400,
       })
       setIsSubmitting(false)
@@ -168,7 +168,7 @@ export function EditBuyer({
             {!shouldHideDolarField() && (
               <div>
                 <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-                  Dolar Pot
+                  Dollar Pot
                 </label>
                 <input
                   value={formData.buyerDolarPot}

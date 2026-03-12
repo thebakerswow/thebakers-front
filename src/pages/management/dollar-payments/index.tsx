@@ -1,49 +1,29 @@
 import { useState } from 'react'
-import { ErrorComponent, ErrorDetails } from '../../../components/error-display'
-import { LoadingSpinner } from '../../../components/LoadingSpinner'
-import { SellsTab } from './sells-tab'
-import { PaymentsTab } from './payments-tab'
+import { ReceiptsSellsTab } from './components/SellsTab'
+import { ReceiptsPaymentsTab } from './components/PaymentsTab'
 
-export function PaymentsPage() {
+export function ReceiptsPage() {
   // Inicializar o estado diretamente com o valor do sessionStorage para evitar "piscar"
   const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = sessionStorage.getItem('paymentsActiveTab')
+    const savedTab = sessionStorage.getItem('receiptsActiveTab')
     if (savedTab) {
       const tabIndex = parseInt(savedTab, 10)
       // Agendar remoção assíncrona para evitar problema de dupla montagem (React StrictMode)
       setTimeout(() => {
-        sessionStorage.removeItem('paymentsActiveTab')
+        sessionStorage.removeItem('receiptsActiveTab')
       }, 100)
       return tabIndex
     }
     return 0
   })
-  const [isLoading] = useState(false)
-  const [error, setError] = useState<ErrorDetails | null>(null)
-
   const handleTabChange = (newValue: number) => {
     setActiveTab(newValue)
-  }
-
-  if (isLoading) {
-    return (
-      <div className='w-full overflow-auto overflow-x-hidden pr-20'>
-        <div className='m-8 min-h-screen w-full pb-12 text-white'>
-          <div className='flex h-40 items-center justify-center'>
-            <div className='flex flex-col items-center gap-2'>
-              <LoadingSpinner size='lg' label='Loading payments page' />
-              <span className='text-gray-400'>Loading...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
     <div className='w-full overflow-auto overflow-x-hidden pr-20'>
       <div className='m-8 min-h-screen w-full pb-12 text-white'>
-        {error && <ErrorComponent error={error} onClose={() => setError(null)} />}
+        {/* Tabs */}
         <div className='mb-4 rounded-xl border border-white/10 bg-white/[0.04] p-2'>
           <div className='grid grid-cols-2 gap-2'>
             <button
@@ -55,7 +35,7 @@ export function PaymentsPage() {
                   : 'border-white/10 bg-white/[0.03] text-neutral-300 hover:border-purple-400/40 hover:bg-purple-500/10'
               }`}
             >
-              Sells
+              Receipts
             </button>
             <button
               type='button'
@@ -72,8 +52,8 @@ export function PaymentsPage() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 0 && <SellsTab onError={setError} />}
-        {activeTab === 1 && <PaymentsTab onError={setError} />}
+        {activeTab === 0 && <ReceiptsSellsTab />}
+        {activeTab === 1 && <ReceiptsPaymentsTab />}
       </div>
     </div>
   )

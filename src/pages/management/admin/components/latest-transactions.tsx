@@ -74,7 +74,7 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
         ]
         // Filtra pelo tipo de acordo com isDolar
         const filteredTransactions = transactionsWithSource.filter((t) =>
-          isDolar ? t.type === 'dolar' : t.type !== 'dolar'
+          isDolar ? t.type === 'dollar' : t.type !== 'dollar'
         )
         // Ordena por data/hora, mais recente primeiro (independente de origem)
         const sortedTransactions = filteredTransactions
@@ -155,7 +155,7 @@ export default function LatestTransactions({ isDolar }: { isDolar: boolean }) {
                     {transaction.name_impacted}
                   </TableCell>
                   <TableCell align='center'>
-                    {transaction?.type === 'dolar' ? '$' : ''}
+                    {transaction?.type === 'dollar' ? '$' : ''}
                     {transaction.value}
                     {(transaction?.type === 'gold' || (transaction as any)?.isGbank) ? 'g' : ''}
                   </TableCell>

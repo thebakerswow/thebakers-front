@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Swal from 'sweetalert2'
-import { Popover, TextField } from '@mui/material'
-import { createReceiptsDate } from '../services/api'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { createReceiptsDate } from '../services/dollarPaymentsApi'
 
 interface AddReceiptsDateProps {
   anchorEl: HTMLElement | null
@@ -46,15 +46,11 @@ export function AddReceiptsDate({ anchorEl, onClose, onDateAdded }: AddReceiptsD
   const handleConfirmDate = async (dateString: string, displayLabel: string) => {
     const result = await Swal.fire({
       title: 'Confirm Receipts Date',
-      html: `<p style="color: white; font-size: 1.1rem;">Create receipts date <strong style="color: rgb(147, 51, 234);">${displayLabel}</strong>?</p>`,
+      text: `Create receipts date ${displayLabel}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: 'rgb(147, 51, 234)',
-      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, create it!',
       cancelButtonText: 'Cancel',
-      background: '#2a2a2a',
-      color: 'white',
     })
 
     if (!result.isConfirmed) {
@@ -79,22 +75,12 @@ export function AddReceiptsDate({ anchorEl, onClose, onDateAdded }: AddReceiptsD
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       }, 100)
     } catch (error) {
-      console.error('Error creating receipts date:', error)
       setSelectedDate('')
       setDisplayDate('')
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to create receipts date.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
+      await handleApiError(error, 'Failed to create receipts date.')
     } finally {
       setIsSubmitting(false)
     }
@@ -104,75 +90,35 @@ export function AddReceiptsDate({ anchorEl, onClose, onDateAdded }: AddReceiptsD
     return null
   }
 
+  const anchorRect = anchorEl.getBoundingClientRect()
+
   return (
-    <Popover
-      open={Boolean(anchorEl)}
-      anchorEl={anchorEl}
-      onClose={handleClose}
-      disableRestoreFocus
-      disableEnforceFocus
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
-      }}
-      slotProps={{
-        paper: {
-          sx: {
-            mt: 1,
-            p: 2,
-            backgroundColor: '#2a2a2a',
-            border: '1px solid #444',
-          },
-        },
-      }}
+    <div
+      className='fixed z-[300] rounded-xl border border-white/10 bg-[#2a2a2a] p-3 shadow-2xl'
+      style={{ top: anchorRect.bottom + 8, left: anchorRect.left, minWidth: 250 }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '250px' }}>
         <div style={{ position: 'relative' }}>
-          <TextField
-            label='Select Date (MM/DD/YYYY)'
+          <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+            Select Date (MM/DD/YYYY)
+          </label>
+          <input
             type='text'
             value={displayDate}
+            readOnly
             placeholder='MM/DD/YYYY'
-            fullWidth
             disabled={isSubmitting}
-            InputProps={{
-              readOnly: true,
-              onClick: () => {
-                const dateInput = document.getElementById('hidden-receipts-date-input') as HTMLInputElement | null
-                if (dateInput) {
-                  try {
-                    dateInput.showPicker()
-                  } catch (error) {
-                    dateInput.click()
-                  }
+            onClick={() => {
+              const dateInput = document.getElementById('hidden-receipts-date-input') as HTMLInputElement | null
+              if (dateInput) {
+                try {
+                  dateInput.showPicker()
+                } catch (_error) {
+                  dateInput.click()
                 }
-              },
-              style: { cursor: 'pointer' },
+              }
             }}
-            sx={{
-              '& .MuiInputBase-input': {
-                color: 'white',
-                cursor: 'pointer',
-              },
-              '& .MuiInputLabel-root': {
-                color: '#9ca3af',
-              },
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: '#444',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgb(147, 51, 234)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'rgb(147, 51, 234)',
-                },
-              },
-            }}
+            className='h-10 w-full cursor-pointer rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
           />
           <input
             id='hidden-receipts-date-input'
@@ -212,21 +158,13 @@ export function AddReceiptsDate({ anchorEl, onClose, onDateAdded }: AddReceiptsD
           <button
             onClick={handleDateSelect}
             disabled={isSubmitting || !selectedDate}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: isSubmitting || !selectedDate ? '#6b7280' : 'rgb(147, 51, 234)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isSubmitting || !selectedDate ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-            }}
+            className='rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
           >
             {isSubmitting ? 'Creating...' : 'Confirm'}
           </button>
         </div>
       </div>
-    </Popover>
+    </div>
   )
 }
 

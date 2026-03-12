@@ -69,11 +69,11 @@ export function SellsPage() {
             balance_total_dolar: item.balance_total ?? null,
           }
         } else {
-          // Para gold e dolar, usa diretamente
+          // Para gold e dollar, usa diretamente
           dataSource[date] = {
             ...item,
             balance_total_gold: item.type === 'gold' ? item.balance_total ?? null : null,
-            balance_total_dolar: item.type === 'dolar' ? item.balance_total ?? null : null,
+            balance_total_dolar: item.type === 'dollar' ? item.balance_total ?? null : null,
           }
         }
       })

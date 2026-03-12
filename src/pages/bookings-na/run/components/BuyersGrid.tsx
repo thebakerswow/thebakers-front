@@ -648,7 +648,7 @@ export function BuyersDataGrid({
             <th className='px-2 py-3 text-center font-semibold'>Advertiser</th>
             <th className='px-2 py-3 text-center font-semibold'>Collector</th>
             <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
-            <th className='px-2 py-3 text-center font-semibold'>Dolar Pot</th>
+            <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
             <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
             <th className='px-2 py-3 text-center font-semibold'>Run Pot</th>
             <th className='px-2 py-3 text-center font-semibold'>Class</th>

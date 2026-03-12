@@ -21,7 +21,7 @@ export interface MockSumPot {
   idDiscord: string
   username: string
   sumPot: number
-  type: 'gold' | 'dolar'
+  type: 'gold' | 'dollar'
 }
 
 export interface MockRunInfo {

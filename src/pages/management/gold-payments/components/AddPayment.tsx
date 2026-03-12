@@ -5,10 +5,13 @@ import Swal from 'sweetalert2'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { ErrorDetails } from '../../../../components/error-display'
-import { AddBuyerToList } from './add-buyer-to-list'
-import { AddPaymentDate } from './add-payment-date'
-import { EditBuyerName } from './edit-buyer-name'
-import { getPayers, getPaymentDates, createSale, type Payer, type PaymentDate } from '../../../../services/api'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { AddBuyerToList } from './AddBuyerToList'
+import { AddPaymentDate } from './AddPaymentDate'
+import { EditBuyerName } from './EditBuyerName'
+import { getPayers, getPaymentDates, createSale } from '../services/goldPaymentApi'
+import type { Payer, PaymentDate } from '../types/goldPayments'
+import { sortPaymentDatesByName, toMonthDay } from '../utils/paymentDate'
 
 interface AddPaymentProps {
   onClose: () => void
@@ -52,6 +55,7 @@ export function AddPayment({
       setBuyers(validPayersData)
     } catch (error) {
       console.error('Error fetching payers:', error)
+      await handleApiError(error, 'Error fetching payers')
       const errorDetails = {
         message: 'Error fetching payers',
         response: error,
@@ -71,53 +75,16 @@ export function AddPayment({
       const paymentDatesData = await getPaymentDates({ is_date_valid: true })
       const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
       
-      // Converte datas de YYYY-MM-DD para MM/DD
-      const convertedDates = validPaymentDatesData.map(date => {
-        const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-        if (match) {
-          const month = match[1]
-          const day = match[2]
-          return { ...date, name: `${month}/${day}` }
-        }
-        return date
-      })
-      
-      // Ordenar datas por data parseada (cronologicamente)
-      const sortedDates = [...convertedDates].sort((dateA, dateB) => {
-        // Função para parsear data no formato MM/DD
-        const parseDateString = (dateStr: string) => {
-          const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
-          if (match) {
-            const month = parseInt(match[1])
-            const day = parseInt(match[2])
-            return month * 100 + day
-          }
-          return 0
-        }
-        
-        // PRIORIDADE 1: Tenta parsear como data MM/DD
-        const dateValueA = parseDateString(dateA.name)
-        const dateValueB = parseDateString(dateB.name)
-        
-        if (dateValueA && dateValueB) {
-          return dateValueA - dateValueB
-        }
-        
-        // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
-        const idA = Number(dateA.id)
-        const idB = Number(dateB.id)
-        
-        if (!isNaN(idA) && !isNaN(idB)) {
-          return idA - idB
-        }
-        
-        // PRIORIDADE 3: Fallback para ordenação alfabética
-        return dateA.name.localeCompare(dateB.name)
-      })
+      const convertedDates = validPaymentDatesData.map((date) => ({
+        ...date,
+        name: toMonthDay(date.name),
+      }))
+      const sortedDates = sortPaymentDatesByName(convertedDates)
       
       setPaymentDateOptions(sortedDates)
     } catch (error) {
       console.error('Error fetching payment dates:', error)
+      await handleApiError(error, 'Error fetching payment dates')
       const errorDetails = {
         message: 'Error fetching payment dates',
         response: error,
@@ -236,12 +203,11 @@ export function AddPayment({
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       }, 150)
     } catch (error) {
       console.error('Error creating sale:', error)
+      await handleApiError(error, 'Error creating sale')
       const errorDetails = {
         message: 'Error creating sale',
         response: error,
@@ -249,15 +215,6 @@ export function AddPayment({
       if (onError) {
         onError(errorDetails)
       }
-      
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to create sale.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
     } finally {
       setIsSubmitting(false)
     }

@@ -49,7 +49,7 @@ export function AddBuyer({
   const isJuniorAdvertiser = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR)
   const canEditPaidFull = !isJuniorAdvertiser
 
-  // Function to check if Dolar field should be hidden for M+ team runs ou Leveling
+  // Function to check if Dollar field should be hidden for M+ team runs ou Leveling
   const shouldHideDolarField = (): boolean => {
     return (
       run.idTeam === import.meta.env.VITE_TEAM_MPLUS ||
@@ -112,14 +112,14 @@ export function AddBuyer({
     setIsSubmitting(true)
     setFormError(null)
 
-    // Validation: only one field should be filled (unless Dolar field is hidden)
+    // Validation: only one field should be filled (unless Dollar field is hidden)
     const buyerPotFilled =
       !!formData.buyerPot && Number(formData.buyerPot.replace(/,/g, '')) > 0
     const buyerDolarPotFilled =
       !!formData.buyerDolarPot &&
       Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
 
-    // If Dolar field is hidden, only validate that Pot is filled
+    // If Dollar field is hidden, only validate that Pot is filled
     if (shouldHideBuyerDolarInput) {
       if (!buyerPotFilled) {
         setFormError('Pot field is required.')

@@ -99,7 +99,7 @@ export function Header() {
               },
               {
                 label: 'Dollar',
-                path: '/receipts',
+                path: '/dollar-payments',
                 icon: <CurrencyDollar size={18} />,
               },
             ],

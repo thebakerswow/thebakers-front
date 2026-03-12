@@ -1,21 +1,20 @@
-import { PencilSimple, X } from '@phosphor-icons/react'
+import { UserPlus, X } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
-import { updatePayer, type Payer } from '../../../../services/api'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { createPayer } from '../services/goldPaymentApi'
 
-interface EditBuyerNameProps {
-  buyer: Payer
+interface AddBuyerToListProps {
   onClose: () => void
-  onBuyerUpdated: (updatedBuyer: Payer) => void
+  onBuyerAdded: (buyerName: string, buyerId: string | number) => void
 }
 
-export function EditBuyerName({
-  buyer,
+export function AddBuyerToList({
   onClose,
-  onBuyerUpdated,
-}: EditBuyerNameProps) {
-  const [buyerName, setBuyerName] = useState(buyer.name)
+  onBuyerAdded,
+}: AddBuyerToListProps) {
+  const [buyerName, setBuyerName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -26,21 +25,6 @@ export function EditBuyerName({
         icon: 'warning',
         title: 'Name required',
         text: 'Please enter the buyer name.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
-      return
-    }
-
-    if (buyerName.trim() === buyer.name) {
-      Swal.fire({
-        icon: 'info',
-        title: 'No changes',
-        text: 'The name is the same as before.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
       })
       return
     }
@@ -48,38 +32,26 @@ export function EditBuyerName({
     setIsSubmitting(true)
 
     try {
-      // Chama API para atualizar o payer
-      const updatedPayer = await updatePayer({ 
-        id: buyer.id, 
-        name: buyerName.trim() 
-      })
+      // Chama API para criar o payer
+      const newPayer = await createPayer({ name: buyerName.trim() })
       
       // Atualiza a lista no componente pai e fecha o modal
-      onBuyerUpdated(updatedPayer)
+      onBuyerAdded(newPayer.name, newPayer.id)
       onClose()
       
       // Mostra mensagem de sucesso após fechar o modal
       setTimeout(() => {
         Swal.fire({
           title: 'Success!',
-          text: 'Buyer updated successfully!',
+          text: 'Buyer added to list!',
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       }, 100)
     } catch (error) {
-      console.error('Error updating buyer:', error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to update buyer.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
+      console.error('Error adding buyer:', error)
+      await handleApiError(error, 'Failed to add buyer.')
     } finally {
       setIsSubmitting(false)
     }
@@ -92,7 +64,7 @@ export function EditBuyerName({
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
       <div className='w-full max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 text-white shadow-2xl'>
         <div className='mb-4 flex items-center justify-between'>
-          <h2 className='text-xl font-semibold text-white'>Edit Buyer Name</h2>
+          <h2 className='text-xl font-semibold text-white'>Add Buyer to List</h2>
           <button
             type='button'
             onClick={onClose}
@@ -129,14 +101,14 @@ export function EditBuyerName({
             <button
               type='submit'
               disabled={isSubmitting}
-              className='inline-flex min-w-[120px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
+              className='inline-flex min-w-[130px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-3 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-300/55 hover:bg-purple-500/30 disabled:cursor-not-allowed disabled:opacity-60'
             >
               {isSubmitting ? (
-                <LoadingSpinner size='sm' color='white' label='Updating buyer' />
+                <LoadingSpinner size='sm' color='white' label='Adding buyer' />
               ) : (
-                <PencilSimple size={18} />
+                <UserPlus size={18} />
               )}
-              {isSubmitting ? 'Updating...' : 'Update'}
+              {isSubmitting ? 'Adding...' : 'Add to List'}
             </button>
           </div>
         </form>

@@ -8,7 +8,7 @@ export type SalesByDate = {
   goldInDollar: number
   shopDolar: number
   total: number
-  type: 'gold' | 'dolar' | 'mixed'
+  type: 'gold' | 'dollar' | 'mixed'
   balanceGold: number | null
   balanceDolar: number | null
 }
@@ -20,7 +20,7 @@ export type PaymentResumeItem = {
   gold_in_dolar: number
   dolar_sold: number
   total: number
-  type: 'gold' | 'dolar' | 'mixed'
+  type: 'gold' | 'dollar' | 'mixed'
   balance_total?: number | null
 }
 

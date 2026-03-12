@@ -3,8 +3,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { handleApiError } from '../../../../utils/apiErrorHandler'
 
-import { updateSale, getPayers, getPaymentDates, type Payer, type PaymentDate } from '../../../../services/api'
+import { updateSale, getPayers, getPaymentDates } from '../services/goldPaymentApi'
+import type { Payer, PaymentDate } from '../types/goldPayments'
+import { sortPaymentDatesByName, toMonthDay } from '../utils/paymentDate'
 
 interface Sale {
   id: number
@@ -51,6 +54,7 @@ export function EditSale({
         setBuyers(payersData)
       } catch (error) {
         console.error('Error fetching buyers:', error)
+        await handleApiError(error, 'Error fetching buyers')
       } finally {
         setIsLoadingBuyers(false)
       }
@@ -62,53 +66,16 @@ export function EditSale({
         const paymentDatesData = await getPaymentDates({ is_date_valid: true })
         const validPaymentDatesData = Array.isArray(paymentDatesData) ? paymentDatesData : []
         
-        // Converte datas de YYYY-MM-DD para MM/DD
-        const convertedDates = validPaymentDatesData.map(date => {
-          const match = date.name.match(/^\d{4}-(\d{1,2})-(\d{1,2})$/)
-          if (match) {
-            const month = match[1]
-            const day = match[2]
-            return { ...date, name: `${month}/${day}` }
-          }
-          return date
-        })
-        
-        // Ordenar datas por data parseada (cronologicamente)
-        const sortedDates = [...convertedDates].sort((dateA, dateB) => {
-          // Função para parsear data no formato MM/DD
-          const parseDateString = (dateStr: string) => {
-            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})/)
-            if (match) {
-              const month = parseInt(match[1])
-              const day = parseInt(match[2])
-              return month * 100 + day
-            }
-            return 0
-          }
-          
-          // PRIORIDADE 1: Tenta parsear como data MM/DD
-          const dateValueA = parseDateString(dateA.name)
-          const dateValueB = parseDateString(dateB.name)
-          
-          if (dateValueA && dateValueB) {
-            return dateValueA - dateValueB
-          }
-          
-          // PRIORIDADE 2: Se não conseguir parsear, tenta ordenar por ID
-          const idA = Number(dateA.id)
-          const idB = Number(dateB.id)
-          
-          if (!isNaN(idA) && !isNaN(idB)) {
-            return idA - idB
-          }
-          
-          // PRIORIDADE 3: Fallback para ordenação alfabética
-          return dateA.name.localeCompare(dateB.name)
-        })
+        const convertedDates = validPaymentDatesData.map((date) => ({
+          ...date,
+          name: toMonthDay(date.name),
+        }))
+        const sortedDates = sortPaymentDatesByName(convertedDates)
         
         setPaymentDateOptions(sortedDates)
       } catch (error) {
         console.error('Error fetching payment dates:', error)
+        await handleApiError(error, 'Error fetching payment dates')
       } finally {
         setIsLoadingPaymentDates(false)
       }
@@ -161,9 +128,6 @@ export function EditSale({
         icon: 'warning',
         title: 'Validation Error',
         text: 'Please provide at least Gold Value or Dollar Value.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
       })
       setIsSubmitting(false)
       return
@@ -192,20 +156,11 @@ export function EditSale({
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#2a2a2a',
-          color: 'white',
         })
       }, 100)
     } catch (error) {
       console.error('Error updating sale:', error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to update sale.',
-        confirmButtonColor: 'rgb(147, 51, 234)',
-        background: '#2a2a2a',
-        color: 'white',
-      })
+      await handleApiError(error, 'Failed to update sale.')
     } finally {
       setIsSubmitting(false)
     }

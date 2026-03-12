@@ -381,6 +381,8 @@ export const getReceiptsManagementDates = async (params?: {
 
 export const updateReceiptsManagementDebit = async (data: {
   id_receipts_dolar_date: number
+  id_discord?: string
+  hold?: boolean
 }): Promise<void> => {
   await api.put('/receipts/dolar/management/debit', data)
 }
