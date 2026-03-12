@@ -28,11 +28,7 @@ import { Login } from './pages/login'
 import { AuthCallback } from './pages/callback'
 import { AuthProvider } from './context/auth-context' // Importe o AuthProvider
 import { useAuth } from './context/auth-context'
-import { ErrorPage } from './pages/error-pages/not-found'
-import { AccessDenied } from './pages/error-pages/access-denied'
-import { LoginErro } from './pages/error-pages/login-erro'
 import { AdminPage } from './pages/management/admin'
-import { CheckAccess } from './pages/error-pages/check-access'
 import ManagementServices from './pages/management/management-services'
 import { MockSpecialRunDetailsPage } from './pages/special-runs/mock-special-run-details-page'
 import { RequestsPage } from './pages/requests'
@@ -41,6 +37,7 @@ import { PaymentsPage } from './pages/management/payments'
 import { ReceiptsPage } from './pages/receipts'
 import { SellsPage } from './pages/sells'
 import { PurpleGlowBackground } from './components/purple-glow-background'
+import { GlobalErrorPage } from './pages/global-error'
 
 // Componente para proteger rotas privadas
 function PrivateRoute({ element }: { element: JSX.Element }) {
@@ -113,8 +110,32 @@ function AppContent() {
               {/* Rotas públicas */}
               <Route path='/' element={<Login />} />
               <Route path='/login/callback' element={<AuthCallback />} />
-              <Route path='/login/error' element={<LoginErro />} />
-              <Route path='/access-denied' element={<AccessDenied />} />
+              <Route
+                path='/login/error'
+                element={
+                  <GlobalErrorPage
+                    title='Login failed'
+                    message='We could not complete your login. You will be redirected to login shortly.'
+                    actionLabel='Return to login'
+                    actionTo='/'
+                    showReload={false}
+                    autoRedirectTo='/'
+                    autoRedirectDelayMs={5000}
+                  />
+                }
+              />
+              <Route
+                path='/access-denied'
+                element={
+                  <GlobalErrorPage
+                    title='Access denied'
+                    message='You do not have permission to access this page.'
+                    actionLabel={isAuthenticated ? 'Go to home' : 'Go to login'}
+                    actionTo={isAuthenticated ? '/home' : '/'}
+                    showReload={false}
+                  />
+                }
+              />
 
               {/* Rotas privadas */}
               <Route
@@ -159,7 +180,19 @@ function AppContent() {
               />
               <Route
                 path='/check-access'
-                element={<PrivateRoute element={<CheckAccess />} />}
+                element={
+                  <PrivateRoute
+                    element={
+                      <GlobalErrorPage
+                        title='Access check failed'
+                        message='You do not have access to this run.'
+                        actionLabel='Back to raids'
+                        actionTo='/bookings-na/raids'
+                        showReload={false}
+                      />
+                    }
+                  />
+                }
               />
               <Route
                 path='/services'
@@ -203,7 +236,18 @@ function AppContent() {
               />
 
               {/* Rota catch-all */}
-              <Route path='*' element={<ErrorPage />} />
+              <Route
+                path='*'
+                element={
+                  <GlobalErrorPage
+                    title='Page not found'
+                    message='The page you were looking for does not exist.'
+                    actionLabel={isAuthenticated ? 'Go to home' : 'Go to login'}
+                    actionTo={isAuthenticated ? '/home' : '/'}
+                    showReload={false}
+                  />
+                }
+              />
               </Routes>
             </div>
           </div>
