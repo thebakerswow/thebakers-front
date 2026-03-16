@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { TRACKED_TEAM_IDS } from '../../utils/teamConfig'
-import { getTrackedTeamRoles, shouldShowBalanceFilter } from '../../utils/roleUtils'
+import {
+  getTrackedTeamRoles,
+  shouldShowBalanceFilter,
+  shouldShowUsGoldButton,
+} from '../../utils/roleUtils'
 import { GBankListNew } from './components/GBankListNew'
 import { BalanceControlTableNew } from './components/BalanceControlTableNew'
 import { BalancePageSkeleton } from './components/BalancePageSkeleton'
@@ -16,6 +20,10 @@ export function NewBalancePage() {
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
 
   const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
+  const shouldShowCurrencyToggle = useMemo(
+    () => shouldShowUsGoldButton(userRoles),
+    [userRoles]
+  )
 
   const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
 
@@ -41,6 +49,12 @@ export function NewBalancePage() {
     }
   }, [authLoading, shouldShowFilter, idDiscord, selectedTeam, allowedTeams])
 
+  useEffect(() => {
+    if (!shouldShowCurrencyToggle && isDolar) {
+      setIsDolar(false)
+    }
+  }, [shouldShowCurrencyToggle, isDolar])
+
   const isInitialPageLoading =
     authLoading || !selectedTeam || !isBalanceInitialLoaded || !isGBankInitialLoaded
 
@@ -64,6 +78,7 @@ export function NewBalancePage() {
                 setIsDolar={setIsDolar}
                 allowedTeams={allowedTeams}
                 hideTeamSelector={!shouldShowFilter}
+                hideCurrencyToggle={!shouldShowCurrencyToggle}
                 onInitialLoadComplete={() => setIsBalanceInitialLoaded(true)}
               />
             )}

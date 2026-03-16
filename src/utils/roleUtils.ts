@@ -209,6 +209,11 @@ export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
   if (isOnlyFreelancer(userRoles)) {
     return false
   }
+
+  // Junior advertiser não deve ver o botão US/Gold
+  if (userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR)) {
+    return false
+  }
   
   // Outros usuários podem ver o botão (incluindo advertiser + freelancer)
   return true

@@ -62,6 +62,9 @@ export function BuyersDataGrid({
   const isOnlyAdvertiserRole =
     userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER) &&
     userRoles.length === 1
+  const isJuniorAdvertiserRole = userRoles.includes(
+    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
+  )
 
   // Function to check if current user is the advertiser of a buyer
   const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
@@ -146,6 +149,12 @@ export function BuyersDataGrid({
   // Function to check if user can see advertiser buttons
   const canSeeAdvertiserButtons = (buyer: BuyerData): boolean => {
     return isBuyerAdvertiser(buyer) || isChefeDeCozinha()
+  }
+
+  const canDeleteBuyer = (buyer: BuyerData): boolean => {
+    if (isOnlyAdvertiserRole) return false
+    if (isJuniorAdvertiserRole && isBuyerAdvertiser(buyer)) return false
+    return true
   }
 
   // Function to get recipient IDs for buyer notifications
@@ -507,7 +516,7 @@ export function BuyersDataGrid({
   }
 
   const handleDeleteBuyer = async (buyer: BuyerData) => {
-    if (runIsLocked) return
+    if (runIsLocked || !canDeleteBuyer(buyer)) return
 
     const result = await Swal.fire({
       title: 'Confirm Deletion',
@@ -895,7 +904,7 @@ export function BuyersDataGrid({
                         >
                           <Pencil size={18} />
                       </button>
-                      {!isOnlyAdvertiserRole && (
+                      {canDeleteBuyer(buyer) && (
                         <button
                           type='button'
                           title='Delete'

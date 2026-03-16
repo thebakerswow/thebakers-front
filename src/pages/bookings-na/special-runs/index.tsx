@@ -200,6 +200,9 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const serviceType = useMemo(() => normalizeType(runType), [runType])
   const responsibleUserId = idDiscord || username || null
   const isChefeDeCozinha = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const isJuniorAdvertiser = userRoles.includes(
+    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
+  )
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [buyers, setBuyers] = useState<SpecialRunBuyer[]>([])
   const [isLoadingBuyers, setIsLoadingBuyers] = useState<boolean>(true)
@@ -270,6 +273,15 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     return isBuyerClaimedByCurrentUser(buyer)
   }
 
+  const canUseAdvertiserActionButtons = (buyer: SpecialRunBuyer) => {
+    if (isChefeDeCozinha) return true
+    if (!idDiscord) return false
+    return (
+      buyer.idOwnerClaimService === idDiscord ||
+      buyer.idClaimServiceAdvertiser === idDiscord
+    )
+  }
+
   const canEditBuyer = (buyer: SpecialRunBuyer) => {
     if (isChefeDeCozinha) return true
 
@@ -284,6 +296,13 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const canSeeHistoryButton = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
   const canDeleteBuyer = (buyer: SpecialRunBuyer) => {
     if (isChefeDeCozinha) return true
+    if (
+      isJuniorAdvertiser &&
+      !!idDiscord &&
+      buyer.idOwnerClaimService === idDiscord
+    ) {
+      return false
+    }
     return canUseActionButtons(buyer)
   }
 
@@ -425,10 +444,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
 
   const sendActionMessage = async (
     buyerId: string,
-    messageBuilder: (buyer: SpecialRunBuyer, pageLink: string) => string
+    messageBuilder: (buyer: SpecialRunBuyer, pageLink: string) => string,
+    canSendMessage: (buyer: SpecialRunBuyer) => boolean = canUseActionButtons
   ) => {
     const buyer = buyers.find((entry) => entry.id === buyerId)
-    if (!buyer || !canUseActionButtons(buyer)) return
+    if (!buyer || !canSendMessage(buyer)) return
 
     const recipientIds = getClaimServiceRecipientIds(buyer)
     if (recipientIds.length === 0) return
@@ -489,7 +509,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     await sendActionMessage(
       buyerId,
       (buyer, pageLink) =>
-        `Buyer Ready\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`
+        `Buyer Ready\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`,
+      canUseAdvertiserActionButtons
     )
   }
 
@@ -497,7 +518,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     await sendActionMessage(
       buyerId,
       (buyer, pageLink) =>
-        `Buyer Logging\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`
+        `Buyer Logging\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`,
+      canUseAdvertiserActionButtons
     )
   }
 
@@ -505,7 +527,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     await sendActionMessage(
       buyerId,
       (buyer, pageLink) =>
-        `Attention! Check Note\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`
+        `Attention! Check Note\nNick: ${buyer.nameAndRealm}\nRun: ${pageLink}`,
+      canUseAdvertiserActionButtons
     )
   }
 
@@ -525,7 +548,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       {isInitialLoad && isLoadingBuyers ? (
         <SpecialRunPageSkeleton />
       ) : (
-        <div className='mx-2 p-4 pb-20'>
+        <div className='mx-2 p-4 pb-4'>
           <SpecialRunDetails
             selectedDateLabel={selectedDateLabel}
             onPreviousDate={() =>
@@ -561,6 +584,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
               canToggleClaim={canToggleClaim}
               canEditStatus={canEditStatus}
               canUseActionButtons={canUseActionButtons}
+              canUseAdvertiserActionButtons={canUseAdvertiserActionButtons}
               canEditBuyer={canEditBuyer}
               canSeeDeleteButton={canSeeDeleteButton}
               canDeleteBuyer={canDeleteBuyer}

@@ -590,7 +590,7 @@ export function RunDetails() {
         {isLoadingRun ? (
           <RunPageSkeleton />
         ) : (
-          <div className='p-4 pb-20'>
+          <div className='p-4 pb-4'>
             {runData ? (
               <RunInfo
                 run={runData}

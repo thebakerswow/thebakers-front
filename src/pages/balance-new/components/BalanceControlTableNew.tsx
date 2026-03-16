@@ -35,6 +35,7 @@ export function BalanceControlTableNew({
   setIsDolar,
   allowedTeams,
   hideTeamSelector = false,
+  hideCurrencyToggle = false,
   onInitialLoadComplete,
 }: BalanceControlTableNewProps) {
   const [users, setUsers] = useState<BalanceDailyUser[]>([])
@@ -163,16 +164,18 @@ export function BalanceControlTableNew({
               ▼
             </span>
           </div>
-          <button
-            className={`inline-flex h-10 min-w-[110px] items-center justify-center rounded-md border px-4 text-sm font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 ${
-              isDolar
-                ? 'border-purple-300/55 bg-purple-500/30 text-purple-100 hover:border-purple-300/70 hover:bg-purple-500/40'
-                : 'border-purple-400/40 bg-purple-500/20 text-purple-100 hover:border-purple-300/55 hover:bg-purple-500/30'
-            }`}
-            onClick={() => setIsDolar(!isDolar)}
-          >
-            {isDolar ? 'U$' : 'Gold'}
-          </button>
+          {!hideCurrencyToggle && (
+            <button
+              className={`inline-flex h-10 min-w-[110px] items-center justify-center rounded-md border px-4 text-sm font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 ${
+                isDolar
+                  ? 'border-purple-300/55 bg-purple-500/30 text-purple-100 hover:border-purple-300/70 hover:bg-purple-500/40'
+                  : 'border-purple-400/40 bg-purple-500/20 text-purple-100 hover:border-purple-300/55 hover:bg-purple-500/30'
+              }`}
+              onClick={() => setIsDolar(!isDolar)}
+            >
+              {isDolar ? 'U$' : 'Gold'}
+            </button>
+          )}
         </div>
 
         <div className='h-[calc(100%-65px)] overflow-auto'>

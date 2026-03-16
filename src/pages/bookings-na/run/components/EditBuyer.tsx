@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, X } from '@phosphor-icons/react'
 import { updateBuyer } from '../services/runApi'
@@ -6,13 +6,14 @@ import Swal from 'sweetalert2'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { EditBuyerProps } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { useAuth } from '../../../../context/AuthContext'
 
 export function EditBuyer({
   buyer,
   onClose,
   onEditSuccess,
-  runIdTeam,
 }: EditBuyerProps) {
+  const { userRoles } = useAuth()
   const [formData, setFormData] = useState({
     nameAndRealm: buyer.nameAndRealm,
     buyerPot:
@@ -26,11 +27,22 @@ export function EditBuyer({
     buyerNote: buyer.buyerNote,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isJuniorAdvertiser = userRoles.includes(
+    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
+  )
 
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
-    return Boolean(runIdTeam) && false
+    return isJuniorAdvertiser
   }
+
+  useEffect(() => {
+    if (!isJuniorAdvertiser) return
+    setFormData((prev) => ({
+      ...prev,
+      buyerDolarPot: '',
+    }))
+  }, [isJuniorAdvertiser])
 
   // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
   const formatBuyerDolarPot = (value: string) => {
@@ -74,7 +86,9 @@ export function EditBuyer({
 
     // Validar se os valores são números válidos
     const buyerPotValue = Number(formData.buyerPot.replace(/,/g, ''))
-    const buyerDolarPotValue = Number(formData.buyerDolarPot.replace(/,/g, ''))
+    const buyerDolarPotValue = shouldHideDolarField()
+      ? 0
+      : Number(formData.buyerDolarPot.replace(/,/g, ''))
 
     if (isNaN(buyerPotValue) || isNaN(buyerDolarPotValue)) {
       await handleApiError(
@@ -89,7 +103,7 @@ export function EditBuyer({
       id_buyer: buyer.id,
       nameAndRealm: formData.nameAndRealm || '',
       buyerPot: buyerPotValue || 0,
-      buyerDolarPot: buyerDolarPotValue || 0,
+      buyerDolarPot: shouldHideDolarField() ? 0 : buyerDolarPotValue || 0,
       buyerNote: formData.buyerNote || '',
     }
 

@@ -20,7 +20,11 @@ import {
   ClipboardText,
 } from '@phosphor-icons/react'
 import { useAuth } from '../context/AuthContext'
-import { shouldShowBookingsTab, shouldUseNewBalance } from '../utils/roleUtils'
+import {
+  isOnlyFreelancer,
+  shouldShowBookingsTab,
+  shouldUseNewBalance,
+} from '../utils/roleUtils'
 
 type NavItem = {
   label: string
@@ -58,6 +62,7 @@ export function Header() {
     }
     return requiredRoles.some((role) => userRoles.includes(role))
   }
+  const isFreelancerOnlyUser = isOnlyFreelancer(userRoles)
 
   const handleLogout = () => {
     logout()
@@ -70,101 +75,103 @@ export function Header() {
     setIsMobileOpen(false)
   }
 
-  const navItems: NavItem[] = [
-    { label: 'Home', path: '/home', icon: <Briefcase size={18} /> },
-    {
-      label: 'Finances',
-      icon: <CurrencyDollar size={18} />,
-      children: [
-        { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
-        { label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> },
-        ...(shouldUseNewBalance(userRoles)
-          ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
+  const navItems: NavItem[] = isFreelancerOnlyUser
+    ? [{ label: 'Balance', path: '/balance', icon: <Coins size={18} /> }]
+    : [
+        { label: 'Home', path: '/home', icon: <Briefcase size={18} /> },
+        {
+          label: 'Finances',
+          icon: <CurrencyDollar size={18} />,
+          children: [
+            { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
+            { label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> },
+            ...(shouldUseNewBalance(userRoles)
+              ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
+              : []),
+          ],
+        },
+        ...(hasAccess([import.meta.env.VITE_TEAM_CHEFE])
+          ? [
+              {
+                label: 'Management',
+                icon: <Briefcase size={18} />,
+                children: [
+                  { label: 'Admin', path: '/admin', icon: <Briefcase size={18} /> },
+                  {
+                    label: 'Services',
+                    path: '/services',
+                    icon: <CalendarBlank size={18} />,
+                  },
+                  {
+                    label: 'Requests',
+                    path: '/requests',
+                    icon: <ClipboardText size={18} />,
+                  },
+                  {
+                    label: 'Gold',
+                    path: '/payments',
+                    icon: <CurrencyDollar size={18} />,
+                  },
+                  {
+                    label: 'Dollar',
+                    path: '/dollar-payments',
+                    icon: <CurrencyDollar size={18} />,
+                  },
+                ],
+              },
+            ]
           : []),
-      ],
-    },
-    ...(hasAccess([import.meta.env.VITE_TEAM_CHEFE])
-      ? [
-          {
-            label: 'Management',
-            icon: <Briefcase size={18} />,
-            children: [
-              { label: 'Admin', path: '/admin', icon: <Briefcase size={18} /> },
+        ...(shouldShowBookingsTab(userRoles)
+          ? [
               {
-                label: 'Services',
-                path: '/services',
+                label: 'Bookings (NA)',
                 icon: <CalendarBlank size={18} />,
+                children: [
+                  {
+                    label: 'Raids',
+                    path: '/bookings-na/raids',
+                    activeExactPaths: ['/bookings-na/raids'],
+                    activeMatchPaths: ['/bookings-na/run'],
+                    activePaths: ['/bookings-na/run'],
+                    icon: <ListIcon size={18} />,
+                  },
+                  {
+                    label: 'Keys',
+                    path: '/keys',
+                    activeExactPaths: ['/keys'],
+                    activeMatchPaths: ['/keys', '/bookings-na/key'],
+                    activePaths: ['/bookings-na/key'],
+                    icon: <Key size={18} />,
+                  },
+                  {
+                    label: 'Leveling',
+                    path: '/leveling',
+                    activeExactPaths: ['/leveling'],
+                    activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
+                    activePaths: ['/bookings-na/leveling'],
+                    icon: <ArrowFatUp size={18} />,
+                  },
+                  {
+                    label: 'Delves',
+                    path: '/delves',
+                    activeExactPaths: ['/delves'],
+                    activeMatchPaths: ['/delves', '/bookings-na/delves'],
+                    activePaths: ['/bookings-na/delves'],
+                    icon: <Sword size={18} />,
+                  },
+                  {
+                    label: 'Achievements',
+                    path: '/achievements',
+                    activeExactPaths: ['/achievements'],
+                    activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
+                    activePaths: ['/bookings-na/achievements'],
+                    icon: <Trophy size={18} />,
+                  },
+                ],
               },
-              {
-                label: 'Requests',
-                path: '/requests',
-                icon: <ClipboardText size={18} />,
-              },
-              {
-                label: 'Gold',
-                path: '/payments',
-                icon: <CurrencyDollar size={18} />,
-              },
-              {
-                label: 'Dollar',
-                path: '/dollar-payments',
-                icon: <CurrencyDollar size={18} />,
-              },
-            ],
-          },
-        ]
-      : []),
-    ...(shouldShowBookingsTab(userRoles)
-      ? [
-          {
-            label: 'Bookings (NA)',
-            icon: <CalendarBlank size={18} />,
-            children: [
-              {
-                label: 'Raids',
-                path: '/bookings-na/raids',
-                activeExactPaths: ['/bookings-na/raids'],
-                activeMatchPaths: ['/bookings-na/run'],
-                activePaths: ['/bookings-na/run'],
-                icon: <ListIcon size={18} />,
-              },
-              {
-                label: 'Keys',
-                path: '/keys',
-                activeExactPaths: ['/keys'],
-                activeMatchPaths: ['/keys', '/bookings-na/key'],
-                activePaths: ['/bookings-na/key'],
-                icon: <Key size={18} />,
-              },
-              {
-                label: 'Leveling',
-                path: '/leveling',
-                activeExactPaths: ['/leveling'],
-                activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
-                activePaths: ['/bookings-na/leveling'],
-                icon: <ArrowFatUp size={18} />,
-              },
-              {
-                label: 'Delves',
-                path: '/delves',
-                activeExactPaths: ['/delves'],
-                activeMatchPaths: ['/delves', '/bookings-na/delves'],
-                activePaths: ['/bookings-na/delves'],
-                icon: <Sword size={18} />,
-              },
-              {
-                label: 'Achievements',
-                path: '/achievements',
-                activeExactPaths: ['/achievements'],
-                activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
-                activePaths: ['/bookings-na/achievements'],
-                icon: <Trophy size={18} />,
-              },
-            ],
-          },
-        ]
-      : []),
-  ]
+            ]
+          : []),
+      ]
 
   if (!isAuthenticated) return null
 
@@ -213,7 +220,7 @@ export function Header() {
         }`}
       >
         <div className='md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
-          <div className='flex h-full flex-col overflow-hidden'>
+          <div className='flex h-full min-h-0 flex-col overflow-hidden'>
             <div className='relative flex shrink-0 items-center justify-center border-b border-white/5 px-6 py-8'>
               <button
                 onClick={() => goTo('/home')}
@@ -225,10 +232,7 @@ export function Header() {
                 <span>BAKERS</span>
               </button>
             </div>
-            <div className='flex shrink-0 items-center justify-center px-6 py-3'>
-              <p className='text-base text-gray-400'>Administration</p>
-            </div>
-            <nav className='font-space-grotesk min-h-0 flex-1 overflow-y-auto space-y-1 px-4 py-2'>
+            <nav className='font-space-grotesk min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-2'>
               {navItems.map((item) => (
                 <SidebarItem
                   key={item.label}
@@ -241,17 +245,15 @@ export function Header() {
                   onNavigate={goTo}
                 />
               ))}
+              <button
+                onClick={handleLogout}
+                className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
+              >
+                <SignOut size={18} />
+                Logout
+              </button>
             </nav>
           </div>
-        </div>
-        <div className='mt-auto shrink-0 border-t border-white/5 px-4 py-4'>
-          <button
-            onClick={handleLogout}
-            className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
-          >
-            <SignOut size={18} />
-            Logout
-          </button>
         </div>
       </aside>
 
@@ -297,15 +299,14 @@ export function Header() {
                   onNavigate={goTo}
                 />
               ))}
+              <button
+                onClick={handleLogout}
+                className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
+              >
+                <SignOut size={18} />
+                Logout
+              </button>
             </nav>
-
-            <button
-              onClick={handleLogout}
-              className='mt-4 flex w-full shrink-0 items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
-            >
-              <SignOut size={18} />
-              Logout
-            </button>
           </aside>
         </div>
       )}

@@ -292,7 +292,7 @@ function TopInfoBar({
   const screen = getScreenMeta(pathname)
 
   return (
-    <div className='hidden h-20 w-full shrink-0 items-center justify-between border-b border-white/10 bg-black/50 px-6 backdrop-blur-sm md:flex'>
+    <div className='hidden h-[92px] w-full shrink-0 items-center justify-between border-b border-white/10 bg-black/50 px-6 backdrop-blur-sm md:flex'>
       <div className='flex items-center gap-3'>
         <span className='flex h-11 w-11 items-center justify-center rounded-xl border border-purple-400/25 bg-gradient-to-b from-[#2a1242] to-[#140821] shadow-[0_8px_20px_rgba(76,29,149,0.35)]'>
           <span className='text-purple-300'>{screen.icon}</span>
@@ -332,7 +332,7 @@ function getScreenMeta(pathname: string) {
     }
   }
   if (pathname.startsWith('/home')) {
-    return { name: 'Home', breadcrumb: 'Dashboard / Home', icon: <House size={20} weight='duotone' /> }
+    return { name: 'Home', breadcrumb: 'Home', icon: <House size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/balance')) {
     return { name: 'Balance', breadcrumb: 'Finances / Balance', icon: <Coins size={20} weight='duotone' /> }
@@ -418,12 +418,12 @@ function getScreenMeta(pathname: string) {
   if (pathname.startsWith('/sells')) {
     return { name: 'Sells', breadcrumb: 'Finances / Sells', icon: <CurrencyDollar size={20} weight='duotone' /> }
   }
-  return { name: 'Dashboard', breadcrumb: 'Dashboard', icon: <House size={20} weight='duotone' /> }
+  return { name: 'Home', breadcrumb: 'Home', icon: <House size={20} weight='duotone' /> }
 }
 
 function AppFooter() {
   return (
-    <footer className='relative z-10 h-14 w-full shrink-0 border-t border-white/5 bg-black/50 backdrop-blur-sm'>
+    <footer className='relative z-10 h-14 w-full shrink-0 bg-black/50 backdrop-blur-sm'>
       <div className='flex h-full w-full items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>
         <div className='flex items-center justify-center'>
           <p className='text-xs text-neutral-500'>

@@ -28,6 +28,10 @@ export function HomePage() {
 
   const navigate = useNavigate()
   const { isAuthenticated, loading, userRoles, idDiscord } = useAuth()
+  const isRestrictedHome = useMemo(
+    () => shouldShowRestrictedHome(userRoles),
+    [userRoles]
+  )
 
   const dates = useMemo(() => getWeekDatesEST(), [])
 
@@ -47,6 +51,12 @@ export function HomePage() {
   }, [isAuthenticated, loading, navigate])
 
   useEffect(() => {
+    if (isRestrictedHome) {
+      setLoadingRuns(false)
+      setWeekRuns({})
+      return
+    }
+
     const loadWeekRuns = async () => {
       setLoadingRuns(true)
       try {
@@ -69,8 +79,8 @@ export function HomePage() {
     }
 
     void loadWeekRuns()
-    if (!shouldShowRestrictedHome(userRoles)) void loadServicesAndCategories()
-  }, [userRoles, dates])
+    void loadServicesAndCategories()
+  }, [dates, isRestrictedHome])
 
   const categoriesWithServices = useMemo(() => {
     const servicesByCategoryId = new Map<number, HomeServicesData['services']>()
@@ -132,7 +142,7 @@ export function HomePage() {
 
   return (
     <div className='relative flex min-h-screen w-full flex-col bg-transparent text-white'>
-      {shouldShowRestrictedHome(userRoles) ? (
+      {isRestrictedHome ? (
         <div className='relative z-10 mx-auto flex min-h-screen w-full max-w-[1720px] items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>
           <div className='w-full max-w-3xl rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm'>
             <h1 className='text-3xl font-bold text-white md:text-4xl'>

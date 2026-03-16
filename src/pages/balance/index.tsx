@@ -5,7 +5,11 @@ import { BalanceTeamFilter } from './components/BalanceTeamFilter'
 import { WeekRangeFilter } from './components/WeekFilter'
 import { BalancePageSkeleton } from './components/BalanceSkeleton'
 import { useAuth } from '../../context/AuthContext'
-import { shouldShowBalanceFilter, shouldShowUsGoldButton } from '../../utils/roleUtils'
+import {
+  shouldShowBalanceFilter,
+  shouldShowOwnBalanceOnly,
+  shouldShowUsGoldButton,
+} from '../../utils/roleUtils'
 import { NewBalancePage } from '../balance-new'
 import { BalanceDateRange } from './types/balance'
 
@@ -93,9 +97,14 @@ export function BalancePage() {
 export function BalancePageRouter() {
   const { userRoles = [], loading } = useAuth()
   const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const shouldUseRestrictedBalance = shouldShowOwnBalanceOnly(userRoles)
 
   if (loading) {
     return <BalancePageSkeleton />
+  }
+
+  if (shouldUseRestrictedBalance) {
+    return <BalancePage />
   }
 
   return isChefe ? <BalancePage /> : <NewBalancePage />

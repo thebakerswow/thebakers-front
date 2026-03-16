@@ -5,7 +5,7 @@ import { useAuth } from '../../../../context/AuthContext'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { Advertiser } from '../../run/types/run'
-import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { getApiErrorMessage, handleApiError } from '../../../../utils/apiErrorHandler'
 import type {
   AddClaimServiceBuyerProps,
   CreateClaimServicePayload,
@@ -13,7 +13,11 @@ import type {
 import {
   createClaimService,
 } from '../services/specialRunsApi'
-import { getGhostUsers } from '../../run/services/runApi'
+import {
+  getGhostUsers,
+  getTeamMembers,
+  sendDiscordBulkMessage,
+} from '../../run/services/runApi'
 
 export function AddClaimServiceBuyer({
   type,
@@ -26,6 +30,7 @@ export function AddClaimServiceBuyer({
     import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
   )
   const canEditPaidFull = !isJuniorAdvertiser
+  const shouldHideDolarInput = isJuniorAdvertiser
 
   const [formData, setFormData] = useState({
     nameAndRealm: '',
@@ -100,9 +105,129 @@ export function AddClaimServiceBuyer({
     }
   }, [])
 
+  const normalizeDiscordId = (value: unknown): string | null => {
+    if (typeof value !== 'string' && typeof value !== 'number') return null
+    const normalizedId = String(value).trim()
+    return normalizedId.length > 0 ? normalizedId : null
+  }
+
+  const isDiscordSnowflake = (value: string): boolean => /^\d{17,20}$/.test(value)
+  const isDiscordDmBlockedError = (error: unknown): boolean => {
+    const rawMessage = getApiErrorMessage(error, '')
+
+    return (
+      rawMessage.includes('50007') ||
+      rawMessage.includes('Cannot send messages to this user')
+    )
+  }
+
+  const getMemberDiscordId = (member: unknown): string | null => {
+    if (!member || typeof member !== 'object') return null
+    const memberRecord = member as Record<string, unknown>
+
+    if (memberRecord.bot === true || memberRecord.is_bot === true) return null
+
+    const userRecord =
+      memberRecord.user && typeof memberRecord.user === 'object'
+        ? (memberRecord.user as Record<string, unknown>)
+        : null
+    if (userRecord?.bot === true || userRecord?.is_bot === true) return null
+
+    const rawId =
+      memberRecord.id_discord ??
+      memberRecord.idDiscord ??
+      memberRecord.id ??
+      userRecord?.id_discord ??
+      userRecord?.idDiscord ??
+      userRecord?.id
+
+    const normalizedId = normalizeDiscordId(rawId)
+    if (!normalizedId) return null
+    return isDiscordSnowflake(normalizedId) ? normalizedId : null
+  }
+
+  const sendClaimServiceNotification = useCallback(
+    async (
+      serviceTypeRaw: string,
+      buyerNameAndRealm: string,
+      buyerNote: string,
+      buyerPrice: string
+    ) => {
+      const serviceType = serviceTypeRaw.trim().toLowerCase()
+      const teamIdsByType: Record<string, string[]> = {
+        keys: [
+          // import.meta.env.VITE_TEAM_MPLUS_SOLO,
+          // import.meta.env.VITE_TEAM_MPLUS_TEAM,
+          import.meta.env.VITE_TEAM_CHEFE,
+        ],
+        leveling: [import.meta.env.VITE_TEAM_LEVELING, import.meta.env.VITE_TEAM_CHEFE],
+        delves: [
+          import.meta.env.VITE_TEAM_MPLUS_SOLO,
+          import.meta.env.VITE_TEAM_MPLUS_TEAM,
+          import.meta.env.VITE_TEAM_CHEFE,
+        ],
+        achievements: [
+          import.meta.env.VITE_TEAM_ACHIEVEMENTS,
+          import.meta.env.VITE_TEAM_CHEFE,
+        ],
+      }
+
+      const targetTeamIds = (teamIdsByType[serviceType] || []).filter(
+        (teamId): teamId is string => !!teamId && teamId.trim().length > 0
+      )
+      if (targetTeamIds.length === 0) return
+
+      const teamsMembers = await Promise.all(
+        targetTeamIds.map((teamId) => getTeamMembers(teamId))
+      )
+
+      const recipientIds = new Set<string>()
+      teamsMembers.forEach((teamMembers) => {
+        if (!Array.isArray(teamMembers)) return
+        teamMembers.forEach((member) => {
+          const discordId = getMemberDiscordId(member)
+          if (discordId) recipientIds.add(discordId)
+        })
+      })
+
+      if (recipientIds.size === 0) return
+
+      const pageLink = window.location.href
+      const buyerLabel = buyerNameAndRealm.trim() || 'Unknown buyer'
+      const noteLabel = buyerNote.trim() || '-'
+      const priceLabel = buyerPrice.trim() || '-'
+      const serviceLabel =
+        serviceType === 'leveling'
+          ? 'Leveling'
+          : serviceType === 'delves'
+            ? 'Delves'
+            : serviceType === 'achievements'
+              ? 'Achievements'
+            : 'Keys'
+      const message = `New buyer added in ${serviceLabel}\nBuyer: ${buyerLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nDate: ${date}\nLink: ${pageLink}`
+
+      try {
+        await sendDiscordBulkMessage(Array.from(recipientIds), message)
+      } catch (error) {
+        if (isDiscordDmBlockedError(error)) return
+        throw error
+      }
+    },
+    [date]
+  )
+
   useEffect(() => {
     void fetchAdvertisers()
   }, [fetchAdvertisers])
+
+  useEffect(() => {
+    if (!isJuniorAdvertiser) return
+    setFormData((prev) => ({
+      ...prev,
+      claimServiceDolarPot: '',
+      isPaid: false,
+    }))
+  }, [isJuniorAdvertiser])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -121,7 +246,13 @@ export function AddClaimServiceBuyer({
       return
     }
 
-    if ((hasGoldPot && hasDolarPot) || (!hasGoldPot && !hasDolarPot)) {
+    if (shouldHideDolarInput) {
+      if (!hasGoldPot) {
+        setFormError('Gold Pot field is required.')
+        setIsSubmitting(false)
+        return
+      }
+    } else if ((hasGoldPot && hasDolarPot) || (!hasGoldPot && !hasDolarPot)) {
       setFormError(
         'Fill only one field: Gold Pot OR Pot (USD). At least one must be greater than zero.'
       )
@@ -141,12 +272,40 @@ export function AddClaimServiceBuyer({
 
     if (hasGoldPot) {
       payload.claimServicePot = Math.trunc(claimServicePot)
-    } else {
+    } else if (!shouldHideDolarInput) {
       payload.claimServiceDolarPot = claimServiceDolarPot
     }
 
+    const buyerPriceLabel = hasGoldPot
+      ? `${Math.trunc(claimServicePot).toLocaleString('en-US')} gold`
+      : `${claimServiceDolarPot.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} USD`
+
     try {
       await createClaimService(payload)
+
+      if (['keys', 'key', 'leveling', 'delves', 'achievements'].includes(type.trim().toLowerCase())) {
+        try {
+          await sendClaimServiceNotification(
+            type,
+            formData.nameAndRealm || '',
+            formData.claimServiceNote || '',
+            buyerPriceLabel
+          )
+        } catch (notificationError) {
+          if (isDiscordDmBlockedError(notificationError)) {
+            // Ignore Discord DM blocked errors and keep buyer creation flow silent.
+          } else {
+            await handleApiError(
+              notificationError,
+              'Buyer created, but failed to notify one or more users on Discord'
+            )
+          }
+        }
+      }
+
       await onBuyerAddedReload()
       onClose()
 
@@ -230,6 +389,7 @@ export function AddClaimServiceBuyer({
                 }))
               }
               disabled={
+                !shouldHideDolarInput &&
                 !!formData.claimServiceDolarPot &&
                 Number(formData.claimServiceDolarPot.replace(/,/g, '')) > 0
               }
@@ -237,26 +397,28 @@ export function AddClaimServiceBuyer({
             />
           </div>
 
-          <div>
-            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-              Pot (USD)
-            </label>
-            <input
-              id='claimServiceDolarPot'
-              value={formData.claimServiceDolarPot}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  claimServiceDolarPot: formatDolarPot(e.target.value),
-                }))
-              }
-              disabled={
-                !!formData.claimServicePot &&
-                Number(formData.claimServicePot.replace(/,/g, '')) > 0
-              }
-              className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-            />
-          </div>
+          {!shouldHideDolarInput && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Pot (USD)
+              </label>
+              <input
+                id='claimServiceDolarPot'
+                value={formData.claimServiceDolarPot}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    claimServiceDolarPot: formatDolarPot(e.target.value),
+                  }))
+                }
+                disabled={
+                  !!formData.claimServicePot &&
+                  Number(formData.claimServicePot.replace(/,/g, '')) > 0
+                }
+                className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
+              />
+            </div>
+          )}
 
           <div>
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
@@ -317,12 +479,6 @@ export function AddClaimServiceBuyer({
               />
               Paid Full
             </label>
-          )}
-
-          {isJuniorAdvertiser && (
-            <div className='col-span-1 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-2 text-xs text-yellow-200 md:col-span-2'>
-              Junior advertiser role detected.
-            </div>
           )}
 
           <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>

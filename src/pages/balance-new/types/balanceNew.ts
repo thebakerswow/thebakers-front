@@ -15,6 +15,7 @@ export type BalanceControlTableNewProps = {
   setIsDolar: (value: boolean) => void
   allowedTeams: string[]
   hideTeamSelector?: boolean
+  hideCurrencyToggle?: boolean
   onInitialLoadComplete?: () => void
 }
 

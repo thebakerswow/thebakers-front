@@ -90,6 +90,7 @@ export interface SpecialRunBuyersGridProps {
   canToggleClaim: (buyer: SpecialRunBuyer) => boolean
   canEditStatus: (buyer: SpecialRunBuyer) => boolean
   canUseActionButtons: (buyer: SpecialRunBuyer) => boolean
+  canUseAdvertiserActionButtons: (buyer: SpecialRunBuyer) => boolean
   canEditBuyer: (buyer: SpecialRunBuyer) => boolean
   canSeeDeleteButton: boolean
   canDeleteBuyer: (buyer: SpecialRunBuyer) => boolean

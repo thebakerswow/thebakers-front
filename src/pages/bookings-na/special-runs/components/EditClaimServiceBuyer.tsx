@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, X } from '@phosphor-icons/react'
 import Swal from 'sweetalert2'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { CustomSelect } from '../../../../components/CustomSelect'
+import { useAuth } from '../../../../context/AuthContext'
 import type {
   EditClaimServiceBuyerProps,
   UpdateClaimServicePayload,
@@ -16,6 +17,12 @@ export function EditClaimServiceBuyer({
   onClose,
   onEditSuccess,
 }: EditClaimServiceBuyerProps) {
+  const { userRoles } = useAuth()
+  const isJuniorAdvertiser = userRoles.includes(
+    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
+  )
+  const shouldHideDolarInput = isJuniorAdvertiser
+
   const [formData, setFormData] = useState({
     nameAndRealm: buyer.nameAndRealm,
     claimServicePot:
@@ -88,6 +95,14 @@ export function EditClaimServiceBuyer({
       }))
     }
 
+  useEffect(() => {
+    if (!isJuniorAdvertiser) return
+    setFormData((prev) => ({
+      ...prev,
+      claimServiceDolarPot: '',
+    }))
+  }, [isJuniorAdvertiser])
+
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
@@ -98,7 +113,16 @@ export function EditClaimServiceBuyer({
     const hasGoldPot = claimServicePot > 0
     const hasDolarPot = claimServiceDolarPot > 0
 
-    if ((hasGoldPot && hasDolarPot) || (!hasGoldPot && !hasDolarPot)) {
+    if (shouldHideDolarInput) {
+      if (!hasGoldPot) {
+        await handleApiError(
+          new Error('Gold Pot field is required.'),
+          'Invalid pot values'
+        )
+        setIsSubmitting(false)
+        return
+      }
+    } else if ((hasGoldPot && hasDolarPot) || (!hasGoldPot && !hasDolarPot)) {
       await handleApiError(
         new Error('Fill only one field: Gold Pot OR Pot (USD).'),
         'Invalid pot values'
@@ -125,7 +149,7 @@ export function EditClaimServiceBuyer({
 
     if (hasGoldPot) {
       payload.claimServicePot = Math.trunc(claimServicePot)
-    } else {
+    } else if (!shouldHideDolarInput) {
       payload.claimServiceDolarPot = claimServiceDolarPot
     }
 
@@ -204,6 +228,7 @@ export function EditClaimServiceBuyer({
               value={formData.claimServicePot}
               onChange={handleChange('claimServicePot')}
               disabled={
+                !shouldHideDolarInput &&
                 !!formData.claimServiceDolarPot &&
                 Number(formData.claimServiceDolarPot.replace(/,/g, '')) > 0
               }
@@ -211,20 +236,22 @@ export function EditClaimServiceBuyer({
             />
           </div>
 
-          <div>
-            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
-              Dollar Pot
-            </label>
-            <input
-              value={formData.claimServiceDolarPot}
-              onChange={handleChange('claimServiceDolarPot')}
-              disabled={
-                !!formData.claimServicePot &&
-                Number(formData.claimServicePot.replace(/,/g, '')) > 0
-              }
-              className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-            />
-          </div>
+          {!shouldHideDolarInput && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+                Dollar Pot
+              </label>
+              <input
+                value={formData.claimServiceDolarPot}
+                onChange={handleChange('claimServiceDolarPot')}
+                disabled={
+                  !!formData.claimServicePot &&
+                  Number(formData.claimServicePot.replace(/,/g, '')) > 0
+                }
+                className={`${baseFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
+              />
+            </div>
+          )}
 
           <div className='md:col-span-2'>
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>

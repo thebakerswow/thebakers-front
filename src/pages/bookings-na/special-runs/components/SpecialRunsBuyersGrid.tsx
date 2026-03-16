@@ -29,6 +29,7 @@ export function SpecialRunBuyersGrid({
   canToggleClaim,
   canEditStatus,
   canUseActionButtons,
+  canUseAdvertiserActionButtons,
   canEditBuyer,
   canSeeDeleteButton,
   canDeleteBuyer,
@@ -150,95 +151,110 @@ export function SpecialRunBuyersGrid({
                 <td className='px-2 py-2 text-center'>
                   {(() => {
                     const canUseActions = canUseActionButtons(buyer)
+                    const canUseAdvertiserActions =
+                      canUseAdvertiserActionButtons(buyer)
+                    const canEdit = canEditBuyer(buyer)
+                    const canDelete =
+                      canSeeDeleteButton && canDeleteBuyer(buyer)
                     const actionClass =
-                      'rounded-md p-1 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
+                      'rounded-md p-1 transition hover:bg-white/10'
+                    const hasAnyAction =
+                      canUseActions ||
+                      canUseAdvertiserActions ||
+                      canEdit ||
+                      canDelete
+
+                    if (!hasAnyAction) {
+                      return <span className='text-neutral-400'>-</span>
+                    }
 
                     return (
-                  <div className='mx-auto grid max-w-[136px] grid-cols-2 justify-items-center gap-1 min-[1750px]:max-w-[196px] min-[1750px]:grid-cols-3 min-[2300px]:flex min-[2300px]:max-w-none min-[2300px]:justify-center'>
-                    <button
-                      type='button'
-                      title='AFK'
-                      onClick={() => onSendAFKMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiZzzFill size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Offline'
-                      onClick={() => onSendOfflineMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiWifiOffLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Buyer in combat'
-                      onClick={() => onSendBuyerCombatMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiSwordLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Price below minimum'
-                      onClick={() => onSendPriceWarningMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiArrowDownLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Buyer Ready'
-                      onClick={() => onSendBuyerReadyMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiUserHeartLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Buyer Logging'
-                      onClick={() => onSendBuyerLoggingMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiLoginCircleLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Attention! Check Note'
-                      onClick={() => onSendAttentionMessage(buyer.id)}
-                      disabled={!canUseActions}
-                      className={actionClass}
-                    >
-                      <RiAlertLine size={18} />
-                    </button>
-                    <button
-                      type='button'
-                      title='Edit'
-                      onClick={() => canEditBuyer(buyer) && onEdit(buyer)}
-                      disabled={!canEditBuyer(buyer)}
-                      className={actionClass}
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    {canSeeDeleteButton && (
-                      <button
-                        type='button'
-                        title='Delete'
-                        onClick={() => canDeleteBuyer(buyer) && onDelete(buyer)}
-                        disabled={!canDeleteBuyer(buyer)}
-                        className={actionClass}
-                      >
-                        <Trash size={18} />
-                      </button>
-                    )}
-                  </div>
+                      <div className='mx-auto grid max-w-[136px] grid-cols-2 justify-items-center gap-1 min-[1750px]:max-w-[196px] min-[1750px]:grid-cols-3 min-[2300px]:flex min-[2300px]:max-w-none min-[2300px]:justify-center'>
+                        {canUseActions && (
+                          <>
+                            <button
+                              type='button'
+                              title='AFK'
+                              onClick={() => onSendAFKMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiZzzFill size={18} />
+                            </button>
+                            <button
+                              type='button'
+                              title='Offline'
+                              onClick={() => onSendOfflineMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiWifiOffLine size={18} />
+                            </button>
+                            <button
+                              type='button'
+                              title='Buyer in combat'
+                              onClick={() => onSendBuyerCombatMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiSwordLine size={18} />
+                            </button>
+                            <button
+                              type='button'
+                              title='Price below minimum'
+                              onClick={() => onSendPriceWarningMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiArrowDownLine size={18} />
+                            </button>
+                          </>
+                        )}
+                        {canUseAdvertiserActions && (
+                          <>
+                            <button
+                              type='button'
+                              title='Buyer Ready'
+                              onClick={() => onSendBuyerReadyMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiUserHeartLine size={18} />
+                            </button>
+                            <button
+                              type='button'
+                              title='Buyer Logging'
+                              onClick={() => onSendBuyerLoggingMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiLoginCircleLine size={18} />
+                            </button>
+                            <button
+                              type='button'
+                              title='Attention! Check Note'
+                              onClick={() => onSendAttentionMessage(buyer.id)}
+                              className={actionClass}
+                            >
+                              <RiAlertLine size={18} />
+                            </button>
+                          </>
+                        )}
+                        {canEdit && (
+                          <button
+                            type='button'
+                            title='Edit'
+                            onClick={() => onEdit(buyer)}
+                            className={actionClass}
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type='button'
+                            title='Delete'
+                            onClick={() => onDelete(buyer)}
+                            className={actionClass}
+                          >
+                            <Trash size={18} />
+                          </button>
+                        )}
+                      </div>
                     )
                   })()}
                 </td>

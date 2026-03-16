@@ -57,6 +57,25 @@ export const sendDiscordMessage = async (recipientId: string, message: string) =
   return response.data
 }
 
+export const sendDiscordBulkMessage = async (
+  recipientIds: string[],
+  message: string
+) => {
+  const uniqueRecipients = Array.from(
+    new Set(recipientIds.map((id) => String(id).trim()).filter(Boolean))
+  )
+
+  if (uniqueRecipients.length === 0) {
+    return { info: [], errors: [] }
+  }
+
+  const response = await api.post('/discord/send_message/bulk', {
+    id_discord_recipients: uniqueRecipients,
+    message,
+  })
+  return response.data
+}
+
 export const createBuyer = async (buyerData: unknown) => {
   const response = await api.post('/buyer', buyerData)
   return response.data
@@ -91,7 +110,33 @@ export const getGhostUsers = async () => {
 }
 export const getTeamMembers = async (teamId: string) => {
   const response = await api.get(`/team/${teamId}`)
-  return response.data.info.members || []
+  const info = response.data?.info
+
+  if (Array.isArray(info)) {
+    return info
+  }
+
+  if (info && typeof info === 'object') {
+    const infoRecord = info as {
+      members?: unknown[]
+      users?: unknown[]
+      players?: unknown[]
+    }
+
+    if (Array.isArray(infoRecord.members)) {
+      return infoRecord.members
+    }
+
+    if (Array.isArray(infoRecord.users)) {
+      return infoRecord.users
+    }
+
+    if (Array.isArray(infoRecord.players)) {
+      return infoRecord.players
+    }
+  }
+
+  return []
 }
 export const getFreelancers = async (runId: string) => {
   const response = await api.get(`/freelancers/${runId}`)
