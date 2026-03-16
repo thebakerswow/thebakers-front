@@ -51,7 +51,7 @@ export function Login() {
         </p>
 
         <button
-          className='inline-flex min-w-80 cursor-pointer items-center justify-center gap-4 rounded-2xl border border-[rgba(121,134,255,0.8)] bg-[linear-gradient(135deg,#5865f2_0%,#6d7bff_100%)] px-10 py-6 text-xl font-bold text-white shadow-[0_10px_28px_rgba(88,101,242,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] transition-[transform,box-shadow,filter] duration-200 ease-out hover:-translate-y-[1px] hover:brightness-[1.03] hover:shadow-[0_14px_30px_rgba(88,101,242,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:cursor-not-allowed disabled:opacity-75 disabled:shadow-[0_8px_18px_rgba(88,101,242,0.25)]'
+          className='inline-flex min-w-80 cursor-pointer items-center justify-center gap-4 rounded-2xl border border-[rgba(121,134,255,0.8)] bg-[linear-gradient(135deg,#5865f2_0%,#6d7bff_100%)] px-10 py-6 text-xl font-normal text-white shadow-[0_10px_28px_rgba(88,101,242,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] transition-[transform,box-shadow,filter] duration-200 ease-out hover:-translate-y-[1px] hover:brightness-[1.03] hover:shadow-[0_14px_30px_rgba(88,101,242,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:cursor-not-allowed disabled:opacity-75 disabled:shadow-[0_8px_18px_rgba(88,101,242,0.25)]'
           onClick={() => {
             handleLoginDiscord()
           }}
