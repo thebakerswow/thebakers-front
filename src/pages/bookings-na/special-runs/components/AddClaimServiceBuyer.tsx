@@ -156,8 +156,8 @@ export function AddClaimServiceBuyer({
       const serviceType = serviceTypeRaw.trim().toLowerCase()
       const teamIdsByType: Record<string, string[]> = {
         keys: [
-          // import.meta.env.VITE_TEAM_MPLUS_SOLO,
-          // import.meta.env.VITE_TEAM_MPLUS_TEAM,
+          import.meta.env.VITE_TEAM_MPLUS_SOLO,
+          import.meta.env.VITE_TEAM_MPLUS_TEAM,
           import.meta.env.VITE_TEAM_CHEFE,
         ],
         leveling: [import.meta.env.VITE_TEAM_LEVELING, import.meta.env.VITE_TEAM_CHEFE],
@@ -204,7 +204,7 @@ export function AddClaimServiceBuyer({
             : serviceType === 'achievements'
               ? 'Achievements'
             : 'Keys'
-      const message = `New buyer added in ${serviceLabel}\nBuyer: ${buyerLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nDate: ${date}\nLink: ${pageLink}`
+      const message = `New buyer added in ${serviceLabel}\nBuyer: ${buyerLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nLink: ${pageLink}`
 
       try {
         await sendDiscordBulkMessage(Array.from(recipientIds), message)

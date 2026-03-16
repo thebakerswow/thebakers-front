@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { getCurrentUserDate } from '../../../../utils/timezoneUtils'
 import {
   getBalanceAdmin,
@@ -438,49 +439,51 @@ export function BalanceControlTable({
         </div>
       </div>
 
-      {isNickModalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
-          <div className='w-full max-w-sm rounded-xl border border-white/10 bg-[#111115] p-4 text-white shadow-2xl'>
-            <div className='mb-3 flex items-center justify-between'>
-              <h3 className='text-base font-semibold'>Update Nick</h3>
-              <button
-                type='button'
-                className='rounded px-2 py-1 text-sm hover:bg-white/10'
-                onClick={closeNickModal}
-              >
-                X
-              </button>
+      {isNickModalOpen &&
+        createPortal(
+          <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
+            <div className='w-full max-w-sm rounded-xl border border-white/10 bg-[#111115] p-4 text-white shadow-2xl'>
+              <div className='mb-3 flex items-center justify-between'>
+                <h3 className='text-base font-semibold'>Update Nick</h3>
+                <button
+                  type='button'
+                  className='rounded px-2 py-1 text-sm hover:bg-white/10'
+                  onClick={closeNickModal}
+                >
+                  X
+                </button>
+              </div>
+              <input
+                className='mb-3 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-white outline-none focus:border-purple-400/60'
+                value={newNick}
+                onChange={(event) => setNewNick(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    saveNick()
+                  }
+                }}
+                placeholder='Nick'
+              />
+              <div className='flex justify-end gap-2'>
+                <button
+                  type='button'
+                  className='rounded-md border border-white/10 px-3 py-1 text-sm hover:bg-white/10'
+                  onClick={closeNickModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  type='button'
+                  className='rounded-md border border-purple-400/45 bg-purple-500/20 px-3 py-1 text-sm text-purple-100 hover:bg-purple-500/30'
+                  onClick={saveNick}
+                >
+                  Save
+                </button>
+              </div>
             </div>
-            <input
-              className='mb-3 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-white outline-none focus:border-purple-400/60'
-              value={newNick}
-              onChange={(event) => setNewNick(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  saveNick()
-                }
-              }}
-              placeholder='Nick'
-            />
-            <div className='flex justify-end gap-2'>
-              <button
-                type='button'
-                className='rounded-md border border-white/10 px-3 py-1 text-sm hover:bg-white/10'
-                onClick={closeNickModal}
-              >
-                Cancel
-              </button>
-              <button
-                type='button'
-                className='rounded-md border border-purple-400/45 bg-purple-500/20 px-3 py-1 text-sm text-purple-100 hover:bg-purple-500/30'
-                onClick={saveNick}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {isPayoutModalOpen && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  ArrowFatUp,
   Briefcase,
   CalendarBlank,
   ClipboardText,
@@ -348,7 +349,7 @@ function getScreenMeta(pathname: string) {
     return {
       name: 'Leveling',
       breadcrumb: 'Bookings (NA) / Leveling',
-      icon: <Sword size={20} weight='duotone' />,
+      icon: <ArrowFatUp size={20} weight='duotone' />,
     }
   }
   if (pathname.startsWith('/bookings-na/delves/')) {
@@ -387,7 +388,7 @@ function getScreenMeta(pathname: string) {
     return {
       name: 'Leveling',
       breadcrumb: 'Bookings (NA) / Leveling',
-      icon: <Sword size={20} weight='duotone' />,
+      icon: <ArrowFatUp size={20} weight='duotone' />,
     }
   }
   if (pathname.startsWith('/delves')) {
