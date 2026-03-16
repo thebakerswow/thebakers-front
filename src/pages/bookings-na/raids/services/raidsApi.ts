@@ -1,6 +1,4 @@
 import { api } from '../../../../utils/axiosConfig'
-import { RUN_FLAG_QUERY_PARAM } from '../../../../utils/runFlags'
-import type { RunScreenFlag } from '../../../../utils/runFlags'
 import type { BuyerData } from '../../run/types/run'
 import type { ApiOption, RaidRunCreatePayload, RaidsRunData } from '../types/raids'
 
@@ -9,20 +7,12 @@ export const getRaidsRuns = async (date: string): Promise<RaidsRunData[]> => {
   return response.data.info
 }
 
-export const getRaidsRun = (
-  runId: string,
-  runScreen?: RunScreenFlag
-): Promise<RaidsRunData> => {
-  const params = runScreen ? { [RUN_FLAG_QUERY_PARAM]: runScreen } : undefined
-  return api.get(`/run/${runId}`, { params }).then((response) => response.data.info)
+export const getRaidsRun = (runId: string): Promise<RaidsRunData> => {
+  return api.get(`/run/${runId}`).then((response) => response.data.info)
 }
 
-export const getRaidsRunBuyers = (
-  runId: string,
-  runScreen?: RunScreenFlag
-): Promise<BuyerData[]> => {
-  const params = runScreen ? { [RUN_FLAG_QUERY_PARAM]: runScreen } : undefined
-  return api.get(`/run/${runId}/buyers`, { params }).then((response) => response.data.info)
+export const getRaidsRunBuyers = (runId: string): Promise<BuyerData[]> => {
+  return api.get(`/run/${runId}/buyers`).then((response) => response.data.info)
 }
 
 export const createRaidRun = (runData: RaidRunCreatePayload): Promise<unknown> => {

@@ -9,7 +9,7 @@ import { handleApiError } from '../../../../utils/apiErrorHandler'
 import type { BuyerData } from '../../run/types/run'
 import type { RaidsRunData, BuyersPreviewProps } from '../types/raids'
 
-export function BuyersPreview({ runId, runScreen, onClose }: BuyersPreviewProps) {
+export function BuyersPreview({ runId, onClose }: BuyersPreviewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [rows, setRows] = useState<BuyerData[]>([])
   const [runData, setRunData] = useState<RaidsRunData | undefined>()
@@ -20,8 +20,8 @@ export function BuyersPreview({ runId, runScreen, onClose }: BuyersPreviewProps)
       if (showLoading) setIsLoading(true)
       try {
         const [runResponse, buyersResponse] = await Promise.all([
-          getRaidsRun(runId, runScreen),
-          getRaidsRunBuyers(runId, runScreen),
+          getRaidsRun(runId),
+          getRaidsRunBuyers(runId),
         ])
         setRunData(runResponse)
         setRows(buyersResponse)
@@ -33,7 +33,7 @@ export function BuyersPreview({ runId, runScreen, onClose }: BuyersPreviewProps)
         if (showLoading) setIsLoading(false)
       }
     },
-    [runId, runScreen]
+    [runId]
   )
 
   useEffect(() => {

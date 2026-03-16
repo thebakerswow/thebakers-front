@@ -1,5 +1,4 @@
 import type { RunData } from '../../run/types/run'
-import type { RunScreenFlag } from '../../../../utils/runFlags'
 
 export type RaidsRunData = RunData
 
@@ -44,6 +43,5 @@ export interface RunsDataGridProps {
 
 export interface BuyersPreviewProps {
   runId: string
-  runScreen?: RunScreenFlag
   onClose: () => void
 }

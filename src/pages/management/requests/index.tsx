@@ -20,8 +20,6 @@ import {
 } from './types/requests'
 
 const TEAM_NAMES: Record<string, string> = {
-  [import.meta.env.VITE_TEAM_MPLUS]: 'M+',
-  [import.meta.env.VITE_TEAM_LEVELING]: 'Leveling',
   [import.meta.env.VITE_TEAM_GARCOM]: 'Garcom',
   [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'Confeiteiros',
   [import.meta.env.VITE_TEAM_JACKFRUIT]: 'Jackfruit',

@@ -23,14 +23,7 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
 
   const scheduleRuns = useMemo(() => {
     if (!activeDate) return []
-    return (weekRuns[activeDate] || [])
-      .filter(
-        (run) =>
-          run.idTeam !== import.meta.env.VITE_TEAM_MPLUS &&
-          run.idTeam !== import.meta.env.VITE_TEAM_LEVELING &&
-          run.idTeam !== import.meta.env.VITE_TEAM_PVP
-      )
-      .sort((a, b) => a.time.localeCompare(b.time))
+    return (weekRuns[activeDate] || []).sort((a, b) => a.time.localeCompare(b.time))
   }, [weekRuns, activeDate])
 
   return (

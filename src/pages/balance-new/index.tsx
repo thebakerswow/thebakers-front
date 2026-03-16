@@ -18,20 +18,15 @@ export function NewBalancePage() {
   const shouldShowFilter = useMemo(() => shouldShowBalanceFilter(userRoles), [userRoles])
 
   const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
-  const isMplus = userRoles.includes(import.meta.env.VITE_TEAM_MPLUS)
 
   const allowedTeams = useMemo(() => {
-    // Se tem Chefe + M+, retorna apenas M+
-    if (isChefe && isMplus) {
-      return [import.meta.env.VITE_TEAM_MPLUS]
-    }
-    // Se tem apenas Chefe (sem M+), retorna todos os times
+    // Se tem Chefe, retorna todos os times
     if (isChefe) {
       return TRACKED_TEAM_IDS
     }
     // Para outros usuários, retorna apenas os times que possuem
     return getTrackedTeamRoles(userRoles).filter((t) => TRACKED_TEAM_IDS.includes(t))
-  }, [isChefe, isMplus, userRoles])
+  }, [isChefe, userRoles])
 
   // Seleção inicial do time
   useEffect(() => {

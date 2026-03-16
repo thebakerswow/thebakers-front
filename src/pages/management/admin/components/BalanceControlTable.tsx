@@ -14,8 +14,6 @@ import { DEFAULT_TEAM_COLOR, TEAM_ID_TO_COLOR_MAP } from '../../../../utils/team
 const teamOptions = [
   { value: 'all', label: 'All Teams' },
   { value: import.meta.env.VITE_TEAM_CHEFE, label: 'Chefe de Cozinha' },
-  { value: import.meta.env.VITE_TEAM_MPLUS, label: 'M+' },
-  { value: import.meta.env.VITE_TEAM_LEVELING, label: 'Leveling' },
   { value: import.meta.env.VITE_TEAM_GARCOM, label: 'Garcom' },
   { value: import.meta.env.VITE_TEAM_CONFEITEIROS, label: 'Confeiteiros' },
   { value: import.meta.env.VITE_TEAM_JACKFRUIT, label: 'Jackfruit' },

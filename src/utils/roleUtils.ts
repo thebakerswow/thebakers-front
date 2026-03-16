@@ -2,9 +2,6 @@
 export const hasTeamRoles = (userRoles: string[]): boolean => {
   const teamRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
-    import.meta.env.VITE_TEAM_MPLUS,
-    import.meta.env.VITE_TEAM_LEVELING,
-    import.meta.env.VITE_TEAM_PVP,
     import.meta.env.VITE_TEAM_GARCOM,
     import.meta.env.VITE_TEAM_CONFEITEIROS,
     import.meta.env.VITE_TEAM_JACKFRUIT,
@@ -31,9 +28,6 @@ export const hasTeamRoles = (userRoles: string[]): boolean => {
 export const getTrackedTeamRoles = (userRoles: string[]): string[] => {
   const teamRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
-    import.meta.env.VITE_TEAM_MPLUS,
-    import.meta.env.VITE_TEAM_LEVELING,
-    import.meta.env.VITE_TEAM_PVP,
     import.meta.env.VITE_TEAM_GARCOM,
     import.meta.env.VITE_TEAM_CONFEITEIROS,
     import.meta.env.VITE_TEAM_JACKFRUIT,
@@ -181,9 +175,6 @@ export const shouldShowBalanceFilter = (userRoles: string[]): boolean => {
 export const getUserTeamsForFilter = (userRoles: string[]): string[] => {
   const teamRoles = [
     import.meta.env.VITE_TEAM_CHEFE,
-    import.meta.env.VITE_TEAM_MPLUS,
-    import.meta.env.VITE_TEAM_LEVELING,
-    import.meta.env.VITE_TEAM_PVP,
     import.meta.env.VITE_TEAM_GARCOM,
     import.meta.env.VITE_TEAM_CONFEITEIROS,
     import.meta.env.VITE_TEAM_JACKFRUIT,
@@ -292,11 +283,10 @@ export const canViewAttendanceButton = (userRoles: string[]): boolean => {
 }
 
 // Função para decidir se deve usar a NOVA tela de balance
-// Grupos com nova visualização: MPLUS, LEVELING, GARCOM, CONFEITEIROS, JACKFRUIT,
+// Grupos com nova visualização: GARCOM, CONFEITEIROS, JACKFRUIT,
 // INSANOS, APAE, LOSRENEGADOS, PADEIRINHO, MILHARAL
 export const shouldUseNewBalance = (userRoles: string[]): boolean => {
   const rolesWithNewBalance = [
-    import.meta.env.VITE_TEAM_MPLUS,
     import.meta.env.VITE_TEAM_GARCOM,
     import.meta.env.VITE_TEAM_CONFEITEIROS,
     import.meta.env.VITE_TEAM_JACKFRUIT,

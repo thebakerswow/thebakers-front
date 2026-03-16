@@ -29,8 +29,6 @@ const teamIdToColorMap: Record<string, string> = {
 
 const teamIdToLabelMap: Record<string, string> = {
   [import.meta.env.VITE_TEAM_CHEFE]: 'Chefe de cozinha',
-  [import.meta.env.VITE_TEAM_MPLUS]: 'M+',
-  [import.meta.env.VITE_TEAM_LEVELING]: 'Leveling',
   [import.meta.env.VITE_TEAM_GARCOM]: 'Garçom',
   [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'Confeiteiros',
   [import.meta.env.VITE_TEAM_JACKFRUIT]: 'Jackfruit',

@@ -29,11 +29,7 @@ export function EditBuyer({
 
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
-    return (
-      runIdTeam === import.meta.env.VITE_TEAM_MPLUS ||
-      runIdTeam === import.meta.env.VITE_TEAM_LEVELING ||
-      runIdTeam === import.meta.env.VITE_TEAM_PVP
-    )
+    return Boolean(runIdTeam) && false
   }
 
   // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table

@@ -49,13 +49,9 @@ export function AddBuyer({
   const isJuniorAdvertiser = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR)
   const canEditPaidFull = !isJuniorAdvertiser
 
-  // Function to check if Dollar field should be hidden for M+ team runs ou Leveling
+  // Function to check if Dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
-    return (
-      run.idTeam === import.meta.env.VITE_TEAM_MPLUS ||
-      run.idTeam === import.meta.env.VITE_TEAM_LEVELING ||
-      run.idTeam === import.meta.env.VITE_TEAM_PVP
-    )
+    return false
   }
   const shouldHideBuyerDolarInput = shouldHideDolarField() || isJuniorAdvertiser
 

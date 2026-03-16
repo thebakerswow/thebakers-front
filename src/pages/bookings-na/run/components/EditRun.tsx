@@ -26,11 +26,7 @@ DatePickerInput.displayName = 'DatePickerInput'
 
 export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
-  // Detecta se e uma run especial (Keys, Leveling ou PVP)
-  const isKeysRun = run.idTeam === import.meta.env.VITE_TEAM_MPLUS
-  const isLevelingRun = run.idTeam === import.meta.env.VITE_TEAM_LEVELING
-  const isPvpRun = run.idTeam === import.meta.env.VITE_TEAM_PVP
-  const isSpecialRun = isKeysRun || isLevelingRun || isPvpRun
+  const isSpecialRun = false
 
   const [formData, setFormData] = useState({
     name: run.name
@@ -61,17 +57,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        // Runs especiais buscam membros do time da propria run
-        let teamId
-        if (isKeysRun) {
-          teamId = import.meta.env.VITE_TEAM_MPLUS
-        } else if (isLevelingRun) {
-          teamId = import.meta.env.VITE_TEAM_LEVELING
-        } else if (isPvpRun) {
-          teamId = import.meta.env.VITE_TEAM_PVP
-        } else {
-          teamId = import.meta.env.VITE_TEAM_PREFEITO
-        }
+        const teamId = import.meta.env.VITE_TEAM_PREFEITO
         const response = await getTeamMembers(teamId)
         if (response) setApiOptions(response)
       } catch (err) {
@@ -79,7 +65,7 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       }
     }
     fetchOptions()
-  }, [isKeysRun, isLevelingRun, isPvpRun])
+  }, [])
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))

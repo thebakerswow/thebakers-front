@@ -2,8 +2,6 @@ export const DEFAULT_TEAM_COLOR =
   'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))'
 
 export const TRACKED_TEAM_OPTIONS = [
-  { id: import.meta.env.VITE_TEAM_MPLUS, label: 'M+' },
-  { id: import.meta.env.VITE_TEAM_LEVELING, label: 'Leveling' },
   { id: import.meta.env.VITE_TEAM_GARCOM, label: 'Garçom' },
   { id: import.meta.env.VITE_TEAM_CONFEITEIROS, label: 'Confeiteiros' },
   { id: import.meta.env.VITE_TEAM_JACKFRUIT, label: 'Jackfruit' },
@@ -18,8 +16,6 @@ export const TRACKED_TEAM_IDS = TRACKED_TEAM_OPTIONS.map((team) => team.id)
 
 export const TEAM_ID_TO_COLOR_MAP: Record<string, string> = {
   [import.meta.env.VITE_TEAM_CHEFE]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
-  [import.meta.env.VITE_TEAM_MPLUS]: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))',
-  [import.meta.env.VITE_TEAM_LEVELING]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
   [import.meta.env.VITE_TEAM_GARCOM]: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))',
   [import.meta.env.VITE_TEAM_CONFEITEIROS]: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))',
   [import.meta.env.VITE_TEAM_JACKFRUIT]: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
@@ -41,8 +37,6 @@ export const TEAM_ID_TO_COLOR_MAP: Record<string, string> = {
 
 export const PRIORITY_ORDER = [
   'Chefe de cozinha',
-  'M+',
-  'Leveling',
   'Garçom',
   'Confeiteiros',
   'Jackfruit',
@@ -64,8 +58,6 @@ export const PRIORITY_ORDER = [
 
 export const COLOR_OPTIONS = [
   { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Chefe de cozinha' },
-  { value: 'linear-gradient(90deg, rgba(167,139,250,0.72), rgba(124,58,237,0.62))', label: 'M+' },
-  { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Leveling' },
   { value: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))', label: 'Garçom' },
   { value: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))', label: 'Confeiteiros' },
   { value: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))', label: 'Jackfruit' },

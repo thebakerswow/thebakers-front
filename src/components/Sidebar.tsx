@@ -114,16 +114,6 @@ export function Header() {
           },
         ]
       : []),
-    ...(hasAccess([import.meta.env.VITE_TEAM_MPLUS]) &&
-    !hasAccess([import.meta.env.VITE_TEAM_CHEFE])
-      ? [
-          {
-            label: 'Services',
-            path: '/services',
-            icon: <CalendarBlank size={18} />,
-          },
-        ]
-      : []),
     ...(shouldShowBookingsTab(userRoles)
       ? [
           {
