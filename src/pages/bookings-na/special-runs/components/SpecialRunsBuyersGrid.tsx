@@ -8,22 +8,8 @@ import {
   RiWifiOffLine,
   RiZzzFill,
 } from 'react-icons/ri'
-import { CustomSelect } from '../../../components/CustomSelect'
-import { MockBuyer, MockBuyerStatus } from '../special-run-mock-types'
-
-interface StatusOption {
-  value: string
-  label: string
-}
-
-interface SpecialRunBuyersGridProps {
-  buyers: MockBuyer[]
-  statusOptions: StatusOption[]
-  getStatusStyle: (status: MockBuyerStatus) => string
-  onStatusChange: (buyerId: string, newStatus: string) => void
-  onClaim: (buyerId: string) => void
-  canToggleClaim: (buyer: MockBuyer) => boolean
-}
+import { CustomSelect } from '../../../../components/CustomSelect'
+import type { SpecialRunBuyersGridProps } from '../types/specialRuns'
 
 export function SpecialRunBuyersGrid({
   buyers,
@@ -31,7 +17,21 @@ export function SpecialRunBuyersGrid({
   getStatusStyle,
   onStatusChange,
   onClaim,
+  onDelete,
+  onEdit,
+  onSendAFKMessage,
+  onSendOfflineMessage,
+  onSendBuyerCombatMessage,
+  onSendPriceWarningMessage,
+  onSendBuyerReadyMessage,
+  onSendBuyerLoggingMessage,
+  onSendAttentionMessage,
   canToggleClaim,
+  canEditStatus,
+  canUseActionButtons,
+  canEditBuyer,
+  canSeeDeleteButton,
+  canDeleteBuyer,
 }: SpecialRunBuyersGridProps) {
   return (
     <div className='p-4'>
@@ -56,16 +56,26 @@ export function SpecialRunBuyersGrid({
             </tr>
           </thead>
           <tbody>
-            {buyers.map((buyer, index) => (
-              <tr key={buyer.id} className={`border-b border-white/5 ${getStatusStyle(buyer.status)}`}>
+            {buyers.length === 0 ? (
+              <tr>
+                <td colSpan={14} className='px-4 py-6 text-center text-neutral-400'>
+                  No buyers found for selected date
+                </td>
+              </tr>
+            ) : (
+              buyers.map((buyer, index) => (
+                <tr key={buyer.id} className={`border-b border-white/5 ${getStatusStyle(buyer.status)}`}>
                 <td className='px-2 py-2 text-center'>{index + 1}</td>
                 <td className='px-2 py-2 text-center'>
                   <CustomSelect
                     value={buyer.status}
-                    onChange={(value) => onStatusChange(buyer.id, value)}
+                    onChange={(value) =>
+                      canEditStatus(buyer) && onStatusChange(buyer.id, value as typeof buyer.status)
+                    }
                     options={statusOptions}
                     minWidthClassName='min-w-[120px]'
                     triggerClassName='!h-9 ![background-image:none] !bg-white/10 !backdrop-blur-sm !shadow-none !border-white/25 !text-center text-white'
+                    disabled={!canEditStatus(buyer)}
                     renderInPortal
                   />
                 </td>
@@ -74,7 +84,7 @@ export function SpecialRunBuyersGrid({
                 <td className='px-2 py-2 text-center'>{buyer.advertiser}</td>
                 <td className='px-2 py-2 text-center'>{buyer.collector}</td>
                 <td className='px-2 py-2 text-center'>
-                  {buyer.claimed ? buyer.claimedByName || buyer.claimedById || '-' : '-'}
+                  {buyer.claimedBy || '-'}
                 </td>
                 <td className='px-2 py-2 text-center'>
                   <span className='inline-flex rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm'>
@@ -106,18 +116,28 @@ export function SpecialRunBuyersGrid({
                 </td>
                 <td className='px-2 py-2 text-center'>{buyer.playerClass}</td>
                 <td className='px-2 py-2 text-center'>
-                  {buyer.status === 'waiting' ? (
+                  {buyer.claimed && canToggleClaim(buyer) ? (
+                    <button
+                      type='button'
+                      onClick={() => onClaim(buyer.id)}
+                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                        'border-emerald-300/60 bg-emerald-500/30 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)] hover:bg-emerald-500/40'
+                      }`}
+                    >
+                      Unclaim
+                    </button>
+                  ) : buyer.claimed ? (
+                    <span className='rounded-md border border-emerald-300/60 bg-emerald-500/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]'>
+                      Claimed
+                    </span>
+                  ) : buyer.status === 'waiting' ? (
                     <button
                       type='button'
                       onClick={() => onClaim(buyer.id)}
                       disabled={!canToggleClaim(buyer)}
-                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
-                        buyer.claimed
-                          ? 'border-emerald-300/60 bg-emerald-500/30 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]'
-                          : 'border-yellow-300/70 bg-yellow-500/30 text-yellow-100 shadow-[0_0_20px_rgba(250,204,21,0.45)] hover:bg-yellow-500/40'
-                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                      className='rounded-md border border-yellow-300/70 bg-yellow-500/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-yellow-100 shadow-[0_0_20px_rgba(250,204,21,0.45)] transition hover:bg-yellow-500/40 disabled:cursor-not-allowed disabled:opacity-60'
                     >
-                      {buyer.claimed ? 'Claimed' : 'Claim'}
+                      Claim
                     </button>
                   ) : buyer.status === 'group' || buyer.status === 'done' ? (
                     <span className='rounded-md border border-emerald-300/60 bg-emerald-500/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]'>
@@ -128,48 +148,103 @@ export function SpecialRunBuyersGrid({
                   )}
                 </td>
                 <td className='px-2 py-2 text-center'>
+                  {(() => {
+                    const canUseActions = canUseActionButtons(buyer)
+                    const actionClass =
+                      'rounded-md p-1 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
+
+                    return (
                   <div className='mx-auto grid max-w-[136px] grid-cols-2 justify-items-center gap-1 min-[1750px]:max-w-[196px] min-[1750px]:grid-cols-3 min-[2300px]:flex min-[2300px]:max-w-none min-[2300px]:justify-center'>
-                    <button type='button' title='AFK' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='AFK'
+                      onClick={() => onSendAFKMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
+                    >
                       <RiZzzFill size={18} />
                     </button>
-                    <button type='button' title='Offline' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='Offline'
+                      onClick={() => onSendOfflineMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
+                    >
                       <RiWifiOffLine size={18} />
                     </button>
-                    <button type='button' title='Buyer in combat' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='Buyer in combat'
+                      onClick={() => onSendBuyerCombatMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
+                    >
                       <RiSwordLine size={18} />
                     </button>
                     <button
                       type='button'
                       title='Price below minimum'
-                      disabled
-                      className='rounded-md p-1 opacity-50'
+                      onClick={() => onSendPriceWarningMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
                     >
                       <RiArrowDownLine size={18} />
                     </button>
-                    <button type='button' title='Buyer Ready' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='Buyer Ready'
+                      onClick={() => onSendBuyerReadyMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
+                    >
                       <RiUserHeartLine size={18} />
                     </button>
-                    <button type='button' title='Buyer Logging' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='Buyer Logging'
+                      onClick={() => onSendBuyerLoggingMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
+                    >
                       <RiLoginCircleLine size={18} />
                     </button>
                     <button
                       type='button'
                       title='Attention! Check Note'
-                      disabled
-                      className='rounded-md p-1 opacity-50'
+                      onClick={() => onSendAttentionMessage(buyer.id)}
+                      disabled={!canUseActions}
+                      className={actionClass}
                     >
                       <RiAlertLine size={18} />
                     </button>
-                    <button type='button' title='Edit' disabled className='rounded-md p-1 opacity-50'>
+                    <button
+                      type='button'
+                      title='Edit'
+                      onClick={() => canEditBuyer(buyer) && onEdit(buyer)}
+                      disabled={!canEditBuyer(buyer)}
+                      className={actionClass}
+                    >
                       <Pencil size={18} />
                     </button>
-                    <button type='button' title='Delete' disabled className='rounded-md p-1 opacity-50'>
-                      <Trash size={18} />
-                    </button>
+                    {canSeeDeleteButton && (
+                      <button
+                        type='button'
+                        title='Delete'
+                        onClick={() => canDeleteBuyer(buyer) && onDelete(buyer)}
+                        disabled={!canDeleteBuyer(buyer)}
+                        className={actionClass}
+                      >
+                        <Trash size={18} />
+                      </button>
+                    )}
                   </div>
+                    )
+                  })()}
                 </td>
-              </tr>
-            ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

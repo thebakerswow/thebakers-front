@@ -29,7 +29,7 @@ import { AuthProvider } from './context/AuthContext' // Importe o AuthProvider
 import { useAuth } from './context/AuthContext'
 import { AdminPage } from './pages/management/admin'
 import ManagementServices from './pages/management/services-management'
-import { MockSpecialRunDetailsPage } from './pages/special-runs/mock-special-run-details-page'
+import { SpecialRunDetailsPage } from './pages/bookings-na/special-runs'
 import { RequestsPage } from './pages/management/requests'
 import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/management/gold-payments'
@@ -160,19 +160,19 @@ function AppContent() {
               />
               <Route
                 path='/bookings-na/key/:id'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Keys' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Keys' />} />}
               />
               <Route
                 path='/bookings-na/leveling/:id'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Leveling' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Leveling' />} />}
               />
               <Route
                 path='/bookings-na/delves/:id'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Delves' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Delves' />} />}
               />
               <Route
                 path='/bookings-na/achievements/:id'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Achievements' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
               />
               <Route
                 path='/admin'
@@ -200,19 +200,19 @@ function AppContent() {
               />
               <Route
                 path='/keys'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Keys' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Keys' />} />}
               />
               <Route
                 path='/leveling'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Leveling' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Leveling' />} />}
               />
               <Route
                 path='/delves'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Delves' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Delves' />} />}
               />
               <Route
                 path='/achievements'
-                element={<PrivateRoute element={<MockSpecialRunDetailsPage runType='Achievements' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
               />
               <Route
                 path='/requests'
