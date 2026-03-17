@@ -7,7 +7,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
       <div className='absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
       <div className='flex h-full flex-col p-5 sm:p-6'>
         <div className='mb-2 flex items-start gap-2'>
-          <h3 className='line-clamp-1 flex-1 text-lg font-bold text-white transition-colors duration-300 group-hover:text-purple-100'>
+          <h3 className='flex-1 break-words text-lg font-bold text-white transition-colors duration-300 group-hover:text-purple-100'>
             {service.name}
           </h3>
           {service.hotItem && (
