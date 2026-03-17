@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../../context/AuthContext'
 import { SpecialRunDetails } from './components/SpecialRunsDetails'
 import { SpecialRunBuyersGrid } from './components/SpecialRunsBuyersGrid'
@@ -210,14 +210,23 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<SpecialRunBuyer | null>(null)
+  const buyersRequestInFlightRef = useRef(false)
+  const buyersSnapshotRef = useRef('')
+  const isUserActiveRef = useRef(true)
 
   const selectedDateParam = useMemo(
     () => formatDateParam(selectedDate),
     [selectedDate]
   )
 
-  const loadBuyers = useCallback(async () => {
-    setIsLoadingBuyers(true)
+  const loadBuyers = useCallback(async (showLoading = true) => {
+    if (buyersRequestInFlightRef.current) return
+
+    buyersRequestInFlightRef.current = true
+    if (showLoading) {
+      setIsLoadingBuyers(true)
+    }
+
     try {
       const response = await getClaimServices({
         date: selectedDateParam,
@@ -227,18 +236,74 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       const mappedBuyers = response.map((buyer, index) =>
         mapClaimServiceBuyer(buyer, index, serviceType)
       )
-      setBuyers(mappedBuyers)
+      const nextSnapshot = JSON.stringify(mappedBuyers)
+      if (buyersSnapshotRef.current !== nextSnapshot) {
+        buyersSnapshotRef.current = nextSnapshot
+        setBuyers(mappedBuyers)
+      }
     } catch (error) {
       setBuyers([])
       await handleApiError(error, 'Failed to fetch special run buyers')
     } finally {
-      setIsLoadingBuyers(false)
+      buyersRequestInFlightRef.current = false
+      if (showLoading) {
+        setIsLoadingBuyers(false)
+      }
       setIsInitialLoad(false)
     }
   }, [selectedDateParam, serviceType])
 
   useEffect(() => {
+    // Reseta o snapshot para garantir refresh ao trocar data ou tipo.
+    buyersSnapshotRef.current = ''
     void loadBuyers()
+
+    const resetActivityTimer = () => {
+      isUserActiveRef.current = true
+      clearTimeout(inactivityTimeout)
+      inactivityTimeout = setTimeout(() => {
+        isUserActiveRef.current = false
+      }, 5000)
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isUserActiveRef.current = false
+      } else {
+        isUserActiveRef.current = true
+        resetActivityTimer()
+      }
+    }
+
+    let inactivityTimeout: ReturnType<typeof setTimeout>
+    let buyersTimer: ReturnType<typeof setTimeout>
+
+    const handleMouseOrKeyActivity = () => {
+      resetActivityTimer()
+    }
+
+    const scheduleBuyersPoll = () => {
+      const buyersDelay = isUserActiveRef.current ? 2000 : 12000
+      buyersTimer = setTimeout(() => {
+        void loadBuyers(false)
+        scheduleBuyersPoll()
+      }, buyersDelay)
+    }
+
+    window.addEventListener('mousemove', handleMouseOrKeyActivity)
+    window.addEventListener('keydown', handleMouseOrKeyActivity)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    resetActivityTimer()
+    scheduleBuyersPoll()
+
+    return () => {
+      clearTimeout(buyersTimer)
+      clearTimeout(inactivityTimeout)
+      window.removeEventListener('mousemove', handleMouseOrKeyActivity)
+      window.removeEventListener('keydown', handleMouseOrKeyActivity)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [loadBuyers])
 
   const sortedBuyers = useMemo(

@@ -15,6 +15,19 @@ export function SellsPage() {
   const [statusFilter, setStatusFilter] = useState<SellsStatusFilter>('pending')
   const [resumeData, setResumeData] = useState<PaymentsResumeResponse | null>(null)
 
+  const normalizePaymentType = (
+    type: string | undefined
+  ): 'gold' | 'dollar' | 'mixed' => {
+    if (type === 'mixed') return 'mixed'
+    if (type === 'dollar' || type === 'dolar') return 'dollar'
+    return 'gold'
+  }
+
+  const toSafeNumber = (value: unknown): number => {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+
   // Faz o GET na rota /payments/resume
   useEffect(() => {
     const fetchPaymentsResume = async () => {
@@ -59,8 +72,8 @@ export function SellsPage() {
       const completed = resumeData.info.completed || {}
       
       Object.entries(completed).forEach(([date, item]) => {
+        const itemType = normalizePaymentType(item.type)
         // Se já for mixed, usa diretamente (o total já vem calculado da API)
-        const itemType = item.type
         if (itemType === 'mixed') {
           dataSource[date] = {
             ...item,
@@ -72,8 +85,9 @@ export function SellsPage() {
           // Para gold e dollar, usa diretamente
           dataSource[date] = {
             ...item,
-            balance_total_gold: item.type === 'gold' ? item.balance_total ?? null : null,
-            balance_total_dolar: item.type === 'dollar' ? item.balance_total ?? null : null,
+            type: itemType,
+            balance_total_gold: itemType === 'gold' ? item.balance_total ?? null : null,
+            balance_total_dolar: itemType === 'dollar' ? item.balance_total ?? null : null,
           }
         }
       })
@@ -113,6 +127,7 @@ export function SellsPage() {
         } else if (dolarItem) {
           dataSource[date] = {
             ...dolarItem,
+            type: normalizePaymentType(dolarItem.type),
             balance_total_gold: null,
             balance_total_dolar: dolarItem.balance_total ?? null,
           }
@@ -123,17 +138,21 @@ export function SellsPage() {
     // Converte o objeto em array e formata os dados
     return Object.entries(dataSource)
       .map(([date, item]) => {
-        const type = item.type
+        const type = normalizePaymentType(item.type)
         const total =
-          type === 'mixed' ? item.total : type === 'gold' ? item.gold_in_dolar : item.dolar_sold
+          type === 'mixed'
+            ? toSafeNumber(item.total)
+            : type === 'gold'
+              ? toSafeNumber(item.gold_in_dolar)
+              : toSafeNumber(item.dolar_sold)
         
         return {
           date,
           paymentDate: formatDate(item.payment_date),
-          goldSold: item.gold_sold,
-          avgM: item.avg_m,
-          goldInDollar: item.gold_in_dolar,
-          shopDolar: item.dolar_sold,
+          goldSold: toSafeNumber(item.gold_sold),
+          avgM: toSafeNumber(item.avg_m),
+          goldInDollar: toSafeNumber(item.gold_in_dolar),
+          shopDolar: toSafeNumber(item.dolar_sold),
           total,
           type,
           balanceGold: item.balance_total_gold ?? null,

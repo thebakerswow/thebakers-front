@@ -72,6 +72,12 @@ export default function LatestTransactions({ isDolar }: LatestTransactionsProps)
     return safeRounded.toLocaleString('en-US')
   }
 
+  const hasNonZeroValue = (rawValue: string | number): boolean => {
+    const numeric = Number(rawValue)
+    if (Number.isNaN(numeric)) return true
+    return numeric !== 0
+  }
+
   const fetchTransactions = async () => {
     try {
       const response = (await getLatestTransactions()) as LatestTransactionsResponse
@@ -80,8 +86,10 @@ export default function LatestTransactions({ isDolar }: LatestTransactionsProps)
         ...response.transactions_gbanks.map((t: Transaction) => ({ ...t, isGbank: true })),
       ]
       // Filtra pelo tipo de acordo com isDolar
-      const filteredTransactions = transactionsWithSource.filter((t) =>
-        isDolar ? t.type === 'dollar' : t.type !== 'dollar'
+      const filteredTransactions = transactionsWithSource.filter(
+        (t) =>
+          (isDolar ? t.type === 'dollar' : t.type !== 'dollar') &&
+          hasNonZeroValue(t.value)
       )
       // Ordena por data/hora, mais recente primeiro (independente de origem)
       const sortedTransactions = filteredTransactions
