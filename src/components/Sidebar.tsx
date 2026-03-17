@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowFatUp,
   Briefcase,
@@ -34,6 +35,28 @@ type NavItem = {
   activeExactPaths?: string[]
   icon: JSX.Element
   children?: NavItem[]
+}
+
+const sidebarListVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.08,
+    },
+  },
+}
+
+const sidebarItemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.3,
+      ease: 'easeOut' as const,
+    },
+  },
 }
 
 export function Header() {
@@ -222,94 +245,134 @@ export function Header() {
         <div className='md:sticky md:top-0 md:flex md:h-screen md:flex-col'>
           <div className='flex h-full min-h-0 flex-col overflow-hidden'>
             <div className='relative flex shrink-0 items-center justify-center border-b border-white/5 px-6 py-8'>
-              <button
+              <motion.button
                 onClick={() => goTo('/home')}
                 className='inline-flex items-center justify-center gap-2 text-xl font-semibold uppercase tracking-[0.32em] text-white'
                 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.4, ease: 'easeOut' }}
               >
                 <span>THE</span>
                 <span className='text-[10px] text-purple-500'>●</span>
                 <span>BAKERS</span>
-              </button>
+              </motion.button>
             </div>
-            <nav className='font-space-grotesk min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-2'>
+            <motion.nav
+              key={`desktop-sidebar-${location.pathname}`}
+              initial='hidden'
+              animate='visible'
+              variants={sidebarListVariants}
+              className='font-space-grotesk min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-2'
+            >
               {navItems.map((item) => (
-                <SidebarItem
-                  key={item.label}
-                  item={item}
-                  pathname={location.pathname}
-                  open={openGroups[item.label.toLowerCase()] ?? true}
-                  setOpen={(next) =>
-                    setOpenGroups((prev) => ({ ...prev, [item.label.toLowerCase()]: next }))
-                  }
-                  onNavigate={goTo}
-                />
+                <motion.div key={item.label} variants={sidebarItemVariants}>
+                  <SidebarItem
+                    item={item}
+                    pathname={location.pathname}
+                    open={openGroups[item.label.toLowerCase()] ?? true}
+                    setOpen={(next) =>
+                      setOpenGroups((prev) => ({ ...prev, [item.label.toLowerCase()]: next }))
+                    }
+                    onNavigate={goTo}
+                  />
+                </motion.div>
               ))}
-              <button
+              <motion.button
+                variants={sidebarItemVariants}
+                whileHover={{ x: 3 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleLogout}
                 className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
               >
                 <SignOut size={18} />
-                Logout
-              </button>
-            </nav>
+                <span>Logout</span>
+              </motion.button>
+            </motion.nav>
           </div>
         </div>
       </aside>
 
-      {isMobileOpen && (
-        <div className='fixed inset-0 z-50 md:hidden'>
-          <button
-            className='absolute inset-0 bg-black/60'
-            onClick={() => setIsMobileOpen(false)}
-            aria-label='Close sidebar backdrop'
-          />
-          <aside className='absolute left-0 top-0 flex h-full w-[82%] max-w-[320px] flex-col border-r border-white/5 bg-[#0a0a0c]/95 p-4 backdrop-blur-sm'>
-            <div className='mb-4 flex items-center justify-between'>
-              <button
-                onClick={() => goTo('/home')}
-                className='inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-white'
-                style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-              >
-                <span>THE</span>
-                <span className='text-[10px] text-purple-500'>●</span>
-                <span>BAKERS</span>
-              </button>
-              <button
-                onClick={() => setIsMobileOpen(false)}
-                className='rounded-md border border-white/10 bg-white/5 p-2 text-white transition hover:border-purple-500/40 hover:text-purple-300'
-              >
-                <X size={18} />
-              </button>
-            </div>
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div
+            className='fixed inset-0 z-50 md:hidden'
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button
+              className='absolute inset-0 bg-black/60'
+              onClick={() => setIsMobileOpen(false)}
+              aria-label='Close sidebar backdrop'
+            />
+            <motion.aside
+              className='absolute left-0 top-0 flex h-full w-[82%] max-w-[320px] flex-col border-r border-white/5 bg-[#0a0a0c]/95 p-4 backdrop-blur-sm'
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.5, ease: 'easeOut' }}
+            >
+              <div className='mb-4 flex items-center justify-between'>
+                <motion.button
+                  onClick={() => goTo('/home')}
+                  className='inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-white'
+                  style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.4, ease: 'easeOut' }}
+                >
+                  <span>THE</span>
+                  <span className='text-[10px] text-purple-500'>●</span>
+                  <span>BAKERS</span>
+                </motion.button>
+                <button
+                  onClick={() => setIsMobileOpen(false)}
+                  className='rounded-md border border-white/10 bg-white/5 p-2 text-white transition hover:border-purple-500/40 hover:text-purple-300'
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-            <nav className='font-space-grotesk flex-1 space-y-1 overflow-y-auto'>
-              {navItems.map((item) => (
-                <SidebarItem
-                  key={`mobile-${item.label}`}
-                  item={item}
-                  pathname={location.pathname}
-                  open={openGroups[item.label.toLowerCase()] ?? true}
-                  setOpen={(next) =>
-                    setOpenGroups((prev) => ({
-                      ...prev,
-                      [item.label.toLowerCase()]: next,
-                    }))
-                  }
-                  onNavigate={goTo}
-                />
-              ))}
-              <button
-                onClick={handleLogout}
-                className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
+              <motion.nav
+                key={`mobile-sidebar-${location.pathname}`}
+                initial='hidden'
+                animate='visible'
+                variants={sidebarListVariants}
+                className='font-space-grotesk flex-1 space-y-1 overflow-y-auto'
               >
-                <SignOut size={18} />
-                Logout
-              </button>
-            </nav>
-          </aside>
-        </div>
-      )}
+                {navItems.map((item) => (
+                  <motion.div key={`mobile-${item.label}`} variants={sidebarItemVariants}>
+                    <SidebarItem
+                      item={item}
+                      pathname={location.pathname}
+                      open={openGroups[item.label.toLowerCase()] ?? true}
+                      setOpen={(next) =>
+                        setOpenGroups((prev) => ({
+                          ...prev,
+                          [item.label.toLowerCase()]: next,
+                        }))
+                      }
+                      onNavigate={goTo}
+                    />
+                  </motion.div>
+                ))}
+                <motion.button
+                  variants={sidebarItemVariants}
+                  whileHover={{ x: 3 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  onClick={handleLogout}
+                  className='flex w-full items-center gap-3 rounded-md border-l-2 border-transparent px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:border-red-500 hover:bg-red-500/10 hover:text-white'
+                >
+                  <SignOut size={18} />
+                  <span>Logout</span>
+                </motion.button>
+              </motion.nav>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
@@ -362,10 +425,14 @@ function SidebarItem({
           onClick={() => setOpen(!open)}
           className='flex w-full items-center justify-between rounded-md px-4 py-2.5 text-left text-sm text-gray-400 transition-all duration-200 hover:bg-white/5 hover:text-white'
         >
-          <span className='inline-flex items-center gap-2'>
+          <motion.span
+            className='inline-flex items-center gap-2'
+            whileHover={{ x: 3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          >
             {item.icon}
             {item.label}
-          </span>
+          </motion.span>
           <CaretDown
             size={14}
             className={`transition-transform ${open ? 'rotate-180' : ''}`}
@@ -390,7 +457,12 @@ function SidebarItem({
                   }`}
                 >
                   {renderNavIcon(child.icon, isActive)}
-                  {child.label}
+                  <motion.span
+                    whileHover={{ x: 3 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  >
+                    {child.label}
+                  </motion.span>
                 </button>
               )
             })}
@@ -415,7 +487,12 @@ function SidebarItem({
       }`}
     >
       {renderNavIcon(item.icon, isActive)}
-      {item.label}
+      <motion.span
+        whileHover={{ x: 3 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      >
+        {item.label}
+      </motion.span>
     </button>
   )
 }

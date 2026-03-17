@@ -389,32 +389,6 @@ header,
   -webkit-line-clamp: 3;
 }
 
-@keyframes purpleGlowFloat {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(20px, -14px, 0) scale(1.2);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@media (max-width: 768px) {
-  .purple-glow-blob {
-    width: var(--blob-mobile-size) !important;
-    height: var(--blob-mobile-size) !important;
-    filter: blur(var(--blob-mobile-blur)) !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .purple-glow-blob {
-    animation: none !important;
-  }
-}
-
 /* Global SweetAlert2 theme */
 .swal2-popup {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;

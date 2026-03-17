@@ -36,7 +36,6 @@ import { MyRequestsPage } from './pages/my-requests'
 import { PaymentsPage } from './pages/management/gold-payments'
 import { ReceiptsPage } from './pages/management/dollar-payments'
 import { SellsPage } from './pages/sells'
-import { PurpleGlowBackground } from './components/PurpleGlowBackground'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { GlobalErrorPage } from './pages/global-error'
 
@@ -94,7 +93,34 @@ function AppContent() {
 
   return (
     <div className='relative isolate flex min-h-screen w-full flex-col bg-[#060608]'>
-      <PurpleGlowBackground />
+      <div className='pointer-events-none fixed inset-0 z-0 overflow-hidden' aria-hidden='true'>
+        <div className='absolute inset-0 bg-[#060608]' />
+
+        <div
+          className='absolute inset-0'
+          style={{
+            opacity: 0.035,
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")",
+            backgroundRepeat: 'repeat',
+            backgroundSize: '256px 256px',
+          }}
+        />
+
+        <div
+          className='absolute inset-0'
+          style={{
+            opacity: 0.04,
+            backgroundImage: 'radial-gradient(rgba(139,92,246,0.3) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className='absolute -top-[200px] -right-[100px] h-[900px] w-[900px] rounded-full bg-purple-600/[0.07] blur-[120px]' />
+        <div className='absolute -top-[150px] -left-[50px] h-[850px] w-[850px] rounded-full bg-purple-600/[0.07] blur-[120px]' />
+        <div className='absolute -bottom-[100px] -left-[100px] h-[800px] w-[800px] rounded-full bg-violet-600/6 blur-[120px]' />
+        <div className='absolute top-1/2 left-1/2 h-[700px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/4 blur-[100px]' />
+      </div>
       <div className='relative z-10 flex w-full flex-1'>
         {isAuthenticated ? <Header /> : null}
         <main

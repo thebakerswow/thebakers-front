@@ -298,7 +298,11 @@ export function BalanceDataGrid({
                   </td>
                 </tr>
               ) : (
-                processedBalanceData.map((player) => (
+                processedBalanceData.map((player, rowIndex) => {
+                  const shouldOpenClassMenuUpwards =
+                    rowIndex >= processedBalanceData.length - 2
+
+                  return (
                   <tr key={player.id} className='border-b border-white/5'>
                     <td className='py-3 pr-3'>
                       <div className='relative inline-block'>
@@ -320,7 +324,11 @@ export function BalanceDataGrid({
                         </button>
 
                         {openPlayerClassMenu === player.id && (
-                          <div className='absolute left-0 top-11 z-20 w-[196px] rounded-md border border-white/10 bg-[#111115] p-2 shadow-2xl'>
+                          <div
+                            className={`absolute left-0 z-20 w-[196px] rounded-md border border-white/10 bg-[#111115] p-2 shadow-2xl ${
+                              shouldOpenClassMenuUpwards ? 'bottom-11' : 'top-11'
+                            }`}
+                          >
                             <div className='grid grid-cols-5 gap-2'>
                               {classOptions.map((option) => (
                                 <button
@@ -374,7 +382,7 @@ export function BalanceDataGrid({
                       </td>
                     ))}
                   </tr>
-                ))
+                )})
               )}
             </tbody>
             </table>
