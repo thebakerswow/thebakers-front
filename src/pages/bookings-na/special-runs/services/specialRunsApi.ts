@@ -5,6 +5,7 @@ import type {
   CreateClaimServicePayload,
   GetClaimServicesParams,
   SpecialRunServiceType,
+  UpdateClaimServicePaidPayload,
   UpdateClaimServicePayload,
   UpdateClaimServiceStatusPayload,
 } from '../types/specialRuns'
@@ -59,6 +60,17 @@ export const updateClaimServiceStatus = async (
     return response.data
   } catch (error) {
     return throwSpecialRunsApiError(error, 'Failed to update claim service status')
+  }
+}
+
+export const updateClaimServicePaid = async (
+  payload: UpdateClaimServicePaidPayload
+) => {
+  try {
+    const response = await api.put('/claim-services/paid', payload)
+    return response.data
+  } catch (error) {
+    return throwSpecialRunsApiError(error, 'Failed to update claim service paid')
   }
 }
 

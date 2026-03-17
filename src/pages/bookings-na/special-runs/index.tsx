@@ -18,6 +18,7 @@ import {
   deleteClaimService,
   getClaimServices,
   toggleClaimService,
+  updateClaimServicePaid,
   updateClaimServiceStatus,
 } from './services/specialRunsApi'
 import { sendDiscordMessage } from '../run/services/runApi'
@@ -401,6 +402,37 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     }
   }
 
+  const handleTogglePaid = async (buyerId: string) => {
+    const buyer = buyers.find((entry) => entry.id === buyerId)
+    if (!buyer || !canEditStatus(buyer)) return
+    const nextPaidStatus = !buyer.paidFull
+
+    const parsedId = Number(buyerId)
+    if (!Number.isFinite(parsedId) || parsedId <= 0) {
+      await handleApiError(
+        new Error('Invalid claim service id'),
+        'Failed to update claim service paid'
+      )
+      return
+    }
+
+    try {
+      await updateClaimServicePaid({
+        id_claim_service: parsedId,
+        is_paid: nextPaidStatus,
+      })
+      setBuyers((prev) => {
+        const nextBuyers = prev.map((entry) =>
+          entry.id === buyerId ? { ...entry, paidFull: nextPaidStatus } : entry
+        )
+        buyersSnapshotRef.current = JSON.stringify(nextBuyers)
+        return nextBuyers
+      })
+    } catch (error) {
+      await handleApiError(error, 'Failed to update claim service paid')
+    }
+  }
+
   const handleClaim = async (buyerId: string) => {
     if (!responsibleUserId) return
 
@@ -625,6 +657,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
               statusOptions={statusOptions}
               getStatusStyle={getStatusStyle}
               onStatusChange={handleStatusChange}
+              onTogglePaid={handleTogglePaid}
               onClaim={handleClaim}
               onDelete={handleDeleteBuyer}
               onEdit={handleOpenEditBuyer}

@@ -54,6 +54,11 @@ export interface UpdateClaimServicePayload {
   nameAndRealm?: string
 }
 
+export interface UpdateClaimServicePaidPayload {
+  id_claim_service: number
+  is_paid: boolean
+}
+
 export interface SpecialRunDetailsPageProps {
   runType: string
 }
@@ -78,6 +83,7 @@ export interface SpecialRunBuyersGridProps {
   statusOptions: StatusOption[]
   getStatusStyle: (status: SpecialRunBuyerStatus) => string
   onStatusChange: (buyerId: string, newStatus: SpecialRunBuyerStatus) => void
+  onTogglePaid: (buyerId: string) => void
   onClaim: (buyerId: string) => void
   onDelete: (buyer: SpecialRunBuyer) => void
   onEdit: (buyer: SpecialRunBuyer) => void

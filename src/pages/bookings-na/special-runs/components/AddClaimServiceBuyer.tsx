@@ -155,9 +155,9 @@ export function AddClaimServiceBuyer({
       const serviceType = serviceTypeRaw.trim().toLowerCase()
       const teamIdsByType: Record<string, string[]> = {
         keys: [
-          import.meta.env.VITE_TEAM_MPLUS_SOLO,
-          import.meta.env.VITE_TEAM_MPLUS_TEAM,
-          import.meta.env.VITE_TEAM_CHEFE,
+           import.meta.env.VITE_TEAM_MPLUS_SOLO,
+           import.meta.env.VITE_TEAM_MPLUS_TEAM,
+           import.meta.env.VITE_TEAM_CHEFE,
         ],
         leveling: [import.meta.env.VITE_TEAM_LEVELING, import.meta.env.VITE_TEAM_CHEFE],
         delves: [

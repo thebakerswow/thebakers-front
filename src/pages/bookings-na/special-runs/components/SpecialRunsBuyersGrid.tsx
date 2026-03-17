@@ -16,6 +16,7 @@ export function SpecialRunBuyersGrid({
   statusOptions,
   getStatusStyle,
   onStatusChange,
+  onTogglePaid,
   onClaim,
   onDelete,
   onEdit,
@@ -88,13 +89,18 @@ export function SpecialRunBuyersGrid({
                   {buyer.claimedBy || '-'}
                 </td>
                 <td className='px-2 py-2 text-center'>
-                  <span className='inline-flex rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm'>
+                  <button
+                    type='button'
+                    onClick={() => canEditStatus(buyer) && onTogglePaid(buyer.id)}
+                    disabled={!canEditStatus(buyer)}
+                    className='inline-flex rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50'
+                  >
                     {buyer.paidFull ? (
                       <CheckFat className='text-green-500' size={22} weight='fill' />
                     ) : (
                       <X className='text-red-600' size={22} weight='bold' />
                     )}
-                  </span>
+                  </button>
                 </td>
                 <td className='px-2 py-2 text-center'>
                   {buyer.dolarPot > 0
