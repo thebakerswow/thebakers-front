@@ -89,60 +89,6 @@ h6 {
   overflow-x: hidden;
 }
 
-/* Melhorar layout das páginas */
-.page-container {
-  overflow-x: hidden;
-  width: 100%;
-}
-
-/* Adicione isso ao seu CSS global ou no seu componente */
-.DayPicker-Day.selected {
-  background-color: #9f7aea !important; /* Roxo */
-  color: white !important;
-}
-
-/* Estilos personalizados para o Swiper */
-.swiper-pagination-bullet {
-  background-color: #9f7aea !important;
-  opacity: 0.5 !important;
-}
-
-.swiper-pagination-bullet-active {
-  background-color: #9f7aea !important;
-  opacity: 1 !important;
-}
-
-.swiper-pagination {
-  position: relative !important;
-  margin-top: 1rem !important;
-}
-
-.swiper-slide {
-  height: auto !important;
-  padding: 10px !important;
-}
-
-/* Permitir que os cards tenham espaço interno para expandir no hover */
-/* Aplicar apenas aos cards da página home */
-.home-page .swiper-slide > div {
-  transition: transform 0.3s ease !important;
-}
-
-.home-page .swiper-slide:hover > div {
-  transform: scale(1.05) !important;
-  z-index: 10 !important;
-}
-
-/* Aplicar o mesmo tratamento de hover para Hot Services apenas na página home */
-.home-page .grid > div {
-  transition: transform 0.3s ease !important;
-}
-
-.home-page .grid > div:hover {
-  transform: scale(1.05) !important;
-  z-index: 10 !important;
-}
-
 .font-space-grotesk {
   font-family: 'Space Grotesk', 'Montserrat', sans-serif;
 }
@@ -329,83 +275,9 @@ h6 {
 }
 
 /* Time picker styling for Add Run */
-.add-run-timepicker {
-  width: 220px !important;
-  min-width: 220px !important;
-}
-
-.add-run-timepicker .react-datepicker__time-container {
-  width: 100% !important;
-  border-left: none !important;
-  background: #0e0e12 !important;
-}
-
-.add-run-timepicker .react-datepicker__header--time {
-  background: #14141b !important;
-  border-bottom: 1px solid rgba(192, 132, 252, 0.2) !important;
-  color: #f5f5f5 !important;
-}
-
-.add-run-timepicker .react-datepicker-time__header,
-.add-run-timepicker .react-datepicker__time,
-.add-run-timepicker .react-datepicker__time-box,
-.add-run-timepicker .react-datepicker__time-box .react-datepicker__time-list {
-  width: 100% !important;
-  background: #0e0e12 !important;
-  color: #f5f5f5 !important;
-}
-
-.add-run-timepicker .react-datepicker__time-list-item {
-  background: #0e0e12 !important;
-  color: rgba(245, 245, 245, 0.92) !important;
-}
-
-.add-run-timepicker .react-datepicker__time-list-item:hover {
-  background: rgba(168, 85, 247, 0.18) !important;
-  color: #fff !important;
-}
-
-.add-run-timepicker .react-datepicker__time-list-item--selected {
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0.95), rgba(147, 51, 234, 0.95)) !important;
-  color: #fff !important;
-}
-
-/* Normalize native date/time controls to balance theme */
-.add-run-native-input {
-  color-scheme: dark;
-}
-
-.add-run-native-input::-webkit-calendar-picker-indicator {
-  filter: invert(81%) sepia(14%) saturate(944%) hue-rotate(214deg) brightness(101%) contrast(94%);
-  opacity: 0.9;
-}
-
-.add-run-native-input::-webkit-datetime-edit,
-.add-run-native-input::-webkit-datetime-edit-text,
-.add-run-native-input::-webkit-datetime-edit-month-field,
-.add-run-native-input::-webkit-datetime-edit-day-field,
-.add-run-native-input::-webkit-datetime-edit-year-field,
-.add-run-native-input::-webkit-datetime-edit-hour-field,
-.add-run-native-input::-webkit-datetime-edit-minute-field,
-.add-run-native-input::-webkit-datetime-edit-ampm-field {
-  color: rgba(255, 255, 255, 0.95);
-}
-
 /* SweetAlert2 and shared helpers */
 .z-50 {
   z-index: 50;
-}
-
-.swal2-custom-popup {
-  border-radius: 12px !important;
-  font-family: inherit !important;
-}
-
-.swal2-custom-confirm {
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  text-transform: none !important;
-  padding: 12px 24px !important;
 }
 
 .swal2-container {
@@ -510,25 +382,11 @@ header,
   -webkit-line-clamp: 1;
 }
 
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .line-clamp-3 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-}
-
-.line-clamp-4 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
 }
 
 @keyframes purpleGlowFloat {
