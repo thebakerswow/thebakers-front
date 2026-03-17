@@ -95,20 +95,26 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
   }
 
   const formatCurrency = (value: number) => {
-    if (value === 0) return '0'
-    const fixedValue = Math.abs(value).toFixed(2)
+    const roundedToCents = Math.round(value * 100) / 100
+    const normalizedValue = Object.is(roundedToCents, -0) ? 0 : roundedToCents
+    if (normalizedValue === 0) return '0'
+    const fixedValue = Math.abs(normalizedValue).toFixed(2)
     const [integerPart, decimalPart] = fixedValue.split('.')
     const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    return `U$ ${value < 0 ? '-' : ''}${formattedInteger}.${decimalPart}`
+    return `U$ ${normalizedValue < 0 ? '-' : ''}${formattedInteger}.${decimalPart}`
   }
 
   const formatCurrencyWithZero = (value: number) => {
-    if (value === 0) return '-'
+    const roundedToCents = Math.round(value * 100) / 100
+    const normalizedValue = Object.is(roundedToCents, -0) ? 0 : roundedToCents
+    if (normalizedValue === 0) return '-'
     return formatCurrency(value)
   }
 
   const formatDollar = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+      Object.is(Math.round(value * 100) / 100, -0) ? 0 : Math.round(value * 100) / 100
+    )
 
   const getPaymentDateLabel = (dateId: number | null) => {
     if (!dateId) return '-'

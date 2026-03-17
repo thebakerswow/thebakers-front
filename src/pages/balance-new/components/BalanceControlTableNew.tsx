@@ -53,6 +53,21 @@ export function BalanceControlTableNew({
     'h-10 w-full rounded-md border border-white/15 bg-[#0f0f12] px-3 pr-9 text-left text-sm text-white shadow-none outline-none transition focus:border-purple-400/50'
 
   const shouldShowInlineLoading = isLoading && hasReportedInitialLoad.current
+  const formatRoundedIntNoNegativeZero = (value: number | string): string => {
+    const rounded = Math.round(Number(value))
+    const normalized = Object.is(rounded, -0) ? 0 : rounded
+    return normalized.toLocaleString('en-US')
+  }
+  const formatDollarNoNegativeZero = (value: number | string): string => {
+    const numericValue = Number(value)
+    if (!Number.isFinite(numericValue)) return '0.00'
+    const roundedToCents = Math.round(numericValue * 100) / 100
+    const normalizedValue = Object.is(roundedToCents, -0) ? 0 : roundedToCents
+    return normalizedValue.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
 
   const sortedUsers = useMemo(() => {
     if (!Array.isArray(users)) return []
@@ -222,19 +237,14 @@ export function BalanceControlTableNew({
                         {user.username}
                       </span>
                     </td>
-                    <td className='px-3 py-4 text-center'>{Math.round(Number(user.gold)).toLocaleString('en-US')}</td>
+                    <td className='px-3 py-4 text-center'>{formatRoundedIntNoNegativeZero(user.gold)}</td>
                     <td className='px-3 py-4 text-center'>
-                      {Math.round(Number(user.gold_collect)).toLocaleString('en-US')}
+                      {formatRoundedIntNoNegativeZero(user.gold_collect)}
                     </td>
-                    <td className='px-3 py-4 text-center'>{Math.round(Number(user.sum_day)).toLocaleString('en-US')}</td>
+                    <td className='px-3 py-4 text-center'>{formatRoundedIntNoNegativeZero(user.sum_day)}</td>
                     <td className='px-3 py-4 text-center'>
                       {isDolar
-                        ? Math.abs(Number(user.balance_total)) === 0
-                          ? '0.00'
-                          : Number(user.balance_total).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })
+                        ? formatDollarNoNegativeZero(user.balance_total)
                         : Math.abs(Math.round(Number(user.balance_total))) === 0
                           ? '0'
                           : Math.round(Number(user.balance_total)).toLocaleString('en-US')}

@@ -45,8 +45,13 @@ export function ReceiptsSellsTab({ onError }: ReceiptsSellsTabProps) {
   const [editingReceipt, setEditingReceipt] = useState<ReceiptDisplay | null>(null)
   const [receiptsDateOptions, setReceiptsDateOptions] = useState<ReceiptsDate[]>([])
 
-  const formatDollar = (value: number): string =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+  const formatDollar = (value: number): string => {
+    const roundedToCents = Math.round(value * 100) / 100
+    const normalizedValue = Object.is(roundedToCents, -0) ? 0 : roundedToCents
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+      normalizedValue
+    )
+  }
 
   const formatCreatedAt = (createdAt: string) => {
     if (!createdAt) return { date: '-', time: '-' }

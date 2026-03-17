@@ -114,6 +114,17 @@ export function BalanceDataGrid({
     }
   }
 
+  const formatDollarNoNegativeZero = (value: number | string): string => {
+    const numericValue = Number(value)
+    if (!Number.isFinite(numericValue)) return '0.00'
+    const roundedToCents = Math.round(numericValue * 100) / 100
+    const normalizedValue = Object.is(roundedToCents, -0) ? 0 : roundedToCents
+    return normalizedValue.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
   // Busca os dados de balanceamento com base no time e intervalo de datas selecionados
   useEffect(() => {
     const loadBalanceData = async () => {
@@ -334,15 +345,7 @@ export function BalanceDataGrid({
                     </td>
                     <td className='py-3 px-3 text-center text-white'>
                       {is_dolar
-                        ? Math.abs(Number(player.balance_total)) === 0
-                          ? '0.00'
-                          : Number(player.balance_total).toLocaleString(
-                              'en-US',
-                              {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              }
-                            )
+                        ? formatDollarNoNegativeZero(player.balance_total)
                         : Math.abs(Math.round(Number(player.balance_total))) ===
                             0
                           ? '0'
@@ -357,15 +360,7 @@ export function BalanceDataGrid({
                       >
                         {player.dailyValues[date] !== undefined
                           ? is_dolar
-                            ? Math.abs(Number(player.dailyValues[date])) === 0
-                              ? '0.00'
-                              : Number(player.dailyValues[date]).toLocaleString(
-                                  'en-US',
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  }
-                                )
+                            ? formatDollarNoNegativeZero(player.dailyValues[date])
                             : Math.abs(player.dailyValues[date]) === 0
                               ? '0'
                               : Number(player.dailyValues[date]).toLocaleString(

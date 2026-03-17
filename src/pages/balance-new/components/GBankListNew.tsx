@@ -31,7 +31,14 @@ export function GBankListNew({ selectedTeam, onInitialLoadComplete }: GBankListN
     const rawValue = value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '')
     if (rawValue === '-') return '-'
     const numberValue = Number(rawValue.replace(/,/g, ''))
-    return isNaN(numberValue) ? '' : numberValue.toLocaleString('en-US')
+    if (isNaN(numberValue)) return ''
+    return (Object.is(numberValue, -0) ? 0 : numberValue).toLocaleString('en-US')
+  }
+
+  const formatRoundedIntNoNegativeZero = (value: number | string) => {
+    const rounded = Math.round(Number(value))
+    const normalized = Object.is(rounded, -0) ? 0 : rounded
+    return normalized.toLocaleString('en-US')
   }
 
   const showUploadModal = (gbank: GBank, value: string) => {
@@ -341,7 +348,7 @@ export function GBankListNew({ selectedTeam, onInitialLoadComplete }: GBankListN
                               <tr key={g.id} className='border-t border-white/10'>
                                 <td className='px-3 py-3'>{g.name}</td>
                                 <td className='px-3 py-3 text-center'>
-                                  {Math.round(Number(g.balance)).toLocaleString('en-US')}
+                                  {formatRoundedIntNoNegativeZero(g.balance)}
                                 </td>
                                 <td className='px-3 py-3 text-center'>
                                   <input
