@@ -29,7 +29,7 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
   return (
     <section
       id='schedule-section'
-      className='relative z-10 mx-auto w-full max-w-[1720px] px-4 pb-16 pt-16 sm:px-6 lg:px-12 2xl:px-16'
+      className='relative z-10 w-full pb-16 pt-16'
     >
       <motion.div
         initial={{ opacity: 0, y: 10 }}
