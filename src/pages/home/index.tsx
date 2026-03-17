@@ -186,15 +186,6 @@ export function HomePage() {
             <Schedule dates={dates} weekRuns={weekRuns} loadingRuns={loadingRuns} />
           </div>
 
-          <CategoryFilters
-            categoriesWithServices={categoriesWithServices}
-            activeCategory={activeCategory}
-            filtersOpen={filtersOpen}
-            onSetFiltersOpen={setFiltersOpen}
-            onSelectCategory={setActiveCategory}
-            onScrollToSchedule={scrollToSchedule}
-          />
-
           <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
             <section className='relative z-10 pb-2 pt-8 text-center sm:pt-10'>
               <motion.div
@@ -232,6 +223,16 @@ export function HomePage() {
                 </motion.div>
               </div>
             </section>
+
+            <CategoryFilters
+              categoriesWithServices={categoriesWithServices}
+              activeCategory={activeCategory}
+              filtersOpen={filtersOpen}
+              onSetFiltersOpen={setFiltersOpen}
+              onSelectCategory={setActiveCategory}
+              onScrollToSchedule={scrollToSchedule}
+            />
+            <div className='h-20' aria-hidden='true' />
 
             {loadingServices ? (
               <ServicesSkeleton />
