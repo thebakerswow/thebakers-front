@@ -26,7 +26,7 @@ const TEAM_NAMES: Record<string, string> = {
   [import.meta.env.VITE_TEAM_INSANOS]: 'Insanos',
   [import.meta.env.VITE_TEAM_APAE]: 'APAE',
   [import.meta.env.VITE_TEAM_LOSRENEGADOS]: 'Los Renegados',
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'Booty Reaper',
+  [import.meta.env.VITE_TEAM_PUNKS]: 'Punks',
 }
 
 export function RequestsPage() {

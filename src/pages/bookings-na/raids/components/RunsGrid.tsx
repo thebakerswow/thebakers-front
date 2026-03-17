@@ -57,7 +57,7 @@ export function RunsDataGrid({
     'Guild Azralon BR#1': 10,
     'Guild Azralon BR#2': 11,
     Rocket: 12,
-    'Booty Reaper': 13,
+    'Punks': 13,
     Padeirinho: 14,
     Milharal: 15,
   }
@@ -75,11 +75,11 @@ export function RunsDataGrid({
     'Guild Azralon BR#1': 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))',
     'Guild Azralon BR#2': 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))',
     Rocket: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
-    'Booty Reaper': 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
+    'Punks': 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
     Padeirinho: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))',
     Milharal: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))',
     'Bastard Munchen': 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))',
-    'Kiwi': 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
+    'Gachi Squad': 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
   }
 
   // Retorna o estilo de fundo associado a um time
@@ -265,7 +265,7 @@ export function RunsDataGrid({
         team === 'KFFC' ||
         team === 'Insanos' ||
         team === 'Greensky' ||
-        team === 'Booty Reaper' ||
+        team === 'Punks' ||
         team === 'Guild Azralon BR#1' ||
         team === 'Guild Azralon BR#2' ||
         team === 'Rocket' 

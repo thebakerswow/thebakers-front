@@ -28,11 +28,11 @@ export const TEAM_ID_TO_COLOR_MAP: Record<string, string> = {
   [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))',
   [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))',
   [import.meta.env.VITE_TEAM_ROCKET]: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))',
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
+  [import.meta.env.VITE_TEAM_PUNKS]: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))',
   [import.meta.env.VITE_TEAM_PADEIRINHO]: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))',
   [import.meta.env.VITE_TEAM_MILHARAL]: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))',
   [import.meta.env.VITE_TEAM_BASTARD]: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))',
-  [import.meta.env.VITE_TEAM_KIWI]: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
+  [import.meta.env.VITE_TEAM_GACHI_SQUAD]: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
 }
 
 export const PRIORITY_ORDER = [
@@ -49,11 +49,11 @@ export const PRIORITY_ORDER = [
   'Guild Azralon BR#1',
   'Guild Azralon BR#2',
   'Rocket',
-  'Booty Reaper',
+  'Punks',
   'Padeirinho',
   'Milharal',
   'Bastard Munchen',
-  'Kiwi',
+  'Gachi Squad',
 ]
 
 export const COLOR_OPTIONS = [
@@ -70,13 +70,13 @@ export const COLOR_OPTIONS = [
   { value: 'linear-gradient(270deg, rgba(45,212,191,0.72), rgba(13,148,136,0.62))', label: 'Guild Azralon BR#1' },
   { value: 'linear-gradient(270deg, rgba(96,165,250,0.72), rgba(29,78,216,0.62))', label: 'Guild Azralon BR#2' },
   { value: 'linear-gradient(90deg, rgba(248,113,113,0.72), rgba(185,28,28,0.62))', label: 'Rocket' },
-  { value: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))', label: 'Booty Reaper' },
+  { value: 'linear-gradient(90deg, rgba(139,92,246,0.72), rgba(76,29,149,0.62))', label: 'Punks' },
   { value: 'linear-gradient(90deg, rgba(251,146,60,0.72), rgba(234,88,12,0.62))', label: 'Padeirinho' },
   { value: 'linear-gradient(90deg, rgba(254,243,199,0.62), rgba(254,240,138,0.54))', label: 'Milharal' },
   { value: '#9CA3AF', label: 'Advertiser' },
   { value: '#86EFAC', label: 'Freelancer' },
   { value: 'linear-gradient(90deg, rgba(245,158,11,0.72), rgba(217,119,6,0.62))', label: 'Bastard Munchen' },
-  { value: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))', label: 'Kiwi' },
+  { value: 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))', label: 'Gachi Squad' },
 ]
 
 export const compareByPriority = (aLabel: string, bLabel: string) => {

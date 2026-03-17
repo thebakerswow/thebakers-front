@@ -159,11 +159,11 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     { value: import.meta.env.VITE_TEAM_GUILD_AZRALON_1, label: 'Guild Azralon BR#1' },
     { value: import.meta.env.VITE_TEAM_GUILD_AZRALON_2, label: 'Guild Azralon BR#2' },
     { value: import.meta.env.VITE_TEAM_ROCKET, label: 'Rocket' },
-    { value: import.meta.env.VITE_TEAM_BOOTY_REAPER, label: 'Booty Reaper' },
+    { value: import.meta.env.VITE_TEAM_PUNKS, label: 'Punks' },
     { value: import.meta.env.VITE_TEAM_PADEIRINHO, label: 'Padeirinho' },
     { value: import.meta.env.VITE_TEAM_MILHARAL, label: 'Milharal' },
     { value: import.meta.env.VITE_TEAM_BASTARD, label: 'Bastard Munchen' },
-    { value: import.meta.env.VITE_TEAM_KIWI, label: 'Kiwi' },
+    { value: import.meta.env.VITE_TEAM_GACHI_SQUAD, label: 'Gachi Squad' },
   ]
   const lootOptions = [
     'Group loot',

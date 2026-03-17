@@ -31,13 +31,13 @@ const teamOrder = [
   'Guild Azralon BR#1',
   'Guild Azralon BR#2',
   'Rocket',
-  'Booty Reaper',
+  'Punks',
   'Padeirinho',
   'Milharal',
   'Advertiser',
   'Freelancer',
   'Bastard Munchen',
-  'Kiwi',
+  'Gachi Squad',
 ] as const
 
 interface PaymentRow {

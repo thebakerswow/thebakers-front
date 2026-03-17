@@ -41,13 +41,13 @@ const teamIdToLabelMap: Record<string, string> = {
   [import.meta.env.VITE_TEAM_GUILD_AZRALON_1]: 'Guild Azralon BR#1',
   [import.meta.env.VITE_TEAM_GUILD_AZRALON_2]: 'Guild Azralon BR#2',
   [import.meta.env.VITE_TEAM_ROCKET]: 'Rocket',
-  [import.meta.env.VITE_TEAM_BOOTY_REAPER]: 'Booty Reaper',
+  [import.meta.env.VITE_TEAM_PUNKS]: 'Punks',
   [import.meta.env.VITE_TEAM_PADEIRINHO]: 'Padeirinho',
   [import.meta.env.VITE_TEAM_MILHARAL]: 'Milharal',
   [import.meta.env.VITE_TEAM_ADVERTISER]: 'Advertiser',
   [import.meta.env.VITE_TEAM_FREELANCER]: 'Freelancer',
   [import.meta.env.VITE_TEAM_BASTARD]: 'Bastard Munchen',
-  [import.meta.env.VITE_TEAM_KIWI]: 'Kiwi',
+  [import.meta.env.VITE_TEAM_GACHI_SQUAD]: 'Gachi Squad',
 }
 
 const teamSelectOptions = Object.entries(teamIdToLabelMap)

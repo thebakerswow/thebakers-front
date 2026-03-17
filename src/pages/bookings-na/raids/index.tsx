@@ -45,11 +45,11 @@ export function FullRaidsNa() {
       { value: 'Guild Azralon BR#1', label: 'Guild Azralon BR#1' },
       { value: 'Guild Azralon BR#2', label: 'Guild Azralon BR#2' },
       { value: 'Rocket', label: 'Rocket' },
-      { value: 'Booty Reaper', label: 'Booty Reaper' },
+      { value: 'Punks', label: 'Punks' },
       { value: 'Padeirinho', label: 'Padeirinho' },
       { value: 'Milharal', label: 'Milharal' },
       { value: 'Bastard Munchen', label: 'Bastard Munchen' },
-      { value: 'Kiwi', label: 'Kiwi' },
+      { value: 'Gachi Squad', label: 'Gachi Squad' },
     ],
     []
   )

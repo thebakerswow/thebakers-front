@@ -27,7 +27,7 @@ const sortTeamsByPriority = (
     'Guild Azralon BR#1',
     'Guild Azralon BR#2',
     'Rocket',
-    'Booty Reaper',
+    'Punks',
     'Padeirinho',
     'Milharal',
     'Bastard Munchen',

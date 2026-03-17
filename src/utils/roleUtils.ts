@@ -14,11 +14,11 @@ export const hasTeamRoles = (userRoles: string[]): boolean => {
     import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
     import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
     import.meta.env.VITE_TEAM_ROCKET,
-    import.meta.env.VITE_TEAM_BOOTY_REAPER,
+    import.meta.env.VITE_TEAM_PUNKS,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
     import.meta.env.VITE_TEAM_BASTARD,
-    import.meta.env.VITE_TEAM_KIWI,
+    import.meta.env.VITE_TEAM_GACHI_SQUAD,
   ]
 
   return userRoles.some(role => teamRoles.includes(role))
@@ -40,11 +40,11 @@ export const getTrackedTeamRoles = (userRoles: string[]): string[] => {
     import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
     import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
     import.meta.env.VITE_TEAM_ROCKET,
-    import.meta.env.VITE_TEAM_BOOTY_REAPER,
+    import.meta.env.VITE_TEAM_PUNKS,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
     import.meta.env.VITE_TEAM_BASTARD,
-    import.meta.env.VITE_TEAM_KIWI,
+    import.meta.env.VITE_TEAM_GACHI_SQUAD,
   ]
 
   return userRoles.filter(role => teamRoles.includes(role))
@@ -187,11 +187,11 @@ export const getUserTeamsForFilter = (userRoles: string[]): string[] => {
     import.meta.env.VITE_TEAM_GUILD_AZRALON_1,
     import.meta.env.VITE_TEAM_GUILD_AZRALON_2,
     import.meta.env.VITE_TEAM_ROCKET,
-    import.meta.env.VITE_TEAM_BOOTY_REAPER,
+    import.meta.env.VITE_TEAM_PUNKS,
     import.meta.env.VITE_TEAM_PADEIRINHO,
     import.meta.env.VITE_TEAM_MILHARAL,
     import.meta.env.VITE_TEAM_BASTARD,
-    import.meta.env.VITE_TEAM_KIWI,
+    import.meta.env.VITE_TEAM_GACHI_SQUAD,
   ]
 
   // Se o usuário tem cargo de Chefe de cozinha, retorna todos os times
@@ -298,7 +298,7 @@ export const shouldUseNewBalance = (userRoles: string[]): boolean => {
     import.meta.env.VITE_TEAM_INSANOS,
     import.meta.env.VITE_TEAM_APAE,
     import.meta.env.VITE_TEAM_LOSRENEGADOS,
-    import.meta.env.VITE_TEAM_BOOTY_REAPER
+    import.meta.env.VITE_TEAM_PUNKS
   ]
 
   return userRoles.some((role) => rolesWithNewBalance.includes(role))
