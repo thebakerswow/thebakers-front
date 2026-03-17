@@ -61,16 +61,8 @@ export const sendDiscordBulkMessage = async (
   recipientIds: string[],
   message: string
 ) => {
-  const uniqueRecipients = Array.from(
-    new Set(recipientIds.map((id) => String(id).trim()).filter(Boolean))
-  )
-
-  if (uniqueRecipients.length === 0) {
-    return { info: [], errors: [] }
-  }
-
   const response = await api.post('/discord/send_message/bulk', {
-    id_discord_recipients: uniqueRecipients,
+    id_discord_recipients: recipientIds,
     message,
   })
   return response.data

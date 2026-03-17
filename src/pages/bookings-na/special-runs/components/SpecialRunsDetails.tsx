@@ -1,10 +1,30 @@
+import { forwardRef } from 'react'
 import { CalendarBlank, CaretLeft, CaretRight, Clock, UserPlus } from '@phosphor-icons/react'
+import DatePicker from 'react-datepicker'
 import type { SpecialRunDetailsProps } from '../types/specialRuns'
 
+const DatePickerInput = forwardRef<
+  HTMLButtonElement,
+  { value?: string; onClick?: () => void }
+>(({ value, onClick }, ref) => (
+  <button
+    ref={ref}
+    type='button'
+    onClick={onClick}
+    className='inline-flex h-10 min-w-[220px] items-center justify-center gap-2 rounded-md border border-white/15 bg-white/[0.08] px-4 text-sm font-medium text-neutral-100 transition hover:border-purple-300/40 hover:bg-white/[0.12]'
+  >
+    <CalendarBlank size={16} />
+    {value || '-'}
+  </button>
+))
+
+DatePickerInput.displayName = 'DatePickerInput'
+
 export function SpecialRunDetails({
-  selectedDateLabel,
+  selectedDate,
   onPreviousDate,
   onNextDate,
+  onDateSelect,
   onOpenAddBuyer,
   onOpenHistory,
   canSeeHistoryButton,
@@ -21,10 +41,14 @@ export function SpecialRunDetails({
           <button type='button' onClick={onPreviousDate} className={dateButtonClass} aria-label='Previous day'>
             <CaretLeft size={18} />
           </button>
-          <span className='inline-flex h-10 min-w-[220px] items-center justify-center gap-2 rounded-md border border-white/15 bg-white/[0.08] px-4 text-sm font-medium text-neutral-100'>
-            <CalendarBlank size={16} />
-            {selectedDateLabel}
-          </span>
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date) => date && onDateSelect(date)}
+            dateFormat='EEE, MMM dd, yyyy'
+            customInput={<DatePickerInput />}
+            popperClassName='z-[240] balance-datepicker-popper'
+            calendarClassName='balance-datepicker add-run-datepicker'
+          />
           <button type='button' onClick={onNextDate} className={dateButtonClass} aria-label='Next day'>
             <CaretRight size={18} />
           </button>

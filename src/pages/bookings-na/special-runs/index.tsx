@@ -532,17 +532,6 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     )
   }
 
-  const selectedDateLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-      }).format(selectedDate),
-    [selectedDate]
-  )
-
   return (
     <div className='flex w-full flex-col overflow-auto rounded-xl text-gray-100 shadow-2xl'>
       {isInitialLoad && isLoadingBuyers ? (
@@ -550,13 +539,14 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       ) : (
         <div className='mx-2 p-4 pb-4'>
           <SpecialRunDetails
-            selectedDateLabel={selectedDateLabel}
+            selectedDate={selectedDate}
             onPreviousDate={() =>
               setSelectedDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1))
             }
             onNextDate={() =>
               setSelectedDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1))
             }
+            onDateSelect={setSelectedDate}
             onOpenAddBuyer={() => setIsAddBuyerOpen(true)}
             onOpenHistory={() => setIsHistoryOpen(true)}
             canSeeHistoryButton={canSeeHistoryButton}

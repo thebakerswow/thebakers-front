@@ -287,21 +287,23 @@ export function AddClaimServiceBuyer({
       await createClaimService(payload)
 
       if (['keys', 'key', 'leveling', 'delves', 'achievements'].includes(type.trim().toLowerCase())) {
-        void sendClaimServiceNotification(
-          type,
-          formData.nameAndRealm || '',
-          formData.claimServiceNote || '',
-          buyerPriceLabel
-        ).catch(async (notificationError) => {
-          if (isDiscordDmBlockedError(notificationError)) {
-            // Ignore Discord DM blocked errors and keep buyer creation flow silent.
+        try {
+          await sendClaimServiceNotification(
+            type,
+            formData.nameAndRealm || '',
+            formData.claimServiceNote || '',
+            buyerPriceLabel
+          )
+        } catch (notificationError) {
+          if (!isDiscordDmBlockedError(notificationError)) {
+            await handleApiError(
+              notificationError,
+              'Buyer created, but failed to notify one or more users on Discord'
+            )
+            setIsSubmitting(false)
             return
           }
-          await handleApiError(
-            notificationError,
-            'Buyer created, but failed to notify one or more users on Discord'
-          )
-        })
+        }
       }
 
       onClose()

@@ -59,9 +59,10 @@ export interface SpecialRunDetailsPageProps {
 }
 
 export interface SpecialRunDetailsProps {
-  selectedDateLabel: string
+  selectedDate: Date
   onPreviousDate: () => void
   onNextDate: () => void
+  onDateSelect: (date: Date) => void
   onOpenAddBuyer: () => void
   onOpenHistory: () => void
   canSeeHistoryButton: boolean

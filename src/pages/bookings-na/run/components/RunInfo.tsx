@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Clock, Lock, LockOpen, Pencil, UserPlus } from '@phosphor-icons/react'
 import { RiMegaphoneLine } from 'react-icons/ri'
+import { format, parseISO } from 'date-fns'
 import { AddBuyer } from './AddBuyer'
 import { EditRun } from './EditRun'
 import { useAuth } from '../../../../context/AuthContext'
@@ -77,6 +78,14 @@ export function RunInfo({
     const formattedHours = hours % 12 || 12 // Converte 0 para 12 no formato 12h
 
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
+  function formatRunDate(dateStr: string) {
+    try {
+      return format(parseISO(dateStr), 'EEEE LL/dd')
+    } catch {
+      return dateStr
+    }
   }
 
   const handleToggleRunLock = async () => {
@@ -299,7 +308,11 @@ export function RunInfo({
               {run.raid} {run.difficulty}
             </h1>
             <p className='mt-1 text-sm text-neutral-300'>
-              {run.time ? `${formatTo12HourEST(run.time)} EST` : '-'}
+              {run.date || run.time
+                ? `${run.date ? formatRunDate(run.date) : '-'}${run.date && run.time ? ' - ' : ''}${
+                    run.time ? `${formatTo12HourEST(run.time)} EST` : '-'
+                  }`
+                : '-'}
             </p>
 
             <dl className='mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 xl:grid-cols-3'>
