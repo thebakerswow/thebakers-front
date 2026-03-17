@@ -205,8 +205,8 @@ export const getUserTeamsForFilter = (userRoles: string[]): string[] => {
 
 // Função para determinar se deve mostrar o botão US/Gold no balance
 export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
-  // Usuários somente freelancer não devem ver o botão US/Gold
-  if (isOnlyFreelancer(userRoles)) {
+  // Qualquer usuário com cargo freelancer não deve ver o botão US/Gold
+  if (hasFreelancerRole(userRoles)) {
     return false
   }
 
@@ -215,7 +215,7 @@ export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
     return false
   }
   
-  // Outros usuários podem ver o botão (incluindo advertiser + freelancer)
+  // Outros usuários podem ver o botão
   return true
 }
 

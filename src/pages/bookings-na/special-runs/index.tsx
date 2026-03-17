@@ -328,9 +328,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   }
 
   const canEditStatus = (buyer: SpecialRunBuyer) => {
-    if (!buyer.claimed) return false
-    if (isChefeDeCozinha) return true
-    return isBuyerClaimedByCurrentUser(buyer)
+    void buyer
+    return true
   }
 
   const canUseActionButtons = (buyer: SpecialRunBuyer) => {

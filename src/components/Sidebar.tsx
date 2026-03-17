@@ -86,6 +86,13 @@ export function Header() {
     return requiredRoles.some((role) => userRoles.includes(role))
   }
   const isFreelancerOnlyUser = isOnlyFreelancer(userRoles)
+  const hasFreelancerRole = userRoles.includes(import.meta.env.VITE_TEAM_FREELANCER)
+  const hasMplusKeysAccess = hasAccess([
+    import.meta.env.VITE_TEAM_MPLUS_SOLO,
+    import.meta.env.VITE_TEAM_MPLUS_TEAM,
+  ])
+  const hasLevelingAccess = hasAccess([import.meta.env.VITE_TEAM_LEVELING])
+  const hasAchievementsAccess = hasAccess([import.meta.env.VITE_TEAM_ACHIEVEMENTS])
 
   const handleLogout = () => {
     logout()
@@ -107,7 +114,9 @@ export function Header() {
           icon: <CurrencyDollar size={18} />,
           children: [
             { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
-            { label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> },
+            ...(!hasFreelancerRole
+              ? [{ label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> }]
+              : []),
             ...(shouldUseNewBalance(userRoles)
               ? [{ label: 'My Requests', path: '/my-requests', icon: <User size={18} /> }]
               : []),
@@ -144,52 +153,75 @@ export function Header() {
               },
             ]
           : []),
-        ...(shouldShowBookingsTab(userRoles)
+        ...(shouldShowBookingsTab(userRoles) ||
+        hasMplusKeysAccess ||
+        hasLevelingAccess ||
+        hasAchievementsAccess
           ? [
               {
                 label: 'Bookings (NA)',
                 icon: <CalendarBlank size={18} />,
                 children: [
-                  {
-                    label: 'Raids',
-                    path: '/bookings-na/raids',
-                    activeExactPaths: ['/bookings-na/raids'],
-                    activeMatchPaths: ['/bookings-na/run'],
-                    activePaths: ['/bookings-na/run'],
-                    icon: <ListIcon size={18} />,
-                  },
-                  {
-                    label: 'Keys',
-                    path: '/keys',
-                    activeExactPaths: ['/keys'],
-                    activeMatchPaths: ['/keys', '/bookings-na/key'],
-                    activePaths: ['/bookings-na/key'],
-                    icon: <Key size={18} />,
-                  },
-                  {
-                    label: 'Leveling',
-                    path: '/leveling',
-                    activeExactPaths: ['/leveling'],
-                    activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
-                    activePaths: ['/bookings-na/leveling'],
-                    icon: <ArrowFatUp size={18} />,
-                  },
-                  {
-                    label: 'Delves',
-                    path: '/delves',
-                    activeExactPaths: ['/delves'],
-                    activeMatchPaths: ['/delves', '/bookings-na/delves'],
-                    activePaths: ['/bookings-na/delves'],
-                    icon: <Sword size={18} />,
-                  },
-                  {
-                    label: 'Achievements',
-                    path: '/achievements',
-                    activeExactPaths: ['/achievements'],
-                    activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
-                    activePaths: ['/bookings-na/achievements'],
-                    icon: <Trophy size={18} />,
-                  },
+                  ...(shouldShowBookingsTab(userRoles)
+                    ? [
+                        {
+                          label: 'Raids',
+                          path: '/bookings-na/raids',
+                          activeExactPaths: ['/bookings-na/raids'],
+                          activeMatchPaths: ['/bookings-na/run'],
+                          activePaths: ['/bookings-na/run'],
+                          icon: <ListIcon size={18} />,
+                        },
+                      ]
+                    : []),
+                  ...(shouldShowBookingsTab(userRoles) || hasMplusKeysAccess
+                    ? [
+                        {
+                          label: 'Keys',
+                          path: '/keys',
+                          activeExactPaths: ['/keys'],
+                          activeMatchPaths: ['/keys', '/bookings-na/key'],
+                          activePaths: ['/bookings-na/key'],
+                          icon: <Key size={18} />,
+                        },
+                      ]
+                    : []),
+                  ...(shouldShowBookingsTab(userRoles) || hasLevelingAccess
+                    ? [
+                        {
+                          label: 'Leveling',
+                          path: '/leveling',
+                          activeExactPaths: ['/leveling'],
+                          activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
+                          activePaths: ['/bookings-na/leveling'],
+                          icon: <ArrowFatUp size={18} />,
+                        },
+                      ]
+                    : []),
+                  ...(shouldShowBookingsTab(userRoles) || hasMplusKeysAccess
+                    ? [
+                        {
+                          label: 'Delves',
+                          path: '/delves',
+                          activeExactPaths: ['/delves'],
+                          activeMatchPaths: ['/delves', '/bookings-na/delves'],
+                          activePaths: ['/bookings-na/delves'],
+                          icon: <Sword size={18} />,
+                        },
+                      ]
+                    : []),
+                  ...(shouldShowBookingsTab(userRoles) || hasAchievementsAccess
+                    ? [
+                        {
+                          label: 'Achievements',
+                          path: '/achievements',
+                          activeExactPaths: ['/achievements'],
+                          activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
+                          activePaths: ['/bookings-na/achievements'],
+                          icon: <Trophy size={18} />,
+                        },
+                      ]
+                    : []),
                 ],
               },
             ]

@@ -50,7 +50,7 @@ export function SpecialRunBuyersGrid({
               <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
               <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
               <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
-              <th className='px-2 py-3 text-center font-semibold'>Run Pot</th>
+              <th className='px-2 py-3 text-center font-semibold'>Service Pot</th>
               <th className='px-2 py-3 text-center font-semibold'>Class</th>
               <th className='px-2 py-3 text-center font-semibold'>Claim</th>
               <th className='px-2 py-3 text-center font-semibold'>Actions</th>

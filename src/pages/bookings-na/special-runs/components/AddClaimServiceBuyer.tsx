@@ -149,15 +149,14 @@ export function AddClaimServiceBuyer({
   const sendClaimServiceNotification = useCallback(
     async (
       serviceTypeRaw: string,
-      buyerNameAndRealm: string,
       buyerNote: string,
       buyerPrice: string
     ) => {
       const serviceType = serviceTypeRaw.trim().toLowerCase()
       const teamIdsByType: Record<string, string[]> = {
         keys: [
-          import.meta.env.VITE_TEAM_MPLUS_SOLO,
-          import.meta.env.VITE_TEAM_MPLUS_TEAM,
+          // import.meta.env.VITE_TEAM_MPLUS_SOLO,
+          // import.meta.env.VITE_TEAM_MPLUS_TEAM,
           import.meta.env.VITE_TEAM_CHEFE,
         ],
         leveling: [import.meta.env.VITE_TEAM_LEVELING, import.meta.env.VITE_TEAM_CHEFE],
@@ -193,7 +192,6 @@ export function AddClaimServiceBuyer({
       if (recipientIds.size === 0) return
 
       const pageLink = window.location.href
-      const buyerLabel = buyerNameAndRealm.trim() || 'Unknown buyer'
       const noteLabel = buyerNote.trim() || '-'
       const priceLabel = buyerPrice.trim() || '-'
       const serviceLabel =
@@ -204,7 +202,7 @@ export function AddClaimServiceBuyer({
             : serviceType === 'achievements'
               ? 'Achievements'
             : 'Keys'
-      const message = `New buyer added in ${serviceLabel}\nBuyer: ${buyerLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nLink: ${pageLink}`
+      const message = `New buyer added in ${serviceLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nLink: ${pageLink}`
 
       try {
         await sendDiscordBulkMessage(Array.from(recipientIds), message)
@@ -290,7 +288,6 @@ export function AddClaimServiceBuyer({
         try {
           await sendClaimServiceNotification(
             type,
-            formData.nameAndRealm || '',
             formData.claimServiceNote || '',
             buyerPriceLabel
           )
