@@ -35,7 +35,7 @@
     "react-router-dom": "^6.26.0",
     "react-zoom-pan-pinch": "^3.7.0",
     "sweetalert2": "^11.22.2",
-    "swiper": "^11.2.10",
+    "swiper": "^12.1.2",
     "tailwind-variants": "^0.2.1"
   },
   "devDependencies": {

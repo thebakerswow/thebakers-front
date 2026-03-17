@@ -12,11 +12,19 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'], // Separa pacotes de vendor
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+
+          // Split each dependency into its own chunk for better cacheability
+          // and to avoid oversized app chunks.
+          const pkgPath = id.split('node_modules/')[1]
+          const pkgName = pkgPath?.startsWith('@')
+            ? pkgPath.split('/').slice(0, 2).join('/')
+            : pkgPath?.split('/')[0]
+
+          return pkgName ? `vendor-${pkgName.replace('/', '-')}` : 'vendor'
         },
       },
     },
-    chunkSizeWarningLimit: 1000, // Optional: Increases the warning limit
   },
 })
