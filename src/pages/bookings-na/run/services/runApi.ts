@@ -69,11 +69,56 @@ export const sendDiscordBulkMessage = async (
     return { info: [], errors: [] }
   }
 
-  const response = await api.post('/discord/send_message/bulk', {
-    id_discord_recipients: uniqueRecipients,
-    message,
-  })
-  return response.data
+  const BULK_CHUNK_SIZE = 75
+  const MAX_CONCURRENT_BULK_REQUESTS = 3
+
+  const recipientChunks: string[][] = []
+  for (let index = 0; index < uniqueRecipients.length; index += BULK_CHUNK_SIZE) {
+    recipientChunks.push(uniqueRecipients.slice(index, index + BULK_CHUNK_SIZE))
+  }
+
+  const aggregateResponse = {
+    info: [] as unknown[],
+    errors: [] as unknown[],
+  }
+
+  for (
+    let chunkIndex = 0;
+    chunkIndex < recipientChunks.length;
+    chunkIndex += MAX_CONCURRENT_BULK_REQUESTS
+  ) {
+    const concurrentChunks = recipientChunks.slice(
+      chunkIndex,
+      chunkIndex + MAX_CONCURRENT_BULK_REQUESTS
+    )
+
+    const chunkResponses = await Promise.all(
+      concurrentChunks.map((chunkRecipientIds) =>
+        api.post('/discord/send_message/bulk', {
+          id_discord_recipients: chunkRecipientIds,
+          message,
+        })
+      )
+    )
+
+    chunkResponses.forEach((response) => {
+      const data = response.data as { info?: unknown; errors?: unknown }
+
+      if (Array.isArray(data.info)) {
+        aggregateResponse.info.push(...data.info)
+      } else if (data.info != null) {
+        aggregateResponse.info.push(data.info)
+      }
+
+      if (Array.isArray(data.errors)) {
+        aggregateResponse.errors.push(...data.errors)
+      } else if (data.errors != null) {
+        aggregateResponse.errors.push(data.errors)
+      }
+    })
+  }
+
+  return aggregateResponse
 }
 
 export const createBuyer = async (buyerData: unknown) => {
