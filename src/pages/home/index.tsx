@@ -219,15 +219,18 @@ export function HomePage() {
                 </motion.div>
               </div>
             </section>
+          </div>
 
-            <CategoryFilters
-              categoriesWithServices={categoriesWithServices}
-              activeCategory={activeCategory}
-              filtersOpen={filtersOpen}
-              onSetFiltersOpen={setFiltersOpen}
-              onSelectCategory={setActiveCategory}
-              onScrollToSchedule={scrollToSchedule}
-            />
+          <CategoryFilters
+            categoriesWithServices={categoriesWithServices}
+            activeCategory={activeCategory}
+            filtersOpen={filtersOpen}
+            onSetFiltersOpen={setFiltersOpen}
+            onSelectCategory={setActiveCategory}
+            onScrollToSchedule={scrollToSchedule}
+          />
+
+          <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
             <Schedule dates={dates} weekRuns={weekRuns} loadingRuns={loadingRuns} />
             <div className='h-20' aria-hidden='true' />
 
