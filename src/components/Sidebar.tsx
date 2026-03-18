@@ -304,7 +304,6 @@ export function Header() {
               </motion.button>
             </div>
             <motion.nav
-              key={`desktop-sidebar-${location.pathname}`}
               initial='hidden'
               animate='visible'
               variants={sidebarListVariants}
@@ -381,7 +380,6 @@ export function Header() {
               </div>
 
               <motion.nav
-                key={`mobile-sidebar-${location.pathname}`}
                 initial='hidden'
                 animate='visible'
                 variants={sidebarListVariants}
