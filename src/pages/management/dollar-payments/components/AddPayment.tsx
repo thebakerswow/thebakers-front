@@ -2,6 +2,7 @@ import { UserPlus, Plus, PencilSimple } from '@phosphor-icons/react'
 import { X } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
+import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { ApiErrorDetails, handleApiError } from '../../../../utils/apiErrorHandler'
 import { AddReceiptsPayer } from './AddPaymentsPayer'
@@ -268,6 +269,17 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
     }))
   }
 
+  const customSelectTriggerClass =
+    'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+  const payerSelectOptions = payers.map((payer) => ({
+    value: String(payer.id),
+    label: payer.name,
+  }))
+  const receiptDateSelectOptions = receiptDateOptions.map((receiptDate) => ({
+    value: String(receiptDate.id),
+    label: receiptDate.name,
+  }))
+
   return (
     <>
       <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
@@ -302,28 +314,25 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                 Payer *
               </label>
               <div className='flex gap-2'>
-                <select
-                  id='payer'
-                  value={formData.payerId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      payerId: e.target.value,
-                    }))
-                  }
-                  required
-                  disabled={isLoadingPayers}
-                  className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
-                >
-                  <option value='' disabled>
-                    {isLoadingPayers ? 'Loading payers...' : 'Select a Payer'}
-                  </option>
-                  {payers.map((payer) => (
-                    <option key={payer.id} value={String(payer.id)}>
-                      {payer.name}
-                    </option>
-                  ))}
-                </select>
+                <div className='flex-1'>
+                  <CustomSelect
+                    value={formData.payerId}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        payerId: value,
+                      }))
+                    }
+                    options={payerSelectOptions}
+                    placeholder={isLoadingPayers ? 'Loading payers...' : 'Select a Payer'}
+                    disabled={isLoadingPayers}
+                    minWidthClassName='min-w-full'
+                    triggerClassName={customSelectTriggerClass}
+                    menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                    optionClassName='text-white/90 hover:bg-white/10'
+                    renderInPortal
+                  />
+                </div>
                 <button
                   type='button'
                   onClick={() => {
@@ -354,28 +363,27 @@ export function AddReceipt({ onClose, onReceiptAdded, onError }: AddReceiptProps
                 Receipts Date *
               </label>
               <div className='flex gap-2'>
-                <select
-                  id='receiptDate'
-                  value={formData.receiptDateId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      receiptDateId: e.target.value,
-                    }))
-                  }
-                  required
-                  disabled={isLoadingReceiptDates}
-                  className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
-                >
-                  <option value='' disabled>
-                    {isLoadingReceiptDates ? 'Loading receipts dates...' : 'Select a Receipts Date'}
-                  </option>
-                  {receiptDateOptions.map((receiptDate) => (
-                    <option key={receiptDate.id} value={String(receiptDate.id)}>
-                      {receiptDate.name}
-                    </option>
-                  ))}
-                </select>
+                <div className='flex-1'>
+                  <CustomSelect
+                    value={formData.receiptDateId}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        receiptDateId: value,
+                      }))
+                    }
+                    options={receiptDateSelectOptions}
+                    placeholder={
+                      isLoadingReceiptDates ? 'Loading receipts dates...' : 'Select a Receipts Date'
+                    }
+                    disabled={isLoadingReceiptDates}
+                    minWidthClassName='min-w-full'
+                    triggerClassName={customSelectTriggerClass}
+                    menuClassName='!border-white/15 !bg-[#1a1a1a]'
+                    optionClassName='text-white/90 hover:bg-white/10'
+                    renderInPortal
+                  />
+                </div>
                 <button
                   type='button'
                   onClick={(e) => {

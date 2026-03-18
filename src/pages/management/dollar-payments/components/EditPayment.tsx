@@ -2,6 +2,7 @@ import { PencilSimple } from '@phosphor-icons/react'
 import { X } from '@phosphor-icons/react'
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
+import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import {
@@ -105,6 +106,17 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
     return formattedValue
   }
 
+  const customSelectTriggerClass =
+    'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+  const payerSelectOptions = payers.map((payer) => ({
+    value: String(payer.id),
+    label: payer.name,
+  }))
+  const receiptDateSelectOptions = dateOptions.map((receiptDate) => ({
+    value: String(receiptDate.id),
+    label: receiptDate.name,
+  }))
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -188,28 +200,23 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
             <label htmlFor='payer' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
               Payer *
             </label>
-            <select
-              id='payer'
-              value={formData.idPayer}
-              onChange={(e) =>
+            <CustomSelect
+              value={formData.idPayer ? String(formData.idPayer) : ''}
+              onChange={(value) =>
                 setFormData((prev) => ({
                   ...prev,
-                  idPayer: Number(e.target.value),
+                  idPayer: Number(value),
                 }))
               }
-              required
+              options={payerSelectOptions}
+              placeholder={isLoadingPayers ? 'Loading payers...' : 'Select a Payer'}
               disabled={isLoadingPayers}
-              className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
-            >
-              <option value={0} disabled>
-                {isLoadingPayers ? 'Loading payers...' : 'Select a Payer'}
-              </option>
-              {payers.map((payer) => (
-                <option key={payer.id} value={Number(payer.id)}>
-                  {payer.name}
-                </option>
-              ))}
-            </select>
+              minWidthClassName='min-w-full'
+              triggerClassName={customSelectTriggerClass}
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
+            />
           </div>
 
           <div className='md:col-span-2'>
@@ -235,27 +242,23 @@ export function EditReceipt({ sale, onClose, onReceiptUpdated }: EditReceiptProp
             <label htmlFor='receiptDate' className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
               Receipts Date
             </label>
-            <select
-              id='receiptDate'
-              value={formData.idReceiptsDate}
-              onChange={(e) =>
+            <CustomSelect
+              value={formData.idReceiptsDate ? String(formData.idReceiptsDate) : ''}
+              onChange={(value) =>
                 setFormData((prev) => ({
                   ...prev,
-                  idReceiptsDate: Number(e.target.value),
+                  idReceiptsDate: Number(value),
                 }))
               }
+              options={receiptDateSelectOptions}
+              placeholder={isLoadingDates ? 'Loading receipts dates...' : 'Select a Receipts Date'}
               disabled={isLoadingDates}
-              className='h-10 w-full rounded-md border border-white/15 bg-white/[0.05] px-3 text-sm text-white outline-none transition focus:border-purple-400/50'
-            >
-              <option value={0} disabled>
-                {isLoadingDates ? 'Loading receipts dates...' : 'Select a Receipts Date'}
-              </option>
-              {dateOptions.map((receiptDate) => (
-                <option key={receiptDate.id} value={Number(receiptDate.id)}>
-                  {receiptDate.name}
-                </option>
-              ))}
-            </select>
+              minWidthClassName='min-w-full'
+              triggerClassName={customSelectTriggerClass}
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
+            />
           </div>
 
           <div className='col-span-1 flex items-center justify-end gap-2 md:col-span-2'>
