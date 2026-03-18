@@ -180,8 +180,8 @@ export function Header() {
                         {
                           label: 'Keys',
                           path: '/keys',
-                          activeExactPaths: ['/keys'],
-                          activeMatchPaths: ['/keys', '/bookings-na/key'],
+                          activeExactPaths: ['/keys', '/bookings-na/keys'],
+                          activeMatchPaths: ['/keys', '/bookings-na/key', '/bookings-na/keys'],
                           activePaths: ['/bookings-na/key'],
                           icon: <Key size={18} />,
                         },
@@ -192,7 +192,7 @@ export function Header() {
                         {
                           label: 'Leveling',
                           path: '/leveling',
-                          activeExactPaths: ['/leveling'],
+                          activeExactPaths: ['/leveling', '/bookings-na/leveling'],
                           activeMatchPaths: ['/leveling', '/bookings-na/leveling'],
                           activePaths: ['/bookings-na/leveling'],
                           icon: <ArrowFatUp size={18} />,
@@ -204,7 +204,7 @@ export function Header() {
                         {
                           label: 'Delves',
                           path: '/delves',
-                          activeExactPaths: ['/delves'],
+                          activeExactPaths: ['/delves', '/bookings-na/delves'],
                           activeMatchPaths: ['/delves', '/bookings-na/delves'],
                           activePaths: ['/bookings-na/delves'],
                           icon: <Mountains size={18} />,
@@ -216,7 +216,7 @@ export function Header() {
                         {
                           label: 'Achievements',
                           path: '/achievements',
-                          activeExactPaths: ['/achievements'],
+                          activeExactPaths: ['/achievements', '/bookings-na/achievements'],
                           activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
                           activePaths: ['/bookings-na/achievements'],
                           icon: <Trophy size={18} />,
@@ -228,7 +228,7 @@ export function Header() {
                         {
                           label: 'PvP',
                           path: '/pvp',
-                          activeExactPaths: ['/pvp'],
+                          activeExactPaths: ['/pvp', '/bookings-na/pvp'],
                           activeMatchPaths: ['/pvp', '/bookings-na/pvp'],
                           activePaths: ['/bookings-na/pvp'],
                           icon: <Sword size={18} />,

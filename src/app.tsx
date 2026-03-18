@@ -201,23 +201,23 @@ function AppContent() {
               />
               <Route
                 path='/bookings-na/key/:id'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Keys' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='keys-detail' runType='Keys' />} />}
               />
               <Route
                 path='/bookings-na/leveling/:id'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Leveling' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='leveling-detail' runType='Leveling' />} />}
               />
               <Route
                 path='/bookings-na/delves/:id'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Delves' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='delves-detail' runType='Delves' />} />}
               />
               <Route
                 path='/bookings-na/achievements/:id'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='achievements-detail' runType='Achievements' />} />}
               />
               <Route
                 path='/bookings-na/pvp/:id'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='PvP' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='pvp-detail' runType='PvP' />} />}
               />
               <Route
                 path='/admin'
@@ -245,23 +245,43 @@ function AppContent() {
               />
               <Route
                 path='/keys'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Keys' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='keys' runType='Keys' />} />}
               />
               <Route
                 path='/leveling'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Leveling' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='leveling' runType='Leveling' />} />}
               />
               <Route
                 path='/delves'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Delves' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='delves' runType='Delves' />} />}
               />
               <Route
                 path='/achievements'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='achievements' runType='Achievements' />} />}
               />
               <Route
                 path='/pvp'
-                element={<PrivateRoute element={<SpecialRunDetailsPage runType='PvP' />} />}
+                element={<PrivateRoute element={<SpecialRunDetailsPage key='pvp' runType='PvP' />} />}
+              />
+              <Route
+                path='/bookings-na/keys'
+                element={<Navigate to='/keys' replace />}
+              />
+              <Route
+                path='/bookings-na/leveling'
+                element={<Navigate to='/leveling' replace />}
+              />
+              <Route
+                path='/bookings-na/delves'
+                element={<Navigate to='/delves' replace />}
+              />
+              <Route
+                path='/bookings-na/achievements'
+                element={<Navigate to='/achievements' replace />}
+              />
+              <Route
+                path='/bookings-na/pvp'
+                element={<Navigate to='/pvp' replace />}
               />
               <Route
                 path='/requests'
@@ -436,6 +456,33 @@ function getScreenMeta(pathname: string) {
       icon: <CalendarBlank size={20} weight='duotone' />,
     }
   }
+  if (pathname.startsWith('/bookings-na/keys')) {
+    return { name: 'Keys', breadcrumb: 'Bookings (NA) / Keys', icon: <Key size={20} weight='duotone' /> }
+  }
+  if (pathname.startsWith('/bookings-na/leveling')) {
+    return {
+      name: 'Leveling',
+      breadcrumb: 'Bookings (NA) / Leveling',
+      icon: <ArrowFatUp size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/delves')) {
+    return {
+      name: 'Delves',
+      breadcrumb: 'Bookings (NA) / Delves',
+      icon: <Sword size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/achievements')) {
+    return {
+      name: 'Achievements',
+      breadcrumb: 'Bookings (NA) / Achievements',
+      icon: <Trophy size={20} weight='duotone' />,
+    }
+  }
+  if (pathname.startsWith('/bookings-na/pvp')) {
+    return { name: 'PvP', breadcrumb: 'Bookings (NA) / PvP', icon: <Sword size={20} weight='duotone' /> }
+  }
   if (pathname.startsWith('/keys')) {
     return { name: 'Keys', breadcrumb: 'Bookings (NA) / Keys', icon: <Key size={20} weight='duotone' /> }
   }
@@ -509,10 +556,6 @@ export function App() {
   return (
     <div className='flex min-h-screen w-full'>
       <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
       >
         <AuthProvider>
           <AppContent />
