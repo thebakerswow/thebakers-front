@@ -144,11 +144,20 @@ export function RunInfo({
       '210470259226968066',
       '420200946405212160',
     ]
+    const NIGHT_MARKET_ID = '1331332769149616279'
 
     if (buyer.idOwnerBuyer === BABY_JOHNY_ID) {
       return BABY_JOHNY_EMPLOYEES
     } else if (buyer.idOwnerBuyer === WIDEX_ID) {
       return WIDEX_EMPLOYEES
+    } else if (
+      buyer.idOwnerBuyer === NIGHT_MARKET_ID ||
+      buyer.idBuyerAdvertiser === NIGHT_MARKET_ID
+    ) {
+      return [
+        import.meta.env.VITE_ID_GRASSMAN,
+        import.meta.env.VITE_ID_CALMAKARAI,
+      ]
     } else if (buyer.idBuyerAdvertiser) {
       return [import.meta.env.VITE_ID_CALMAKARAI]
     } else {

@@ -524,12 +524,22 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       '210470259226968066',
       '420200946405212160',
     ]
+    const NIGHT_MARKET_ID = '1331332769149616279'
 
     if (buyer.idOwnerClaimService === BABY_JOHNY_ID) {
       return BABY_JOHNY_EMPLOYEES
     }
     if (buyer.idOwnerClaimService === WIDEX_ID) {
       return WIDEX_EMPLOYEES
+    }
+    if (
+      buyer.idOwnerClaimService === NIGHT_MARKET_ID ||
+      buyer.idClaimServiceAdvertiser === NIGHT_MARKET_ID
+    ) {
+      return [
+        import.meta.env.VITE_ID_GRASSMAN,
+        import.meta.env.VITE_ID_CALMAKARAI,
+      ]
     }
     if (buyer.idClaimServiceAdvertiser) {
       return [import.meta.env.VITE_ID_CALMAKARAI]
