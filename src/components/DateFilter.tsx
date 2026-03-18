@@ -246,8 +246,9 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
               selected={selectedMonth}
               onChange={handleMonthChange}
               onChangeRaw={(event) => {
-                const value = (event.target as HTMLInputElement).value
-                setMonthInputValue(value)
+                const input = event?.target as HTMLInputElement | null
+                if (!input) return
+                setMonthInputValue(input.value)
               }}
               onBlur={applyManualMonth}
               onKeyDown={(event) => {

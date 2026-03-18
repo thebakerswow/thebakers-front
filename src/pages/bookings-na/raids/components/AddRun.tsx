@@ -458,8 +458,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                   setDateInputValue(date ? format(date, 'dd/MM/yyyy') : '')
                 }}
                 onChangeRaw={(event) => {
-                  const value = (event.target as HTMLInputElement).value
-                  setDateInputValue(value)
+                  const input = event?.target as HTMLInputElement | null
+                  if (!input) return
+                  setDateInputValue(input.value)
                 }}
                 onBlur={applyManualDate}
                 onKeyDown={(event) => {
