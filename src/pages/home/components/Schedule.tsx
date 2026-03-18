@@ -27,7 +27,7 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
       const timeA = parseTimeToMinutes(a.time)
       const timeB = parseTimeToMinutes(b.time)
 
-      if (timeA !== null && timeB !== null) return timeB - timeA
+      if (timeA !== null && timeB !== null) return timeA - timeB
       if (timeA !== null) return -1
       if (timeB !== null) return 1
 

@@ -25,7 +25,7 @@ export function RunsDataGrid({
 }: RunsDataGridProps) {
   const navigate = useNavigate()
 
-  const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(false)
+  const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
