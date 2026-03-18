@@ -28,10 +28,6 @@ export function EditBuyer({
     buyerNote: buyer.buyerNote,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const isJuniorAdvertiser = userRoles.includes(
-    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
-  )
-
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
     return shouldHideDollarPotInfo(userRoles)
