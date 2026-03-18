@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { UserPlus, X } from '@phosphor-icons/react'
 import { format, parse } from 'date-fns'
@@ -10,17 +10,6 @@ import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import type { AddRunProps, ApiOption } from '../types/raids'
-
-const DatePickerInput = forwardRef<
-  HTMLButtonElement,
-  { value?: string; onClick?: () => void; className: string; placeholder?: string }
->(({ value, onClick, className, placeholder = 'dd/mm/aaaa' }, ref) => (
-  <button ref={ref} type='button' onClick={onClick} className={className}>
-    <span className={value ? 'text-purple-100' : 'text-purple-200/50'}>{value || placeholder}</span>
-  </button>
-))
-
-DatePickerInput.displayName = 'DatePickerInput'
 
 export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [formData, setFormData] = useState({
@@ -39,9 +28,12 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
+  const [dateInputValue, setDateInputValue] = useState('')
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
+  const [timeInputValue, setTimeInputValue] = useState('')
   const [raidLeaderSearch, setRaidLeaderSearch] = useState('')
   const [isRaidLeaderAutocompleteOpen, setIsRaidLeaderAutocompleteOpen] = useState(false)
+  const datePickerRef = useRef<DatePicker | null>(null)
   const timePickerRef = useRef<HTMLDivElement | null>(null)
 
   const baseFieldClass =
@@ -114,6 +106,78 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     () => Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0')),
     []
   )
+
+  const formatTime12h = useCallback((time24: string) => {
+    const [hourPart, minutePart = '00'] = time24.split(':')
+    const parsedHour = Number(hourPart)
+    const parsedMinute = Number(minutePart)
+
+    if (
+      Number.isNaN(parsedHour) ||
+      Number.isNaN(parsedMinute) ||
+      parsedHour < 0 ||
+      parsedHour > 23 ||
+      parsedMinute < 0 ||
+      parsedMinute > 59
+    ) {
+      return ''
+    }
+
+    const period = parsedHour >= 12 ? 'PM' : 'AM'
+    const normalizedHour = parsedHour % 12 || 12
+    return `${String(normalizedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')} ${period}`
+  }, [])
+
+  const normalizeTimeInput = useCallback((rawValue: string) => {
+    const value = rawValue.trim()
+    if (!value) return ''
+
+    const hourMinuteMatch = value.match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
+    if (hourMinuteMatch) {
+      const [, hour, minute] = hourMinuteMatch
+      return `${hour.padStart(2, '0')}:${minute}`
+    }
+
+    const meridiemMatch = value.match(/^(\d{1,2}):([0-5]\d)\s*([aApP][mM])$/)
+    if (meridiemMatch) {
+      const [, hourRaw, minute, periodRaw] = meridiemMatch
+      const hour12 = Number(hourRaw)
+      if (hour12 < 1 || hour12 > 12) return null
+
+      const period = periodRaw.toUpperCase()
+      let hour24 = hour12 % 12
+      if (period === 'PM') hour24 += 12
+
+      return `${String(hour24).padStart(2, '0')}:${minute}`
+    }
+
+    return null
+  }, [])
+
+  const normalizeDateInput = useCallback((rawValue: string) => {
+    const value = rawValue.trim()
+    if (!value) return ''
+
+    const dayMonthYearMatch = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+    if (dayMonthYearMatch) {
+      const [, dayRaw, monthRaw, year] = dayMonthYearMatch
+      const day = dayRaw.padStart(2, '0')
+      const month = monthRaw.padStart(2, '0')
+      const isoCandidate = `${year}-${month}-${day}`
+      const parsed = parse(isoCandidate, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'yyyy-MM-dd') === isoCandidate ? isoCandidate : null
+    }
+
+    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (isoMatch) {
+      const parsed = parse(value, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'yyyy-MM-dd') === value ? value : null
+    }
+
+    return null
+  }, [])
 
   const fetchTeamMembers = useCallback(async () => {
     try {
@@ -254,6 +318,21 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
   }, [formData.date])
 
+  useEffect(() => {
+    if (!formData.date) {
+      setDateInputValue('')
+      return
+    }
+
+    const parsedDate = parse(formData.date, 'yyyy-MM-dd', new Date())
+    if (Number.isNaN(parsedDate.getTime())) {
+      setDateInputValue('')
+      return
+    }
+
+    setDateInputValue(format(parsedDate, 'dd/MM/yyyy'))
+  }, [formData.date])
+
   const timeParts = useMemo(() => {
     if (!formData.time) {
       return { hour: '12', minute: '00', period: 'AM', hasValue: false }
@@ -298,8 +377,39 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     let hour24 = Number(nextHour12) % 12
     if (nextPeriod === 'PM') hour24 += 12
 
-    setField('time', `${String(hour24).padStart(2, '0')}:${nextMinute}`)
+    const normalizedTime = `${String(hour24).padStart(2, '0')}:${nextMinute}`
+    setField('time', normalizedTime)
+    setTimeInputValue(formatTime12h(normalizedTime))
   }
+
+  const applyManualTime = useCallback(() => {
+    const normalizedTime = normalizeTimeInput(timeInputValue)
+
+    if (normalizedTime === '') {
+      setField('time', '')
+      return
+    }
+
+    if (!normalizedTime) return
+
+    setField('time', normalizedTime)
+    setTimeInputValue(formatTime12h(normalizedTime))
+  }, [formatTime12h, normalizeTimeInput, timeInputValue])
+
+  const applyManualDate = useCallback(() => {
+    const normalizedDate = normalizeDateInput(dateInputValue)
+
+    if (normalizedDate === '') {
+      setField('date', '')
+      return
+    }
+
+    if (!normalizedDate) return
+
+    setField('date', normalizedDate)
+    const parsedDate = parse(normalizedDate, 'yyyy-MM-dd', new Date())
+    setDateInputValue(format(parsedDate, 'dd/MM/yyyy'))
+  }, [dateInputValue, normalizeDateInput])
 
   return createPortal(
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
@@ -340,19 +450,44 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             </label>
             <div className='relative'>
               <DatePicker
+                ref={datePickerRef}
                 selected={selectedDate}
-                onChange={(date) => setField('date', date ? format(date, 'yyyy-MM-dd') : '')}
+                onChange={(date) => {
+                  const normalizedDate = date ? format(date, 'yyyy-MM-dd') : ''
+                  setField('date', normalizedDate)
+                  setDateInputValue(date ? format(date, 'dd/MM/yyyy') : '')
+                }}
+                onChangeRaw={(event) => {
+                  const value = (event.target as HTMLInputElement).value
+                  setDateInputValue(value)
+                }}
+                onBlur={applyManualDate}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    applyManualDate()
+                  }
+                }}
                 dateFormat='dd/MM/yyyy'
                 placeholderText='dd/mm/aaaa'
                 popperClassName='z-[240] balance-datepicker-popper'
                 calendarClassName='balance-datepicker add-run-datepicker'
                 wrapperClassName='w-full'
-                customInput={<DatePickerInput className={dateTriggerClass} />}
+                className={`${dateTriggerClass} pr-10`}
+                value={dateInputValue}
               />
-              <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+              <button
+                type='button'
+                onClick={() => datePickerRef.current?.setOpen(true)}
+                aria-label='Open date picker'
+                className='absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-xs text-purple-300/85 transition hover:bg-white/10 hover:text-purple-200'
+              >
                 ▼
-              </span>
+              </button>
             </div>
+            <span className='mt-1 text-[11px] text-neutral-400'>
+              Type `dd/mm/yyyy` or use the calendar selector.
+            </span>
           </div>
 
           <div className='flex flex-col'>
@@ -360,20 +495,28 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               Time
             </label>
             <div ref={timePickerRef} className='relative'>
+              <input
+                type='text'
+                value={timeInputValue}
+                onChange={(event) => setTimeInputValue(event.target.value)}
+                onBlur={applyManualTime}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    applyManualTime()
+                  }
+                }}
+                placeholder={timeParts.hasValue ? `${timeParts.hour}:${timeParts.minute} ${timeParts.period}` : 'hh:mm AM/PM or HH:mm'}
+                className={`${dateTriggerClass} pr-10`}
+              />
               <button
                 type='button'
                 onClick={() => setIsTimePickerOpen((prev) => !prev)}
-                className={dateTriggerClass}
+                aria-label='Open time picker'
+                className='absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-xs text-purple-300/85 transition hover:bg-white/10 hover:text-purple-200'
               >
-                <span className={timeParts.hasValue ? 'text-purple-100' : 'text-purple-200/50'}>
-                  {timeParts.hasValue
-                    ? `${timeParts.hour}:${timeParts.minute} ${timeParts.period}`
-                    : '--:--'}
-                </span>
-              </button>
-              <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
                 ▼
-              </span>
+              </button>
               {isTimePickerOpen && (
                 <div className='absolute left-0 top-[calc(100%+8px)] z-[240] w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] p-3 shadow-[0_20px_40px_rgba(0,0,0,0.45)]'>
                   <div className='grid grid-cols-3 gap-2'>
@@ -444,6 +587,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 </div>
               )}
             </div>
+            <span className='mt-1 text-[11px] text-neutral-400'>
+              Type `HH:mm` or `hh:mm AM/PM`, or use the selector.
+            </span>
           </div>
 
           <div className='flex flex-col'>

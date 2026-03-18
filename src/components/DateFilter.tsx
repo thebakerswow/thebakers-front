@@ -1,8 +1,9 @@
-import { forwardRef, useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
   format,
+  parse,
   eachDayOfInterval,
   addDays,
   isBefore,
@@ -16,22 +17,6 @@ import { CustomSelect } from './CustomSelect'
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
 }
-
-const MonthPickerInput = forwardRef<
-  HTMLButtonElement,
-  { value?: string; onClick?: () => void }
->(({ value, onClick }, ref) => (
-  <button
-    ref={ref}
-    type='button'
-    onClick={onClick}
-    className='balance-filter-control h-10 w-full min-w-0 rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35 sm:min-w-[220px]'
-  >
-    {value || 'Month'}
-  </button>
-))
-
-MonthPickerInput.displayName = 'MonthPickerInput'
 
 function computeWeeksAndDays(date: Date) {
   // Calcula as semanas e dias de um mês específico, incluindo a semana atual e o dia selecionado.
@@ -139,6 +124,10 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(
     initialData.selectedWeekIndex
   )
+  const [monthInputValue, setMonthInputValue] = useState(
+    format(currentMonth, 'MM/yyyy')
+  )
+  const monthPickerRef = useRef<DatePicker | null>(null)
   const weekOptions = useMemo(
     () =>
       weeks.map((week, index) => ({
@@ -161,12 +150,56 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     setSelectedWeekIndex(data.selectedWeekIndex)
   }, [])
 
+  const normalizeMonthInput = useCallback((rawValue: string) => {
+    const value = rawValue.trim()
+    if (!value) return null
+
+    const monthYearMatch = value.match(/^(\d{1,2})[/-](\d{4})$/)
+    if (monthYearMatch) {
+      const [, monthRaw, year] = monthYearMatch
+      const month = Number(monthRaw)
+      if (month < 1 || month > 12) return null
+      const normalizedMonth = String(month).padStart(2, '0')
+      const isoDate = `${year}-${normalizedMonth}-01`
+      const parsed = parse(isoDate, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'MM/yyyy')
+    }
+
+    const yearMonthMatch = value.match(/^(\d{4})[/-](\d{1,2})$/)
+    if (yearMonthMatch) {
+      const [, year, monthRaw] = yearMonthMatch
+      const month = Number(monthRaw)
+      if (month < 1 || month > 12) return null
+      const normalizedMonth = String(month).padStart(2, '0')
+      const isoDate = `${year}-${normalizedMonth}-01`
+      const parsed = parse(isoDate, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'MM/yyyy')
+    }
+
+    return null
+  }, [])
+
+  const applyManualMonth = useCallback(() => {
+    const normalizedMonth = normalizeMonthInput(monthInputValue)
+    if (!normalizedMonth) return
+
+    const parsed = parse(normalizedMonth, 'MM/yyyy', new Date())
+    if (Number.isNaN(parsed.getTime())) return
+
+    setSelectedMonth(parsed)
+    updateWeeksAndDays(parsed)
+    setMonthInputValue(normalizedMonth)
+  }, [monthInputValue, normalizeMonthInput, updateWeeksAndDays])
+
   const handleMonthChange = useCallback(
     (date: Date | null) => {
       // Atualiza o mês selecionado e recalcula as semanas e dias.
       if (date) {
         setSelectedMonth(date)
         updateWeeksAndDays(date)
+        setMonthInputValue(format(date, 'MM/yyyy'))
       }
     },
     [updateWeeksAndDays]
@@ -191,6 +224,7 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
     // Reseta o filtro para o dia atual e recalcula os dados.
     const newMonth = new Date()
     setSelectedMonth(newMonth)
+    setMonthInputValue(format(newMonth, 'MM/yyyy'))
     const data = computeWeeksAndDays(newMonth)
     setWeeks(data.weeks)
     setDays(data.days)
@@ -208,19 +242,37 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
           </label>
           <div className='relative w-full sm:w-auto'>
             <DatePicker
+              ref={monthPickerRef}
               selected={selectedMonth}
               onChange={handleMonthChange}
+              onChangeRaw={(event) => {
+                const value = (event.target as HTMLInputElement).value
+                setMonthInputValue(value)
+              }}
+              onBlur={applyManualMonth}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  applyManualMonth()
+                }
+              }}
               dateFormat='MM/yyyy'
               showMonthYearPicker
               placeholderText='Month'
               popperClassName='z-[99999] balance-datepicker-popper'
               calendarClassName='balance-datepicker'
               wrapperClassName='w-full sm:w-auto'
-              customInput={<MonthPickerInput />}
+              className='balance-filter-control h-10 w-full min-w-0 rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35 sm:min-w-[220px]'
+              value={monthInputValue}
             />
-            <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+            <button
+              type='button'
+              onClick={() => monthPickerRef.current?.setOpen(true)}
+              aria-label='Open month picker'
+              className='absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-xs text-purple-300/85 transition hover:bg-white/10 hover:text-purple-200'
+            >
               ▼
-            </span>
+            </button>
           </div>
         </div>
         {weeks.length > 0 && (

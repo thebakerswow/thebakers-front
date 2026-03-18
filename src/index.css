@@ -98,6 +98,26 @@ h6 {
   border-color: rgba(192, 132, 252, 0.45);
 }
 
+.react-datepicker__input-container .balance-filter-control,
+.react-datepicker__input-container .balance-filter-control:hover,
+.react-datepicker__input-container .balance-filter-control:focus,
+.react-datepicker__input-container .balance-filter-control:active {
+  background: linear-gradient(
+    180deg,
+    rgba(23, 23, 27, 0.92) 0%,
+    rgba(14, 14, 18, 0.92) 100%
+  ) !important;
+}
+
+.react-datepicker__input-container .balance-filter-control:-webkit-autofill,
+.react-datepicker__input-container .balance-filter-control:-webkit-autofill:hover,
+.react-datepicker__input-container .balance-filter-control:-webkit-autofill:focus,
+.react-datepicker__input-container .balance-filter-control:-webkit-autofill:active {
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 0 0px 1000px rgba(14, 14, 18, 0.92) inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .balance-filter-control option {
   background-color: #111117;
   color: rgba(255, 255, 255, 0.95);
