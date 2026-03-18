@@ -23,7 +23,16 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
 
   const scheduleRuns = useMemo(() => {
     if (!activeDate) return []
-    return (weekRuns[activeDate] || []).sort((a, b) => a.time.localeCompare(b.time))
+    return [...(weekRuns[activeDate] || [])].sort((a, b) => {
+      const timeA = parseTimeToMinutes(a.time)
+      const timeB = parseTimeToMinutes(b.time)
+
+      if (timeA !== null && timeB !== null) return timeB - timeA
+      if (timeA !== null) return -1
+      if (timeB !== null) return 1
+
+      return a.time.localeCompare(b.time)
+    })
   }, [weekRuns, activeDate])
 
   return (
@@ -250,9 +259,52 @@ function formatDateLabel(
 
 function formatTime12h(time: string) {
   if (!time) return ''
-  const [h, m] = time.split(':').map(Number)
-  if (Number.isNaN(h) || Number.isNaN(m)) return time
-  const hour = ((h + 11) % 12) + 1
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+  const totalMinutes = parseTimeToMinutes(time)
+  if (totalMinutes === null) return time
+
+  const hour24 = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  const hour12 = ((hour24 + 11) % 12) + 1
+  const ampm = hour24 >= 12 ? 'PM' : 'AM'
+  return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`
+}
+
+function parseTimeToMinutes(time: string): number | null {
+  const trimmed = time.trim()
+  if (!trimmed) return null
+
+  // Normaliza variações como "p.m.", "PM", "12:00 PM EST", etc.
+  const normalized = trimmed.toLowerCase().replace(/\./g, '')
+
+  const twelveHourMatch = normalized.match(
+    /(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?\s*([ap])m\b/
+  )
+  if (twelveHourMatch) {
+    const rawHour = Number(twelveHourMatch[1])
+    const minutes = Number(twelveHourMatch[2])
+    const meridiem = twelveHourMatch[3]
+
+    if (
+      !Number.isFinite(rawHour) ||
+      !Number.isFinite(minutes) ||
+      rawHour < 1 ||
+      rawHour > 12 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      return null
+    }
+
+    const hour24 = (rawHour % 12) + (meridiem === 'p' ? 12 : 0)
+    return hour24 * 60 + minutes
+  }
+
+  const twentyFourHourMatch = normalized.match(
+    /\b([01]?\d|2[0-3])\s*:\s*([0-5]\d)(?::\d{2})?\b/
+  )
+  if (!twentyFourHourMatch) return null
+
+  const hour24 = Number(twentyFourHourMatch[1])
+  const minutes = Number(twentyFourHourMatch[2])
+  return hour24 * 60 + minutes
 }

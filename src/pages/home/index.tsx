@@ -183,10 +183,6 @@ export function HomePage() {
       ) : (
         <>
           <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
-            <Schedule dates={dates} weekRuns={weekRuns} loadingRuns={loadingRuns} />
-          </div>
-
-          <div className='mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12 2xl:px-16'>
             <section className='relative z-10 pb-2 pt-8 text-center sm:pt-10'>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -210,9 +206,9 @@ export function HomePage() {
                   transition={{ duration: 0.6 }}
                 >
                   <h1 className='font-space-grotesk text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl'>
-                    <span className='text-white'>Premium</span>{' '}
+                    <span className='text-white'>Boosting</span>{' '}
                     <span className='bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-600 bg-clip-text text-transparent'>
-                      Catalog
+                      Guild
                     </span>
                   </h1>
                   <p className='mx-auto mt-4 max-w-xl text-lg leading-relaxed text-neutral-400'>
@@ -232,6 +228,7 @@ export function HomePage() {
               onSelectCategory={setActiveCategory}
               onScrollToSchedule={scrollToSchedule}
             />
+            <Schedule dates={dates} weekRuns={weekRuns} loadingRuns={loadingRuns} />
             <div className='h-20' aria-hidden='true' />
 
             {loadingServices ? (

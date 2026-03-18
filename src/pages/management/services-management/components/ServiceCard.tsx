@@ -11,7 +11,7 @@ export function ServiceCard({ service, onEdit, onDelete }: ServiceCardProps) {
   return (
     <div className='relative flex flex-col rounded-xl border border-white/10 bg-[#262626] p-4 transition hover:-translate-y-0.5 hover:border-purple-500/40'>
       <div className='mb-2 flex items-start gap-2'>
-        <h3 className='line-clamp-1 flex-1 text-lg font-bold text-white'>{service.name}</h3>
+        <h3 className='flex-1 text-lg font-bold text-white'>{service.name}</h3>
         {service.hotItem ? (
           <span className='inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400'>
             <Fire size={12} />

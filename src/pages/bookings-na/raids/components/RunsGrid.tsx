@@ -25,7 +25,7 @@ export function RunsDataGrid({
 }: RunsDataGridProps) {
   const navigate = useNavigate()
 
-  const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(true)
+  const [isTimeSortedAsc, setIsTimeSortedAsc] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [isEditRunModalOpen, setIsEditRunModalOpen] = useState(false)
@@ -158,10 +158,45 @@ export function RunsDataGrid({
     navigate(`/bookings-na/run/${id}`)
   }
 
-  // Converte o horário no formato HH:mm para minutos totais
-  const convertTimeToMinutes = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number)
-    return hours * 60 + minutes
+  // Converte horários 24h ou 12h (AM/PM) para minutos totais do dia
+  const convertTimeToMinutes = (time: string): number | null => {
+    const trimmed = time.trim()
+    if (!trimmed) return null
+
+    // Normaliza variações como "p.m.", "PM", "12:00 PM EST", etc.
+    const normalized = trimmed.toLowerCase().replace(/\./g, '')
+
+    const twelveHourMatch = normalized.match(
+      /(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?\s*([ap])m\b/
+    )
+    if (twelveHourMatch) {
+      const rawHour = Number(twelveHourMatch[1])
+      const minutes = Number(twelveHourMatch[2])
+      const meridiem = twelveHourMatch[3]
+
+      if (
+        !Number.isFinite(rawHour) ||
+        !Number.isFinite(minutes) ||
+        rawHour < 1 ||
+        rawHour > 12 ||
+        minutes < 0 ||
+        minutes > 59
+      ) {
+        return null
+      }
+
+      const hour24 = (rawHour % 12) + (meridiem === 'p' ? 12 : 0)
+      return hour24 * 60 + minutes
+    }
+
+    const twentyFourHourMatch = normalized.match(
+      /\b([01]?\d|2[0-3])\s*:\s*([0-5]\d)(?::\d{2})?\b/
+    )
+    if (!twentyFourHourMatch) return null
+
+    const hour24 = Number(twentyFourHourMatch[1])
+    const minutes = Number(twentyFourHourMatch[2])
+    return hour24 * 60 + minutes
   }
 
   // Ordena os dados por horário e prioridade do time
@@ -172,8 +207,13 @@ export function RunsDataGrid({
       const timeA = convertTimeToMinutes(a.time)
       const timeB = convertTimeToMinutes(b.time)
 
-      if (timeA !== timeB) {
+      if (timeA !== null && timeB !== null && timeA !== timeB) {
         return isTimeSortedAsc ? timeA - timeB : timeB - timeA
+      }
+      if (timeA !== null && timeB === null) return -1
+      if (timeA === null && timeB !== null) return 1
+      if (timeA === null && timeB === null) {
+        return a.time.localeCompare(b.time)
       }
 
       const priorityA = teamPriority[a.team] || 999
@@ -192,8 +232,11 @@ export function RunsDataGrid({
 
   // Formata o horário para o formato de 12 horas EST
   const formatTo12HourEST = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number)
+    const totalMinutes = convertTimeToMinutes(timeStr)
+    if (totalMinutes === null) return timeStr
 
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
     const period = hours >= 12 ? 'PM' : 'AM'
     const formattedHours = hours % 12 || 12
 

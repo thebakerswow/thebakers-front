@@ -40,6 +40,8 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
+  const [raidLeaderSearch, setRaidLeaderSearch] = useState('')
+  const [isRaidLeaderAutocompleteOpen, setIsRaidLeaderAutocompleteOpen] = useState(false)
   const timePickerRef = useRef<HTMLDivElement | null>(null)
 
   const baseFieldClass =
@@ -151,20 +153,43 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleRaidLeaderChange = (value: string, checked: boolean) => {
-    setFormData((prev) => {
-      const nextRaidLeaders = checked
-        ? [...prev.raidLeader, value]
-        : prev.raidLeader.filter((leader) => leader !== value)
-
-      return { ...prev, raidLeader: nextRaidLeaders }
-    })
-  }
+  const raidLeaderOptions = useMemo(
+    () =>
+      apiOptions
+        .map((option) => ({
+          value: `${option.id};${option.username}`,
+          label: option.global_name,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [apiOptions]
+  )
 
   const selectedRaidLeaders = formData.raidLeader.map((value) => {
     const found = apiOptions.find((option) => `${option.id};${option.username}` === value)
     return found?.global_name || value
   })
+
+  const filteredRaidLeaderOptions = useMemo(() => {
+    const normalizedSearch = raidLeaderSearch.trim().toLowerCase()
+    if (!normalizedSearch) return raidLeaderOptions
+
+    return raidLeaderOptions.filter((option) =>
+      option.label.toLowerCase().includes(normalizedSearch)
+    )
+  }, [raidLeaderSearch, raidLeaderOptions])
+
+  const selectedRaidLeader = useMemo(() => {
+    const selectedValue = formData.raidLeader[0]
+    if (!selectedValue) return null
+
+    return raidLeaderOptions.find((option) => option.value === selectedValue) || null
+  }, [formData.raidLeader, raidLeaderOptions])
+
+  useEffect(() => {
+    if (selectedRaidLeader && raidLeaderSearch !== selectedRaidLeader.label) {
+      setRaidLeaderSearch(selectedRaidLeader.label)
+    }
+  }, [selectedRaidLeader, raidLeaderSearch])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -530,30 +555,45 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             <label className='mb-1 text-xs uppercase tracking-wide text-neutral-300'>
               Raid Leader
             </label>
-            <div className='max-h-[190px] w-full overflow-y-auto rounded-md border border-white/15 bg-white/[0.05] px-4 py-3'>
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
-                {apiOptions.map((option) => {
-                  const optionValue = `${option.id};${option.username}`
-                  const isChecked = formData.raidLeader.includes(optionValue)
+            <div className='relative'>
+              <input
+                type='text'
+                value={raidLeaderSearch}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setRaidLeaderSearch(value)
+                  setIsRaidLeaderAutocompleteOpen(true)
+                  setFormData((prev) => ({ ...prev, raidLeader: [] }))
+                }}
+                onFocus={() => setIsRaidLeaderAutocompleteOpen(true)}
+                onBlur={() => setTimeout(() => setIsRaidLeaderAutocompleteOpen(false), 120)}
+                placeholder='Search raid leader'
+                className={baseFieldClass}
+              />
 
-                  return (
-                    <label
-                      key={option.username}
-                      className='flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10'
-                    >
-                      <input
-                        type='checkbox'
-                        checked={isChecked}
-                        onChange={(event) =>
-                          handleRaidLeaderChange(optionValue, event.target.checked)
-                        }
-                        className='h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.05] accent-purple-500'
-                      />
-                      <span>{option.global_name}</span>
-                    </label>
-                  )
-                })}
-              </div>
+              {isRaidLeaderAutocompleteOpen && raidLeaderSearch.trim() && (
+                <div className='absolute left-0 right-0 top-[calc(100%+6px)] z-[250] max-h-56 overflow-auto rounded-md border border-white/15 bg-neutral-900/95 p-1 shadow-xl backdrop-blur-sm'>
+                  {filteredRaidLeaderOptions.length > 0 ? (
+                    filteredRaidLeaderOptions.slice(0, 8).map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          setFormData((prev) => ({ ...prev, raidLeader: [option.value] }))
+                          setRaidLeaderSearch(option.label)
+                          setIsRaidLeaderAutocompleteOpen(false)
+                        }}
+                        className='w-full rounded-md px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10'
+                      >
+                        {option.label}
+                      </button>
+                    ))
+                  ) : (
+                    <p className='px-3 py-2 text-sm text-neutral-400'>No raid leader found</p>
+                  )}
+                </div>
+              )}
             </div>
             {selectedRaidLeaders.length > 0 ? (
               <div className='mt-2 flex flex-wrap gap-1'>
