@@ -66,19 +66,28 @@ function AppContent() {
         body.classList.contains('swal2-shown') ||
         html.classList.contains('swal2-shown')
 
-      html.style.removeProperty('padding-right')
-      html.style.removeProperty('margin-right')
-      body.style.removeProperty('padding-right')
-      body.style.removeProperty('margin-right')
+      if (html.style.paddingRight) html.style.removeProperty('padding-right')
+      if (html.style.marginRight) html.style.removeProperty('margin-right')
+      if (body.style.paddingRight) body.style.removeProperty('padding-right')
+      if (body.style.marginRight) body.style.removeProperty('margin-right')
 
       if (!isSwalOpen) {
-        html.style.removeProperty('overflow')
-        body.style.removeProperty('overflow')
+        if (html.style.overflow) html.style.removeProperty('overflow')
+        if (body.style.overflow) body.style.removeProperty('overflow')
       }
     }
 
+    let rafId: number | null = null
+    const scheduleClearScrollLocks = () => {
+      if (rafId !== null) return
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null
+        clearScrollLocks()
+      })
+    }
+
     clearScrollLocks()
-    const observer = new MutationObserver(clearScrollLocks)
+    const observer = new MutationObserver(scheduleClearScrollLocks)
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'style'],
@@ -88,7 +97,12 @@ function AppContent() {
       attributeFilter: ['class', 'style'],
     })
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId)
+      }
+    }
   }, [])
 
   return (
