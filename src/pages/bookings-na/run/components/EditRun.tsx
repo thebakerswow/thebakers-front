@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, X } from '@phosphor-icons/react'
 import { format, parse } from 'date-fns'
@@ -10,19 +10,6 @@ import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { ApiOption, EditRunProps } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
-
-const DatePickerInput = forwardRef<
-  HTMLButtonElement,
-  { value?: string; onClick?: () => void; className: string; placeholder?: string }
->(({ value, onClick, className, placeholder = 'dd/mm/aaaa' }, ref) => (
-  <button ref={ref} type='button' onClick={onClick} className={className}>
-    <span className={value ? 'text-purple-100' : 'text-purple-200/50'}>
-      {value || placeholder}
-    </span>
-  </button>
-))
-
-DatePickerInput.displayName = 'DatePickerInput'
 
 export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
@@ -51,7 +38,12 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       : { String: '', Valid: false },
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [dateInputValue, setDateInputValue] = useState('')
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
+  const [timeInputValue, setTimeInputValue] = useState('')
+  const [raidLeaderSearch, setRaidLeaderSearch] = useState('')
+  const [isRaidLeaderAutocompleteOpen, setIsRaidLeaderAutocompleteOpen] = useState(false)
+  const datePickerRef = useRef<DatePicker | null>(null)
   const timePickerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -180,6 +172,75 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     () => Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0')),
     []
   )
+  const formatTime12h = useCallback((time24: string) => {
+    const [hourPart, minutePart = '00'] = time24.split(':')
+    const parsedHour = Number(hourPart)
+    const parsedMinute = Number(minutePart)
+
+    if (
+      Number.isNaN(parsedHour) ||
+      Number.isNaN(parsedMinute) ||
+      parsedHour < 0 ||
+      parsedHour > 23 ||
+      parsedMinute < 0 ||
+      parsedMinute > 59
+    ) {
+      return ''
+    }
+
+    const period = parsedHour >= 12 ? 'PM' : 'AM'
+    const normalizedHour = parsedHour % 12 || 12
+    return `${String(normalizedHour).padStart(2, '0')}:${String(parsedMinute).padStart(2, '0')} ${period}`
+  }, [])
+  const normalizeTimeInput = useCallback((rawValue: string) => {
+    const value = rawValue.trim()
+    if (!value) return ''
+
+    const hourMinuteMatch = value.match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
+    if (hourMinuteMatch) {
+      const [, hour, minute] = hourMinuteMatch
+      return `${hour.padStart(2, '0')}:${minute}`
+    }
+
+    const meridiemMatch = value.match(/^(\d{1,2}):([0-5]\d)\s*([aApP][mM])$/)
+    if (meridiemMatch) {
+      const [, hourRaw, minute, periodRaw] = meridiemMatch
+      const hour12 = Number(hourRaw)
+      if (hour12 < 1 || hour12 > 12) return null
+
+      const period = periodRaw.toUpperCase()
+      let hour24 = hour12 % 12
+      if (period === 'PM') hour24 += 12
+
+      return `${String(hour24).padStart(2, '0')}:${minute}`
+    }
+
+    return null
+  }, [])
+  const normalizeDateInput = useCallback((rawValue: string) => {
+    const value = rawValue.trim()
+    if (!value) return ''
+
+    const dayMonthYearMatch = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+    if (dayMonthYearMatch) {
+      const [, dayRaw, monthRaw, year] = dayMonthYearMatch
+      const day = dayRaw.padStart(2, '0')
+      const month = monthRaw.padStart(2, '0')
+      const isoCandidate = `${year}-${month}-${day}`
+      const parsed = parse(isoCandidate, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'yyyy-MM-dd') === isoCandidate ? isoCandidate : null
+    }
+
+    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (isoMatch) {
+      const parsed = parse(value, 'yyyy-MM-dd', new Date())
+      if (Number.isNaN(parsed.getTime())) return null
+      return format(parsed, 'yyyy-MM-dd') === value ? value : null
+    }
+
+    return null
+  }, [])
   const handleRaidLeaderChange = (value: string, checked: boolean) => {
     setFormData((prev) => {
       const nextRaidLeaders = checked
@@ -188,14 +249,46 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       return { ...prev, raidLeader: nextRaidLeaders }
     })
   }
+  const raidLeaderOptions = useMemo(
+    () =>
+      apiOptions
+        .map((option) => ({
+          value: `${option.id};${option.username}`,
+          label: option.global_name,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [apiOptions]
+  )
   const selectedRaidLeaders = formData.raidLeader.map((value) => {
     const found = apiOptions.find((option) => `${option.id};${option.username}` === value)
-    return found?.global_name || value
+    return { value, label: found?.global_name || value }
   })
+  const filteredRaidLeaderOptions = useMemo(() => {
+    const normalizedSearch = raidLeaderSearch.trim().toLowerCase()
+    if (!normalizedSearch) return raidLeaderOptions
+
+    return raidLeaderOptions.filter((option) =>
+      option.label.toLowerCase().includes(normalizedSearch)
+    )
+  }, [raidLeaderSearch, raidLeaderOptions])
   const selectedDate = useMemo(() => {
     if (!formData.date) return null
     const parsedDate = parse(formData.date, 'yyyy-MM-dd', new Date())
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+  }, [formData.date])
+  useEffect(() => {
+    if (!formData.date) {
+      setDateInputValue('')
+      return
+    }
+
+    const parsedDate = parse(formData.date, 'yyyy-MM-dd', new Date())
+    if (Number.isNaN(parsedDate.getTime())) {
+      setDateInputValue('')
+      return
+    }
+
+    setDateInputValue(format(parsedDate, 'dd/MM/yyyy'))
   }, [formData.date])
   const timeParts = useMemo(() => {
     if (!formData.time) {
@@ -218,6 +311,15 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       hasValue: true,
     }
   }, [formData.time])
+  useEffect(() => {
+    if (!formData.time) {
+      setTimeInputValue('')
+      return
+    }
+
+    const formatted = formatTime12h(formData.time)
+    setTimeInputValue(formatted || '')
+  }, [formData.time, formatTime12h])
 
   useEffect(() => {
     if (!isTimePickerOpen) return
@@ -241,8 +343,37 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     let hour24 = Number(nextHour12) % 12
     if (nextPeriod === 'PM') hour24 += 12
 
-    handleChange('time', `${String(hour24).padStart(2, '0')}:${nextMinute}`)
+    const normalizedTime = `${String(hour24).padStart(2, '0')}:${nextMinute}`
+    handleChange('time', normalizedTime)
+    setTimeInputValue(formatTime12h(normalizedTime))
   }
+  const applyManualDate = useCallback(() => {
+    const normalizedDate = normalizeDateInput(dateInputValue)
+
+    if (normalizedDate === '') {
+      handleChange('date', '')
+      return
+    }
+
+    if (!normalizedDate) return
+
+    handleChange('date', normalizedDate)
+    const parsedDate = parse(normalizedDate, 'yyyy-MM-dd', new Date())
+    setDateInputValue(format(parsedDate, 'dd/MM/yyyy'))
+  }, [dateInputValue, normalizeDateInput])
+  const applyManualTime = useCallback(() => {
+    const normalizedTime = normalizeTimeInput(timeInputValue)
+
+    if (normalizedTime === '') {
+      handleChange('time', '')
+      return
+    }
+
+    if (!normalizedTime) return
+
+    handleChange('time', normalizedTime)
+    setTimeInputValue(formatTime12h(normalizedTime))
+  }, [formatTime12h, normalizeTimeInput, timeInputValue])
 
   return createPortal(
     <div className='fixed inset-0 z-[240] flex items-center justify-center bg-black/70 p-4'>
@@ -283,40 +414,74 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Date</label>
             <div className='relative'>
               <DatePicker
+                ref={datePickerRef}
                 selected={selectedDate}
-                onChange={(date) => handleChange('date', date ? format(date, 'yyyy-MM-dd') : '')}
+                onChange={(date) => {
+                  const normalizedDate = date ? format(date, 'yyyy-MM-dd') : ''
+                  handleChange('date', normalizedDate)
+                  setDateInputValue(date ? format(date, 'dd/MM/yyyy') : '')
+                }}
+                onChangeRaw={(event) => {
+                  const input = event?.target as HTMLInputElement | null
+                  if (!input) return
+                  setDateInputValue(input.value)
+                }}
+                onBlur={applyManualDate}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    applyManualDate()
+                  }
+                }}
                 dateFormat='dd/MM/yyyy'
                 placeholderText='dd/mm/aaaa'
                 showPopperArrow={false}
                 popperClassName='z-[240] balance-datepicker-popper'
                 calendarClassName='balance-datepicker add-run-datepicker'
                 wrapperClassName='w-full'
-                customInput={<DatePickerInput className={dateTriggerClass} />}
+                className={`${dateTriggerClass} pr-10`}
+                value={dateInputValue}
               />
-              <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
+              <button
+                type='button'
+                onClick={() => datePickerRef.current?.setOpen(true)}
+                aria-label='Open date picker'
+                className='absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-xs text-purple-300/85 transition hover:bg-white/10 hover:text-purple-200'
+              >
                 ▼
-              </span>
+              </button>
             </div>
+            <span className='mt-1 block text-[11px] text-neutral-400'>
+              Type `dd/mm/yyyy` or use the calendar selector.
+            </span>
           </div>
 
           {!isSpecialRun && (
             <div>
               <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Time</label>
               <div ref={timePickerRef} className='relative'>
+                <input
+                  type='text'
+                  value={timeInputValue}
+                  onChange={(event) => setTimeInputValue(event.target.value)}
+                  onBlur={applyManualTime}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      applyManualTime()
+                    }
+                  }}
+                  placeholder={timeParts.hasValue ? `${timeParts.hour}:${timeParts.minute} ${timeParts.period}` : 'hh:mm AM/PM or HH:mm'}
+                  className={`${dateTriggerClass} pr-10`}
+                />
                 <button
                   type='button'
                   onClick={() => setIsTimePickerOpen((prev) => !prev)}
-                  className={dateTriggerClass}
+                  aria-label='Open time picker'
+                  className='absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-xs text-purple-300/85 transition hover:bg-white/10 hover:text-purple-200'
                 >
-                  <span className={timeParts.hasValue ? 'text-purple-100' : 'text-purple-200/50'}>
-                    {timeParts.hasValue
-                      ? `${timeParts.hour}:${timeParts.minute} ${timeParts.period}`
-                      : '--:--'}
-                  </span>
-                </button>
-                <span className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-300/85'>
                   ▼
-                </span>
+                </button>
                 {isTimePickerOpen && (
                   <div className='absolute left-0 top-[calc(100%+8px)] z-[240] w-full overflow-hidden rounded-xl border border-purple-300/25 bg-[rgba(14,10,28,0.98)] p-3 shadow-[0_20px_40px_rgba(0,0,0,0.45)]'>
                     <div className='grid grid-cols-3 gap-2'>
@@ -387,6 +552,9 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                   </div>
                 )}
               </div>
+              <span className='mt-1 block text-[11px] text-neutral-400'>
+                Type `HH:mm` or `hh:mm AM/PM`, or use the selector.
+              </span>
             </div>
           )}
 
@@ -486,40 +654,63 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
 
           <div className='col-span-1 flex flex-col md:col-span-2'>
             <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Raid Leader</label>
-            <div className='max-h-[190px] w-full overflow-y-auto rounded-md border border-white/15 bg-white/[0.05] px-4 py-3'>
-              <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
-                {apiOptions.map((option) => {
-                  const optionValue = `${option.id};${option.username}`
-                  const isChecked = formData.raidLeader.includes(optionValue)
+            <div className='relative'>
+              <input
+                type='text'
+                value={raidLeaderSearch}
+                onChange={(event) => {
+                  setRaidLeaderSearch(event.target.value)
+                  setIsRaidLeaderAutocompleteOpen(true)
+                }}
+                onFocus={() => setIsRaidLeaderAutocompleteOpen(true)}
+                onBlur={() => setTimeout(() => setIsRaidLeaderAutocompleteOpen(false), 120)}
+                placeholder='Search raid leader'
+                className={baseFieldClass}
+              />
 
-                  return (
-                    <label
-                      key={option.username}
-                      className='flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-white hover:bg-white/10'
-                    >
-                      <input
-                        type='checkbox'
-                        checked={isChecked}
-                        onChange={(event) =>
-                          handleRaidLeaderChange(optionValue, event.target.checked)
-                        }
-                        className='h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.05] accent-purple-500'
-                      />
-                      <span>{option.global_name}</span>
-                    </label>
-                  )
-                })}
-              </div>
+              {isRaidLeaderAutocompleteOpen && (
+                <div className='absolute left-0 right-0 top-[calc(100%+6px)] z-[250] max-h-56 overflow-auto rounded-md border border-white/15 bg-neutral-900/95 p-1 shadow-xl backdrop-blur-sm'>
+                  {filteredRaidLeaderOptions.length > 0 ? (
+                    filteredRaidLeaderOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          const isChecked = formData.raidLeader.includes(option.value)
+                          handleRaidLeaderChange(option.value, !isChecked)
+                          setRaidLeaderSearch('')
+                          setIsRaidLeaderAutocompleteOpen(true)
+                        }}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${
+                          formData.raidLeader.includes(option.value)
+                            ? 'bg-purple-500/20 text-purple-100'
+                            : 'text-white/90 hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {formData.raidLeader.includes(option.value) && (
+                          <span className='ml-2 text-xs text-purple-200'>Selected</span>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <p className='px-3 py-2 text-sm text-neutral-400'>No raid leader found</p>
+                  )}
+                </div>
+              )}
             </div>
             {selectedRaidLeaders.length > 0 ? (
               <div className='mt-2 flex flex-wrap gap-1'>
                 {selectedRaidLeaders.map((leader) => (
-                  <span
-                    key={leader}
+                  <button
+                    key={leader.value}
+                    type='button'
+                    onClick={() => handleRaidLeaderChange(leader.value, false)}
                     className='rounded-full border border-purple-300/30 bg-purple-500/20 px-2 py-0.5 text-xs text-purple-100'
                   >
-                    {leader}
-                  </span>
+                    {leader.label} <span className='ml-1 text-purple-200/80'>x</span>
+                  </button>
                 ))}
               </div>
             ) : null}

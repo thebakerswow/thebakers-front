@@ -230,7 +230,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
 
   const selectedRaidLeaders = formData.raidLeader.map((value) => {
     const found = apiOptions.find((option) => `${option.id};${option.username}` === value)
-    return found?.global_name || value
+    return { value, label: found?.global_name || value }
   })
 
   const filteredRaidLeaderOptions = useMemo(() => {
@@ -241,19 +241,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       option.label.toLowerCase().includes(normalizedSearch)
     )
   }, [raidLeaderSearch, raidLeaderOptions])
-
-  const selectedRaidLeader = useMemo(() => {
-    const selectedValue = formData.raidLeader[0]
-    if (!selectedValue) return null
-
-    return raidLeaderOptions.find((option) => option.value === selectedValue) || null
-  }, [formData.raidLeader, raidLeaderOptions])
-
-  useEffect(() => {
-    if (selectedRaidLeader && raidLeaderSearch !== selectedRaidLeader.label) {
-      setRaidLeaderSearch(selectedRaidLeader.label)
-    }
-  }, [selectedRaidLeader, raidLeaderSearch])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -710,7 +697,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                   const value = event.target.value
                   setRaidLeaderSearch(value)
                   setIsRaidLeaderAutocompleteOpen(true)
-                  setFormData((prev) => ({ ...prev, raidLeader: [] }))
                 }}
                 onFocus={() => setIsRaidLeaderAutocompleteOpen(true)}
                 onBlur={() => setTimeout(() => setIsRaidLeaderAutocompleteOpen(false), 120)}
@@ -718,22 +704,35 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
                 className={baseFieldClass}
               />
 
-              {isRaidLeaderAutocompleteOpen && raidLeaderSearch.trim() && (
+              {isRaidLeaderAutocompleteOpen && (
                 <div className='absolute left-0 right-0 top-[calc(100%+6px)] z-[250] max-h-56 overflow-auto rounded-md border border-white/15 bg-neutral-900/95 p-1 shadow-xl backdrop-blur-sm'>
                   {filteredRaidLeaderOptions.length > 0 ? (
-                    filteredRaidLeaderOptions.slice(0, 8).map((option) => (
+                    filteredRaidLeaderOptions.map((option) => (
                       <button
                         key={option.value}
                         type='button'
                         onMouseDown={(event) => {
                           event.preventDefault()
-                          setFormData((prev) => ({ ...prev, raidLeader: [option.value] }))
-                          setRaidLeaderSearch(option.label)
-                          setIsRaidLeaderAutocompleteOpen(false)
+                          setFormData((prev) => {
+                            const isSelected = prev.raidLeader.includes(option.value)
+                            const nextRaidLeaders = isSelected
+                              ? prev.raidLeader.filter((leader) => leader !== option.value)
+                              : [...prev.raidLeader, option.value]
+                            return { ...prev, raidLeader: nextRaidLeaders }
+                          })
+                          setRaidLeaderSearch('')
+                          setIsRaidLeaderAutocompleteOpen(true)
                         }}
-                        className='w-full rounded-md px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10'
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${
+                          formData.raidLeader.includes(option.value)
+                            ? 'bg-purple-500/20 text-purple-100'
+                            : 'text-white/90 hover:bg-white/10'
+                        }`}
                       >
-                        {option.label}
+                        <span>{option.label}</span>
+                        {formData.raidLeader.includes(option.value) && (
+                          <span className='ml-2 text-xs text-purple-200'>Selected</span>
+                        )}
                       </button>
                     ))
                   ) : (
@@ -745,12 +744,19 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
             {selectedRaidLeaders.length > 0 ? (
               <div className='mt-2 flex flex-wrap gap-1'>
                 {selectedRaidLeaders.map((leader) => (
-                  <span
-                    key={leader}
+                  <button
+                    key={leader.value}
+                    type='button'
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        raidLeader: prev.raidLeader.filter((value) => value !== leader.value),
+                      }))
+                    }}
                     className='rounded-full border border-purple-300/30 bg-purple-500/20 px-2 py-0.5 text-xs text-purple-100'
                   >
-                    {leader}
-                  </span>
+                    {leader.label} <span className='ml-1 text-purple-200/80'>x</span>
+                  </button>
                 ))}
               </div>
             ) : null}
