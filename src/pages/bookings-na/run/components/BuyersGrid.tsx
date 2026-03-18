@@ -25,6 +25,7 @@ import CryptoJS from 'crypto-js'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import type { BuyerData, BuyersGridProps, RaidLeader } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 const statusOptions = [
   { value: 'waiting', label: 'Waiting' },
@@ -59,12 +60,11 @@ export function BuyersDataGrid({
   raidLeaders, // Added raid leaders prop
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
-  const isOnlyAdvertiserRole =
-    userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER) &&
-    userRoles.length === 1
+  const isAdvertiserRole = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
   const isJuniorAdvertiserRole = userRoles.includes(
     import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
   )
+  const shouldHideDollarPotColumn = shouldHideDollarPotInfo(userRoles)
 
   // Function to check if current user is the advertiser of a buyer
   const isBuyerAdvertiser = (buyer: BuyerData): boolean => {
@@ -151,9 +151,9 @@ export function BuyersDataGrid({
     return isBuyerAdvertiser(buyer) || isChefeDeCozinha()
   }
 
-  const canDeleteBuyer = (buyer: BuyerData): boolean => {
-    if (isOnlyAdvertiserRole) return false
-    if (isJuniorAdvertiserRole && isBuyerAdvertiser(buyer)) return false
+  const canDeleteBuyer = (_: BuyerData): boolean => {
+    if (isJuniorAdvertiserRole) return false
+    if (isAdvertiserRole) return true
     return true
   }
 
@@ -657,7 +657,9 @@ export function BuyersDataGrid({
             <th className='px-2 py-3 text-center font-semibold'>Advertiser</th>
             <th className='px-2 py-3 text-center font-semibold'>Collector</th>
             <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
-            <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
+            {!shouldHideDollarPotColumn && (
+              <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
+            )}
             <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
             <th className='px-2 py-3 text-center font-semibold'>Run Pot</th>
             <th className='px-2 py-3 text-center font-semibold'>Class</th>
@@ -667,7 +669,10 @@ export function BuyersDataGrid({
         <tbody>
           {sortedData.length === 0 ? (
             <tr>
-              <td colSpan={12} className='p-6 text-center text-neutral-400'>
+              <td
+                colSpan={shouldHideDollarPotColumn ? 11 : 12}
+                className='p-6 text-center text-neutral-400'
+              >
                 No Buyers
               </td>
             </tr>
@@ -727,22 +732,24 @@ export function BuyersDataGrid({
                     })
                   )}
                 </td>
-                <td className='px-2 py-2 text-center'>
-                  {buyer.buyerDolarPot == null ? (
-                    buyer.buyerPot == null ? (
-                      <i>Encrypted</i>
+                {!shouldHideDollarPotColumn && (
+                  <td className='px-2 py-2 text-center'>
+                    {buyer.buyerDolarPot == null ? (
+                      buyer.buyerPot == null ? (
+                        <i>Encrypted</i>
+                      ) : (
+                        '-'
+                      )
+                    ) : buyer.buyerDolarPot > 0 ? (
+                      Number(buyer.buyerDolarPot).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
                     ) : (
                       '-'
-                    )
-                  ) : buyer.buyerDolarPot > 0 ? (
-                    Number(buyer.buyerDolarPot).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  ) : (
-                    '-'
-                  )}
-                </td>
+                    )}
+                  </td>
+                )}
                 <td className='px-2 py-2 text-center'>
                   {buyer.buyerPot == null ? (
                     <i>Encrypted</i>
@@ -755,15 +762,13 @@ export function BuyersDataGrid({
                 <td className='px-2 py-2 text-center'>
                   {buyer.buyerActualPot == null ? (
                     <i>Encrypted</i>
-                  ) : buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
+                  ) : !shouldHideDollarPotColumn && buyer.buyerDolarPot && buyer.buyerDolarPot > 0 ? (
                     Number(buyer.buyerActualPot).toLocaleString('en-US', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })
                   ) : (
-                    Math.round(Number(buyer.buyerActualPot)).toLocaleString(
-                      'en-US'
-                    )
+                    Math.round(Number(buyer.buyerActualPot)).toLocaleString('en-US')
                   )}
                 </td>
                 <td className='px-2 py-2 text-center'>

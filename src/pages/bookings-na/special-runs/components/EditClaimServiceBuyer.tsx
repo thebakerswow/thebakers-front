@@ -11,6 +11,7 @@ import type {
 } from '../types/specialRuns'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import { updateClaimService } from '../services/specialRunsApi'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 export function EditClaimServiceBuyer({
   buyer,
@@ -18,10 +19,7 @@ export function EditClaimServiceBuyer({
   onEditSuccess,
 }: EditClaimServiceBuyerProps) {
   const { userRoles } = useAuth()
-  const isJuniorAdvertiser = userRoles.includes(
-    import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
-  )
-  const shouldHideDolarInput = isJuniorAdvertiser
+  const shouldHideDolarInput = shouldHideDollarPotInfo(userRoles)
 
   const [formData, setFormData] = useState({
     nameAndRealm: buyer.nameAndRealm,
@@ -96,12 +94,12 @@ export function EditClaimServiceBuyer({
     }
 
   useEffect(() => {
-    if (!isJuniorAdvertiser) return
+    if (!shouldHideDolarInput) return
     setFormData((prev) => ({
       ...prev,
       claimServiceDolarPot: '',
     }))
-  }, [isJuniorAdvertiser])
+  }, [shouldHideDolarInput])
 
   const handleSubmit = async () => {
     setIsSubmitting(true)

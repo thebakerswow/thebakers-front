@@ -13,6 +13,7 @@ import type { SpecialRunBuyersGridProps } from '../types/specialRuns'
 
 export function SpecialRunBuyersGrid({
   buyers,
+  hideDollarPotInfo,
   statusOptions,
   getStatusStyle,
   onStatusChange,
@@ -49,7 +50,9 @@ export function SpecialRunBuyersGrid({
               <th className='px-2 py-3 text-center font-semibold'>Collector</th>
               <th className='px-2 py-3 text-center font-semibold'>Claimed By</th>
               <th className='px-2 py-3 text-center font-semibold'>Paid Full</th>
-              <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
+              {!hideDollarPotInfo && (
+                <th className='px-2 py-3 text-center font-semibold'>Dollar Pot</th>
+              )}
               <th className='px-2 py-3 text-center font-semibold'>Gold Pot</th>
               <th className='px-2 py-3 text-center font-semibold'>Service Pot</th>
               <th className='px-2 py-3 text-center font-semibold'>Class</th>
@@ -60,7 +63,10 @@ export function SpecialRunBuyersGrid({
           <tbody>
             {buyers.length === 0 ? (
               <tr>
-                <td colSpan={14} className='px-4 py-6 text-center text-neutral-400'>
+                <td
+                  colSpan={hideDollarPotInfo ? 13 : 14}
+                  className='px-4 py-6 text-center text-neutral-400'
+                >
                   No buyers found for selected date
                 </td>
               </tr>
@@ -102,19 +108,21 @@ export function SpecialRunBuyersGrid({
                     )}
                   </button>
                 </td>
-                <td className='px-2 py-2 text-center'>
-                  {buyer.dolarPot > 0
-                    ? buyer.dolarPot.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : '-'}
-                </td>
+                {!hideDollarPotInfo && (
+                  <td className='px-2 py-2 text-center'>
+                    {buyer.dolarPot > 0
+                      ? buyer.dolarPot.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : '-'}
+                  </td>
+                )}
                 <td className='px-2 py-2 text-center'>
                   {buyer.goldPot > 0 ? Math.round(buyer.goldPot).toLocaleString('en-US') : '-'}
                 </td>
                 <td className='px-2 py-2 text-center'>
-                  {buyer.dolarPot > 0
+                  {!hideDollarPotInfo && buyer.dolarPot > 0
                     ? buyer.runPot.toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

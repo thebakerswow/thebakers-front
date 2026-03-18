@@ -86,6 +86,12 @@ export const hasAdvertiserRole = (userRoles: string[]): boolean => {
   return userRoles.includes(advertiserRole)
 }
 
+// Função para verificar se o usuário tem cargo de advertiser junior
+export const hasAdvertiserJuniorRole = (userRoles: string[]): boolean => {
+  const advertiserJuniorRole = import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
+  return userRoles.includes(advertiserJuniorRole)
+}
+
 // Função para verificar se o usuário é somente advertiser
 export const isOnlyAdvertiser = (userRoles: string[]): boolean => {
   const advertiserRole = import.meta.env.VITE_TEAM_ADVERTISER
@@ -217,6 +223,32 @@ export const shouldShowUsGoldButton = (userRoles: string[]): boolean => {
   
   // Outros usuários podem ver o botão
   return true
+}
+
+// Função para determinar se deve mostrar a aba de sells no header
+export const shouldShowSellsTab = (userRoles: string[]): boolean => {
+  const hasFreelancer = hasFreelancerRole(userRoles)
+  const hasAdvertiser = hasAdvertiserRole(userRoles)
+  const hasAdvertiserJunior = hasAdvertiserJuniorRole(userRoles)
+  const hasTrackedTeams = hasTeamRoles(userRoles)
+
+  // Advertiser/Advertiser Junior sem cargo de time não devem ver Sells
+  if ((hasAdvertiser || hasAdvertiserJunior) && !hasTrackedTeams) {
+    return false
+  }
+
+  // Usuários com cargo freelancer não devem ver Sells
+  if (hasFreelancer) {
+    return false
+  }
+
+  // Demais usuários podem ver Sells
+  return true
+}
+
+// Função para determinar se deve ocultar dados de Dollar Pot
+export const shouldHideDollarPotInfo = (userRoles: string[]): boolean => {
+  return hasAdvertiserJuniorRole(userRoles) && !hasTeamRoles(userRoles)
 }
 
 // Função para determinar se deve mostrar a aba de bookings no header

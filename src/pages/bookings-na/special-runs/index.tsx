@@ -23,6 +23,7 @@ import {
 } from './services/specialRunsApi'
 import { sendDiscordMessage } from '../run/services/runApi'
 import { handleApiError } from '../../../utils/apiErrorHandler'
+import { shouldHideDollarPotInfo } from '../../../utils/roleUtils'
 import Swal from 'sweetalert2'
 
 const statusOrder: Record<SpecialRunBuyerStatus, number> = {
@@ -201,9 +202,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const serviceType = useMemo(() => normalizeType(runType), [runType])
   const responsibleUserId = idDiscord || username || null
   const isChefeDeCozinha = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const isAdvertiser = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
   const isJuniorAdvertiser = userRoles.includes(
     import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
   )
+  const hideDollarPotInfo = shouldHideDollarPotInfo(userRoles)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [buyers, setBuyers] = useState<SpecialRunBuyer[]>([])
   const [isLoadingBuyers, setIsLoadingBuyers] = useState<boolean>(true)
@@ -357,17 +360,13 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     return isBuyerClaimedByCurrentUser(buyer) || isBuyerAdvertiser
   }
 
-  const canSeeDeleteButton = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const canSeeDeleteButton =
+    isChefeDeCozinha || (isAdvertiser && !isJuniorAdvertiser)
   const canSeeHistoryButton = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
   const canDeleteBuyer = (buyer: SpecialRunBuyer) => {
+    if (isJuniorAdvertiser) return false
     if (isChefeDeCozinha) return true
-    if (
-      isJuniorAdvertiser &&
-      !!idDiscord &&
-      buyer.idOwnerClaimService === idDiscord
-    ) {
-      return false
-    }
+    if (isAdvertiser) return true
     return canUseActionButtons(buyer)
   }
 
@@ -654,6 +653,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
           ) : (
             <SpecialRunBuyersGrid
               buyers={sortedBuyers}
+              hideDollarPotInfo={hideDollarPotInfo}
               statusOptions={statusOptions}
               getStatusStyle={getStatusStyle}
               onStatusChange={handleStatusChange}

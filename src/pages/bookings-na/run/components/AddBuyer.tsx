@@ -8,6 +8,7 @@ import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { AddBuyerProps, Advertiser } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 export function AddBuyer({
   run,
@@ -51,9 +52,9 @@ export function AddBuyer({
 
   // Function to check if Dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
-    return false
+    return shouldHideDollarPotInfo(userRoles)
   }
-  const shouldHideBuyerDolarInput = shouldHideDolarField() || isJuniorAdvertiser
+  const shouldHideBuyerDolarInput = shouldHideDolarField()
 
   // Function to handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

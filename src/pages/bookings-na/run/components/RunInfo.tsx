@@ -15,6 +15,7 @@ import { useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import type { BuyerData, RunData, RunInfoProps } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 export function RunInfo({
   run,
@@ -254,8 +255,10 @@ export function RunInfo({
   const hasGoldCollectors = Boolean(
     run.sumPot?.some((item) => item.type === 'gold' && item.sumPot !== 0)
   )
+  const hideDollarPotInfo = shouldHideDollarPotInfo(userRoles)
   const hasDolarCollectors = Boolean(
-    run.sumPot?.some((item) => item.type === 'dollar' && item.sumPot !== 0)
+    !hideDollarPotInfo &&
+      run.sumPot?.some((item) => item.type === 'dollar' && item.sumPot !== 0)
   )
   const mainCardColSpanClass =
     hasGoldCollectors && hasDolarCollectors
@@ -356,19 +359,21 @@ export function RunInfo({
                     : '-'}
                 </dd>
               </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Run Dollar Pot
-                </dt>
-                <dd className='mt-1 font-medium'>
-                  {run.actualPotDolar != null
-                    ? Number(run.actualPotDolar).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : '-'}
-                </dd>
-              </div>
+              {!hideDollarPotInfo && (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Run Dollar Pot
+                  </dt>
+                  <dd className='mt-1 font-medium'>
+                    {run.actualPotDolar != null
+                      ? Number(run.actualPotDolar).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : '-'}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 

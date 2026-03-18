@@ -80,6 +80,7 @@ export interface StatusOption {
 
 export interface SpecialRunBuyersGridProps {
   buyers: SpecialRunBuyer[]
+  hideDollarPotInfo: boolean
   statusOptions: StatusOption[]
   getStatusStyle: (status: SpecialRunBuyerStatus) => string
   onStatusChange: (buyerId: string, newStatus: SpecialRunBuyerStatus) => void

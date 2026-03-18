@@ -24,6 +24,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   isOnlyFreelancer,
   shouldShowBookingsTab,
+  shouldShowSellsTab,
   shouldUseNewBalance,
 } from '../utils/roleUtils'
 
@@ -86,7 +87,6 @@ export function Header() {
     return requiredRoles.some((role) => userRoles.includes(role))
   }
   const isFreelancerOnlyUser = isOnlyFreelancer(userRoles)
-  const hasFreelancerRole = userRoles.includes(import.meta.env.VITE_TEAM_FREELANCER)
   const hasMplusKeysAccess = hasAccess([
     import.meta.env.VITE_TEAM_MPLUS_SOLO,
     import.meta.env.VITE_TEAM_MPLUS_TEAM,
@@ -114,7 +114,7 @@ export function Header() {
           icon: <CurrencyDollar size={18} />,
           children: [
             { label: 'Balance', path: '/balance', icon: <Coins size={18} /> },
-            ...(!hasFreelancerRole
+            ...(shouldShowSellsTab(userRoles)
               ? [{ label: 'Sells', path: '/sells', icon: <CurrencyDollar size={18} /> }]
               : []),
             ...(shouldUseNewBalance(userRoles)

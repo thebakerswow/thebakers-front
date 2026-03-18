@@ -18,6 +18,7 @@ import {
   getTeamMembers,
   sendDiscordBulkMessage,
 } from '../../run/services/runApi'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 export function AddClaimServiceBuyer({
   type,
@@ -30,7 +31,7 @@ export function AddClaimServiceBuyer({
     import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR
   )
   const canEditPaidFull = !isJuniorAdvertiser
-  const shouldHideDolarInput = isJuniorAdvertiser
+  const shouldHideDolarInput = shouldHideDollarPotInfo(userRoles)
 
   const [formData, setFormData] = useState({
     nameAndRealm: '',
@@ -219,13 +220,13 @@ export function AddClaimServiceBuyer({
   }, [fetchAdvertisers])
 
   useEffect(() => {
-    if (!isJuniorAdvertiser) return
+    if (!shouldHideDolarInput) return
     setFormData((prev) => ({
       ...prev,
       claimServiceDolarPot: '',
       isPaid: false,
     }))
-  }, [isJuniorAdvertiser])
+  }, [shouldHideDolarInput])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

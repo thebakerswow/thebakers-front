@@ -213,8 +213,8 @@ function AppContent() {
                       <GlobalErrorPage
                         title='Access check failed'
                         message='You do not have access to this run.'
-                        actionLabel='Back to raids'
-                        actionTo='/bookings-na/raids'
+                        actionLabel='Back to home'
+                        actionTo='/home'
                         showReload={false}
                       />
                     }

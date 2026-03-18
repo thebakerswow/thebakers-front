@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { EditBuyerProps } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import { useAuth } from '../../../../context/AuthContext'
+import { shouldHideDollarPotInfo } from '../../../../utils/roleUtils'
 
 export function EditBuyer({
   buyer,
@@ -33,16 +34,16 @@ export function EditBuyer({
 
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
-    return isJuniorAdvertiser
+    return shouldHideDollarPotInfo(userRoles)
   }
 
   useEffect(() => {
-    if (!isJuniorAdvertiser) return
+    if (!shouldHideDolarField()) return
     setFormData((prev) => ({
       ...prev,
       buyerDolarPot: '',
     }))
-  }, [isJuniorAdvertiser])
+  }, [userRoles])
 
   // Função para formatar o valor do campo "buyerDolarPot" igual ao input do dólar da calculadora do balance-control-table
   const formatBuyerDolarPot = (value: string) => {
