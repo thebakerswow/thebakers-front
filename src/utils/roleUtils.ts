@@ -279,6 +279,9 @@ export const shouldShowBookingsTab = (userRoles: string[]): boolean => {
 
 // Função para determinar se o usuário deve ver apenas seu próprio balance
 export const shouldShowOwnBalanceOnly = (userRoles: string[]): boolean => {
+  const hasAdvertiserJunior = hasAdvertiserJuniorRole(userRoles)
+  const hasTrackedTeams = hasTeamRoles(userRoles)
+
   // Se o usuário tem apenas cargo de freelancer, deve ver apenas seu próprio balance
   if (isOnlyFreelancer(userRoles)) {
     return true
@@ -293,9 +296,14 @@ export const shouldShowOwnBalanceOnly = (userRoles: string[]): boolean => {
   if (hasAdvertiserAndFreelancerOnly(userRoles)) {
     return true
   }
+
+  // Se o usuário é advertiser junior e não tem cargo de time, deve ver apenas seu próprio balance
+  if (hasAdvertiserJunior && !hasTrackedTeams) {
+    return true
+  }
   
   // Se o usuário tem cargos de times rastreados, pode ver balance de times
-  if (hasTeamRoles(userRoles)) {
+  if (hasTrackedTeams) {
     return false
   }
   
