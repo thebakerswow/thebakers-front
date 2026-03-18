@@ -55,6 +55,9 @@ export function AddMultipleRuns({
       const runsArray = Array.isArray(parsedRuns) ? parsedRuns : [parsedRuns]
 
       const formattedRuns: RaidRunCreatePayload[] = runsArray.map((run) => ({
+        minPriceEnabled: true,
+        minPriceGold: Number(run.minPriceGold ?? 0),
+        minPriceDollar: Number(run.minPriceDollar ?? 0),
         name: run.name,
         date: run.date,
         time: run.time,
@@ -68,6 +71,13 @@ export function AddMultipleRuns({
         quantityBoss: run.quantityBoss,
         note: run.note || '',
       }))
+
+      const hasInvalidMinPrice = formattedRuns.some(
+        (run) => run.minPriceGold <= 0 || run.minPriceDollar <= 0
+      )
+      if (hasInvalidMinPrice) {
+        throw new Error('Min Price Gold and Min Price USD must be greater than zero.')
+      }
 
       for (const run of formattedRuns) {
         await createRaidRun(run)

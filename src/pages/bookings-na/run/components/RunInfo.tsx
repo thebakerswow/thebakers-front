@@ -9,6 +9,7 @@ import {
   getRunAttendance,
   toggleRunLock as toggleRunLockService,
   sendDiscordMessage,
+  updateRun,
 } from '../services/runApi'
 import { EditHistoryDialog } from './History'
 import { useParams } from 'react-router-dom'
@@ -30,6 +31,7 @@ export function RunInfo({
   const { userRoles, idDiscord } = useAuth() // Obtenha as roles do contexto
   const [isEditHistoryOpen, setIsEditHistoryOpen] = useState(false)
   const [cooldownMegaphone, setCooldownMegaphone] = useState(false)
+  const [isTogglingMinPrice, setIsTogglingMinPrice] = useState(false)
   const { id: runId } = useParams<{ id: string }>()
 
   // Function to check if current user is a raid leader
@@ -252,6 +254,50 @@ export function RunInfo({
     setCooldownMegaphone(false)
   }
 
+  const canToggleMinPrice = isRaidLeader() || userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
+  const formattedMinPriceGold =
+    run.minPriceGold != null && Number(run.minPriceGold) > 0
+      ? Math.round(Number(run.minPriceGold)).toLocaleString('en-US')
+      : '-'
+  const formattedMinPriceDollar =
+    run.minPriceDollar != null && Number(run.minPriceDollar) > 0
+      ? Number(run.minPriceDollar).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : '-'
+
+  const handleToggleMinPrice = async () => {
+    if (!canToggleMinPrice || isTogglingMinPrice) {
+      return
+    }
+
+    const nextMinPriceEnabled = !run.minPriceEnabled
+    setIsTogglingMinPrice(true)
+
+    try {
+      await updateRun(run.id, {
+        id: run.id,
+        minPriceEnabled: nextMinPriceEnabled,
+        minPriceGold: Number(run.minPriceGold || 0),
+        minPriceDollar: Number(run.minPriceDollar || 0),
+      })
+
+      await onRunEdit()
+      Swal.fire({
+        title: 'Success!',
+        text: `Min Price ${nextMinPriceEnabled ? 'enabled' : 'disabled'} successfully.`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } catch (error) {
+      await handleApiError(error, 'Failed to update Min Price setting')
+    } finally {
+      setIsTogglingMinPrice(false)
+    }
+  }
+
   const visibleRaidLeaders =
     run.raidLeaders
       ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
@@ -384,6 +430,28 @@ export function RunInfo({
                   </dd>
                 </div>
               )}
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Min Price
+                </dt>
+                <dd className='mt-1 font-medium'>
+                  {run.minPriceEnabled ? 'Enabled' : 'Disabled'}
+                </dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Min Gold
+                </dt>
+                <dd className='mt-1 font-medium'>{formattedMinPriceGold}</dd>
+              </div>
+              {!hideDollarPotInfo && (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Min USD
+                  </dt>
+                  <dd className='mt-1 font-medium'>{formattedMinPriceDollar}</dd>
+                </div>
+              )}
               <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
                 <dt className='text-xs uppercase tracking-wide text-neutral-400'>
                   Note
@@ -408,6 +476,19 @@ export function RunInfo({
               <UserPlus size={18} />
               Add Buyer
             </button>
+            {canToggleMinPrice && (
+              <button
+                onClick={handleToggleMinPrice}
+                disabled={isTogglingMinPrice}
+                className={actionButtonClass}
+              >
+                {isTogglingMinPrice
+                  ? 'Updating Min Price...'
+                  : run.minPriceEnabled
+                    ? 'Disable Min Price'
+                    : 'Enable Min Price'}
+              </button>
+            )}
             {canManageRun ? (
               <>
                 <button

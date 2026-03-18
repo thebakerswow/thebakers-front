@@ -13,6 +13,9 @@ export function EditBuyer({
   buyer,
   onClose,
   onEditSuccess,
+  minPriceEnabled = false,
+  minPriceGold = 0,
+  minPriceDollar = 0,
 }: EditBuyerProps) {
   const { userRoles } = useAuth()
   const [formData, setFormData] = useState({
@@ -94,6 +97,42 @@ export function EditBuyer({
       )
       setIsSubmitting(false)
       return
+    }
+
+    if (minPriceEnabled) {
+      if (buyerPotValue <= 0 && buyerDolarPotValue <= 0) {
+        await handleApiError(
+          new Error('Set either Gold Pot or Dollar Pot above zero when Min Price is enabled.'),
+          'Min Price validation'
+        )
+        setIsSubmitting(false)
+        return
+      }
+
+      if (buyerPotValue > 0 && buyerPotValue < Number(minPriceGold)) {
+        await handleApiError(
+          new Error(
+            `Gold Pot must be at least ${Math.round(Number(minPriceGold)).toLocaleString('en-US')}.`
+          ),
+          'Min Price validation'
+        )
+        setIsSubmitting(false)
+        return
+      }
+
+      if (buyerDolarPotValue > 0 && buyerDolarPotValue < Number(minPriceDollar)) {
+        await handleApiError(
+          new Error(
+            `Dollar Pot must be at least ${Number(minPriceDollar).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}.`
+          ),
+          'Min Price validation'
+        )
+        setIsSubmitting(false)
+        return
+      }
     }
 
     const payload = {

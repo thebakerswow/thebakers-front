@@ -36,6 +36,16 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
           Valid: !!run.quantityBoss.Valid,
         }
       : { String: '', Valid: false },
+    minPriceEnabled:
+      typeof run.minPriceEnabled === 'boolean' ? run.minPriceEnabled : true,
+    minPriceGold:
+      run.minPriceGold != null && Number(run.minPriceGold) > 0
+        ? String(Math.round(Number(run.minPriceGold)))
+        : '',
+    minPriceDollar:
+      run.minPriceDollar != null && Number(run.minPriceDollar) > 0
+        ? Number(run.minPriceDollar).toString()
+        : '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dateInputValue, setDateInputValue] = useState('')
@@ -60,6 +70,8 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
   }, [])
 
   const handleChange = (field: string, value: any) => {
+    if (field === 'minPriceGold' && !/^[0-9]*$/.test(value)) return
+    if (field === 'minPriceDollar' && !/^\d*([.]\d{0,2})?$/.test(value)) return
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -77,12 +89,34 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
       return
     }
 
+    const parsedMinPriceGold = Number(formData.minPriceGold)
+    const parsedMinPriceDollar = Number(formData.minPriceDollar)
+
+    if (
+      formData.minPriceEnabled &&
+      (!formData.minPriceGold ||
+        !formData.minPriceDollar ||
+        parsedMinPriceGold <= 0 ||
+        parsedMinPriceDollar <= 0)
+    ) {
+      await Swal.fire({
+        title: 'Validation',
+        text: 'When Min Price is enabled, Gold and USD values must be greater than zero.',
+        icon: 'warning',
+        confirmButtonText: 'Close',
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     const data = {
       ...formData,
       id: run.id,
       maxBuyers: formData.maxBuyers.toString(),
+      minPriceEnabled: formData.minPriceEnabled,
+      minPriceGold: formData.minPriceEnabled ? parsedMinPriceGold : 0,
+      minPriceDollar: formData.minPriceEnabled ? parsedMinPriceDollar : 0,
       raidLeader: formData.raidLeader.map((value) => {
         const parts = value.split(';')
         return `${parts[0]};${parts[1]}`
@@ -650,6 +684,44 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
                 required
               />
             </div>
+          )}
+
+          {!isSpecialRun && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Min Price (Gold)</label>
+              <input
+                value={formData.minPriceGold}
+                onChange={(e) => handleChange('minPriceGold', e.target.value)}
+                placeholder='Ex: 600000'
+                className={baseFieldClass}
+                disabled={!formData.minPriceEnabled}
+              />
+            </div>
+          )}
+
+          {!isSpecialRun && (
+            <div>
+              <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>Min Price (USD)</label>
+              <input
+                value={formData.minPriceDollar}
+                onChange={(e) => handleChange('minPriceDollar', e.target.value)}
+                placeholder='Ex: 25.00'
+                className={baseFieldClass}
+                disabled={!formData.minPriceEnabled}
+              />
+            </div>
+          )}
+
+          {!isSpecialRun && (
+            <label className='col-span-1 inline-flex items-center gap-2 text-sm text-neutral-200 md:col-span-2'>
+              <input
+                type='checkbox'
+                checked={formData.minPriceEnabled}
+                onChange={(e) => handleChange('minPriceEnabled', e.target.checked)}
+                className='h-4 w-4 rounded border-white/40 bg-transparent accent-purple-500'
+              />
+              Min Price Enabled
+            </label>
           )}
 
           <div className='col-span-1 flex flex-col md:col-span-2'>

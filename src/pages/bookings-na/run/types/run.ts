@@ -33,6 +33,9 @@ export interface RunData {
   players: Players[]
   buyersCount: string
   quantityBoss: { String: string; Valid: boolean }
+  minPriceEnabled: boolean
+  minPriceGold: number
+  minPriceDollar: number
 }
 
 export interface RunHistory {
@@ -145,6 +148,9 @@ export interface EditBuyerProps {
   onClose: () => void
   onEditSuccess: () => void
   runIdTeam?: string
+  minPriceEnabled?: boolean
+  minPriceGold?: number
+  minPriceDollar?: number
 }
 
 export interface BuyersGridProps {
@@ -157,6 +163,9 @@ export interface BuyersGridProps {
   runIsLocked?: boolean
   runIdTeam?: string
   raidLeaders?: RaidLeader[]
+  minPriceEnabled?: boolean
+  minPriceGold?: number
+  minPriceDollar?: number
 }
 
 export interface ApiOption {

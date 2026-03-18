@@ -5,6 +5,7 @@ import {
   Pencil,
   Lock,
   LockOpen,
+  ArrowsClockwise,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react'
@@ -13,7 +14,11 @@ import { BuyersPreview } from './BuyersPreview'
 import { EditRun } from '../../run/components/EditRun'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../../../../context/AuthContext'
-import { deleteRaidRun, toggleRaidRunLock } from '../services/raidsApi'
+import {
+  deleteRaidRun,
+  toggleRaidRunLock,
+  toggleRaidRunMinPrice,
+} from '../services/raidsApi'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import Swal from 'sweetalert2'
 import type { RaidsRunData, RunsDataGridProps } from '../types/raids'
@@ -36,7 +41,7 @@ export function RunsDataGrid({
     null
   )
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null)
-  const { userRoles } = useAuth()
+  const { userRoles, idDiscord, username } = useAuth()
   const [runs, setRuns] = useState<RaidsRunData[]>(data)
 
   useEffect(() => {
@@ -265,6 +270,9 @@ export function RunsDataGrid({
       loot: run.loot,
       note: run.note || '',
       quantityBoss: run.quantityBoss,
+      minPriceEnabled: Boolean(run.minPriceEnabled),
+      minPriceGold: Number(run.minPriceGold || 0),
+      minPriceDollar: Number(run.minPriceDollar || 0),
     }
 
     navigator.clipboard
@@ -295,6 +303,44 @@ export function RunsDataGrid({
       })
     } catch (error) {
       await handleApiError(error, 'Failed to toggle run lock.')
+    }
+  }
+
+  const canToggleRunMinPrice = (run: RaidsRunData): boolean => {
+    const isChefe = hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
+    if (isChefe) return true
+    if (!Array.isArray(run.raidLeaders)) return false
+
+    return run.raidLeaders.some((leader) => leader.idDiscord === idDiscord)
+      || run.raidLeaders.some(
+        (leader) =>
+          Boolean(username) &&
+          leader.username?.toLowerCase?.() === username?.toLowerCase?.()
+      )
+  }
+
+  const handleToggleRunMinPrice = async (run: RaidsRunData) => {
+    if (!canToggleRunMinPrice(run)) {
+      return
+    }
+
+    try {
+      await toggleRaidRunMinPrice(run.id)
+      setRuns((prevRuns) =>
+        prevRuns.map((entry) =>
+          entry.id === run.id
+            ? { ...entry, minPriceEnabled: !Boolean(entry.minPriceEnabled) }
+            : entry
+        )
+      )
+      Swal.fire({
+        icon: 'success',
+        title: `Min Price ${run.minPriceEnabled ? 'disabled' : 'enabled'} successfully.`,
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } catch (error) {
+      await handleApiError(error, 'Failed to toggle run Min Price.')
     }
   }
 
@@ -451,6 +497,21 @@ export function RunsDataGrid({
                 {renderTableCell(run.note)}
                 {renderTableCell(
                   <div className='flex flex-col items-center gap-1'>
+                    {canToggleRunMinPrice(run) && (
+                      <button
+                        type='button'
+                        title={run.minPriceEnabled ? 'Disable Min Price' : 'Enable Min Price'}
+                        onClick={() => handleToggleRunMinPrice(run)}
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition ${
+                          run.minPriceEnabled
+                            ? 'bg-green-500/20 text-green-200 hover:bg-green-500/30'
+                            : 'bg-zinc-500/20 text-zinc-200 hover:bg-zinc-500/30'
+                        }`}
+                      >
+                        <ArrowsClockwise size={14} />
+                        Min Price: {run.minPriceEnabled ? 'ON' : 'OFF'}
+                      </button>
+                    )}
                     {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
                       <div className='grid grid-cols-2 gap-1'>
                         <button

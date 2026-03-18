@@ -21,6 +21,9 @@ export interface RaidRunCreatePayload {
   loot: string
   note: string
   quantityBoss: { String: string; Valid: boolean } | string
+  minPriceEnabled: boolean
+  minPriceGold: number
+  minPriceDollar: number
 }
 
 export interface AddRunProps {

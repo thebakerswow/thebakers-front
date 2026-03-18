@@ -25,6 +25,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     loot: '',
     note: '',
     quantityBoss: { String: '', Valid: false },
+    minPriceEnabled: true,
+    minPriceGold: '',
+    minPriceDollar: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
@@ -214,6 +217,8 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       return
     }
     if (field === 'maxBuyers' && !/^[0-9]*$/.test(value)) return
+    if (field === 'minPriceGold' && !/^[0-9]*$/.test(value)) return
+    if (field === 'minPriceDollar' && !/^\d*([.]\d{0,2})?$/.test(value)) return
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -246,6 +251,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     event.preventDefault()
     setIsSubmitting(true)
 
+    const parsedMinPriceGold = Number(formData.minPriceGold)
+    const parsedMinPriceDollar = Number(formData.minPriceDollar)
+
     if (
       !formData.name.String ||
       !formData.date ||
@@ -255,13 +263,17 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       !formData.difficulty ||
       !formData.idTeam ||
       !formData.maxBuyers ||
+      !formData.minPriceGold ||
+      !formData.minPriceDollar ||
       !formData.loot ||
       formData.raidLeader.length === 0 ||
-      (formData.difficulty === 'Mythic' && !formData.quantityBoss.String)
+      (formData.difficulty === 'Mythic' && !formData.quantityBoss.String) ||
+      parsedMinPriceGold <= 0 ||
+      parsedMinPriceDollar <= 0
     ) {
       Swal.fire({
         title: 'Missing fields',
-        text: 'Please fill all required fields.',
+        text: 'Please fill all required fields (including Min Price Gold/USD values greater than zero).',
         icon: 'warning',
         timer: 1600,
         showConfirmButton: false,
@@ -274,6 +286,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       await createRaidRun({
         ...formData,
         quantityBoss: formData.quantityBoss,
+        minPriceEnabled: true,
+        minPriceGold: parsedMinPriceGold,
+        minPriceDollar: parsedMinPriceDollar,
       })
       await onRunAddedReload()
       onClose()
@@ -681,6 +696,32 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               type='text'
               value={formData.maxBuyers}
               onChange={(e) => setField('maxBuyers', e.target.value)}
+              className={baseFieldClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs uppercase tracking-wide text-neutral-300'>
+              Min Price (Gold)
+            </label>
+            <input
+              type='text'
+              value={formData.minPriceGold}
+              onChange={(e) => setField('minPriceGold', e.target.value)}
+              placeholder='Ex: 600000'
+              className={baseFieldClass}
+            />
+          </div>
+
+          <div className='flex flex-col'>
+            <label className='mb-1 text-xs uppercase tracking-wide text-neutral-300'>
+              Min Price (USD)
+            </label>
+            <input
+              type='text'
+              value={formData.minPriceDollar}
+              onChange={(e) => setField('minPriceDollar', e.target.value)}
+              placeholder='Ex: 25.00'
               className={baseFieldClass}
             />
           </div>

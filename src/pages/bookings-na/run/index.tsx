@@ -645,6 +645,9 @@ export function RunDetails() {
                     runIsLocked={runData?.runIsLocked ?? false}
                     runIdTeam={runData?.idTeam}
                     raidLeaders={runData?.raidLeaders}
+                    minPriceEnabled={runData?.minPriceEnabled}
+                    minPriceGold={runData?.minPriceGold}
+                    minPriceDollar={runData?.minPriceDollar}
                   />
                 </>
               )}
