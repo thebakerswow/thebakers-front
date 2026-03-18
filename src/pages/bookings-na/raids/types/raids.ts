@@ -39,6 +39,9 @@ export interface RunsDataGridProps {
   data: RaidsRunData[]
   isLoading: boolean
   onDeleteSuccess: () => void
+  selectedRunIds: string[]
+  onToggleRunSelection: (runId: string) => void
+  onToggleSelectAllVisible: (visibleRunIds: string[]) => void
 }
 
 export interface BuyersPreviewProps {

@@ -7,7 +7,7 @@ import {
   LockOpen,
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { BuyersPreview } from './BuyersPreview'
 import { EditRun } from '../../run/components/EditRun'
@@ -22,6 +22,9 @@ export function RunsDataGrid({
   data,
   isLoading,
   onDeleteSuccess,
+  selectedRunIds,
+  onToggleRunSelection,
+  onToggleSelectAllVisible,
 }: RunsDataGridProps) {
   const navigate = useNavigate()
 
@@ -32,6 +35,7 @@ export function RunsDataGrid({
   const [selectedRunToEdit, setSelectedRunToEdit] = useState<RaidsRunData | null>(
     null
   )
+  const headerCheckboxRef = useRef<HTMLInputElement | null>(null)
   const { userRoles } = useAuth()
   const [runs, setRuns] = useState<RaidsRunData[]>(data)
 
@@ -333,11 +337,39 @@ export function RunsDataGrid({
       '-'
     )
 
+  const canManageSelection = hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
+  const visibleRunIds = useMemo(() => sortedData.map((run) => run.id), [sortedData])
+  const selectedVisibleCount = useMemo(
+    () => visibleRunIds.filter((id) => selectedRunIds.includes(id)).length,
+    [visibleRunIds, selectedRunIds]
+  )
+  const isAllVisibleSelected =
+    visibleRunIds.length > 0 && selectedVisibleCount === visibleRunIds.length
+  const isPartiallySelected =
+    selectedVisibleCount > 0 && selectedVisibleCount < visibleRunIds.length
+
+  useEffect(() => {
+    if (!headerCheckboxRef.current) return
+    headerCheckboxRef.current.indeterminate = isPartiallySelected
+  }, [isPartiallySelected])
+
   return (
     <div className='overflow-x-auto rounded-xl border border-white/10 bg-black/30'>
       <table className='w-full min-w-[1200px] text-sm'>
         <thead>
           <tr className='border-b border-white/10 bg-white/[0.03] text-neutral-300'>
+            <th className='px-3 py-3 text-center font-semibold'>
+              {canManageSelection && (
+                <input
+                  ref={headerCheckboxRef}
+                  type='checkbox'
+                  checked={isAllVisibleSelected}
+                  onChange={() => onToggleSelectAllVisible(visibleRunIds)}
+                  className='h-4 w-4 cursor-pointer rounded border-white/30 bg-black/30 align-middle accent-purple-500'
+                  aria-label='Select all visible runs'
+                />
+              )}
+            </th>
             <th className='px-3 py-3 text-center font-semibold'>Preview</th>
             <th className='px-3 py-3 text-center font-semibold'>Date</th>
             <th className='px-3 py-3 text-center font-semibold'>
@@ -364,13 +396,13 @@ export function RunsDataGrid({
         <tbody>
           {isLoading ? (
             <tr className='h-[320px]'>
-              <td colSpan={12} className='text-center align-middle'>
+              <td colSpan={13} className='text-center align-middle'>
                 <LoadingSpinner size='lg' className='mx-auto' label='Loading runs' />
               </td>
             </tr>
           ) : sortedData.length === 0 ? (
             <tr className='h-[320px]'>
-              <td colSpan={12} className='text-center align-middle text-neutral-400'>
+              <td colSpan={13} className='text-center align-middle text-neutral-400'>
                 No runs today
               </td>
             </tr>
@@ -382,6 +414,18 @@ export function RunsDataGrid({
                 className='cursor-pointer border-b border-white/5'
                 style={getTeamColor(run.team)}
               >
+                <td className='px-3 py-3 text-center text-sm text-white/90'>
+                  {canManageSelection && (
+                    <input
+                      type='checkbox'
+                      checked={selectedRunIds.includes(run.id)}
+                      onChange={() => onToggleRunSelection(run.id)}
+                      onClick={(event) => event.stopPropagation()}
+                      className='h-4 w-4 cursor-pointer rounded border-white/30 bg-black/30 align-middle accent-purple-500'
+                      aria-label={`Select run ${run.raid}`}
+                    />
+                  )}
+                </td>
                 {renderTableCell(
                   run.date ? (
                     <button

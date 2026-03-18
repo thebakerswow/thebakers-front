@@ -4,10 +4,10 @@ import { AddMultipleRuns } from './components/AddMultipleRuns'
 import { RaidsPageSkeleton } from './components/RaidsPageSkeleton'
 import { DateFilter } from '../../../components/DateFilter'
 import { format } from 'date-fns'
-import { UserPlus, ClipboardText, UsersFour } from '@phosphor-icons/react'
+import { UserPlus, ClipboardText, UsersFour, Trash } from '@phosphor-icons/react'
 import { AddRun } from './components/AddRun'
 import { useAuth } from '../../../context/AuthContext'
-import { getRaidsRuns } from './services/raidsApi'
+import { deleteRaidRun, getRaidsRuns } from './services/raidsApi'
 import { handleApiError } from '../../../utils/apiErrorHandler'
 import type { RaidsRunData } from './types/raids'
 import Swal from 'sweetalert2'
@@ -22,6 +22,8 @@ export function FullRaidsNa() {
   const [hasLoadedRunsOnce, setHasLoadedRunsOnce] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
+  const [isDeletingRuns, setIsDeletingRuns] = useState(false)
+  const [selectedRunIds, setSelectedRunIds] = useState<string[]>([])
   const [selectedTeam, setSelectedTeam] = useState<string>('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
   const [selectedLoot, setSelectedLoot] = useState<string>('All')
@@ -92,10 +94,10 @@ export function FullRaidsNa() {
 
   // Copia os dados das corridas para a área de transferência
   const copyRunsToClipboard = () => {
-    if (filteredRows.length === 0) {
+    if (selectedRunIds.length === 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'No runs available to copy.',
+        title: 'Select at least one run to copy.',
         confirmButtonColor: '#ef4444',
         timer: 1500,
         showConfirmButton: false,
@@ -103,7 +105,19 @@ export function FullRaidsNa() {
       return
     }
 
-    const formattedRuns = filteredRows.map((run) => ({
+    const selectedRuns = filteredRows.filter((run) => selectedRunIds.includes(run.id))
+    if (selectedRuns.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Selected runs are not visible with current filters.',
+        confirmButtonColor: '#ef4444',
+        timer: 1800,
+        showConfirmButton: false,
+      })
+      return
+    }
+
+    const formattedRuns = selectedRuns.map((run) => ({
       name: run.name,
       date: run.date,
       time: run.time,
@@ -129,6 +143,88 @@ export function FullRaidsNa() {
         setTimeout(() => setIsCopied(false), 2000) // Reset after 2 seconds
       })
       .finally(() => setIsCopying(false))
+  }
+
+  const handleToggleRunSelection = (runId: string) => {
+    setSelectedRunIds((prev) =>
+      prev.includes(runId) ? prev.filter((id) => id !== runId) : [...prev, runId]
+    )
+  }
+
+  const handleToggleSelectAllVisible = (visibleRunIds: string[]) => {
+    setSelectedRunIds((prev) => {
+      const allVisibleSelected =
+        visibleRunIds.length > 0 && visibleRunIds.every((id) => prev.includes(id))
+      if (allVisibleSelected) {
+        return prev.filter((id) => !visibleRunIds.includes(id))
+      }
+      const merged = new Set([...prev, ...visibleRunIds])
+      return Array.from(merged)
+    })
+  }
+
+  const handleDeleteSelectedRuns = async () => {
+    if (selectedRunIds.length === 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Select at least one run to delete.',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      return
+    }
+
+    const selectedRuns = rows.filter((run) => selectedRunIds.includes(run.id))
+    const result = await Swal.fire({
+      title: 'Confirm Bulk Deletion',
+      text: `Are you sure you want to delete ${selectedRuns.length} run(s)?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Delete Selected',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+      setIsDeletingRuns(true)
+      Swal.fire({
+        title: 'Deleting runs...',
+        text: `Removing ${selectedRuns.length} run(s)`,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
+
+      let successCount = 0
+      for (const run of selectedRuns) {
+        try {
+          await deleteRaidRun(run.id)
+          successCount++
+        } catch (error) {
+          await handleApiError(error, `Failed to delete run ${run.raid}`)
+        }
+      }
+
+      Swal.close()
+      setSelectedRunIds([])
+      await fetchRuns(true)
+
+      await Swal.fire({
+        title: successCount > 0 ? 'Done!' : 'No runs deleted',
+        text: `Deleted ${successCount} of ${selectedRuns.length} selected run(s).`,
+        icon: successCount > 0 ? 'success' : 'info',
+        timer: 1700,
+        showConfirmButton: false,
+      })
+    } finally {
+      setIsDeletingRuns(false)
+    }
   }
 
   // Busca os dados das corridas na API
@@ -180,6 +276,12 @@ export function FullRaidsNa() {
     const runTypeMatch = selectedRunType === 'All' || run.runType === selectedRunType
     return teamMatch && difficultyMatch && lootMatch && runTypeMatch
   })
+
+  useEffect(() => {
+    const visibleRunIdsSet = new Set(filteredRows.map((run) => run.id))
+    setSelectedRunIds((prev) => prev.filter((id) => visibleRunIdsSet.has(id)))
+  }, [filteredRows])
+
   const showInitialPageSkeleton =
     isLoading && selectedDate !== null && !hasLoadedRunsOnce
 
@@ -256,7 +358,15 @@ export function FullRaidsNa() {
                   onClick={copyRunsToClipboard}
                 >
                   <ClipboardText size={18} />
-                  {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Runs'}
+                  {isCopying ? 'Copying...' : isCopied ? 'Copied!' : 'Copy Selected'}
+                </button>
+                <button
+                  className='inline-flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 disabled:cursor-not-allowed disabled:border-zinc-500/60 disabled:bg-zinc-700/60 disabled:text-zinc-300'
+                  onClick={handleDeleteSelectedRuns}
+                  disabled={isDeletingRuns}
+                >
+                  <Trash size={18} />
+                  {isDeletingRuns ? 'Deleting...' : 'Delete Selected'}
                 </button>
                 <button
                   className='inline-flex h-10 min-w-[170px] items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45'
@@ -344,6 +454,9 @@ export function FullRaidsNa() {
             data={filteredRows}
             isLoading={isLoading}
             onDeleteSuccess={() => fetchRuns(true)}
+            selectedRunIds={selectedRunIds}
+            onToggleRunSelection={handleToggleRunSelection}
+            onToggleSelectAllVisible={handleToggleSelectAllVisible}
           />
 
           {isAddRunOpen && (

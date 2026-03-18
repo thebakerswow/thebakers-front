@@ -384,6 +384,14 @@ export function RunInfo({
                   </dd>
                 </div>
               )}
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Note
+                </dt>
+                <dd className='mt-1 whitespace-pre-wrap break-words font-medium'>
+                  {run.note?.trim() ? run.note : '-'}
+                </dd>
+              </div>
             </dl>
           </div>
 
