@@ -64,6 +64,7 @@ const normalizeType = (runType: string): SpecialRunServiceType => {
   if (normalized === 'leveling') return 'leveling'
   if (normalized === 'delves') return 'delves'
   if (normalized === 'achievements') return 'achievements'
+  if (normalized === 'pvp') return 'pvp'
 
   return 'keys'
 }

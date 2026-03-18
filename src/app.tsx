@@ -216,6 +216,10 @@ function AppContent() {
                 element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
               />
               <Route
+                path='/bookings-na/pvp/:id'
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='PvP' />} />}
+              />
+              <Route
                 path='/admin'
                 element={<PrivateRoute element={<AdminPage />} />}
               />
@@ -254,6 +258,10 @@ function AppContent() {
               <Route
                 path='/achievements'
                 element={<PrivateRoute element={<SpecialRunDetailsPage runType='Achievements' />} />}
+              />
+              <Route
+                path='/pvp'
+                element={<PrivateRoute element={<SpecialRunDetailsPage runType='PvP' />} />}
               />
               <Route
                 path='/requests'
@@ -406,6 +414,13 @@ function getScreenMeta(pathname: string) {
       icon: <Trophy size={20} weight='duotone' />,
     }
   }
+  if (pathname.startsWith('/bookings-na/pvp/')) {
+    return {
+      name: 'PvP',
+      breadcrumb: 'Bookings (NA) / PvP',
+      icon: <Sword size={20} weight='duotone' />,
+    }
+  }
   if (pathname.startsWith('/bookings-na/run/')) {
     const runId = pathname.split('/').filter(Boolean).pop() || '-'
     return {
@@ -440,6 +455,9 @@ function getScreenMeta(pathname: string) {
       breadcrumb: 'Bookings (NA) / Achievements',
       icon: <Trophy size={20} weight='duotone' />,
     }
+  }
+  if (pathname.startsWith('/pvp')) {
+    return { name: 'PvP', breadcrumb: 'Bookings (NA) / PvP', icon: <Sword size={20} weight='duotone' /> }
   }
   if (pathname.startsWith('/services')) {
     return { name: 'Services', breadcrumb: 'Management / Services', icon: <Briefcase size={20} weight='duotone' /> }

@@ -13,6 +13,7 @@ import {
   Key,
   List as ListIcon,
   List,
+  Mountains,
   SignOut,
   Sword,
   Trophy,
@@ -206,7 +207,7 @@ export function Header() {
                           activeExactPaths: ['/delves'],
                           activeMatchPaths: ['/delves', '/bookings-na/delves'],
                           activePaths: ['/bookings-na/delves'],
-                          icon: <Sword size={18} />,
+                          icon: <Mountains size={18} />,
                         },
                       ]
                     : []),
@@ -219,6 +220,18 @@ export function Header() {
                           activeMatchPaths: ['/achievements', '/bookings-na/achievements'],
                           activePaths: ['/bookings-na/achievements'],
                           icon: <Trophy size={18} />,
+                        },
+                      ]
+                    : []),
+                  ...(shouldShowBookingsTab(userRoles) || hasMplusKeysAccess
+                    ? [
+                        {
+                          label: 'PvP',
+                          path: '/pvp',
+                          activeExactPaths: ['/pvp'],
+                          activeMatchPaths: ['/pvp', '/bookings-na/pvp'],
+                          activePaths: ['/bookings-na/pvp'],
+                          icon: <Sword size={18} />,
                         },
                       ]
                     : []),

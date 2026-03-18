@@ -170,6 +170,10 @@ export function AddClaimServiceBuyer({
           import.meta.env.VITE_TEAM_ACHIEVEMENTS,
           import.meta.env.VITE_TEAM_CHEFE,
         ],
+        pvp: [
+          import.meta.env.VITE_TEAM_PVP,
+          import.meta.env.VITE_TEAM_CHEFE,
+        ],
       }
 
       const targetTeamIds = (teamIdsByType[serviceType] || []).filter(
@@ -184,7 +188,7 @@ export function AddClaimServiceBuyer({
       const recipientIds = new Set<string>()
       teamsMembers.forEach((teamMembers) => {
         if (!Array.isArray(teamMembers)) return
-        teamMembers.forEach((member) => {
+        teamMembers.forEach((member: unknown) => {
           const discordId = getMemberDiscordId(member)
           if (discordId) recipientIds.add(discordId)
         })
@@ -202,6 +206,8 @@ export function AddClaimServiceBuyer({
             ? 'Delves'
             : serviceType === 'achievements'
               ? 'Achievements'
+            : serviceType === 'pvp'
+              ? 'PvP'
             : 'Keys'
       const message = `New buyer added in ${serviceLabel}\nPrice: ${priceLabel}\nNote: ${noteLabel}\nLink: ${pageLink}`
 
@@ -285,7 +291,7 @@ export function AddClaimServiceBuyer({
     try {
       await createClaimService(payload)
 
-      if (['keys', 'key', 'leveling', 'delves', 'achievements'].includes(type.trim().toLowerCase())) {
+      if (['keys', 'key', 'leveling', 'delves', 'achievements', 'pvp'].includes(type.trim().toLowerCase())) {
         try {
           await sendClaimServiceNotification(
             type,

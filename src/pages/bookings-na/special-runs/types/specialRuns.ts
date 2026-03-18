@@ -5,6 +5,7 @@ export type SpecialRunServiceType =
   | 'leveling'
   | 'delves'
   | 'achievements'
+  | 'pvp'
 
 export interface SpecialRunBuyer {
   id: string
