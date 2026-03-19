@@ -146,6 +146,7 @@ export interface EditBuyerModalBuyer {
   buyerPot: number
   buyerDolarPot: number
   buyerNote: string
+  playerClass: string
 }
 
 export interface EditBuyerProps {

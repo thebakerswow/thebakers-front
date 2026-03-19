@@ -4,6 +4,7 @@ import { Pencil, X } from '@phosphor-icons/react'
 import { updateBuyer } from '../services/runApi'
 import Swal from 'sweetalert2'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
+import { CustomSelect } from '../../../../components/CustomSelect'
 import type { EditBuyerProps } from '../types/run'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import { useAuth } from '../../../../context/AuthContext'
@@ -26,8 +27,24 @@ export function EditBuyer({
         ? buyer.buyerDolarPot.toLocaleString('en-US')
         : '',
     buyerNote: buyer.buyerNote,
+    playerClass: buyer.playerClass || '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const classOptions = [
+    'Warrior',
+    'Paladin',
+    'Hunter',
+    'Rogue',
+    'Priest',
+    'Shaman',
+    'Mage',
+    'Warlock',
+    'Monk',
+    'Druid',
+    'Demon Hunter',
+    'Death Knight',
+    'Evoker',
+  ].map((cls) => ({ value: cls, label: cls }))
   // Function to determine if the dollar field should be hidden
   const shouldHideDolarField = (): boolean => {
     return shouldHideDollarPotInfo(userRoles)
@@ -99,6 +116,7 @@ export function EditBuyer({
     const payload = {
       id_buyer: buyer.id,
       nameAndRealm: formData.nameAndRealm || '',
+      playerClass: formData.playerClass || '',
       buyerPot: buyerPotValue || 0,
       buyerDolarPot: shouldHideDolarField() ? 0 : buyerDolarPotValue || 0,
       buyerNote: formData.buyerNote || '',
@@ -151,6 +169,28 @@ export function EditBuyer({
               onChange={handleChange('nameAndRealm')}
               maxLength={255}
               className={baseFieldClass}
+            />
+          </div>
+
+          <div>
+            <label className='mb-1 block text-xs uppercase tracking-wide text-neutral-300'>
+              Class
+            </label>
+            <CustomSelect
+              value={formData.playerClass}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  playerClass: value,
+                }))
+              }
+              options={classOptions}
+              placeholder='Select Class'
+              minWidthClassName='min-w-full'
+              triggerClassName='h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
+              menuClassName='!border-white/15 !bg-[#1a1a1a]'
+              optionClassName='text-white/90 hover:bg-white/10'
+              renderInPortal
             />
           </div>
 

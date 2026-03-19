@@ -200,6 +200,7 @@ export function BuyersDataGrid({
     buyerPot: number
     buyerDolarPot: number
     buyerNote: string
+    playerClass: string
   } | null>(null)
   const [cooldown, setCooldown] = useState<BuyerCooldownMap>({})
   const [cooldownAFK, setCooldownAFK] = useState<BuyerCooldownMap>({}) // Separate cooldown for Bed button
@@ -219,6 +220,7 @@ export function BuyersDataGrid({
       buyerPot: buyer.buyerPot,
       buyerDolarPot: buyer.buyerDolarPot,
       buyerNote: buyer.buyerNote,
+      playerClass: buyer.playerClass || '',
     })
     setOpenModal(true)
   }
@@ -947,6 +949,7 @@ export function BuyersDataGrid({
             buyerPot: editingBuyer.buyerPot,
             buyerDolarPot: editingBuyer.buyerDolarPot,
             buyerNote: editingBuyer.buyerNote,
+            playerClass: editingBuyer.playerClass,
           }}
           onClose={() => setOpenModal(false)}
           onEditSuccess={onBuyerNameNoteEdit}
