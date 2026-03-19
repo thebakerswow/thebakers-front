@@ -346,35 +346,26 @@ export function RunsDataGrid({
       plate?: boolean
     }
   ) => {
+    const renderLootLetter = (letter: string, label: string, isDone?: boolean) => (
+      <span className='group relative inline-flex'>
+        <span className={`cursor-help ${isDone ? 'text-purple-500' : 'text-red-500'}`}>
+          {letter}
+        </span>
+        <span className='pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/15 bg-[#1a1a1a] px-2 py-1 text-xs font-medium text-neutral-100 opacity-0 shadow-2xl transition-opacity duration-150 group-hover:opacity-100'>
+          {label}
+        </span>
+      </span>
+    )
+
     if (loot === 'Armor and Token Priority') {
       return (
         <div className='flex flex-col items-center leading-tight'>
           <span>{loot}</span>
           <div className='mt-1 flex items-center gap-2 text-base font-extrabold'>
-            <span
-              title='Cloth'
-              className={`cursor-help ${atp?.cloth ? 'text-purple-500' : 'text-red-500'}`}
-            >
-              C
-            </span>
-            <span
-              title='Leather'
-              className={`cursor-help ${atp?.leather ? 'text-purple-500' : 'text-red-500'}`}
-            >
-              L
-            </span>
-            <span
-              title='Mail'
-              className={`cursor-help ${atp?.mail ? 'text-purple-500' : 'text-red-500'}`}
-            >
-              M
-            </span>
-            <span
-              title='Plate'
-              className={`cursor-help ${atp?.plate ? 'text-purple-500' : 'text-red-500'}`}
-            >
-              P
-            </span>
+            {renderLootLetter('C', 'Cloth', atp?.cloth)}
+            {renderLootLetter('L', 'Leather', atp?.leather)}
+            {renderLootLetter('M', 'Mail', atp?.mail)}
+            {renderLootLetter('P', 'Plate', atp?.plate)}
           </div>
         </div>
       )
