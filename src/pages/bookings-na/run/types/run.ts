@@ -10,6 +10,13 @@ export interface SumPot {
   type: 'gold' | 'dollar'
 }
 
+export interface ArmorTokenPriorityStatus {
+  cloth: boolean
+  leather: boolean
+  mail: boolean
+  plate: boolean
+}
+
 export interface RunData {
   id: string
   name: { String: string; Valid: boolean }
@@ -28,6 +35,7 @@ export interface RunData {
   maxBuyers: string
   raidLeaders: RaidLeader[]
   loot: string
+  atp?: ArmorTokenPriorityStatus
   note: string
   sumPot: SumPot[]
   players: Players[]

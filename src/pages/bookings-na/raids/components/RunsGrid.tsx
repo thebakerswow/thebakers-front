@@ -337,6 +337,52 @@ export function RunsDataGrid({
       '-'
     )
 
+  const renderLoot = (
+    loot: string | undefined,
+    atp?: {
+      cloth?: boolean
+      leather?: boolean
+      mail?: boolean
+      plate?: boolean
+    }
+  ) => {
+    if (loot === 'Armor and Token Priority') {
+      return (
+        <div className='flex flex-col items-center leading-tight'>
+          <span>{loot}</span>
+          <div className='mt-1 flex items-center gap-2 text-base font-extrabold'>
+            <span
+              title='Cloth'
+              className={`cursor-help ${atp?.cloth ? 'text-purple-500' : 'text-red-500'}`}
+            >
+              C
+            </span>
+            <span
+              title='Leather'
+              className={`cursor-help ${atp?.leather ? 'text-purple-500' : 'text-red-500'}`}
+            >
+              L
+            </span>
+            <span
+              title='Mail'
+              className={`cursor-help ${atp?.mail ? 'text-purple-500' : 'text-red-500'}`}
+            >
+              M
+            </span>
+            <span
+              title='Plate'
+              className={`cursor-help ${atp?.plate ? 'text-purple-500' : 'text-red-500'}`}
+            >
+              P
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    return loot || '-'
+  }
+
   const canManageSelection = hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE])
   const visibleRunIds = useMemo(() => sortedData.map((run) => run.id), [sortedData])
   const selectedVisibleCount = useMemo(
@@ -447,7 +493,7 @@ export function RunsDataGrid({
                 {renderTableCell(renderRaidLeaders(run.raidLeaders, run.team))}
                 {renderTableCell(run.runType)}
                 {renderTableCell(run.difficulty)}
-                {renderTableCell(run.loot)}
+                {renderTableCell(renderLoot(run.loot, run.atp))}
                 {renderTableCell(run.note)}
                 {renderTableCell(
                   <div className='flex flex-col items-center gap-1'>
