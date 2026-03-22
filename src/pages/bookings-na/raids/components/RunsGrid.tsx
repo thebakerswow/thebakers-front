@@ -497,7 +497,7 @@ export function RunsDataGrid({
                 {renderTableCell(run.note)}
                 {renderTableCell(
                   <div className='flex flex-col items-center gap-1'>
-                    {canToggleRunMinPrice(run) && (
+                    {canToggleRunMinPrice(run) ? (
                       <button
                         type='button'
                         title={run.minPriceEnabled ? 'Disable Min Price' : 'Enable Min Price'}
@@ -511,6 +511,17 @@ export function RunsDataGrid({
                         <ArrowsClockwise size={14} />
                         Min Price: {run.minPriceEnabled ? 'ON' : 'OFF'}
                       </button>
+                    ) : (
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
+                          run.minPriceEnabled
+                            ? 'bg-green-500/20 text-green-200'
+                            : 'bg-zinc-500/20 text-zinc-200'
+                        }`}
+                        title='Min Price'
+                      >
+                        Min Price: {run.minPriceEnabled ? 'ON' : 'OFF'}
+                      </span>
                     )}
                     {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
                       <div className='grid grid-cols-2 gap-1'>

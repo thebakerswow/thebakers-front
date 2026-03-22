@@ -32,7 +32,7 @@ export const toggleRaidRunLock = (runId: string, isLocked: boolean) => {
 }
 
 export const toggleRaidRunMinPrice = (runId: string) => {
-  return api.patch(`/run/${runId}/min-price/toggle`).then((response) => response.data)
+  return api.put(`/run/${runId}/min-price/toggle`).then((response) => response.data)
 }
 
 export const getRaidsTeamMembers = async (teamId: string): Promise<ApiOption[]> => {
