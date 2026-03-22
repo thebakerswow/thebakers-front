@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { getCurrentUserDate } from '../../../../utils/timezoneUtils'
+import { getLocalTodayDateString } from '../../../../utils/timezoneUtils'
 import {
   getBalanceAdmin,
   createTransaction,
@@ -77,8 +77,7 @@ export function BalanceControlTable({
 
   useEffect(() => {
     if (!selectedDate) {
-      const todayLocal = getCurrentUserDate().toISOString().split('T')[0]
-      setSelectedDate(todayLocal)
+      setSelectedDate(getLocalTodayDateString())
     }
   }, [selectedDate, setSelectedDate])
 

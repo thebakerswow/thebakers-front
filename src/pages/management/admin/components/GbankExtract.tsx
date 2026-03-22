@@ -5,6 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { getGbanks, getGbankLogs } from '../services/adminApi'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { getLocalTodayDateString } from '../../../../utils/timezoneUtils'
 import type {
   DatePickerInputProps,
   ExtractLogInfo,
@@ -32,7 +33,7 @@ export function GbankExtract() {
   const [isGbankAutocompleteOpen, setIsGbankAutocompleteOpen] = useState(false)
   const [isLoadingGbanks, setIsLoadingGbanks] = useState(false)
   const [isFetchingLogs, setIsFetchingLogs] = useState(false)
-  const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
+  const today = getLocalTodayDateString()
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
   const [logs, setLogs] = useState<ExtractLogRow[]>([])

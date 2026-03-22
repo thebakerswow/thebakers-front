@@ -262,8 +262,8 @@ export function RunsDataGrid({
     setIsTimeSortedAsc((prev) => !prev)
   }, [])
 
-  // Formata o horário para o formato de 12 horas EST
-  const formatTo12HourEST = (timeStr: string) => {
+  // Formata o horário da API para 12h (valor já é o horário “de negócio”; coluna indica EST só como referência)
+  const formatRunTime12h = (timeStr: string) => {
     const totalMinutes = convertTimeToMinutes(timeStr)
     if (totalMinutes === null) return timeStr
 
@@ -355,11 +355,10 @@ export function RunsDataGrid({
       : '-'
   }
 
-  // Renderiza o horário em formato 12 horas EST
   const renderTime = (time: string | undefined, date: string | undefined) =>
     time && date ? (
       <>
-        {formatTo12HourEST(time)}
+        {formatRunTime12h(time)}
       </>
     ) : (
       '-'

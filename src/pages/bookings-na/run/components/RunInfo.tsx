@@ -72,7 +72,7 @@ export function RunInfo({
 
 
 
-  function formatTo12HourEST(timeStr: string) {
+  function formatRunTime12h(timeStr: string) {
     const [hours, minutes] = timeStr.split(':').map(Number)
 
     const period = hours >= 12 ? 'PM' : 'AM'
@@ -323,7 +323,7 @@ export function RunInfo({
             <p className='mt-1 text-sm text-neutral-300'>
               {run.date || run.time
                 ? `${run.date ? formatRunDate(run.date) : '-'}${run.date && run.time ? ' - ' : ''}${
-                    run.time ? `${formatTo12HourEST(run.time)} EST` : '-'
+                    run.time ? `${formatRunTime12h(run.time)} EST` : '-'
                   }`
                 : '-'}
             </p>

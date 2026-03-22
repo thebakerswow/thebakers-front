@@ -8,7 +8,7 @@ import { shouldShowRestrictedHome } from '../../utils/roleUtils'
 import { CategoryFilters } from './components/CategoryFilters'
 import { ServiceCard } from './components/ServiceCard'
 import { ServicesSkeleton } from './components/ServicesSkeleton'
-import { getWeekDatesEST } from '../../utils/timezoneUtils'
+import { getWeekDates } from '../../utils/timezoneUtils'
 import { Schedule } from './components/Schedule'
 import { fetchHomeServicesAndCategories, fetchWeekRuns } from './services/homeApi'
 import {
@@ -35,7 +35,7 @@ export function HomePage() {
     [userRoles]
   )
 
-  const dates = useMemo(() => getWeekDatesEST(), [])
+  const dates = useMemo(() => getWeekDates(), [])
 
   useEffect(() => {
     const token = localStorage.getItem('jwt')

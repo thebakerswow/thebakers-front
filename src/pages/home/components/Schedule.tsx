@@ -55,7 +55,7 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
           <div className='h-px flex-1 bg-gradient-to-l from-purple-500/30 to-transparent' />
         </div>
         <p className='text-center text-sm text-neutral-500'>
-          Upcoming runs for the next 7 days (EST)
+          Next 7 days use your local calendar. Times reference EST (organizer timezone).
         </p>
       </motion.div>
 

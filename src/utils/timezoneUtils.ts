@@ -1,12 +1,12 @@
-import { format, addDays, parseISO } from 'date-fns'
+import { format, addDays, parseISO, startOfDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
 /**
- * Utilitários para lidar com fuso horário no sistema
- * IMPORTANTE: Os horários inseridos pelos usuários são sempre considerados EST/EDT
+ * Calendário e “hoje” no app usam o fuso local do dispositivo.
+ * Helpers com SYSTEM_TIMEZONE servem para integrações legadas / backend; o rótulo “EST” na UI é informativo.
  */
 
-// Fuso horário padrão do sistema (EST/EDT)
+// Referência de negócio (ex.: conversões legadas para API)
 export const SYSTEM_TIMEZONE = 'America/New_York'
 
 // Detecta o fuso horário do usuário para exibição
@@ -32,39 +32,25 @@ export const utcToUserTimezone = (utcDate: Date | string): Date => {
   return toZonedTime(date, userTz)
 }
 
-// Obtém a data atual em EST (para o schedule sempre usar EST como referência)
-export const getCurrentESTDate = (): Date => {
-  return utcToEST(new Date())
-}
-
-// Obtém a data atual no fuso horário do usuário (para outros usos)
+// Obtém a data atual no fuso horário do usuário (instante “agora” visto nesse fuso)
 export const getCurrentUserDate = (): Date => {
   return utcToUserTimezone(new Date())
 }
 
-// Gera um array de datas para a semana atual em EST (para o schedule)
-export const getWeekDatesEST = (): string[] => {
-  const todayEST = getCurrentESTDate()
-  const dates: string[] = []
-  
-  for (let i = 0; i < 7; i++) {
-    const date = addDays(todayEST, i)
-    dates.push(format(date, 'yyyy-MM-dd'))
-  }
-  
-  return dates
+/** Hoje no calendário local do dispositivo (yyyy-MM-dd). */
+export const getLocalTodayDateString = (): string => {
+  return format(startOfDay(new Date()), 'yyyy-MM-dd')
 }
 
-// Gera um array de datas para a semana atual no fuso horário do usuário (para outros usos)
+// Próximos 7 dias a partir de hoje no calendário local (home / schedule)
 export const getWeekDates = (): string[] => {
-  const today = getCurrentUserDate()
+  const today = startOfDay(new Date())
   const dates: string[] = []
-  
+
   for (let i = 0; i < 7; i++) {
-    const date = addDays(today, i)
-    dates.push(format(date, 'yyyy-MM-dd'))
+    dates.push(format(addDays(today, i), 'yyyy-MM-dd'))
   }
-  
+
   return dates
 }
 

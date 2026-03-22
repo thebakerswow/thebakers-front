@@ -6,6 +6,7 @@ import { getPlayers, getTransactionLogs } from '../services/adminApi'
 import { CustomSelect } from '../../../../components/CustomSelect'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
+import { getLocalTodayDateString } from '../../../../utils/timezoneUtils'
 import type {
   DatePickerInputProps,
   ExtractLogInfo,
@@ -34,7 +35,7 @@ export function TransactionExtract() {
   const [selectedPlayer, setSelectedPlayer] = useState('')
   const [playerSearch, setPlayerSearch] = useState('')
   const [isPlayerAutocompleteOpen, setIsPlayerAutocompleteOpen] = useState(false)
-  const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
+  const today = getLocalTodayDateString()
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
   const [logs, setLogs] = useState<ExtractLogRow[]>([])
