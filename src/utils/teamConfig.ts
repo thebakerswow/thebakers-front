@@ -8,6 +8,7 @@ export const TRACKED_TEAM_OPTIONS = [
   { id: import.meta.env.VITE_TEAM_INSANOS, label: 'Insanos' },
   { id: import.meta.env.VITE_TEAM_APAE, label: 'APAE' },
   { id: import.meta.env.VITE_TEAM_LOSRENEGADOS, label: 'Los Renegados' },
+  { id: import.meta.env.VITE_TEAM_PUNKS, label: 'Punks' },
   { id: import.meta.env.VITE_TEAM_PADEIRINHO, label: 'Padeirinho' },
   { id: import.meta.env.VITE_TEAM_MILHARAL, label: 'Milharal' },
 ]

@@ -327,9 +327,7 @@ export const canViewAttendanceButton = (userRoles: string[]): boolean => {
   return true
 }
 
-// Função para decidir se deve usar a NOVA tela de balance
-// Grupos com nova visualização: GARCOM, CONFEITEIROS, JACKFRUIT,
-// INSANOS, APAE, LOSRENEGADOS, PADEIRINHO, MILHARAL
+// Exibe o link "My Requests" em Finances para estes cargos de time
 export const shouldUseNewBalance = (userRoles: string[]): boolean => {
   const rolesWithNewBalance = [
     import.meta.env.VITE_TEAM_GARCOM,
