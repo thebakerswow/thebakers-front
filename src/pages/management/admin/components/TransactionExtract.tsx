@@ -32,6 +32,8 @@ export function TransactionExtract() {
   const [isFetchingLogs, setIsFetchingLogs] = useState(false)
   // Removed unused error state
   const [selectedPlayer, setSelectedPlayer] = useState('')
+  const [playerSearch, setPlayerSearch] = useState('')
+  const [isPlayerAutocompleteOpen, setIsPlayerAutocompleteOpen] = useState(false)
   const today = new Date().toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
   const [initialDate, setInitialDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
@@ -97,22 +99,57 @@ export function TransactionExtract() {
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
   }, [endDate])
 
+  const filteredPlayers = useMemo(() => {
+    const normalizedSearch = playerSearch.trim().toLowerCase()
+    if (!normalizedSearch) return players
+    return players.filter((player) => player.username.toLowerCase().includes(normalizedSearch))
+  }, [playerSearch, players])
+
   return (
     <div>
       <div className='mb-4 mt-2 flex items-end gap-4'>
-        <CustomSelect
-          value={selectedPlayer}
-          onChange={setSelectedPlayer}
-          options={[
-            { value: '', label: 'Select Player' },
-            ...players.map((player) => ({
-              value: player.idDiscord,
-              label: player.username,
-            })),
-          ]}
-          minWidthClassName='flex-1'
-          renderInPortal
-        />
+        <div className='relative flex-1'>
+          <input
+            type='text'
+            value={playerSearch}
+            onChange={(event) => {
+              setPlayerSearch(event.target.value)
+              setSelectedPlayer('')
+              setIsPlayerAutocompleteOpen(true)
+            }}
+            onFocus={() => setIsPlayerAutocompleteOpen(true)}
+            onBlur={() => setTimeout(() => setIsPlayerAutocompleteOpen(false), 120)}
+            placeholder='Search player'
+            className='balance-filter-control h-10 w-full rounded-md border border-purple-300/20 bg-[linear-gradient(180deg,rgba(23,23,27,0.92)_0%,rgba(14,14,18,0.92)_100%)] px-3 pr-9 text-left text-sm text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] outline-none transition placeholder:text-white/50 focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/35'
+          />
+          {isPlayerAutocompleteOpen && (
+            <div className='absolute left-0 right-0 top-[calc(100%+6px)] z-[250] max-h-56 overflow-x-hidden overflow-y-auto rounded-md border border-white/15 bg-neutral-900/95 p-1 shadow-xl backdrop-blur-sm'>
+              {filteredPlayers.length > 0 ? (
+                filteredPlayers.map((player) => (
+                  <button
+                    key={player.idDiscord}
+                    type='button'
+                    onMouseDown={(event) => {
+                      event.preventDefault()
+                      setSelectedPlayer(player.idDiscord)
+                      setPlayerSearch(player.username)
+                      setIsPlayerAutocompleteOpen(false)
+                    }}
+                    className={`mb-1 w-full truncate rounded-md px-3 py-2 text-left text-sm transition last:mb-0 ${
+                      selectedPlayer === player.idDiscord
+                        ? 'bg-purple-500/20 text-purple-100'
+                        : 'text-white/90 hover:bg-white/10'
+                    }`}
+                  >
+                    {player.username}
+                  </button>
+                ))
+              ) : (
+                <p className='px-3 py-2 text-sm text-neutral-400'>No player found</p>
+              )}
+            </div>
+          )}
+        </div>
         <div className='relative flex-1'>
           <DatePicker
             selected={selectedInitialDate}
