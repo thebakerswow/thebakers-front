@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { BalanceGridSkeletonProps } from '../types/balance'
+import { isSoftwareRenderingLikely } from '../../../utils/renderingMode'
 
 export function BalanceGridSkeleton({
   rows = 6,
@@ -42,9 +44,21 @@ export function BalanceGridSkeleton({
 }
 
 export function BalancePageSkeleton() {
+  const [useLightVisualEffects, setUseLightVisualEffects] = useState(false)
+
+  useEffect(() => {
+    setUseLightVisualEffects(isSoftwareRenderingLikely())
+  }, [])
+
   return (
     <div className='flex w-full flex-col gap-6 px-6 pb-10 pt-6 md:px-10'>
-      <section className='relative z-30 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm md:p-6'>
+      <section
+        className={`relative z-30 rounded-xl border border-white/10 p-4 md:p-6 ${
+          useLightVisualEffects
+            ? 'bg-white/[0.05]'
+            : 'bg-white/[0.03] backdrop-blur-sm'
+        }`}
+      >
         <div className='flex flex-wrap items-end justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-[220px] animate-pulse rounded-md bg-white/10' />
@@ -58,7 +72,13 @@ export function BalancePageSkeleton() {
         </div>
       </section>
 
-      <section className='relative z-10 rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-sm md:p-4'>
+      <section
+        className={`relative z-10 rounded-xl border border-white/10 p-2 md:p-4 ${
+          useLightVisualEffects
+            ? 'bg-white/[0.05]'
+            : 'bg-white/[0.03] backdrop-blur-sm'
+        }`}
+      >
         <BalanceGridSkeleton />
       </section>
     </div>

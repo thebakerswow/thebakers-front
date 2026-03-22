@@ -12,11 +12,13 @@ import {
 } from '../../utils/roleUtils'
 import { NewBalancePage } from '../balance-new'
 import { BalanceDateRange } from './types/balance'
+import { isSoftwareRenderingLikely } from '../../utils/renderingMode'
 
 export function BalancePage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<BalanceDateRange | undefined>(undefined)
   const [isDolar, setIsDolar] = useState(false)
+  const [useLightVisualEffects, setUseLightVisualEffects] = useState(false)
   const { userRoles = [], idDiscord, loading: authLoading } = useAuth()
 
   // Determina se deve mostrar o filtro baseado nas regras especificadas
@@ -47,6 +49,10 @@ export function BalancePage() {
   // Loading mais simples: só mostra se auth está carregando
   const isLoading = authLoading
 
+  useEffect(() => {
+    setUseLightVisualEffects(isSoftwareRenderingLikely())
+  }, [])
+
   if (isLoading) {
     return <BalancePageSkeleton />
   }
@@ -54,11 +60,17 @@ export function BalancePage() {
   return (
     <motion.div
       className='flex w-full flex-col gap-6 px-6 pb-10 pt-6 md:px-10'
-      initial={{ opacity: 0, y: 16 }}
+      initial={useLightVisualEffects ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: useLightVisualEffects ? 0 : 0.25 }}
     >
-      <section className='relative z-30 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm md:p-6'>
+      <section
+        className={`relative z-30 rounded-xl border border-white/10 p-4 md:p-6 ${
+          useLightVisualEffects
+            ? 'bg-white/[0.05]'
+            : 'bg-white/[0.03] backdrop-blur-sm'
+        }`}
+      >
         <div className='flex flex-wrap items-center justify-between gap-4'>
           <div className='flex flex-wrap items-center gap-2'>
             <BalanceTeamFilter
@@ -82,7 +94,13 @@ export function BalancePage() {
         </div>
       </section>
 
-      <section className='relative z-10 rounded-xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-sm md:p-4'>
+      <section
+        className={`relative z-10 rounded-xl border border-white/10 p-2 md:p-4 ${
+          useLightVisualEffects
+            ? 'bg-white/[0.05]'
+            : 'bg-white/[0.03] backdrop-blur-sm'
+        }`}
+      >
         <BalanceDataGrid
           selectedTeam={selectedTeam}
           dateRange={dateRange}

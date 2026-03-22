@@ -12,6 +12,7 @@ import { handleApiError } from '../../../utils/apiErrorHandler'
 import type { RaidsRunData } from './types/raids'
 import Swal from 'sweetalert2'
 import { CustomSelect } from '../../../components/CustomSelect'
+import { isSoftwareRenderingLikely } from '../../../utils/renderingMode'
 
 export function FullRaidsNa() {
   const [rows, setRows] = useState<RaidsRunData[]>([])
@@ -28,6 +29,7 @@ export function FullRaidsNa() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All')
   const [selectedLoot, setSelectedLoot] = useState<string>('All')
   const [selectedRunType, setSelectedRunType] = useState<string>('All')
+  const [useLightVisualEffects, setUseLightVisualEffects] = useState(false)
   const { userRoles } = useAuth()
   const runsRequestInFlightRef = useRef(false)
   const runsSnapshotRef = useRef('')
@@ -282,6 +284,10 @@ export function FullRaidsNa() {
     setSelectedRunIds((prev) => prev.filter((id) => visibleRunIdsSet.has(id)))
   }, [filteredRows])
 
+  useEffect(() => {
+    setUseLightVisualEffects(isSoftwareRenderingLikely())
+  }, [])
+
   const showInitialPageSkeleton =
     isLoading && selectedDate !== null && !hasLoadedRunsOnce
 
@@ -342,7 +348,13 @@ export function FullRaidsNa() {
       {showInitialPageSkeleton ? (
         <RaidsPageSkeleton />
       ) : (
-        <div className='mx-auto mt-6 flex w-[90%] flex-col gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm'>
+        <div
+          className={`mx-auto mt-6 flex w-[90%] flex-col gap-4 rounded-xl border border-white/10 p-4 ${
+            useLightVisualEffects
+              ? 'bg-white/[0.05]'
+              : 'bg-white/[0.03] backdrop-blur-sm'
+          }`}
+        >
           <div className='mb-2 flex flex-wrap items-end justify-between gap-4'>
             {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (
               <div className='flex flex-wrap gap-3'>

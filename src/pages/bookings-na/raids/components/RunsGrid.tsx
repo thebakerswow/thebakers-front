@@ -17,6 +17,7 @@ import { deleteRaidRun, toggleRaidRunLock } from '../services/raidsApi'
 import { handleApiError } from '../../../../utils/apiErrorHandler'
 import Swal from 'sweetalert2'
 import type { RaidsRunData, RunsDataGridProps } from '../types/raids'
+import { isSoftwareRenderingLikely } from '../../../../utils/renderingMode'
 
 export function RunsDataGrid({
   data,
@@ -38,10 +39,15 @@ export function RunsDataGrid({
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null)
   const { userRoles } = useAuth()
   const [runs, setRuns] = useState<RaidsRunData[]>(data)
+  const [useLightVisualEffects, setUseLightVisualEffects] = useState(false)
 
   useEffect(() => {
     setRuns(data)
   }, [data])
+
+  useEffect(() => {
+    setUseLightVisualEffects(isSoftwareRenderingLikely())
+  }, [])
 
   // Verifica se o usuário possui os papéis necessários
   const hasRequiredRole = (requiredRoles: string[]): boolean => {
@@ -66,7 +72,7 @@ export function RunsDataGrid({
     Milharal: 15,
   }
 
-  const teamColors: { [key: string]: string } = {
+  const teamGradientColors: { [key: string]: string } = {
     Garçom: 'linear-gradient(90deg, rgba(59,130,246,0.72), rgba(37,99,235,0.62))',
     Confeiteiros: 'linear-gradient(90deg, rgba(244,114,182,0.72), rgba(236,72,153,0.62))',
     Jackfruit: 'linear-gradient(90deg, rgba(34,197,94,0.72), rgba(22,163,74,0.62))',
@@ -86,9 +92,31 @@ export function RunsDataGrid({
     'Gachi Squad': 'linear-gradient(90deg, rgba(163,230,53,0.72), rgba(132,204,22,0.62))',
   }
 
+  const teamFlatColors: { [key: string]: string } = {
+    Garçom: 'rgba(59, 130, 246, 0.48)',
+    Confeiteiros: 'rgba(244, 114, 182, 0.46)',
+    Jackfruit: 'rgba(34, 197, 94, 0.46)',
+    Insanos: 'rgba(59, 130, 246, 0.46)',
+    APAE: 'rgba(252, 165, 165, 0.44)',
+    'Los Renegados': 'rgba(252, 211, 77, 0.46)',
+    DTM: 'rgba(167, 139, 250, 0.46)',
+    KFFC: 'rgba(52, 211, 153, 0.46)',
+    Greensky: 'rgba(244, 114, 182, 0.46)',
+    'Guild Azralon BR#1': 'rgba(45, 212, 191, 0.46)',
+    'Guild Azralon BR#2': 'rgba(96, 165, 250, 0.46)',
+    Rocket: 'rgba(248, 113, 113, 0.46)',
+    Punks: 'rgba(139, 92, 246, 0.46)',
+    Padeirinho: 'rgba(251, 146, 60, 0.46)',
+    Milharal: 'rgba(254, 243, 199, 0.4)',
+    'Bastard Munchen': 'rgba(245, 158, 11, 0.46)',
+    'Gachi Squad': 'rgba(163, 230, 53, 0.46)',
+  }
+
   // Retorna o estilo de fundo associado a um time
   const getTeamColor = (team: string) => ({
-    background: teamColors[team] || 'transparent',
+    background: useLightVisualEffects
+      ? teamFlatColors[team] || 'transparent'
+      : teamGradientColors[team] || 'transparent',
   })
 
   // Abre o modal de visualização para uma run específica
