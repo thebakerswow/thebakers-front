@@ -159,26 +159,30 @@ export function FullRaidsNa() {
       return
     }
 
-    const formattedRuns = selectedRuns.map((run) => ({
-      name: run.name,
-      date: run.date,
-      time: run.time,
-      raid: run.raid,
-      runType: run.runType,
-      difficulty: run.difficulty,
-      idTeam: run.idTeam,
-      maxBuyers: run.maxBuyers.toString(),
-      raidLeader:
-        run.raidLeaders?.map(
-          (leader) => `${leader.idDiscord};${leader.username}`
-        ) || [],
-      loot: run.loot,
-      quantityBoss: run.quantityBoss,
-      note: run.note || '',
-      minPriceEnabled: true,
-      minPriceGold: Number(run.minPriceGold || 0),
-      minPriceDollar: Number(run.minPriceDollar || 0),
-    }))
+    const formattedRuns = selectedRuns.map((run) => {
+      const gold = Number(run.minPriceGold || 0)
+      const dollar = Number(run.minPriceDollar || 0)
+      return {
+        name: run.name,
+        date: run.date,
+        time: run.time,
+        raid: run.raid,
+        runType: run.runType,
+        difficulty: run.difficulty,
+        idTeam: run.idTeam,
+        maxBuyers: run.maxBuyers.toString(),
+        raidLeader:
+          run.raidLeaders?.map(
+            (leader) => `${leader.idDiscord};${leader.username}`
+          ) || [],
+        loot: run.loot,
+        quantityBoss: run.quantityBoss,
+        note: run.note || '',
+        minPriceEnabled: false,
+        minPriceGold: gold === 0 ? 1 : gold,
+        minPriceDollar: dollar === 0 ? 1 : dollar,
+      }
+    })
 
     setIsCopying(true)
     navigator.clipboard

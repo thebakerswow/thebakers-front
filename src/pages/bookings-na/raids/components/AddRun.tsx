@@ -25,9 +25,7 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     loot: '',
     note: '',
     quantityBoss: { String: '', Valid: false },
-    minPriceEnabled: true,
-    minPriceGold: '',
-    minPriceDollar: '',
+    minPriceEnabled: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiOptions, setApiOptions] = useState<ApiOption[]>([])
@@ -181,27 +179,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     return null
   }, [])
 
-  const formatGoldInput = useCallback((rawValue: string) => {
-    const normalizedValue = rawValue.replace(/[^0-9]/g, '')
-    if (!normalizedValue) return ''
-    return Number(normalizedValue).toLocaleString('en-US')
-  }, [])
-
-  const formatDollarInput = useCallback((rawValue: string) => {
-    const normalizedValue = rawValue.replace(/[^0-9.]/g, '')
-    if (!normalizedValue) return ''
-
-    const [integerPartRaw = '', ...decimalParts] = normalizedValue.split('.')
-    const integerPart = integerPartRaw ? Number(integerPartRaw).toLocaleString('en-US') : '0'
-
-    if (decimalParts.length === 0) {
-      return integerPart
-    }
-
-    const decimalPart = decimalParts.join('').slice(0, 2)
-    return `${integerPart}.${decimalPart}`
-  }, [])
-
   const fetchTeamMembers = useCallback(async () => {
     try {
       const teamId = import.meta.env.VITE_TEAM_PREFEITO
@@ -237,14 +214,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       return
     }
     if (field === 'maxBuyers' && !/^[0-9]*$/.test(value)) return
-    if (field === 'minPriceGold') {
-      setFormData((prev) => ({ ...prev, minPriceGold: formatGoldInput(value) }))
-      return
-    }
-    if (field === 'minPriceDollar') {
-      setFormData((prev) => ({ ...prev, minPriceDollar: formatDollarInput(value) }))
-      return
-    }
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -277,9 +246,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     event.preventDefault()
     setIsSubmitting(true)
 
-    const parsedMinPriceGold = Number(formData.minPriceGold.replace(/,/g, ''))
-    const parsedMinPriceDollar = Number(formData.minPriceDollar.replace(/,/g, ''))
-
     if (
       !formData.name.String ||
       !formData.date ||
@@ -289,17 +255,13 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       !formData.difficulty ||
       !formData.idTeam ||
       !formData.maxBuyers ||
-      !formData.minPriceGold ||
-      !formData.minPriceDollar ||
       !formData.loot ||
       formData.raidLeader.length === 0 ||
-      (formData.difficulty === 'Mythic' && !formData.quantityBoss.String) ||
-      parsedMinPriceGold <= 0 ||
-      parsedMinPriceDollar <= 0
+      (formData.difficulty === 'Mythic' && !formData.quantityBoss.String)
     ) {
       Swal.fire({
         title: 'Missing fields',
-        text: 'Please fill all required fields (including Min Price Gold/USD values greater than zero).',
+        text: 'Please fill all required fields.',
         icon: 'warning',
         timer: 1600,
         showConfirmButton: false,
@@ -312,9 +274,9 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       await createRaidRun({
         ...formData,
         quantityBoss: formData.quantityBoss,
-        minPriceEnabled: true,
-        minPriceGold: parsedMinPriceGold,
-        minPriceDollar: parsedMinPriceDollar,
+        minPriceEnabled: false,
+        minPriceGold: 1,
+        minPriceDollar: 1,
       })
       await onRunAddedReload()
       onClose()
@@ -722,32 +684,6 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
               type='text'
               value={formData.maxBuyers}
               onChange={(e) => setField('maxBuyers', e.target.value)}
-              className={baseFieldClass}
-            />
-          </div>
-
-          <div className='flex flex-col'>
-            <label className='mb-1 text-xs uppercase tracking-wide text-neutral-300'>
-              Min Price (Gold)
-            </label>
-            <input
-              type='text'
-              value={formData.minPriceGold}
-              onChange={(e) => setField('minPriceGold', e.target.value)}
-              placeholder='Ex: 600000'
-              className={baseFieldClass}
-            />
-          </div>
-
-          <div className='flex flex-col'>
-            <label className='mb-1 text-xs uppercase tracking-wide text-neutral-300'>
-              Min Price (USD)
-            </label>
-            <input
-              type='text'
-              value={formData.minPriceDollar}
-              onChange={(e) => setField('minPriceDollar', e.target.value)}
-              placeholder='Ex: 25.00'
               className={baseFieldClass}
             />
           </div>

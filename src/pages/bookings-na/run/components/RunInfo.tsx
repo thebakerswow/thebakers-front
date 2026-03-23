@@ -416,7 +416,7 @@ export function RunInfo({
               )}
               <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
                 <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Min Price
+                  Discount
                 </dt>
                 <dd className='mt-1 font-medium'>
                   {run.minPriceEnabled ? 'Enabled' : 'Disabled'}

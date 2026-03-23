@@ -298,6 +298,8 @@ export function RunsDataGrid({
 
   // Function to copy an individual run's data to the clipboard
   const copyRunToClipboard = (run: RaidsRunData) => {
+    const gold = Number(run.minPriceGold || 0)
+    const dollar = Number(run.minPriceDollar || 0)
     const formattedRun = {
       name: run.name,
       date: run.date,
@@ -315,8 +317,8 @@ export function RunsDataGrid({
       note: run.note || '',
       quantityBoss: run.quantityBoss,
       minPriceEnabled: Boolean(run.minPriceEnabled),
-      minPriceGold: Number(run.minPriceGold || 0),
-      minPriceDollar: Number(run.minPriceDollar || 0),
+      minPriceGold: gold === 0 ? 1 : gold,
+      minPriceDollar: dollar === 0 ? 1 : dollar,
     }
 
     navigator.clipboard
@@ -379,12 +381,12 @@ export function RunsDataGrid({
       )
       Swal.fire({
         icon: 'success',
-        title: `Min Price ${run.minPriceEnabled ? 'disabled' : 'enabled'} successfully.`,
+        title: `Discount ${run.minPriceEnabled ? 'disabled' : 'enabled'} successfully.`,
         timer: 1500,
         showConfirmButton: false,
       })
     } catch (error) {
-      await handleApiError(error, 'Failed to toggle run Min Price.')
+      await handleApiError(error, 'Failed to toggle run Discount.')
     }
   }
 
@@ -580,7 +582,7 @@ export function RunsDataGrid({
                     {canToggleRunMinPrice(run) ? (
                       <button
                         type='button'
-                        title={run.minPriceEnabled ? 'Disable Min Price' : 'Enable Min Price'}
+                        title={run.minPriceEnabled ? 'Disable Discount' : 'Enable Discount'}
                         onClick={() => handleToggleRunMinPrice(run)}
                         className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs transition ${
                           run.minPriceEnabled
@@ -589,7 +591,7 @@ export function RunsDataGrid({
                         }`}
                       >
                         <ArrowsClockwise size={14} />
-                        Min Price: {run.minPriceEnabled ? 'ON' : 'OFF'}
+                        Discount: {run.minPriceEnabled ? 'ON' : 'OFF'}
                       </button>
                     ) : (
                       <span
@@ -598,9 +600,9 @@ export function RunsDataGrid({
                             ? 'bg-green-500/20 text-green-200'
                             : 'bg-zinc-500/20 text-zinc-200'
                         }`}
-                        title='Min Price'
+                        title='Discount'
                       >
-                        Min Price: {run.minPriceEnabled ? 'ON' : 'OFF'}
+                        Discount: {run.minPriceEnabled ? 'ON' : 'OFF'}
                       </span>
                     )}
                     {hasRequiredRole([import.meta.env.VITE_TEAM_CHEFE]) && (

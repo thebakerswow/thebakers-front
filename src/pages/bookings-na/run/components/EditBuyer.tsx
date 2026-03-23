@@ -119,8 +119,8 @@ export function EditBuyer({
     if (minPriceEnabled) {
       if (buyerPotValue <= 0 && buyerDolarPotValue <= 0) {
         await handleApiError(
-          new Error('Set either Gold Pot or Dollar Pot above zero when Min Price is enabled.'),
-          'Min Price validation'
+          new Error('Set either Gold Pot or Dollar Pot above zero when Discount is enabled.'),
+          'Discount validation'
         )
         setIsSubmitting(false)
         return
@@ -131,7 +131,7 @@ export function EditBuyer({
           new Error(
             `Gold Pot must be at least ${Math.round(Number(minPriceGold)).toLocaleString('en-US')}.`
           ),
-          'Min Price validation'
+          'Discount validation'
         )
         setIsSubmitting(false)
         return
@@ -145,7 +145,7 @@ export function EditBuyer({
               maximumFractionDigits: 2,
             })}.`
           ),
-          'Min Price validation'
+          'Discount validation'
         )
         setIsSubmitting(false)
         return
