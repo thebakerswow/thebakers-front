@@ -47,7 +47,23 @@ export function RunsDataGrid({
   const [useLightVisualEffects, setUseLightVisualEffects] = useState(false)
 
   useEffect(() => {
-    setRuns(data)
+    setRuns((previousRuns) => {
+      if (previousRuns.length !== data.length) return data
+
+      const hasChanged = previousRuns.some((previousRun, index) => {
+        const nextRun = data[index]
+        if (!nextRun) return true
+
+        return (
+          previousRun.id !== nextRun.id ||
+          previousRun.runIsLocked !== nextRun.runIsLocked ||
+          previousRun.minPriceEnabled !== nextRun.minPriceEnabled ||
+          previousRun.buyersCount !== nextRun.buyersCount
+        )
+      })
+
+      return hasChanged ? data : previousRuns
+    })
   }, [data])
 
   useEffect(() => {

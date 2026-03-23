@@ -182,6 +182,27 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     return null
   }, [])
 
+  const formatGoldInput = useCallback((rawValue: string) => {
+    const normalizedValue = rawValue.replace(/[^0-9]/g, '')
+    if (!normalizedValue) return ''
+    return Number(normalizedValue).toLocaleString('en-US')
+  }, [])
+
+  const formatDollarInput = useCallback((rawValue: string) => {
+    const normalizedValue = rawValue.replace(/[^0-9.]/g, '')
+    if (!normalizedValue) return ''
+
+    const [integerPartRaw = '', ...decimalParts] = normalizedValue.split('.')
+    const integerPart = integerPartRaw ? Number(integerPartRaw).toLocaleString('en-US') : '0'
+
+    if (decimalParts.length === 0) {
+      return integerPart
+    }
+
+    const decimalPart = decimalParts.join('').slice(0, 2)
+    return `${integerPart}.${decimalPart}`
+  }, [])
+
   const fetchTeamMembers = useCallback(async () => {
     try {
       const teamId = import.meta.env.VITE_TEAM_PREFEITO
@@ -217,8 +238,14 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
       return
     }
     if (field === 'maxBuyers' && !/^[0-9]*$/.test(value)) return
-    if (field === 'minPriceGold' && !/^[0-9]*$/.test(value)) return
-    if (field === 'minPriceDollar' && !/^\d*([.]\d{0,2})?$/.test(value)) return
+    if (field === 'minPriceGold') {
+      setFormData((prev) => ({ ...prev, minPriceGold: formatGoldInput(value) }))
+      return
+    }
+    if (field === 'minPriceDollar') {
+      setFormData((prev) => ({ ...prev, minPriceDollar: formatDollarInput(value) }))
+      return
+    }
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -251,8 +278,8 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
     event.preventDefault()
     setIsSubmitting(true)
 
-    const parsedMinPriceGold = Number(formData.minPriceGold)
-    const parsedMinPriceDollar = Number(formData.minPriceDollar)
+    const parsedMinPriceGold = Number(formData.minPriceGold.replace(/,/g, ''))
+    const parsedMinPriceDollar = Number(formData.minPriceDollar.replace(/,/g, ''))
 
     if (
       !formData.name.String ||

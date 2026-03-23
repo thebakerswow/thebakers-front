@@ -255,20 +255,31 @@ export function RunInfo({
   const formattedMinPriceGold =
     run.minPriceGold != null && Number(run.minPriceGold) > 0
       ? Math.round(Number(run.minPriceGold)).toLocaleString('en-US')
-      : '-'
+      : ''
   const formattedMinPriceDollar =
     run.minPriceDollar != null && Number(run.minPriceDollar) > 0
       ? Number(run.minPriceDollar).toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })
-      : '-'
+      : ''
 
-  const visibleRaidLeaders =
-    run.raidLeaders
-      ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
-      .map((raidLeader) => raidLeader.username)
-      .join(', ') || '-'
+  const visibleRaidLeaders = run.raidLeaders
+    ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
+    .map((raidLeader) => raidLeader.username)
+    .filter(Boolean)
+    .join(', ')
+  const formattedDate = run.date ? formatRunDate(run.date) : ''
+  const formattedTime = run.time ? `${formatRunTime12h(run.time)} EST` : ''
+  const hasLoot = Boolean(run.loot)
+  const hasMaxBuyers = run.maxBuyers != null && run.maxBuyers !== ''
+  const hasSlotsAvailable = run.slotAvailable != null && run.slotAvailable !== ''
+  const hasBackups = run.backups != null && run.backups !== ''
+  const hasActualPot = run.actualPot != null
+  const hasActualPotDolar = run.actualPotDolar != null
+  const hasMinPriceGold = Boolean(formattedMinPriceGold)
+  const hasMinPriceDollar = Boolean(formattedMinPriceDollar)
+  const hasNote = Boolean(run.note?.trim())
 
   const canManageRun =
     hasPrefeitoTeamAccess(run, userRoles) ||
@@ -331,67 +342,75 @@ export function RunInfo({
             <h1 className='text-2xl font-semibold text-white'>
               {run.raid} {run.difficulty}
             </h1>
-            <p className='mt-1 text-sm text-neutral-300'>
-              {run.date || run.time
-                ? `${run.date ? formatRunDate(run.date) : '-'}${run.date && run.time ? ' - ' : ''}${
-                    run.time ? `${formatRunTime12h(run.time)} EST` : '-'
-                  }`
-                : '-'}
-            </p>
+            {(formattedDate || formattedTime) && (
+              <p className='mt-1 text-sm text-neutral-300'>
+                {formattedDate && formattedTime
+                  ? `${formattedDate} - ${formattedTime}`
+                  : formattedDate || formattedTime}
+              </p>
+            )}
 
             <dl className='mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 xl:grid-cols-3'>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Loot Type
-                </dt>
-                <dd className='mt-1 font-medium text-yellow-300'>{run.loot || '-'}</dd>
-              </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Max Buyers
-                </dt>
-                <dd className='mt-1 font-medium text-red-300'>{run.maxBuyers}</dd>
-              </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Slots Available
-                </dt>
-                <dd className='mt-1 font-medium'>{run.slotAvailable}</dd>
-              </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Backups
-                </dt>
-                <dd className='mt-1 font-medium'>{run.backups}</dd>
-              </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Raid Leader(s)
-                </dt>
-                <dd className='mt-1 font-medium break-words'>{visibleRaidLeaders}</dd>
-              </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Run Gold Pot
-                </dt>
-                <dd className='mt-1 font-medium'>
-                  {run.actualPot != null
-                    ? Math.round(Number(run.actualPot)).toLocaleString('en-US')
-                    : '-'}
-                </dd>
-              </div>
-              {!hideDollarPotInfo && (
+              {hasLoot ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Loot Type
+                  </dt>
+                  <dd className='mt-1 font-medium text-yellow-300'>{run.loot}</dd>
+                </div>
+              ) : null}
+              {hasMaxBuyers ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Max Buyers
+                  </dt>
+                  <dd className='mt-1 font-medium text-red-300'>{run.maxBuyers}</dd>
+                </div>
+              ) : null}
+              {hasSlotsAvailable ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Slots Available
+                  </dt>
+                  <dd className='mt-1 font-medium'>{run.slotAvailable}</dd>
+                </div>
+              ) : null}
+              {hasBackups ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Backups
+                  </dt>
+                  <dd className='mt-1 font-medium'>{run.backups}</dd>
+                </div>
+              ) : null}
+              {visibleRaidLeaders ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Raid Leader(s)
+                  </dt>
+                  <dd className='mt-1 font-medium break-words'>{visibleRaidLeaders}</dd>
+                </div>
+              ) : null}
+              {hasActualPot ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Run Gold Pot
+                  </dt>
+                  <dd className='mt-1 font-medium'>
+                    {Math.round(Number(run.actualPot)).toLocaleString('en-US')}
+                  </dd>
+                </div>
+              ) : null}
+              {!hideDollarPotInfo && hasActualPotDolar && (
                 <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
                   <dt className='text-xs uppercase tracking-wide text-neutral-400'>
                     Run Dollar Pot
                   </dt>
                   <dd className='mt-1 font-medium'>
-                    {run.actualPotDolar != null
-                      ? Number(run.actualPotDolar).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                      : '-'}
+                    {Number(run.actualPotDolar).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </dd>
                 </div>
               )}
@@ -403,13 +422,15 @@ export function RunInfo({
                   {run.minPriceEnabled ? 'Enabled' : 'Disabled'}
                 </dd>
               </div>
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Min Gold
-                </dt>
-                <dd className='mt-1 font-medium'>{formattedMinPriceGold}</dd>
-              </div>
-              {!hideDollarPotInfo && (
+              {hasMinPriceGold ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Min Gold
+                  </dt>
+                  <dd className='mt-1 font-medium'>{formattedMinPriceGold}</dd>
+                </div>
+              ) : null}
+              {!hideDollarPotInfo && hasMinPriceDollar && (
                 <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
                   <dt className='text-xs uppercase tracking-wide text-neutral-400'>
                     Min USD
@@ -417,14 +438,16 @@ export function RunInfo({
                   <dd className='mt-1 font-medium'>{formattedMinPriceDollar}</dd>
                 </div>
               )}
-              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
-                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                  Note
-                </dt>
-                <dd className='mt-1 whitespace-pre-wrap break-words font-medium'>
-                  {run.note?.trim() ? run.note : '-'}
-                </dd>
-              </div>
+              {hasNote ? (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Note
+                  </dt>
+                  <dd className='mt-1 whitespace-pre-wrap break-words font-medium'>
+                    {run.note}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           </div>
 

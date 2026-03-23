@@ -313,18 +313,28 @@ export function FullRaidsNa() {
   }
 
   // Filtra os dados baseado nos filtros selecionados
-  const filteredRows = rows.filter((run) => {
-    const teamMatch = selectedTeam === 'All' || run.team === selectedTeam
-    const difficultyMatch =
-      selectedDifficulty === 'All' || run.difficulty === selectedDifficulty
-    const lootMatch = selectedLoot === 'All' || run.loot === selectedLoot
-    const runTypeMatch = selectedRunType === 'All' || run.runType === selectedRunType
-    return teamMatch && difficultyMatch && lootMatch && runTypeMatch
-  })
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((run) => {
+        const teamMatch = selectedTeam === 'All' || run.team === selectedTeam
+        const difficultyMatch =
+          selectedDifficulty === 'All' || run.difficulty === selectedDifficulty
+        const lootMatch = selectedLoot === 'All' || run.loot === selectedLoot
+        const runTypeMatch = selectedRunType === 'All' || run.runType === selectedRunType
+        return teamMatch && difficultyMatch && lootMatch && runTypeMatch
+      }),
+    [rows, selectedTeam, selectedDifficulty, selectedLoot, selectedRunType]
+  )
 
   useEffect(() => {
     const visibleRunIdsSet = new Set(filteredRows.map((run) => run.id))
-    setSelectedRunIds((prev) => prev.filter((id) => visibleRunIdsSet.has(id)))
+    setSelectedRunIds((prev) => {
+      const next = prev.filter((id) => visibleRunIdsSet.has(id))
+      if (next.length === prev.length && next.every((id, index) => id === prev[index])) {
+        return prev
+      }
+      return next
+    })
   }, [filteredRows])
 
   useEffect(() => {
