@@ -252,18 +252,6 @@ export function RunInfo({
     setCooldownMegaphone(false)
   }
 
-  const formattedMinPriceGold =
-    run.minPriceGold != null && Number(run.minPriceGold) > 0
-      ? Math.round(Number(run.minPriceGold)).toLocaleString('en-US')
-      : ''
-  const formattedMinPriceDollar =
-    run.minPriceDollar != null && Number(run.minPriceDollar) > 0
-      ? Number(run.minPriceDollar).toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      : ''
-
   const visibleRaidLeaders = run.raidLeaders
     ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
     .map((raidLeader) => raidLeader.username)
@@ -277,8 +265,6 @@ export function RunInfo({
   const hasBackups = run.backups != null
   const hasActualPot = run.actualPot != null
   const hasActualPotDolar = run.actualPotDolar != null
-  const hasMinPriceGold = Boolean(formattedMinPriceGold)
-  const hasMinPriceDollar = Boolean(formattedMinPriceDollar)
   const hasNote = Boolean(run.note?.trim())
 
   const canManageRun =
@@ -419,25 +405,9 @@ export function RunInfo({
                   Discount
                 </dt>
                 <dd className='mt-1 font-medium'>
-                  {run.minPriceEnabled ? 'Enabled' : 'Disabled'}
+                  {run.minPriceEnabled ? 'ON' : 'OFF'}
                 </dd>
               </div>
-              {hasMinPriceGold ? (
-                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                    Min Gold
-                  </dt>
-                  <dd className='mt-1 font-medium'>{formattedMinPriceGold}</dd>
-                </div>
-              ) : null}
-              {!hideDollarPotInfo && hasMinPriceDollar && (
-                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
-                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
-                    Min USD
-                  </dt>
-                  <dd className='mt-1 font-medium'>{formattedMinPriceDollar}</dd>
-                </div>
-              )}
               {hasNote ? (
                 <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
                   <dt className='text-xs uppercase tracking-wide text-neutral-400'>
