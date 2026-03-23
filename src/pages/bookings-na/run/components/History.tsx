@@ -27,6 +27,15 @@ function formatHistoryDisplayValue(value: string, fieldLabel: string): string {
   return trimmed
 }
 
+/** Não listar alterações de min gold / min dollar (só o toggle Discount permanece visível). */
+function isHiddenMinPriceAmountField(field: string): boolean {
+  const label = formatHistoryFieldLabel(field).toLowerCase()
+  if (label === 'discount') return false
+  if (label.includes('gold')) return true
+  if (label.includes('dollar') || label.includes('usd')) return true
+  return false
+}
+
 export function EditHistoryDialog({
   open,
   onClose,
@@ -46,10 +55,15 @@ export function EditHistoryDialog({
       .finally(() => setLoading(false))
   }, [open, idRun])
 
+  const visibleHistory = useMemo(
+    () => history.filter((edit) => !isHiddenMinPriceAmountField(edit.field)),
+    [history]
+  )
+
   const filteredHistory = useMemo(() => {
-    if (!filter.trim()) return history
+    if (!filter.trim()) return visibleHistory
     const lower = filter.toLowerCase()
-    return history.filter((edit) => {
+    return visibleHistory.filter((edit) => {
       const idBuyerStr =
         edit.id_buyer && edit.id_buyer.Valid
           ? edit.id_buyer.Int64.toString()
@@ -67,7 +81,7 @@ export function EditHistoryDialog({
         .toLowerCase()
       return searchString.includes(lower)
     })
-  }, [filter, history])
+  }, [filter, visibleHistory])
 
   if (!open) return null
 
