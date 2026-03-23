@@ -5,6 +5,28 @@ import dayjs from 'dayjs'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
 import type { EditHistoryDialogProps, RunHistory } from '../types/run'
 
+/** Exibe nomes de campo do histórico alinhados ao produto (ex.: min price → Discount). */
+function formatHistoryFieldLabel(field: string): string {
+  let label = field
+    .replace(/\bmin\s*price\b/gi, 'Discount')
+    .replace(/\bminprice\b/gi, 'Discount')
+    .replace(/min_price/gi, 'Discount')
+  label = label
+    .replace(/\bDiscount\s+enabled\b/gi, 'Discount')
+    .replace(/\bDiscount_enabled\b/gi, 'Discount')
+  return label
+}
+
+/** Para o toggle de Discount, exibe ON/OFF em vez de true/false. */
+function formatHistoryDisplayValue(value: string, fieldLabel: string): string {
+  const trimmed = value.trim()
+  const lower = trimmed.toLowerCase()
+  if (fieldLabel === 'Discount' && (lower === 'true' || lower === 'false')) {
+    return lower === 'true' ? 'ON' : 'OFF'
+  }
+  return trimmed
+}
+
 export function EditHistoryDialog({
   open,
   onClose,
@@ -35,6 +57,7 @@ export function EditHistoryDialog({
       const searchString = [
         idBuyerStr,
         edit.field,
+        formatHistoryFieldLabel(edit.field),
         edit.old_value,
         edit.new_value,
         edit.name_edited_by,
@@ -98,13 +121,14 @@ export function EditHistoryDialog({
                       ? `Buyer ${idBuyer}`
                     : 'Run'
 
+                const fieldLabel = formatHistoryFieldLabel(edit.field)
                 const oldValue =
                   edit.old_value && edit.old_value.trim().length > 0
-                    ? edit.old_value
+                    ? formatHistoryDisplayValue(edit.old_value, fieldLabel)
                     : '(vazio)'
                 const newValue =
                   edit.new_value && edit.new_value.trim().length > 0
-                    ? edit.new_value
+                    ? formatHistoryDisplayValue(edit.new_value, fieldLabel)
                     : '(vazio)'
                 const normalizedField = edit.field.trim().toLowerCase()
                 const isCreatedEvent = normalizedField === 'created'
@@ -139,7 +163,7 @@ export function EditHistoryDialog({
                       <>
                         <span className='font-semibold text-purple-200'>{idBuyerText}</span>{' '}
                         had field{' '}
-                        <span className='font-semibold text-purple-200'>{edit.field}</span>{' '}
+                        <span className='font-semibold text-purple-200'>{fieldLabel}</span>{' '}
                         changed from{' '}
                         <span className='font-medium text-rose-300'>{oldValue}</span>{' '}
                         to{' '}
