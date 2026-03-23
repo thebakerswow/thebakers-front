@@ -273,8 +273,8 @@ export function RunInfo({
   const formattedTime = run.time ? `${formatRunTime12h(run.time)} EST` : ''
   const hasLoot = Boolean(run.loot)
   const hasMaxBuyers = run.maxBuyers != null && run.maxBuyers !== ''
-  const hasSlotsAvailable = run.slotAvailable != null && run.slotAvailable !== ''
-  const hasBackups = run.backups != null && run.backups !== ''
+  const hasSlotsAvailable = run.slotAvailable != null
+  const hasBackups = run.backups != null
   const hasActualPot = run.actualPot != null
   const hasActualPotDolar = run.actualPotDolar != null
   const hasMinPriceGold = Boolean(formattedMinPriceGold)
