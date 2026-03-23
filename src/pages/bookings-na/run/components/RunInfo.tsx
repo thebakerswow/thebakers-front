@@ -263,8 +263,10 @@ export function RunInfo({
   const hasMaxBuyers = run.maxBuyers != null && run.maxBuyers !== ''
   const hasSlotsAvailable = run.slotAvailable != null
   const hasBackups = run.backups != null
-  const hasActualPot = run.actualPot != null
-  const hasActualPotDolar = run.actualPotDolar != null
+  const hasActualPot =
+    run.actualPot != null && Number(run.actualPot) !== 0
+  const hasActualPotDolar =
+    run.actualPotDolar != null && Number(run.actualPotDolar) !== 0
   const hasNote = Boolean(run.note?.trim())
 
   const canManageRun =
