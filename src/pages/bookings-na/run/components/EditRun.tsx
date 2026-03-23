@@ -150,11 +150,10 @@ export function EditRun({ onClose, run, onRunEdit }: EditRunProps) {
     'h-10 ![background-image:none] !border-white/15 !bg-white/[0.05] !shadow-none text-sm !text-white focus:!border-purple-400/50 focus:!ring-0'
   const nameOptions = [
     'Nerub-ar Palace',
-    'Liberation of Undermine',
-    'Manaforge Omega',
     "March on Quel'Danas",
     'The Dreamrift',
     'The Voidspire',
+    'The Voidspire & The Dreamrift',
   ].map((value) => ({ value, label: value }))
   const runTypeOptions = [
     'Full Clear',

@@ -53,11 +53,10 @@ export function AddRun({ onClose, onRunAddedReload }: AddRunProps) {
   const runNameOptions = useMemo(
     () => [
       'Nerub-ar Palace',
-      'Liberation of Undermine',
-      'Manaforge Omega',
       "March on Quel'Danas",
       'The Dreamrift',
       'The Voidspire',
+      'The Voidspire & The Dreamrift',
     ],
     []
   )
