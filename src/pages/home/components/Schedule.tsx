@@ -23,7 +23,10 @@ export function Schedule({ dates, weekRuns, loadingRuns }: ScheduleProps) {
 
   const scheduleRuns = useMemo(() => {
     if (!activeDate) return []
-    return [...(weekRuns[activeDate] || [])].sort((a, b) => {
+    const runs = (weekRuns[activeDate] || []).filter(
+      (run) => (Number(run.slotAvailable) || 0) > 0
+    )
+    return [...runs].sort((a, b) => {
       const timeA = parseTimeToMinutes(a.time)
       const timeB = parseTimeToMinutes(b.time)
 
