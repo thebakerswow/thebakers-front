@@ -55,6 +55,9 @@ export function AddBuyer({
     return shouldHideDollarPotInfo(userRoles)
   }
   const shouldHideBuyerDolarInput = shouldHideDolarField()
+  const minPriceEnabled = Boolean(run.minPriceEnabled)
+  const minPriceGold = Number(run.minPriceGold || 0)
+  const minPriceDollar = Number(run.minPriceDollar || 0)
 
   // Function to handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +118,8 @@ export function AddBuyer({
     const buyerDolarPotFilled =
       !!formData.buyerDolarPot &&
       Number(formData.buyerDolarPot.replace(/,/g, '')) > 0
+    const buyerPotValue = Number(formData.buyerPot.replace(/,/g, '')) || 0
+    const buyerDolarPotValue = Number(formData.buyerDolarPot.replace(/,/g, '')) || 0
 
     // If Dollar field is hidden, only validate that Pot is filled
     if (shouldHideBuyerDolarInput) {
@@ -135,15 +140,36 @@ export function AddBuyer({
       }
     }
 
+    if (minPriceEnabled) {
+      if (buyerPotFilled && buyerPotValue < minPriceGold) {
+        setFormError(
+          `Gold Pot must be at least ${Math.round(minPriceGold).toLocaleString('en-US')} for this run.`
+        )
+        setIsSubmitting(false)
+        return
+      }
+
+      if (buyerDolarPotFilled && buyerDolarPotValue < minPriceDollar) {
+        setFormError(
+          `Pot (USD) must be at least ${Number(minPriceDollar).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} for this run.`
+        )
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     // Ensure all required fields are filled
     const data = {
       id_run: run.id,
       nameAndRealm: formData.nameAndRealm || '',
       playerClass: formData.playerClass || '',
-      buyerPot: Number(formData.buyerPot.replace(/,/g, '')) || 0,
+      buyerPot: buyerPotValue,
       buyerDolarPot: shouldHideBuyerDolarInput
         ? 0
-        : Number(formData.buyerDolarPot.replace(/,/g, '')) || 0,
+        : buyerDolarPotValue,
       isPaid: canEditPaidFull ? formData.isPaid : false,
       idBuyerAdvertiser: formData.idBuyerAdvertiser || '',
       buyerNote: formData.buyerNote || '',

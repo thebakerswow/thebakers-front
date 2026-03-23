@@ -58,6 +58,9 @@ export function BuyersDataGrid({
   runIsLocked, // Destructure runIsLocked
   runIdTeam, // Nova prop
   raidLeaders, // Added raid leaders prop
+  minPriceEnabled,
+  minPriceGold,
+  minPriceDollar,
 }: BuyersGridProps) {
   const { userRoles, idDiscord } = useAuth()
   const isAdvertiserRole = userRoles.includes(import.meta.env.VITE_TEAM_ADVERTISER)
@@ -841,22 +844,24 @@ export function BuyersDataGrid({
                             >
                               <RiSwordLine size={18} />
                           </button>
-                          <button
-                            type='button'
-                            title='Price below minimum'
-                              onClick={() =>
-                                !runIsLocked &&
-                                handleSendPriceWarningMessage(buyer.id)
-                              }
-                              disabled={
-                                runIsLocked ||
-                                cooldownPriceWarning[buyer.id] ||
-                                globalCooldown
-                              }
-                              className='rounded-md p-1 disabled:opacity-50'
-                            >
-                              <RiArrowDownLine size={18} />
-                          </button>
+                          {minPriceEnabled && (
+                            <button
+                              type='button'
+                              title='Price below minimum'
+                                onClick={() =>
+                                  !runIsLocked &&
+                                  handleSendPriceWarningMessage(buyer.id)
+                                }
+                                disabled={
+                                  runIsLocked ||
+                                  cooldownPriceWarning[buyer.id] ||
+                                  globalCooldown
+                                }
+                                className='rounded-md p-1 disabled:opacity-50'
+                              >
+                                <RiArrowDownLine size={18} />
+                            </button>
+                          )}
                         </>
                       )}
                       {canSeeAdvertiserButtons(buyer) && (
@@ -954,6 +959,9 @@ export function BuyersDataGrid({
           onClose={() => setOpenModal(false)}
           onEditSuccess={onBuyerNameNoteEdit}
           runIdTeam={runIdTeam}
+          minPriceEnabled={minPriceEnabled}
+          minPriceGold={minPriceGold}
+          minPriceDollar={minPriceDollar}
         />
       )}
     </div>

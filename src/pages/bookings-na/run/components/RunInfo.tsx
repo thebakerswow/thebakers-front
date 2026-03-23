@@ -252,6 +252,18 @@ export function RunInfo({
     setCooldownMegaphone(false)
   }
 
+  const formattedMinPriceGold =
+    run.minPriceGold != null && Number(run.minPriceGold) > 0
+      ? Math.round(Number(run.minPriceGold)).toLocaleString('en-US')
+      : '-'
+  const formattedMinPriceDollar =
+    run.minPriceDollar != null && Number(run.minPriceDollar) > 0
+      ? Number(run.minPriceDollar).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : '-'
+
   const visibleRaidLeaders =
     run.raidLeaders
       ?.filter((raidLeader) => raidLeader.username !== 'Encrypted')
@@ -279,7 +291,6 @@ export function RunInfo({
     hasGoldCollectors && hasDolarCollectors ? 'lg:col-span-2' : 'lg:col-span-3'
   const actionButtonClass =
     'inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-purple-400/40 bg-purple-500/20 px-4 text-sm text-purple-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.22)] transition hover:border-purple-300/55 hover:bg-purple-500/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/45 disabled:cursor-not-allowed disabled:border-zinc-500/60 disabled:bg-zinc-700/60 disabled:text-zinc-300 disabled:shadow-none'
-  const shouldCenterActionPanel = !canManageRun && !isRunLocked
 
   return (
     <div className='m-4'>
@@ -315,7 +326,7 @@ export function RunInfo({
         <div
           className={`rounded-xl border border-white/10 bg-white/[0.04] p-3 text-white ${mainCardColSpanClass}`}
         >
-          <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between'>
+          <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
           <div className='flex-1'>
             <h1 className='text-2xl font-semibold text-white'>
               {run.raid} {run.difficulty}
@@ -384,6 +395,28 @@ export function RunInfo({
                   </dd>
                 </div>
               )}
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Min Price
+                </dt>
+                <dd className='mt-1 font-medium'>
+                  {run.minPriceEnabled ? 'Enabled' : 'Disabled'}
+                </dd>
+              </div>
+              <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                  Min Gold
+                </dt>
+                <dd className='mt-1 font-medium'>{formattedMinPriceGold}</dd>
+              </div>
+              {!hideDollarPotInfo && (
+                <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5'>
+                  <dt className='text-xs uppercase tracking-wide text-neutral-400'>
+                    Min USD
+                  </dt>
+                  <dd className='mt-1 font-medium'>{formattedMinPriceDollar}</dd>
+                </div>
+              )}
               <div className='rounded-md border border-white/10 bg-black/20 px-3 py-1.5 sm:col-span-2'>
                 <dt className='text-xs uppercase tracking-wide text-neutral-400'>
                   Note
@@ -395,11 +428,7 @@ export function RunInfo({
             </dl>
           </div>
 
-          <div
-            className={`grid w-full gap-2 lg:w-[320px] ${
-              shouldCenterActionPanel ? 'lg:self-center' : ''
-            }`}
-          >
+          <div className='grid w-full shrink-0 gap-2 lg:w-[320px]'>
             <button
               onClick={handleOpenAddBuyer}
               disabled={isRunLocked}

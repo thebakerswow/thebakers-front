@@ -175,6 +175,9 @@ export function FullRaidsNa() {
       loot: run.loot,
       quantityBoss: run.quantityBoss,
       note: run.note || '',
+      minPriceEnabled: true,
+      minPriceGold: Number(run.minPriceGold || 0),
+      minPriceDollar: Number(run.minPriceDollar || 0),
     }))
 
     setIsCopying(true)
