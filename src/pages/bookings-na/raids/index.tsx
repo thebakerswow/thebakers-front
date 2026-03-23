@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { RunsDataGrid } from './components/RunsGrid'
 import { AddMultipleRuns } from './components/AddMultipleRuns'
 import { RaidsPageSkeleton } from './components/RaidsPageSkeleton'
 import { DateFilter } from '../../../components/DateFilter'
-import { format } from 'date-fns'
+import { format, isValid, parse, startOfDay } from 'date-fns'
 import { UserPlus, ClipboardText, UsersFour, Trash } from '@phosphor-icons/react'
 import { AddRun } from './components/AddRun'
 import { useAuth } from '../../../context/AuthContext'
@@ -14,9 +15,19 @@ import Swal from 'sweetalert2'
 import { CustomSelect } from '../../../components/CustomSelect'
 import { isSoftwareRenderingLikely } from '../../../utils/renderingMode'
 
+function parseRaidsDateParam(value: string | null): Date | null {
+  if (!value) return null
+  const d = parse(value, 'yyyy-MM-dd', new Date())
+  if (!isValid(d)) return null
+  return startOfDay(d)
+}
+
 export function FullRaidsNa() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState<RaidsRunData[]>([])
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    return parseRaidsDateParam(searchParams.get('date')) ?? startOfDay(new Date())
+  })
   const [isAddRunOpen, setIsAddRunOpen] = useState(false)
   const [isBulkAddOpen, setIsBulkAddOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -34,6 +45,35 @@ export function FullRaidsNa() {
   const runsRequestInFlightRef = useRef(false)
   const runsSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
+
+  const handleDaySelect = useCallback(
+    (day: Date | null) => {
+      const next = day ?? startOfDay(new Date())
+      setSelectedDate(next)
+      setSearchParams(
+        (prev) => {
+          const n = new URLSearchParams(prev)
+          n.set('date', format(next, 'yyyy-MM-dd'))
+          return n
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
+
+  useLayoutEffect(() => {
+    if (searchParams.get('date') || !selectedDate) return
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev)
+        n.set('date', format(selectedDate, 'yyyy-MM-dd'))
+        return n
+      },
+      { replace: true }
+    )
+  }, [searchParams, selectedDate, setSearchParams])
+
   const teamOptions = useMemo(
     () => [
       { value: 'All', label: 'All' },
@@ -288,8 +328,7 @@ export function FullRaidsNa() {
     setUseLightVisualEffects(isSoftwareRenderingLikely())
   }, [])
 
-  const showInitialPageSkeleton =
-    isLoading && selectedDate !== null && !hasLoadedRunsOnce
+  const showInitialPageSkeleton = isLoading && !hasLoadedRunsOnce
 
   // Busca inicial e configuração de polling
   useEffect(() => {
@@ -344,7 +383,7 @@ export function FullRaidsNa() {
 
   return (
     <div className='flex min-h-screen w-full flex-col items-center pb-20'>
-      <DateFilter onDaySelect={setSelectedDate} />
+      <DateFilter selectedDay={selectedDate} onDaySelect={handleDaySelect} />
       {showInitialPageSkeleton ? (
         <RaidsPageSkeleton />
       ) : (

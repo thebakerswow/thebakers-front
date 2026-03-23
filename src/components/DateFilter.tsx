@@ -16,6 +16,8 @@ import { CustomSelect } from './CustomSelect'
 
 interface DateFilterProps {
   onDaySelect: (day: Date | null) => void
+  /** When set, UI stays aligned with this day (e.g. restored from URL after browser back). */
+  selectedDay?: Date | null
 }
 
 function computeWeeksAndDays(date: Date) {
@@ -111,22 +113,43 @@ function computeWeeksAndDays(date: Date) {
   }
 }
 
-export function DateFilter({ onDaySelect }: DateFilterProps) {
-  const currentMonth = new Date()
-  const initialData = computeWeeksAndDays(currentMonth)
+function buildInitialFilterState(selectedDayProp?: Date | null) {
+  const controlled =
+    selectedDayProp !== undefined && selectedDayProp !== null
+  const anchor = controlled ? startOfDay(selectedDayProp) : new Date()
+  const data = computeWeeksAndDays(anchor)
+  let weekIndex = data.selectedWeekIndex
+  if (controlled) {
+    const d = startOfDay(selectedDayProp)
+    const idx = data.weeks.findIndex(
+      (w) => d >= startOfDay(w.start) && d <= startOfDay(w.end)
+    )
+    if (idx !== -1) weekIndex = idx
+  }
+  const week = data.weeks[weekIndex]
+  return {
+    filterDay: (controlled ? startOfDay(selectedDayProp!) : data.selectedDay) as Date | null,
+    selectedMonth: anchor,
+    weeks: data.weeks,
+    days: eachDayOfInterval({ start: week.start, end: week.end }),
+    selectedWeekIndex: weekIndex,
+    monthInputValue: format(anchor, 'MM/yyyy'),
+  }
+}
 
-  const [filterDay, setFilterDay] = useState<Date | null>(
-    initialData.selectedDay
-  )
-  const [selectedMonth, setSelectedMonth] = useState<Date | null>(currentMonth)
-  const [weeks, setWeeks] = useState(initialData.weeks)
-  const [days, setDays] = useState(initialData.days)
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState(
-    initialData.selectedWeekIndex
-  )
-  const [monthInputValue, setMonthInputValue] = useState(
-    format(currentMonth, 'MM/yyyy')
-  )
+export function DateFilter({ onDaySelect, selectedDay: selectedDayProp }: DateFilterProps) {
+  const initialStateRef = useRef<ReturnType<typeof buildInitialFilterState> | null>(null)
+  if (!initialStateRef.current) {
+    initialStateRef.current = buildInitialFilterState(selectedDayProp)
+  }
+  const initial = initialStateRef.current
+
+  const [filterDay, setFilterDay] = useState<Date | null>(initial.filterDay)
+  const [selectedMonth, setSelectedMonth] = useState<Date | null>(initial.selectedMonth)
+  const [weeks, setWeeks] = useState(initial.weeks)
+  const [days, setDays] = useState(initial.days)
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(initial.selectedWeekIndex)
+  const [monthInputValue, setMonthInputValue] = useState(initial.monthInputValue)
   const monthPickerRef = useRef<DatePicker | null>(null)
   const weekOptions = useMemo(
     () =>
@@ -138,9 +161,27 @@ export function DateFilter({ onDaySelect }: DateFilterProps) {
   )
 
   useEffect(() => {
-    // Configura o dia inicial do filtro ao montar o componente.
+    if (selectedDayProp !== undefined) return
     onDaySelect(filterDay)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só alinha o pai no modo não controlado
   }, [])
+
+  useEffect(() => {
+    if (selectedDayProp === undefined || selectedDayProp === null) return
+    const d = startOfDay(selectedDayProp)
+    const data = computeWeeksAndDays(d)
+    const weekIdx = data.weeks.findIndex(
+      (w) => d >= startOfDay(w.start) && d <= startOfDay(w.end)
+    )
+    const idx = weekIdx >= 0 ? weekIdx : 0
+    setFilterDay(d)
+    setSelectedMonth(d)
+    setMonthInputValue(format(d, 'MM/yyyy'))
+    setWeeks(data.weeks)
+    setSelectedWeekIndex(idx)
+    const week = data.weeks[idx]
+    setDays(eachDayOfInterval({ start: week.start, end: week.end }))
+  }, [selectedDayProp])
 
   const updateWeeksAndDays = useCallback((date: Date) => {
     // Atualiza as semanas e dias com base no mês selecionado.
