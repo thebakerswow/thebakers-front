@@ -37,8 +37,9 @@ body {
   background: #050505;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
-  overflow-y: auto;
+  /* Vertical scroll only on html avoids duplicate scrollbars with html { overflow-y: auto } */
   overflow-x: hidden;
+  overflow-y: visible;
 }
 
 

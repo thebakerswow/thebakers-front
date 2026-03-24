@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CaretDown } from '@phosphor-icons/react'
@@ -16,6 +16,9 @@ import {
   HomeWeekRuns,
   HomeServicesData,
 } from './types/home'
+
+/** Framer AnimatePresence exit (~300ms) before the new category block is in the DOM */
+const CATEGORY_FILTER_SCROLL_DELAY_MS = 320
 
 export function HomePage() {
   const [servicesList, setServicesList] = useState<HomeServicesData['services']>([])
@@ -156,6 +159,17 @@ export function HomePage() {
     })
   }
 
+  const handleSelectCategory = useCallback((categoryId: string | null) => {
+    setActiveCategory(categoryId)
+    window.setTimeout(() => {
+      const anchorId = categoryId ? `home-category-${categoryId}` : 'home-services'
+      document.getElementById(anchorId)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, CATEGORY_FILTER_SCROLL_DELAY_MS)
+  }, [])
+
   if (loading) {
     return (
       <div className='flex min-h-screen items-center justify-center gap-3 text-white'>
@@ -168,7 +182,7 @@ export function HomePage() {
   if (!isAuthenticated) return null
 
   return (
-    <div className='relative flex min-h-screen w-full flex-col bg-transparent text-white'>
+    <div className='relative flex min-h-screen w-full flex-col overflow-x-hidden bg-transparent text-white'>
       {isRestrictedHome ? (
         <div className='relative z-10 mx-auto flex min-h-screen w-full max-w-[1720px] items-center justify-center px-4 sm:px-6 lg:px-12 2xl:px-16'>
           <div className='w-full max-w-3xl rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm'>
@@ -226,7 +240,7 @@ export function HomePage() {
             activeCategory={activeCategory}
             filtersOpen={filtersOpen}
             onSetFiltersOpen={setFiltersOpen}
-            onSelectCategory={setActiveCategory}
+            onSelectCategory={handleSelectCategory}
             onScrollToSchedule={scrollToSchedule}
           />
 
@@ -234,19 +248,25 @@ export function HomePage() {
             <Schedule dates={dates} weekRuns={weekRuns} loadingRuns={loadingRuns} />
             <div className='h-20' aria-hidden='true' />
 
+            <div id='home-services' className='scroll-mt-28 md:scroll-mt-24'>
             {loadingServices ? (
               <ServicesSkeleton />
             ) : (
-              <AnimatePresence mode='wait'>
-                <motion.div
-                  key={activeCategory ?? 'all'}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {filteredCategories.map(({ category, services }) => (
-                    <section key={category.id} className='pt-12 first:pt-8'>
+              <div className='relative overflow-x-hidden'>
+                <AnimatePresence mode='wait'>
+                  <motion.div
+                    key={activeCategory ?? 'all'}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {filteredCategories.map(({ category, services }) => (
+                    <section
+                      key={category.id}
+                      id={`home-category-${category.id}`}
+                      className='scroll-mt-28 pt-12 first:pt-8 md:scroll-mt-24'
+                    >
                       <div className='mb-8'>
                         <button
                           type='button'
@@ -288,10 +308,12 @@ export function HomePage() {
                         )}
                       </AnimatePresence>
                     </section>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             )}
+            </div>
           </div>
         </>
       )}
