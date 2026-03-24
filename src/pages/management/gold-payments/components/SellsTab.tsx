@@ -1,5 +1,14 @@
-import { useMemo, useState, useEffect, type CSSProperties } from 'react'
-import { Plus, Trash, PencilSimple, CaretDown } from '@phosphor-icons/react'
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
+import { createPortal } from 'react-dom'
+import { Plus, Trash, PencilSimple, CaretDown, Info } from '@phosphor-icons/react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { LoadingSpinner } from '../../../../components/LoadingSpinner'
@@ -29,6 +38,103 @@ interface PaymentDisplay {
 
 interface SellsTabProps {
   onError?: (error: ApiErrorDetails | null) => void
+}
+
+const SUMMARY_TOOLTIP_MAX_W = 280
+
+function SummaryInfoTip({
+  tooltip,
+  label,
+  value,
+  valueStyle,
+}: {
+  tooltip: string
+  label: ReactNode
+  value: ReactNode
+  valueStyle?: CSSProperties
+}) {
+  const [visible, setVisible] = useState(false)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const anchorRef = useRef<HTMLDivElement>(null)
+
+  const updatePosition = useCallback(() => {
+    const el = anchorRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    let left = r.left
+    left = Math.max(12, Math.min(left, window.innerWidth - SUMMARY_TOOLTIP_MAX_W - 12))
+    setCoords({ top: r.bottom + 8, left })
+  }, [])
+
+  useEffect(() => {
+    if (!visible) return
+    const hide = () => setVisible(false)
+    window.addEventListener('scroll', hide, true)
+    return () => window.removeEventListener('scroll', hide, true)
+  }, [visible])
+
+  return (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <div
+          ref={anchorRef}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}
+        >
+          {label}
+          <button
+            type='button'
+            className='shrink-0 rounded p-0.5 text-neutral-500 transition hover:bg-white/10 hover:text-purple-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50'
+            aria-label={tooltip}
+            onMouseEnter={() => {
+              updatePosition()
+              setVisible(true)
+            }}
+            onMouseLeave={() => setVisible(false)}
+            onFocus={() => {
+              updatePosition()
+              setVisible(true)
+            }}
+            onBlur={() => setVisible(false)}
+          >
+            <Info size={14} weight='regular' aria-hidden />
+          </button>
+        </div>
+        <p style={{ margin: 0, ...valueStyle }}>{value}</p>
+      </div>
+      {visible &&
+        createPortal(
+          <div
+            role='tooltip'
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              left: coords.left,
+              maxWidth: SUMMARY_TOOLTIP_MAX_W,
+              zIndex: 100000,
+              padding: '10px 12px',
+              borderRadius: 8,
+              backgroundColor: '#1a1425',
+              border: '1px solid rgba(168,85,247,0.35)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: '#e5e5e5',
+              pointerEvents: 'none',
+            }}
+          >
+            {tooltip}
+          </div>,
+          document.body
+        )}
+    </>
+  )
 }
 
 export function SellsTab({ onError }: SellsTabProps) {
@@ -714,51 +820,46 @@ export function SellsTab({ onError }: SellsTabProps) {
                           gap: 1 
                         }}
                       >
-                        {/* Gold Total */}
-                        <span title='Total gold available in the players balance system for this payment date'>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                        <SummaryInfoTip
+                          tooltip='Total gold available in the players balance system for this payment date'
+                          label={
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem', margin: 0 }}>
                               Gold Balance Total:
                             </p>
-                            <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
-                              {formatValueForDisplay(goldTotalGeral)}g
-                            </p>
-                          </div>
-                        </span>
+                          }
+                          value={`${formatValueForDisplay(goldTotalGeral)}g`}
+                          valueStyle={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}
+                        />
 
-                        {/* Estoque de Gold */}
-                        <span title='Quantity of gold in stock available for this payment date (Gbank - Sold)'>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <p style={{ color: '#9ca3af', fontSize: '0.7rem' }}>
+                        <SummaryInfoTip
+                          tooltip='Quantity of gold in stock available for this payment date (Gbank - Sold)'
+                          label={
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem', margin: 0 }}>
                               Gold in Stock:
                             </p>
-                            <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
-                              {formatValueForDisplay(goldInStock)}g
-                            </p>
-                          </div>
-                        </span>
+                          }
+                          value={`${formatValueForDisplay(goldInStock)}g`}
+                          valueStyle={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}
+                        />
 
-                        {/* Gold Missing Date */}
-                        <span
-                          title={hasEnoughGoldForDate 
-                            ? "Surplus: quantity of gold that remains after meeting all pending payments for this date" 
-                            : "Missing: quantity of gold that is still needed to complete all pending payments for this date"}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'help' }}>
-                            <p style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600 }}>
+                        <SummaryInfoTip
+                          tooltip={
+                            hasEnoughGoldForDate
+                              ? 'Surplus: quantity of gold that remains after meeting all pending payments for this date'
+                              : 'Missing: quantity of gold that is still needed to complete all pending payments for this date'
+                          }
+                          label={
+                            <p style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600, margin: 0 }}>
                               {hasEnoughGoldForDate ? 'Surplus:' : 'Missing:'}
                             </p>
-                            <p
-                              style={{ 
-                                color: hasEnoughGoldForDate ? '#10b981' : '#ef4444', 
-                                fontWeight: 700,
-                                fontSize: '0.75rem'
-                              }}
-                            >
-                              {formatValueForDisplay(goldMissing)}g
-                            </p>
-                          </div>
-                        </span>
+                          }
+                          value={`${formatValueForDisplay(goldMissing)}g`}
+                          valueStyle={{
+                            color: hasEnoughGoldForDate ? '#10b981' : '#ef4444',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                          }}
+                        />
                       </div>
                     </div>
                   )
