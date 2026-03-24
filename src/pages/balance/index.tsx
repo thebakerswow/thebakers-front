@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   shouldShowBalanceFilter,
   shouldShowOwnBalanceOnly,
+  shouldUseNewBalance,
   shouldShowUsGoldButton,
 } from '../../utils/roleUtils'
 import { NewBalancePage } from '../balance-new'
@@ -114,8 +115,8 @@ export function BalancePage() {
 // Wrapper que decide entre balance antigo e novo com base nos cargos
 export function BalancePageRouter() {
   const { userRoles = [], loading } = useAuth()
-  const isChefe = userRoles.includes(import.meta.env.VITE_TEAM_CHEFE)
   const shouldUseRestrictedBalance = shouldShowOwnBalanceOnly(userRoles)
+  const shouldRenderNewBalance = shouldUseNewBalance(userRoles)
 
   if (loading) {
     return <BalancePageSkeleton />
@@ -125,5 +126,5 @@ export function BalancePageRouter() {
     return <BalancePage />
   }
 
-  return isChefe ? <BalancePage /> : <NewBalancePage />
+  return shouldRenderNewBalance ? <NewBalancePage /> : <BalancePage />
 }
