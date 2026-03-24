@@ -367,7 +367,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const canDeleteBuyer = (buyer: SpecialRunBuyer) => {
     if (isJuniorAdvertiser) return false
     if (isChefeDeCozinha) return true
-    if (isAdvertiser) return true
+    if (isAdvertiser) return canUseAdvertiserActionButtons(buyer)
     return canUseActionButtons(buyer)
   }
 

@@ -154,9 +154,10 @@ export function BuyersDataGrid({
     return isBuyerAdvertiser(buyer) || isChefeDeCozinha()
   }
 
-  const canDeleteBuyer = (_: BuyerData): boolean => {
+  const canDeleteBuyer = (buyer: BuyerData): boolean => {
     if (isJuniorAdvertiserRole) return false
-    if (isAdvertiserRole) return true
+    if (isChefeDeCozinha()) return true
+    if (isAdvertiserRole) return isBuyerAdvertiser(buyer)
     return true
   }
 
