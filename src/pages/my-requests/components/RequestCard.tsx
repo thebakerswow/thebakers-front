@@ -1,4 +1,5 @@
 import { Eye, PencilSimple, Trash } from '@phosphor-icons/react'
+import { isValid, parseISO } from 'date-fns'
 import { RequestCardProps, TransactionRequest } from '../types/myRequests'
 
 const statusBadgeClass: Record<TransactionRequest['status'], string> = {
@@ -30,15 +31,19 @@ const getStatusBadgeStyle = (status: TransactionRequest['status']) => {
 }
 
 const formatDateFromAPI = (apiDateString: string) => {
-  const datePart = apiDateString.split('T')[0]
-  const [year, month, day] = datePart.split('-')
+  if (!apiDateString) return { date: '-', time: '-' }
+  const parsed = parseISO(apiDateString)
+  if (!isValid(parsed)) return { date: '-', time: '-' }
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
   const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
-  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-  const weekday = weekdays[date.getDay()]
+  const weekday = weekdays[parsed.getDay()]
+  const day = String(parsed.getDate())
+  const month = parsed.getMonth()
+  const year = parsed.getFullYear()
+  const pad2 = (n: number) => String(n).padStart(2, '0')
   return {
-    date: `${weekday}, ${day} ${months[parseInt(month) - 1]} ${year}`,
-    time: apiDateString.split('T')[1].split('.')[0].substring(0, 5),
+    date: `${weekday}, ${day} ${months[month]} ${year}`,
+    time: `${pad2(parsed.getHours())}:${pad2(parsed.getMinutes())}`,
   }
 }
 
