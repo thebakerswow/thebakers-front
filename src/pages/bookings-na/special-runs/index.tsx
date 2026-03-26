@@ -366,6 +366,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   }
 
   const canUseActionButtons = (buyer: SpecialRunBuyer) => {
+    if (isChefeDeCozinha) return true
     if (!buyer.claimed) return false
     return isBuyerClaimedByCurrentUser(buyer)
   }

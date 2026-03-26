@@ -860,24 +860,22 @@ export function BuyersDataGrid({
                             >
                               <RiSwordLine size={18} />
                           </button>
-                          {minPriceEnabled && (
-                            <button
-                              type='button'
-                              title='Price below minimum'
-                                onClick={() =>
-                                  !runIsLocked &&
-                                  handleSendPriceWarningMessage(buyer.id)
-                                }
-                                disabled={
-                                  runIsLocked ||
-                                  cooldownPriceWarning[buyer.id] ||
-                                  globalCooldown
-                                }
-                                className='rounded-md p-1 disabled:opacity-50'
-                              >
-                                <RiArrowDownLine size={18} />
-                            </button>
-                          )}
+                          <button
+                            type='button'
+                            title='Price below minimum'
+                              onClick={() =>
+                                !runIsLocked &&
+                                handleSendPriceWarningMessage(buyer.id)
+                              }
+                              disabled={
+                                runIsLocked ||
+                                cooldownPriceWarning[buyer.id] ||
+                                globalCooldown
+                              }
+                              className='rounded-md p-1 disabled:opacity-50'
+                            >
+                              <RiArrowDownLine size={18} />
+                          </button>
                         </>
                       )}
                       {canSeeAdvertiserButtons(buyer) && (
