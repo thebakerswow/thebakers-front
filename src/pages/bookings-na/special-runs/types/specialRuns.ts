@@ -81,6 +81,8 @@ export interface StatusOption {
 
 export interface SpecialRunBuyersGridProps {
   buyers: SpecialRunBuyer[]
+  /** While true for a buyer id, Paid Full is disabled until the API call finishes */
+  paidTogglePendingByBuyerId?: Record<string, boolean>
   hideDollarPotInfo: boolean
   statusOptions: StatusOption[]
   getStatusStyle: (status: SpecialRunBuyerStatus) => string

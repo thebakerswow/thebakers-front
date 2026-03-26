@@ -198,6 +198,26 @@ const mapClaimServiceBuyer = (
   }
 }
 
+/**
+ * Polls can finish after a paid toggle PATCH and still carry the previous `is_paid`.
+ * Until the API agrees with the value we just saved, keep showing that value so the
+ * UI does not flash false → true while other fields (e.g. collector) catch up.
+ */
+function reconcilePaidFullWithServerPending(
+  rows: SpecialRunBuyer[],
+  pendingPaidByBuyerId: Map<string, boolean>
+): SpecialRunBuyer[] {
+  return rows.map((b) => {
+    const pending = pendingPaidByBuyerId.get(b.id)
+    if (pending === undefined) return b
+    if (b.paidFull === pending) {
+      pendingPaidByBuyerId.delete(b.id)
+      return b
+    }
+    return { ...b, paidFull: pending }
+  })
+}
+
 export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const { username, idDiscord, userRoles } = useAuth()
   const serviceType = useMemo(() => normalizeType(runType), [runType])
@@ -218,6 +238,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const buyersRequestInFlightRef = useRef(false)
   const buyersSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
+  const paidFullUntilServerMatchesRef = useRef<Map<string, boolean>>(new Map())
+  const paidToggleInFlightRef = useRef<Set<string>>(new Set())
+  const [paidTogglePendingByBuyerId, setPaidTogglePendingByBuyerId] = useState<
+    Record<string, boolean>
+  >({})
 
   const selectedDateParam = useMemo(
     () => formatDateParam(selectedDate),
@@ -241,10 +266,14 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       const mappedBuyers = response.map((buyer, index) =>
         mapClaimServiceBuyer(buyer, index, serviceType)
       )
-      const nextSnapshot = JSON.stringify(mappedBuyers)
+      const reconciledBuyers = reconcilePaidFullWithServerPending(
+        mappedBuyers,
+        paidFullUntilServerMatchesRef.current
+      )
+      const nextSnapshot = JSON.stringify(reconciledBuyers)
       if (buyersSnapshotRef.current !== nextSnapshot) {
         buyersSnapshotRef.current = nextSnapshot
-        setBuyers(mappedBuyers)
+        setBuyers(reconciledBuyers)
       }
     } catch (error) {
       setBuyers([])
@@ -261,6 +290,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   useEffect(() => {
     // Reseta o snapshot para garantir refresh ao trocar data ou tipo.
     buyersSnapshotRef.current = ''
+    paidFullUntilServerMatchesRef.current.clear()
     void loadBuyers()
 
     const resetActivityTimer = () => {
@@ -403,6 +433,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   }
 
   const handleTogglePaid = async (buyerId: string) => {
+    if (paidToggleInFlightRef.current.has(buyerId)) return
+
     const buyer = buyers.find((entry) => entry.id === buyerId)
     if (!buyer || !canEditStatus(buyer)) return
     const nextPaidStatus = !buyer.paidFull
@@ -416,11 +448,14 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       return
     }
 
+    paidToggleInFlightRef.current.add(buyerId)
+    setPaidTogglePendingByBuyerId((prev) => ({ ...prev, [buyerId]: true }))
     try {
       await updateClaimServicePaid({
         id_claim_service: parsedId,
         is_paid: nextPaidStatus,
       })
+      paidFullUntilServerMatchesRef.current.set(buyerId, nextPaidStatus)
       setBuyers((prev) => {
         const nextBuyers = prev.map((entry) =>
           entry.id === buyerId ? { ...entry, paidFull: nextPaidStatus } : entry
@@ -430,6 +465,13 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       })
     } catch (error) {
       await handleApiError(error, 'Failed to update claim service paid')
+    } finally {
+      paidToggleInFlightRef.current.delete(buyerId)
+      setPaidTogglePendingByBuyerId((prev) => {
+        const next = { ...prev }
+        delete next[buyerId]
+        return next
+      })
     }
   }
 
@@ -664,6 +706,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
           ) : (
             <SpecialRunBuyersGrid
               buyers={sortedBuyers}
+              paidTogglePendingByBuyerId={paidTogglePendingByBuyerId}
               hideDollarPotInfo={hideDollarPotInfo}
               statusOptions={statusOptions}
               getStatusStyle={getStatusStyle}

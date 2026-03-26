@@ -30,6 +30,22 @@ import type {
   RunData,
 } from './types/run'
 
+/** Same idea as special runs: polls can return `isPaid` before the PATCH is visible server-side. */
+function reconcileRunBuyersIsPaid(
+  buyers: BuyerData[],
+  pendingPaidByBuyerId: Map<string, boolean>
+): BuyerData[] {
+  return buyers.map((b) => {
+    const pending = pendingPaidByBuyerId.get(b.id)
+    if (pending === undefined) return b
+    if (b.isPaid === pending) {
+      pendingPaidByBuyerId.delete(b.id)
+      return b
+    }
+    return { ...b, isPaid: pending }
+  })
+}
+
 export function RunDetails() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -52,6 +68,7 @@ export function RunDetails() {
   const buyersRequestInFlightRef = useRef(false)
   const runRequestInFlightRef = useRef(false)
   const buyersSnapshotRef = useRef('')
+  const buyerPaidUntilServerMatchesRef = useRef<Map<string, boolean>>(new Map())
   const runSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
   const [isChatOpen, setIsChatOpen] = useState(true)
@@ -124,11 +141,15 @@ export function RunDetails() {
         setIsLoadingBuyers(true)
       }
       const data = await getRunBuyers(id!)
-      const nextSnapshot = JSON.stringify(data)
+      const reconciled = reconcileRunBuyersIsPaid(
+        data,
+        buyerPaidUntilServerMatchesRef.current
+      )
+      const nextSnapshot = JSON.stringify(reconciled)
 
       if (buyersSnapshotRef.current !== nextSnapshot) {
         buyersSnapshotRef.current = nextSnapshot
-        setRows(data)
+        setRows(reconciled)
       }
     } catch (error) {
       await handleApiError(error, 'Failed to fetch buyers')
@@ -155,6 +176,9 @@ export function RunDetails() {
 
   useEffect(() => {
     if (!id) return
+
+    buyersSnapshotRef.current = ''
+    buyerPaidUntilServerMatchesRef.current.clear()
 
     // Verifica acesso antes de buscar dados
     verifyRunAccess().then(() => {
@@ -639,6 +663,9 @@ export function RunDetails() {
                   <BuyersDataGrid
                     data={rows}
                     onBuyerStatusEdit={reloadAllData}
+                    onBuyerPaidConfirmed={(buyerId, isPaid) => {
+                      buyerPaidUntilServerMatchesRef.current.set(buyerId, isPaid)
+                    }}
                     onBuyerNameNoteEdit={reloadAllData}
                     onDeleteSuccess={reloadAllData}
                     slotAvailable={runData?.slotAvailable ?? 0}

@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react'
+import { useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { useParams } from 'react-router-dom'
 import { CheckFat, Pencil, Trash, X } from '@phosphor-icons/react'
 import {
@@ -51,6 +51,7 @@ type BuyerCooldownSetter = Dispatch<SetStateAction<BuyerCooldownMap>>
 export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
+  onBuyerPaidConfirmed,
   onBuyerNameNoteEdit,
   onDeleteSuccess,
   containerClassName,
@@ -215,7 +216,10 @@ export function BuyersDataGrid({
   const [cooldownPriceWarning, setCooldownPriceWarning] = useState<BuyerCooldownMap>({}) // Cooldown for Price Warning button
   const [clickTracker, setClickTracker] = useState<BuyerCooldownMap>({}) // Track button clicks
   const [globalCooldown, setGlobalCooldown] = useState(false) // Global cooldown for all buyers
-  const [cooldownPaid, setCooldownPaid] = useState<BuyerCooldownMap>({}) // Cooldown for Paid Full button
+  const paidToggleInFlightRef = useRef<Set<string>>(new Set())
+  const [paidTogglePendingByBuyerId, setPaidTogglePendingByBuyerId] = useState<
+    Record<string, boolean>
+  >({})
 
   const handleOpenModal = (buyer: BuyerData) => {
     setEditingBuyer({
@@ -229,30 +233,29 @@ export function BuyersDataGrid({
     setOpenModal(true)
   }
 
-  const handleApiCall = async (
-    apiFunction: () => Promise<any>,
-    callback: () => void
-  ) => {
-    try {
-      await apiFunction()
-      callback()
-    } catch (error) {
-      await handleApiError(error, 'Failed to update buyer')
-    }
-  }
+  const handleTogglePaid = async (buyerId: string) => {
+    if (paidToggleInFlightRef.current.has(buyerId)) return
 
-  const handleTogglePaid = (buyerId: string) => {
-    if (cooldownPaid[buyerId]) return // Prevent spam
     const buyer = data.find((b) => b.id === buyerId)
     if (!buyer) return
-    setCooldownPaid((prev) => ({ ...prev, [buyerId]: true }))
-    handleApiCall(
-      () => updateBuyerPaid(buyerId, !buyer.isPaid),
-      onBuyerStatusEdit
-    )
-    setTimeout(() => {
-      setCooldownPaid((prev) => ({ ...prev, [buyerId]: false }))
-    }, 3000) // 3 seconds cooldown
+
+    paidToggleInFlightRef.current.add(buyerId)
+    setPaidTogglePendingByBuyerId((prev) => ({ ...prev, [buyerId]: true }))
+    const nextPaid = !buyer.isPaid
+    try {
+      await updateBuyerPaid(buyerId, nextPaid)
+      onBuyerPaidConfirmed?.(buyerId, nextPaid)
+      onBuyerStatusEdit()
+    } catch (error) {
+      await handleApiError(error, 'Failed to update buyer')
+    } finally {
+      paidToggleInFlightRef.current.delete(buyerId)
+      setPaidTogglePendingByBuyerId((prev) => {
+        const next = { ...prev }
+        delete next[buyerId]
+        return next
+      })
+    }
   }
 
   const handleStatusChange = async (buyerId: string, newStatus: string) => {
@@ -596,10 +599,12 @@ export function BuyersDataGrid({
       onClick={() =>
         !runIsLocked &&
         !globalCooldown &&
-        !cooldownPaid[buyer.id] &&
-        handleTogglePaid(buyer.id)
+        !paidTogglePendingByBuyerId[buyer.id] &&
+        void handleTogglePaid(buyer.id)
       }
-      disabled={runIsLocked || globalCooldown || cooldownPaid[buyer.id]}
+      disabled={
+        runIsLocked || globalCooldown || Boolean(paidTogglePendingByBuyerId[buyer.id])
+      }
       className='rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50'
     >
       {buyer.isPaid ? (

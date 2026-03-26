@@ -165,6 +165,8 @@ export interface EditBuyerProps {
 export interface BuyersGridProps {
   data: BuyerData[]
   onBuyerStatusEdit: () => void
+  /** Called after paid PATCH succeeds so parent can reconcile poll vs server lag */
+  onBuyerPaidConfirmed?: (buyerId: string, isPaid: boolean) => void
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
   containerClassName?: string
