@@ -216,6 +216,8 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<SpecialRunBuyer | null>(null)
   const buyersRequestInFlightRef = useRef(false)
+  /** If loadBuyers was requested while a fetch was in flight, run one more silent fetch when it ends */
+  const buyersRefreshQueuedRef = useRef(false)
   const buyersSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
   const paidToggleInFlightRef = useRef<Set<string>>(new Set())
@@ -232,7 +234,10 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   )
 
   const loadBuyers = useCallback(async (showLoading = true) => {
-    if (buyersRequestInFlightRef.current) return
+    if (buyersRequestInFlightRef.current) {
+      buyersRefreshQueuedRef.current = true
+      return
+    }
 
     buyersRequestInFlightRef.current = true
     if (showLoading) {
@@ -273,6 +278,10 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
         setIsLoadingBuyers(false)
       }
       setIsInitialLoad(false)
+      if (buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void loadBuyers(false)
+      }
     }
   }, [selectedDateParam, serviceType])
 
