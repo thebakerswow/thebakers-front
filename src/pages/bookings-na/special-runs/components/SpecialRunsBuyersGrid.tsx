@@ -14,6 +14,7 @@ import type { SpecialRunBuyersGridProps } from '../types/specialRuns'
 export function SpecialRunBuyersGrid({
   buyers,
   paidTogglePendingByBuyerId = {},
+  paidAwaitingExpectedByBuyerId = {},
   hideDollarPotInfo,
   statusOptions,
   getStatusStyle,
@@ -98,12 +99,25 @@ export function SpecialRunBuyersGrid({
                 <td className='px-2 py-2 text-center'>
                   <button
                     type='button'
-                    onClick={() =>
-                      canEditStatus(buyer) &&
-                      !paidTogglePendingByBuyerId[buyer.id] &&
+                    onClick={() => {
+                      const expected = paidAwaitingExpectedByBuyerId[buyer.id]
+                      const awaitingRow =
+                        expected !== undefined && buyer.paidFull !== expected
+                      if (
+                        !canEditStatus(buyer) ||
+                        paidTogglePendingByBuyerId[buyer.id] ||
+                        awaitingRow
+                      ) {
+                        return
+                      }
                       onTogglePaid(buyer.id)
+                    }}
+                    disabled={
+                      !canEditStatus(buyer) ||
+                      Boolean(paidTogglePendingByBuyerId[buyer.id]) ||
+                      (paidAwaitingExpectedByBuyerId[buyer.id] !== undefined &&
+                        buyer.paidFull !== paidAwaitingExpectedByBuyerId[buyer.id])
                     }
-                    disabled={!canEditStatus(buyer) || Boolean(paidTogglePendingByBuyerId[buyer.id])}
                     className='inline-flex rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50'
                   >
                     {buyer.paidFull ? (

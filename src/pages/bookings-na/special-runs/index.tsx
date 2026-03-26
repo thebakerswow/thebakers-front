@@ -198,26 +198,6 @@ const mapClaimServiceBuyer = (
   }
 }
 
-/**
- * Polls can finish after a paid toggle PATCH and still carry the previous `is_paid`.
- * Until the API agrees with the value we just saved, keep showing that value so the
- * UI does not flash false → true while other fields (e.g. collector) catch up.
- */
-function reconcilePaidFullWithServerPending(
-  rows: SpecialRunBuyer[],
-  pendingPaidByBuyerId: Map<string, boolean>
-): SpecialRunBuyer[] {
-  return rows.map((b) => {
-    const pending = pendingPaidByBuyerId.get(b.id)
-    if (pending === undefined) return b
-    if (b.paidFull === pending) {
-      pendingPaidByBuyerId.delete(b.id)
-      return b
-    }
-    return { ...b, paidFull: pending }
-  })
-}
-
 export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const { username, idDiscord, userRoles } = useAuth()
   const serviceType = useMemo(() => normalizeType(runType), [runType])
@@ -238,9 +218,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const buyersRequestInFlightRef = useRef(false)
   const buyersSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
-  const paidFullUntilServerMatchesRef = useRef<Map<string, boolean>>(new Map())
   const paidToggleInFlightRef = useRef<Set<string>>(new Set())
   const [paidTogglePendingByBuyerId, setPaidTogglePendingByBuyerId] = useState<
+    Record<string, boolean>
+  >({})
+  const [paidAwaitingExpectedByBuyerId, setPaidAwaitingExpectedByBuyerId] = useState<
     Record<string, boolean>
   >({})
 
@@ -266,16 +248,23 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       const mappedBuyers = response.map((buyer, index) =>
         mapClaimServiceBuyer(buyer, index, serviceType)
       )
-      const reconciledBuyers = reconcilePaidFullWithServerPending(
-        mappedBuyers,
-        paidFullUntilServerMatchesRef.current
-      )
-      const nextSnapshot = JSON.stringify(reconciledBuyers)
+      setPaidAwaitingExpectedByBuyerId((prev) => {
+        const next = { ...prev }
+        for (const b of mappedBuyers) {
+          const exp = next[b.id]
+          if (exp !== undefined && b.paidFull === exp) {
+            delete next[b.id]
+          }
+        }
+        return next
+      })
+      const nextSnapshot = JSON.stringify(mappedBuyers)
       if (buyersSnapshotRef.current !== nextSnapshot) {
         buyersSnapshotRef.current = nextSnapshot
-        setBuyers(reconciledBuyers)
+        setBuyers(mappedBuyers)
       }
     } catch (error) {
+      setPaidAwaitingExpectedByBuyerId({})
       setBuyers([])
       await handleApiError(error, 'Failed to fetch special run buyers')
     } finally {
@@ -290,7 +279,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   useEffect(() => {
     // Reseta o snapshot para garantir refresh ao trocar data ou tipo.
     buyersSnapshotRef.current = ''
-    paidFullUntilServerMatchesRef.current.clear()
+    setPaidAwaitingExpectedByBuyerId({})
     void loadBuyers()
 
     const resetActivityTimer = () => {
@@ -455,14 +444,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
         id_claim_service: parsedId,
         is_paid: nextPaidStatus,
       })
-      paidFullUntilServerMatchesRef.current.set(buyerId, nextPaidStatus)
-      setBuyers((prev) => {
-        const nextBuyers = prev.map((entry) =>
-          entry.id === buyerId ? { ...entry, paidFull: nextPaidStatus } : entry
-        )
-        buyersSnapshotRef.current = JSON.stringify(nextBuyers)
-        return nextBuyers
-      })
+      setPaidAwaitingExpectedByBuyerId((prev) => ({
+        ...prev,
+        [buyerId]: nextPaidStatus,
+      }))
+      void loadBuyers(false)
     } catch (error) {
       await handleApiError(error, 'Failed to update claim service paid')
     } finally {
@@ -707,6 +693,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
             <SpecialRunBuyersGrid
               buyers={sortedBuyers}
               paidTogglePendingByBuyerId={paidTogglePendingByBuyerId}
+              paidAwaitingExpectedByBuyerId={paidAwaitingExpectedByBuyerId}
               hideDollarPotInfo={hideDollarPotInfo}
               statusOptions={statusOptions}
               getStatusStyle={getStatusStyle}

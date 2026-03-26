@@ -83,6 +83,11 @@ export interface SpecialRunBuyersGridProps {
   buyers: SpecialRunBuyer[]
   /** While true for a buyer id, Paid Full is disabled until the API call finishes */
   paidTogglePendingByBuyerId?: Record<string, boolean>
+  /**
+   * Expected paidFull after a successful PATCH; button stays disabled until a fetch
+   * returns the same value (so collector and check update from one payload).
+   */
+  paidAwaitingExpectedByBuyerId?: Record<string, boolean>
   hideDollarPotInfo: boolean
   statusOptions: StatusOption[]
   getStatusStyle: (status: SpecialRunBuyerStatus) => string

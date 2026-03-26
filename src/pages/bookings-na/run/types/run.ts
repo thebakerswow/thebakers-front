@@ -165,8 +165,13 @@ export interface EditBuyerProps {
 export interface BuyersGridProps {
   data: BuyerData[]
   onBuyerStatusEdit: () => void
-  /** Called after paid PATCH succeeds so parent can reconcile poll vs server lag */
+  /**
+   * Called after paid PATCH succeeds with the new value; parent keeps the button
+   * locked until a fetch returns the same isPaid (collector updates in that payload).
+   */
   onBuyerPaidConfirmed?: (buyerId: string, isPaid: boolean) => void
+  /** buyerId → expected isPaid while waiting for GET to match */
+  buyerPaidAwaitingExpectedByBuyerId?: Record<string, boolean>
   onBuyerNameNoteEdit: () => void
   onDeleteSuccess: () => void
   containerClassName?: string

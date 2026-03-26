@@ -52,6 +52,7 @@ export function BuyersDataGrid({
   data,
   onBuyerStatusEdit,
   onBuyerPaidConfirmed,
+  buyerPaidAwaitingExpectedByBuyerId = {},
   onBuyerNameNoteEdit,
   onDeleteSuccess,
   containerClassName,
@@ -593,17 +594,25 @@ export function BuyersDataGrid({
     />
   )
 
-  const renderPaidIcon = (buyer: BuyerData) => (
+  const renderPaidIcon = (buyer: BuyerData) => {
+    const expectedPaid = buyerPaidAwaitingExpectedByBuyerId[buyer.id]
+    const awaitingPaidRow =
+      expectedPaid !== undefined && buyer.isPaid !== expectedPaid
+    return (
     <button
       type='button'
       onClick={() =>
         !runIsLocked &&
         !globalCooldown &&
         !paidTogglePendingByBuyerId[buyer.id] &&
+        !awaitingPaidRow &&
         void handleTogglePaid(buyer.id)
       }
       disabled={
-        runIsLocked || globalCooldown || Boolean(paidTogglePendingByBuyerId[buyer.id])
+        runIsLocked ||
+        globalCooldown ||
+        Boolean(paidTogglePendingByBuyerId[buyer.id]) ||
+        awaitingPaidRow
       }
       className='rounded-md border border-white/25 bg-white/10 p-1 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50'
     >
@@ -613,7 +622,8 @@ export function BuyersDataGrid({
         <X className='text-red-600' size={22} weight='bold' />
       )}
     </button>
-  )
+    )
+  }
 
   // Função para ordenar os dados com base na prioridade do status
   const sortedData = Array.isArray(data)

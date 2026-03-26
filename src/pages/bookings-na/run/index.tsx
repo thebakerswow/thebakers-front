@@ -30,22 +30,6 @@ import type {
   RunData,
 } from './types/run'
 
-/** Same idea as special runs: polls can return `isPaid` before the PATCH is visible server-side. */
-function reconcileRunBuyersIsPaid(
-  buyers: BuyerData[],
-  pendingPaidByBuyerId: Map<string, boolean>
-): BuyerData[] {
-  return buyers.map((b) => {
-    const pending = pendingPaidByBuyerId.get(b.id)
-    if (pending === undefined) return b
-    if (b.isPaid === pending) {
-      pendingPaidByBuyerId.delete(b.id)
-      return b
-    }
-    return { ...b, isPaid: pending }
-  })
-}
-
 export function RunDetails() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -68,7 +52,8 @@ export function RunDetails() {
   const buyersRequestInFlightRef = useRef(false)
   const runRequestInFlightRef = useRef(false)
   const buyersSnapshotRef = useRef('')
-  const buyerPaidUntilServerMatchesRef = useRef<Map<string, boolean>>(new Map())
+  const [buyerPaidAwaitingExpectedByBuyerId, setBuyerPaidAwaitingExpectedByBuyerId] =
+    useState<Record<string, boolean>>({})
   const runSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
   const [isChatOpen, setIsChatOpen] = useState(true)
@@ -141,17 +126,24 @@ export function RunDetails() {
         setIsLoadingBuyers(true)
       }
       const data = await getRunBuyers(id!)
-      const reconciled = reconcileRunBuyersIsPaid(
-        data,
-        buyerPaidUntilServerMatchesRef.current
-      )
-      const nextSnapshot = JSON.stringify(reconciled)
+      setBuyerPaidAwaitingExpectedByBuyerId((prev) => {
+        const next = { ...prev }
+        for (const b of data) {
+          const exp = next[b.id]
+          if (exp !== undefined && b.isPaid === exp) {
+            delete next[b.id]
+          }
+        }
+        return next
+      })
+      const nextSnapshot = JSON.stringify(data)
 
       if (buyersSnapshotRef.current !== nextSnapshot) {
         buyersSnapshotRef.current = nextSnapshot
-        setRows(reconciled)
+        setRows(data)
       }
     } catch (error) {
+      setBuyerPaidAwaitingExpectedByBuyerId({})
       await handleApiError(error, 'Failed to fetch buyers')
     } finally {
       buyersRequestInFlightRef.current = false
@@ -178,7 +170,7 @@ export function RunDetails() {
     if (!id) return
 
     buyersSnapshotRef.current = ''
-    buyerPaidUntilServerMatchesRef.current.clear()
+    setBuyerPaidAwaitingExpectedByBuyerId({})
 
     // Verifica acesso antes de buscar dados
     verifyRunAccess().then(() => {
@@ -664,8 +656,12 @@ export function RunDetails() {
                     data={rows}
                     onBuyerStatusEdit={reloadAllData}
                     onBuyerPaidConfirmed={(buyerId, isPaid) => {
-                      buyerPaidUntilServerMatchesRef.current.set(buyerId, isPaid)
+                      setBuyerPaidAwaitingExpectedByBuyerId((prev) => ({
+                        ...prev,
+                        [buyerId]: isPaid,
+                      }))
                     }}
+                    buyerPaidAwaitingExpectedByBuyerId={buyerPaidAwaitingExpectedByBuyerId}
                     onBuyerNameNoteEdit={reloadAllData}
                     onDeleteSuccess={reloadAllData}
                     slotAvailable={runData?.slotAvailable ?? 0}
