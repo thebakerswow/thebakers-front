@@ -215,8 +215,9 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [editingBuyer, setEditingBuyer] = useState<SpecialRunBuyer | null>(null)
-  const buyersRequestInFlightRef = useRef(false)
-  /** If loadBuyers was requested while a fetch was in flight, run one more silent fetch when it ends */
+  const latestBuyersRequestIdRef = useRef(0)
+  const buyersLoadingCountRef = useRef(0)
+  const buyersMutationCountRef = useRef(0)
   const buyersRefreshQueuedRef = useRef(false)
   const buyersSnapshotRef = useRef('')
   const isUserActiveRef = useRef(true)
@@ -234,13 +235,16 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
   )
 
   const loadBuyers = useCallback(async (showLoading = true) => {
-    if (buyersRequestInFlightRef.current) {
+    // Avoid background refresh while mutations are in flight to prevent stale GET
+    // responses from overwriting fields updated by mutation endpoints.
+    if (!showLoading && buyersMutationCountRef.current > 0) {
       buyersRefreshQueuedRef.current = true
       return
     }
 
-    buyersRequestInFlightRef.current = true
+    const requestId = ++latestBuyersRequestIdRef.current
     if (showLoading) {
+      buyersLoadingCountRef.current += 1
       setIsLoadingBuyers(true)
     }
 
@@ -249,6 +253,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
         date: selectedDateParam,
         type: serviceType,
       })
+      if (requestId !== latestBuyersRequestIdRef.current) return
 
       const mappedBuyers = response.map((buyer, index) =>
         mapClaimServiceBuyer(buyer, index, serviceType)
@@ -269,18 +274,19 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
         setBuyers(mappedBuyers)
       }
     } catch (error) {
+      if (requestId !== latestBuyersRequestIdRef.current) return
       setPaidAwaitingExpectedByBuyerId({})
       setBuyers([])
       await handleApiError(error, 'Failed to fetch special run buyers')
     } finally {
-      buyersRequestInFlightRef.current = false
       if (showLoading) {
-        setIsLoadingBuyers(false)
+        buyersLoadingCountRef.current = Math.max(0, buyersLoadingCountRef.current - 1)
+        if (buyersLoadingCountRef.current === 0) {
+          setIsLoadingBuyers(false)
+        }
       }
-      setIsInitialLoad(false)
-      if (buyersRefreshQueuedRef.current) {
-        buyersRefreshQueuedRef.current = false
-        void loadBuyers(false)
+      if (requestId === latestBuyersRequestIdRef.current) {
+        setIsInitialLoad(false)
       }
     }
   }, [selectedDateParam, serviceType])
@@ -316,7 +322,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     }
 
     const scheduleBuyersPoll = () => {
-      const buyersDelay = isUserActiveRef.current ? 2000 : 12000
+      const buyersDelay = isUserActiveRef.current ? 10000 : 20000
       buyersTimer = setTimeout(() => {
         void loadBuyers(false)
         scheduleBuyersPoll()
@@ -415,6 +421,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     }
 
     try {
+      buyersMutationCountRef.current += 1
       await updateClaimServiceStatus({
         id_claim_service: parsedId,
         status: newStatus,
@@ -428,6 +435,12 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       )
     } catch (error) {
       await handleApiError(error, 'Failed to update claim service status')
+    } finally {
+      buyersMutationCountRef.current = Math.max(0, buyersMutationCountRef.current - 1)
+      if (buyersMutationCountRef.current === 0 && buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void loadBuyers(false)
+      }
     }
   }
 
@@ -448,6 +461,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     }
 
     paidToggleInFlightRef.current.add(buyerId)
+    buyersMutationCountRef.current += 1
     setPaidTogglePendingByBuyerId((prev) => ({ ...prev, [buyerId]: true }))
     try {
       await updateClaimServicePaid({
@@ -463,6 +477,11 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
       await handleApiError(error, 'Failed to update claim service paid')
     } finally {
       paidToggleInFlightRef.current.delete(buyerId)
+      buyersMutationCountRef.current = Math.max(0, buyersMutationCountRef.current - 1)
+      if (buyersMutationCountRef.current === 0 && buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void loadBuyers(false)
+      }
       setPaidTogglePendingByBuyerId((prev) => {
         const next = { ...prev }
         delete next[buyerId]
@@ -491,6 +510,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     if (!result.isConfirmed) return
 
     try {
+      buyersMutationCountRef.current += 1
       void Swal.fire({
         title: isAlreadyClaimed ? 'Unclaiming buyer...' : 'Claiming buyer...',
         allowOutsideClick: false,
@@ -506,6 +526,12 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     } catch (error) {
       Swal.close()
       await handleApiError(error, 'Failed to claim service')
+    } finally {
+      buyersMutationCountRef.current = Math.max(0, buyersMutationCountRef.current - 1)
+      if (buyersMutationCountRef.current === 0 && buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void loadBuyers(false)
+      }
     }
   }
 
@@ -522,6 +548,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     if (!result.isConfirmed) return
 
     try {
+      buyersMutationCountRef.current += 1
       void Swal.fire({
         title: 'Deleting buyer...',
         allowOutsideClick: false,
@@ -544,6 +571,12 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     } catch (error) {
       Swal.close()
       await handleApiError(error, 'Failed to delete claim service')
+    } finally {
+      buyersMutationCountRef.current = Math.max(0, buyersMutationCountRef.current - 1)
+      if (buyersMutationCountRef.current === 0 && buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void loadBuyers(false)
+      }
     }
   }
 

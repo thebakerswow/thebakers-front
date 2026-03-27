@@ -10,16 +10,16 @@ import type {
 
 type RequestPayload = Record<string, unknown>
 
-export const getRun = async (runId: string) => {
-  const response = await api.get(`/run/${runId}`)
+export const getRun = async (runId: string, signal?: AbortSignal) => {
+  const response = await api.get(`/run/${runId}`, { signal })
   return response.data.info
 }
-export const getRunBuyers = async (runId: string) => {
-  const response = await api.get(`/run/${runId}/buyers`)
+export const getRunBuyers = async (runId: string, signal?: AbortSignal) => {
+  const response = await api.get(`/run/${runId}/buyers`, { signal })
   return response.data.info
 }
-export const getRunAttendance = async (runId: string) => {
-  const response = await api.get(`/run/${runId}/attendance`)
+export const getRunAttendance = async (runId: string, signal?: AbortSignal) => {
+  const response = await api.get(`/run/${runId}/attendance`, { signal })
   return response.data.info
 }
 export const updateRunAttendance = async (
@@ -45,8 +45,8 @@ export const updateRun = async (runId: string, runData: RequestPayload) => {
 }
 
 export const checkRunAccess = (runId: string) => checkRunAccessService(runId)
-export const getChatMessages = async (runId: string) => {
-  const response = await api.get(`/chat/${runId}`)
+export const getChatMessages = async (runId: string, signal?: AbortSignal) => {
+  const response = await api.get(`/chat/${runId}`, { signal })
   return response.data.info
 }
 export const sendDiscordMessage = async (recipientId: string, message: string) => {

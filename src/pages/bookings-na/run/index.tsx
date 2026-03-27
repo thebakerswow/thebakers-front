@@ -29,6 +29,7 @@ import type {
   RaidLeader,
   RunData,
 } from './types/run'
+import axios from 'axios'
 
 export function RunDetails() {
   const navigate = useNavigate()
@@ -49,9 +50,16 @@ export function RunDetails() {
 
   const [chatRaidLeaders, setChatRaidLeaders] = useState<RaidLeader[]>([])
   const chatWs = useRef<WebSocket | null>(null)
+  const latestBuyersRequestIdRef = useRef(0)
   const buyersRequestInFlightRef = useRef(false)
+  const buyersRefreshQueuedRef = useRef(false)
   const runRequestInFlightRef = useRef(false)
   const buyersSnapshotRef = useRef('')
+  const runRequestAbortRef = useRef<AbortController | null>(null)
+  const buyersRequestAbortRef = useRef<AbortController | null>(null)
+  const attendanceRequestAbortRef = useRef<AbortController | null>(null)
+  const chatMessagesRequestAbortRef = useRef<AbortController | null>(null)
+  const chatRaidLeadersRequestAbortRef = useRef<AbortController | null>(null)
   const [buyerPaidAwaitingExpectedByBuyerId, setBuyerPaidAwaitingExpectedByBuyerId] =
     useState<Record<string, boolean>>({})
   const runSnapshotRef = useRef('')
@@ -94,7 +102,9 @@ export function RunDetails() {
 
     runRequestInFlightRef.current = true
     try {
-      const data = await getRun(id!)
+      runRequestAbortRef.current?.abort()
+      runRequestAbortRef.current = new AbortController()
+      const data = await getRun(id!, runRequestAbortRef.current.signal)
       const normalizedRunData = {
         ...data,
         slotAvailable: Number(data.slotAvailable),
@@ -107,6 +117,7 @@ export function RunDetails() {
         setRunData(normalizedRunData)
       }
     } catch (error) {
+      if (axios.isCancel(error)) return
       await handleApiError(error, 'Failed to fetch run data')
     } finally {
       runRequestInFlightRef.current = false
@@ -116,16 +127,25 @@ export function RunDetails() {
 
   // Função para buscar os dados dos buyers
   async function fetchBuyersData(showLoading = true) {
-    if (!id || buyersRequestInFlightRef.current) {
+    if (!id) {
       return
     }
 
+    if (buyersRequestInFlightRef.current) {
+      buyersRefreshQueuedRef.current = true
+      return
+    }
+
+    const requestId = ++latestBuyersRequestIdRef.current
     buyersRequestInFlightRef.current = true
     try {
       if (showLoading) {
         setIsLoadingBuyers(true)
       }
-      const data = await getRunBuyers(id!)
+      buyersRequestAbortRef.current?.abort()
+      buyersRequestAbortRef.current = new AbortController()
+      const data = await getRunBuyers(id!, buyersRequestAbortRef.current.signal)
+      if (requestId !== latestBuyersRequestIdRef.current) return
       setBuyerPaidAwaitingExpectedByBuyerId((prev) => {
         const next = { ...prev }
         for (const b of data) {
@@ -143,6 +163,8 @@ export function RunDetails() {
         setRows(data)
       }
     } catch (error) {
+      if (axios.isCancel(error)) return
+      if (requestId !== latestBuyersRequestIdRef.current) return
       setBuyerPaidAwaitingExpectedByBuyerId({})
       await handleApiError(error, 'Failed to fetch buyers')
     } finally {
@@ -150,19 +172,26 @@ export function RunDetails() {
       if (showLoading) {
         setIsLoadingBuyers(false)
       }
+      if (buyersRefreshQueuedRef.current) {
+        buyersRefreshQueuedRef.current = false
+        void fetchBuyersData(false)
+      }
     }
   }
 
   // Função para verificar acesso à run
-  async function verifyRunAccess() {
+  async function verifyRunAccess(): Promise<boolean> {
     try {
       const hasAccess = await checkRunAccessService(id!)
       if (!hasAccess) {
         navigate('/check-access') // Redireciona para a home se o acesso for negado
+        return false
       }
+      return true
     } catch (error) {
       await handleApiError(error, 'Failed to verify run access')
       navigate('/') // Redireciona para a home em caso de erro
+      return false
     }
   }
 
@@ -171,17 +200,12 @@ export function RunDetails() {
 
     buyersSnapshotRef.current = ''
     setBuyerPaidAwaitingExpectedByBuyerId({})
-
-    // Verifica acesso antes de buscar dados
-    verifyRunAccess().then(() => {
-      fetchBuyersData()
-      fetchRunData()
-    })
+    let isMounted = true
 
     // Função para resetar o temporizador
     const resetActivityTimer = () => {
       isUserActiveRef.current = true
-      clearTimeout(inactivityTimeout)
+      if (inactivityTimeout) clearTimeout(inactivityTimeout)
       inactivityTimeout = setTimeout(() => {
         isUserActiveRef.current = false
       }, 5000)
@@ -198,7 +222,7 @@ export function RunDetails() {
     }
 
     // Configuração de eventos para detectar atividade do usuário
-    let inactivityTimeout: ReturnType<typeof setTimeout>
+    let inactivityTimeout: ReturnType<typeof setTimeout> | undefined
 
     const handleMouseOrKeyActivity = () => {
       resetActivityTimer()
@@ -211,8 +235,8 @@ export function RunDetails() {
     // Inicia como ativo e ajusta com os eventos de interação
     resetActivityTimer()
 
-    let buyersTimer: ReturnType<typeof setTimeout>
-    let runTimer: ReturnType<typeof setTimeout>
+    let buyersTimer: ReturnType<typeof setTimeout> | undefined
+    let runTimer: ReturnType<typeof setTimeout> | undefined
 
     const scheduleBuyersPoll = () => {
       const buyersDelay = isUserActiveRef.current ? 2000 : 12000
@@ -230,13 +254,26 @@ export function RunDetails() {
       }, runDelay)
     }
 
-    scheduleBuyersPoll()
-    scheduleRunPoll()
+    const initializePage = async () => {
+      // Verifica acesso antes de buscar dados e iniciar polling
+      const hasAccess = await verifyRunAccess()
+      if (!hasAccess || !isMounted) return
+
+      // Primeiro carrega run e buyers; só depois inicia o polling.
+      await Promise.allSettled([fetchRunData(), fetchBuyersData(true)])
+      if (!isMounted) return
+
+      scheduleBuyersPoll()
+      scheduleRunPoll()
+    }
+
+    void initializePage()
 
     return () => {
-      clearTimeout(buyersTimer)
-      clearTimeout(runTimer)
-      clearTimeout(inactivityTimeout)
+      isMounted = false
+      if (buyersTimer) clearTimeout(buyersTimer)
+      if (runTimer) clearTimeout(runTimer)
+      if (inactivityTimeout) clearTimeout(inactivityTimeout)
       window.removeEventListener('mousemove', handleMouseOrKeyActivity)
       window.removeEventListener('keydown', handleMouseOrKeyActivity)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -246,11 +283,14 @@ export function RunDetails() {
   // Função para buscar os dados de atendimento
   async function fetchAttendanceData() {
     try {
-      const data = await getRunAttendance(id!)
+      attendanceRequestAbortRef.current?.abort()
+      attendanceRequestAbortRef.current = new AbortController()
+      const data = await getRunAttendance(id!, attendanceRequestAbortRef.current.signal)
 
       setAttendance({ info: data })
       setHasAttendanceAccess(true)
     } catch (error) {
+      if (axios.isCancel(error)) return
       const statusCode = (error as { response?: { status?: number } })?.response?.status
       if (statusCode === 403) {
         setHasAttendanceAccess(false)
@@ -307,21 +347,27 @@ export function RunDetails() {
       setChatLoading(true)
 
       // Fetch previous messages
-      getChatMessages(id!)
+      chatMessagesRequestAbortRef.current?.abort()
+      chatMessagesRequestAbortRef.current = new AbortController()
+      getChatMessages(id!, chatMessagesRequestAbortRef.current.signal)
         .then((messages) => {
           setChatMessages(messages || [])
         })
         .catch((error) => {
+          if (axios.isCancel(error)) return
           void handleApiError(error, 'Failed to fetch chat messages')
         })
         .finally(() => setChatLoading(false))
 
       // Fetch raid leaders
-      getRun(id!)
+      chatRaidLeadersRequestAbortRef.current?.abort()
+      chatRaidLeadersRequestAbortRef.current = new AbortController()
+      getRun(id!, chatRaidLeadersRequestAbortRef.current.signal)
         .then((data) => {
           setChatRaidLeaders(data.raidLeaders || [])
         })
         .catch((error) => {
+          if (axios.isCancel(error)) return
           void handleApiError(error, 'Failed to fetch raid leaders')
         })
 
@@ -416,6 +462,11 @@ export function RunDetails() {
 
     return () => {
       setWsConnected(false)
+      runRequestAbortRef.current?.abort()
+      buyersRequestAbortRef.current?.abort()
+      attendanceRequestAbortRef.current?.abort()
+      chatMessagesRequestAbortRef.current?.abort()
+      chatRaidLeadersRequestAbortRef.current?.abort()
       if (chatWs.current) {
         chatWs.current.close(1000, 'Component unmounting')
       }
