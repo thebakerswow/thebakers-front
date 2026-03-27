@@ -31,6 +31,7 @@ export function SpecialRunBuyersGrid({
   onSendBuyerLoggingMessage,
   onSendAttentionMessage,
   canToggleClaim,
+  canTogglePaidFull,
   canEditStatus,
   canUseActionButtons,
   canUseAdvertiserActionButtons,
@@ -104,7 +105,7 @@ export function SpecialRunBuyersGrid({
                       const awaitingRow =
                         expected !== undefined && buyer.paidFull !== expected
                       if (
-                        !canEditStatus(buyer) ||
+                        !canTogglePaidFull(buyer) ||
                         paidTogglePendingByBuyerId[buyer.id] ||
                         awaitingRow
                       ) {
@@ -113,7 +114,7 @@ export function SpecialRunBuyersGrid({
                       onTogglePaid(buyer.id)
                     }}
                     disabled={
-                      !canEditStatus(buyer) ||
+                      !canTogglePaidFull(buyer) ||
                       Boolean(paidTogglePendingByBuyerId[buyer.id]) ||
                       (paidAwaitingExpectedByBuyerId[buyer.id] !== undefined &&
                         buyer.paidFull !== paidAwaitingExpectedByBuyerId[buyer.id])

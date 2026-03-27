@@ -366,9 +366,21 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     return isBuyerClaimedByCurrentUser(buyer)
   }
 
+  const canTogglePaidFull = (buyer: SpecialRunBuyer) => {
+    if (isChefeDeCozinha) return true
+    if (isBuyerClaimedByCurrentUser(buyer)) return true
+    if (!idDiscord) return false
+    return (
+      buyer.idClaimServiceAdvertiser === idDiscord ||
+      buyer.idOwnerClaimService === idDiscord
+    )
+  }
+
   const canEditStatus = (buyer: SpecialRunBuyer) => {
-    void buyer
-    return true
+    if (isChefeDeCozinha) return true
+    if (isBuyerClaimedByCurrentUser(buyer)) return true
+    if (idDiscord && buyer.idOwnerClaimService === idDiscord) return true
+    return false
   }
 
   const canUseActionButtons = (buyer: SpecialRunBuyer) => {
@@ -448,7 +460,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
     if (paidToggleInFlightRef.current.has(buyerId)) return
 
     const buyer = buyers.find((entry) => entry.id === buyerId)
-    if (!buyer || !canEditStatus(buyer)) return
+    if (!buyer || !canTogglePaidFull(buyer)) return
     const nextPaidStatus = !buyer.paidFull
 
     const parsedId = Number(buyerId)
@@ -753,6 +765,7 @@ export function SpecialRunDetailsPage({ runType }: SpecialRunDetailsPageProps) {
               onSendBuyerLoggingMessage={handleSendBuyerLoggingMessage}
               onSendAttentionMessage={handleSendAttentionMessage}
               canToggleClaim={canToggleClaim}
+              canTogglePaidFull={canTogglePaidFull}
               canEditStatus={canEditStatus}
               canUseActionButtons={canUseActionButtons}
               canUseAdvertiserActionButtons={canUseAdvertiserActionButtons}

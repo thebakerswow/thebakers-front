@@ -104,6 +104,7 @@ export interface SpecialRunBuyersGridProps {
   onSendBuyerLoggingMessage: (buyerId: string) => void
   onSendAttentionMessage: (buyerId: string) => void
   canToggleClaim: (buyer: SpecialRunBuyer) => boolean
+  canTogglePaidFull: (buyer: SpecialRunBuyer) => boolean
   canEditStatus: (buyer: SpecialRunBuyer) => boolean
   canUseActionButtons: (buyer: SpecialRunBuyer) => boolean
   canUseAdvertiserActionButtons: (buyer: SpecialRunBuyer) => boolean
