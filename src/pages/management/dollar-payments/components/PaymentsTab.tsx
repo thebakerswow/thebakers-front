@@ -233,38 +233,6 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
     }
   }
 
-  const handleHoldChange = async (idDiscord: string, checked: boolean) => {
-    setManagementTeams((prev) =>
-      prev.map((team) => ({
-        ...team,
-        players: team.players.map((player) =>
-          player.id_discord === idDiscord ? { ...player, hold: checked } : player
-        ),
-      }))
-    )
-
-    try {
-      if (!selectedDateId) return
-      await updateReceiptsManagementDebit({
-        id_receipts_dolar_date: selectedDateId,
-        id_discord: idDiscord,
-        hold: checked,
-      })
-      await loadManagement()
-    } catch (error) {
-      await handleApiError(error, 'Error updating hold status')
-      handleError('Error updating hold status', error)
-      setManagementTeams((prev) =>
-        prev.map((team) => ({
-          ...team,
-          players: team.players.map((player) =>
-            player.id_discord === idDiscord ? { ...player, hold: !checked } : player
-          ),
-        }))
-      )
-    }
-  }
-
   const handleCopyBinanceTemplate = async () => {
     try {
       const allPlayers = sortedManagementTeams.flatMap((team) => team.players)
@@ -414,14 +382,13 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
         <div key={team.id} className='rounded-xl border border-white/10 bg-white/[0.04] p-4'>
           <p className='mb-4 border-l-4 border-purple-500 pl-2 text-lg font-bold text-white'>{team.name}</p>
           <div className='overflow-x-auto rounded-xl border border-white/10 bg-white/[0.05]'>
-            <table className='w-full min-w-[1000px] text-sm'>
+            <table className='w-full min-w-[900px] text-sm'>
               <thead>
                 <tr className='border-b border-white/10 bg-white/[0.06] text-neutral-200'>
                   <th className='px-4 py-4 text-left font-semibold'>Player</th>
                   <th className='px-4 py-4 text-right font-semibold'>Balance Total</th>
                   <th className='px-4 py-4 text-right font-semibold'>Balance $ Paid</th>
                   <th className='px-4 py-4 text-center font-semibold'>Payment Date</th>
-                  <th className='px-4 py-4 text-center font-semibold'>Hold</th>
                   <th className='px-4 py-4 text-left font-semibold'>Binance ID</th>
                 </tr>
               </thead>
@@ -432,14 +399,6 @@ export function ReceiptsPaymentsTab({ onError }: ReceiptsPaymentsTabProps) {
                     <td className='px-4 py-3 text-right font-semibold text-blue-300'>{formatCurrency(player.balance_total ?? 0)}</td>
                     <td className='px-4 py-3 text-right font-semibold text-violet-300'>{formatCurrencyWithZero(player.balance_dolar_paid ?? 0)}</td>
                     <td className='px-4 py-3 text-center text-neutral-300'>{player.receipts_dolar_date ? formatDate(player.receipts_dolar_date) : '-'}</td>
-                    <td className='px-4 py-3 text-center'>
-                      <input
-                        type='checkbox'
-                        checked={Boolean(player.hold)}
-                        onChange={(e) => handleHoldChange(player.id_discord, e.target.checked)}
-                        style={{ accentColor: 'rgb(147, 51, 234)' }}
-                      />
-                    </td>
                     <td className='px-4 py-3'>
                       <button
                         type='button'
