@@ -31,9 +31,13 @@ function formatHistoryDisplayValue(value: string, fieldLabel: string): string {
 function isHiddenMinPriceAmountField(field: string): boolean {
   const label = formatHistoryFieldLabel(field).toLowerCase()
   if (label === 'discount') return false
-  if (label.includes('gold')) return true
-  if (label.includes('dollar') || label.includes('usd')) return true
-  return false
+  const normalized = field.toLowerCase().replace(/[_-]+/g, ' ')
+  const compact = normalized.replace(/\s+/g, '')
+  const isMinPriceField =
+    /\bmin(?:imum)?\s*price\b/i.test(normalized) || compact.includes('minprice')
+
+  if (!isMinPriceField) return false
+  return /\b(gold|dollar|usd)\b/i.test(normalized)
 }
 
 export function EditHistoryDialog({
