@@ -31,9 +31,15 @@ const teamOptions = [
   { value: import.meta.env.VITE_TEAM_PADEIRINHO, label: 'Padeirinho' },
   { value: import.meta.env.VITE_TEAM_MILHARAL, label: 'Milharal' },
   { value: import.meta.env.VITE_TEAM_ADVERTISER, label: 'Advertiser' },
+  { value: import.meta.env.VITE_TEAM_ADVERTISER_JUNIOR, label: 'Advertiser Junior' },
   { value: import.meta.env.VITE_TEAM_FREELANCER, label: 'Freelancer' },
   { value: import.meta.env.VITE_TEAM_BASTARD, label: 'Bastard Munchen' },
   { value: import.meta.env.VITE_TEAM_GACHI_SQUAD, label: 'Gachi Squad' },
+  { value: import.meta.env.VITE_TEAM_MPLUS_SOLO, label: 'M+ Solo' },
+  { value: import.meta.env.VITE_TEAM_MPLUS_TEAM, label: 'M+ Team' },
+  { value: import.meta.env.VITE_TEAM_LEVELING, label: 'Leveling' },
+  { value: import.meta.env.VITE_TEAM_ACHIEVEMENTS, label: 'Achievements' },
+  { value: import.meta.env.VITE_TEAM_PVP, label: 'PVP' },
 ]
 
 export function BalanceControlTable({
