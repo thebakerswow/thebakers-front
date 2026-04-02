@@ -18,7 +18,7 @@ const teamOptions = [
   { value: import.meta.env.VITE_TEAM_GARCOM, label: 'Garcom' },
   { value: import.meta.env.VITE_TEAM_CONFEITEIROS, label: 'Confeiteiros' },
   { value: import.meta.env.VITE_TEAM_JACKFRUIT, label: 'Jackfruit' },
-  { value: import.meta.env.VITE_TEAM_INSANOS, label: 'Insanos' },
+  // { value: import.meta.env.VITE_TEAM_INSANOS, label: 'Insanos' },
   { value: import.meta.env.VITE_TEAM_APAE, label: 'APAE' },
   { value: import.meta.env.VITE_TEAM_LOSRENEGADOS, label: 'Los Renegados' },
   { value: import.meta.env.VITE_TEAM_DTM, label: 'DTM' },
